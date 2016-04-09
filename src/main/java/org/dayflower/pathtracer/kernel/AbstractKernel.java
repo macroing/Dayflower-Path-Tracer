@@ -18,7 +18,6 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.dayflower.pathtracer.math.Math2;
@@ -147,7 +146,14 @@ public abstract class AbstractKernel extends Kernel {
 		return this.cosTable[(int)(radians * RADIANS_TO_INDEX) & MASK_0];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the modulo of {@code value}.
+	 * <p>
+	 * This operation is equivalent to {@code value - floor(value)}.
+	 * 
+	 * @param value the value to perform the modulo operation on
+	 * @return the modulo of {@code value}
+	 */
 	public final float modulo(final float value) {
 		return value - floor(value);
 	}
@@ -163,7 +169,13 @@ public abstract class AbstractKernel extends Kernel {
 		return doNext(24) * NEXT_FLOAT_RECIPROCAL;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the remainder of {@code x} and {@code y}.
+	 * 
+	 * @param x the left hand side of the remainder operation
+	 * @param y the right hand side of the remainder operation
+	 * @return the remainder of {@code x} and {@code y}
+	 */
 	@SuppressWarnings("static-method")
 	public float remainder(final float x, final float y) {
 		final int n = (int)(x / y);
