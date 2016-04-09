@@ -195,19 +195,6 @@ public abstract class AbstractKernel extends Kernel {
 		return this.sinTable[(int)(radians * RADIANS_TO_INDEX) & MASK_0];
 	}
 	
-//	TODO: Add Javadocs.
-	public final float sqrtReciprocal(final float x) {
-//		final float xHalf = x * 0.5F;
-		
-//		final int ix = 0x5F375A82 - ((int)(x) >> 1);
-		
-//		final float y = ix;
-		
-//		return y * (1.5F - xHalf * y * y);
-		
-		return 1.0F / sqrt(x);
-	}
-	
 	/**
 	 * Updates the cosine- and sine tables used by this {@code AbstractKernel} instance.
 	 */

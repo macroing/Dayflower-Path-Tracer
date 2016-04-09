@@ -39,10 +39,10 @@ import org.dayflower.pathtracer.scene.texture.SolidTexture;
 //TODO: Add Javadocs.
 public final class RendererKernel extends AbstractKernel {
 //	TODO: Add Javadocs.
-	public static final int DEPTH_MAXIMUM = 10;
+	public static final int DEPTH_MAXIMUM = 1;//10;
 	
 //	TODO: Add Javadocs.
-	public static final int DEPTH_MINIMUM = 4;
+	public static final int DEPTH_MINIMUM = 1;//4;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -99,15 +99,11 @@ public final class RendererKernel extends AbstractKernel {
 	private final float zenithX;
 	@Local
 	private final float zenithY;
-	private final float[] accumulatedPixelColorBs;
-	private final float[] accumulatedPixelColorGs;
-	private final float[] accumulatedPixelColorRs;
+	private final float[] accumulatedPixelColors;
 	@Constant
 	private final float[] boundingVolumeHierarchy;
 	private final float[] cameraArray;
-	private final float[] currentPixelColorBs;
-	private final float[] currentPixelColorGs;
-	private final float[] currentPixelColorRs;
+	private final float[] currentPixelColors;
 	private final float[] intersections;
 	@Constant
 	private final float[] matrixRGBToXYZ = new float[12];
@@ -128,9 +124,7 @@ public final class RendererKernel extends AbstractKernel {
 	private final float[] s2XYZ = ChromaticSpectralCurve.getS2XYZ();
 	@Constant
 	private final float[] shapes;
-	private final float[] temporaryColorBs;
-	private final float[] temporaryColorGs;
-	private final float[] temporaryColorRs;
+	private final float[] temporaryColors;
 	@Constant
 	private final float[] textures;
 	private int depthMaximum = DEPTH_MAXIMUM;
@@ -163,17 +157,11 @@ public final class RendererKernel extends AbstractKernel {
 		this.cameraArray = compiledScene.getCamera();
 		this.shapes = compiledScene.getShapes();
 		this.textures = compiledScene.getTextures();
-		this.accumulatedPixelColorBs = new float[width * height];
-		this.accumulatedPixelColorGs = new float[width * height];
-		this.accumulatedPixelColorRs = new float[width * height];
-		this.currentPixelColorBs = new float[width * height];
-		this.currentPixelColorGs = new float[width * height];
-		this.currentPixelColorRs = new float[width * height];
+		this.accumulatedPixelColors = new float[width * height * 3];
+		this.currentPixelColors = new float[width * height * 3];
 		this.intersections = new float[width * height * SIZE_INTERSECTION];
 		this.rays = new float[width * height * SIZE_RAY];
-		this.temporaryColorBs = new float[width * height];
-		this.temporaryColorGs = new float[width * height];
-		this.temporaryColorRs = new float[width * height];
+		this.temporaryColors = new float[width * height * 3];
 		this.shapesLength = this.shapes.length;
 		this.subSamples = new long[width * height];
 		this.breakPoint = 0.00304F;
@@ -294,14 +282,10 @@ public final class RendererKernel extends AbstractKernel {
 		updateTables();
 		
 		put(this.pixels);
-		put(this.accumulatedPixelColorBs);
-		put(this.accumulatedPixelColorGs);
-		put(this.accumulatedPixelColorRs);
+		put(this.accumulatedPixelColors);
 		put(this.boundingVolumeHierarchy);
 		put(this.cameraArray);
-		put(this.currentPixelColorBs);
-		put(this.currentPixelColorGs);
-		put(this.currentPixelColorRs);
+		put(this.currentPixelColors);
 		put(this.intersections);
 		put(this.matrixRGBToXYZ);
 		put(this.matrixXYZToRGB);
@@ -313,9 +297,7 @@ public final class RendererKernel extends AbstractKernel {
 		put(this.s1XYZ);
 		put(this.s2XYZ);
 		put(this.shapes);
-		put(this.temporaryColorBs);
-		put(this.temporaryColorGs);
-		put(this.temporaryColorRs);
+		put(this.temporaryColors);
 		put(this.textures);
 		put(this.gammaCurve);
 		put(this.gammaCurveReciprocal);
@@ -332,9 +314,11 @@ public final class RendererKernel extends AbstractKernel {
 		
 		for(int i = 0; i < this.subSamples.length; i++) {
 			if(this.isResettingFully) {
-				this.accumulatedPixelColorRs[i] = 0.0F;
-				this.accumulatedPixelColorGs[i] = 0.0F;
-				this.accumulatedPixelColorBs[i] = 0.0F;
+				final int pixelIndex = i * 3;
+				
+				this.accumulatedPixelColors[pixelIndex + 0] = 0.0F;
+				this.accumulatedPixelColors[pixelIndex + 1] = 0.0F;
+				this.accumulatedPixelColors[pixelIndex + 2] = 0.0F;
 				this.subSamples[i] = 0L;
 			} else {
 				this.subSamples[i] = 1L;
@@ -348,9 +332,7 @@ public final class RendererKernel extends AbstractKernel {
 		});
 		
 		if(this.isResettingFully) {
-			put(this.accumulatedPixelColorBs);
-			put(this.accumulatedPixelColorGs);
-			put(this.accumulatedPixelColorRs);
+			put(this.accumulatedPixelColors);
 		}
 		
 		put(this.subSamples);
@@ -399,20 +381,24 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private float doIntersectPlane(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
+		final int offsetSurfaceNormal = shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL;
+		
 //		Retrieve the surface normal of the plane:
-		final float surfaceNormalX = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL];
-		final float surfaceNormalY = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL + 1];
-		final float surfaceNormalZ = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL + 2];
+		final float surfaceNormalX = this.shapes[offsetSurfaceNormal];
+		final float surfaceNormalY = this.shapes[offsetSurfaceNormal + 1];
+		final float surfaceNormalZ = this.shapes[offsetSurfaceNormal + 2];
 		
 //		Calculate the dot product between the surface normal and the ray direction:
 		final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
 		
 //		TODO: Write explanation!
 		if(dotProduct < 0.0F || dotProduct > 0.0F) {
+			final int offsetA = shapesOffset + Plane.RELATIVE_OFFSET_A;
+			
 //			TODO: Write explanation!
-			final float aX = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_A];
-			final float aY = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_A + 1];
-			final float aZ = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_A + 2];
+			final float aX = this.shapes[offsetA];
+			final float aY = this.shapes[offsetA + 1];
+			final float aZ = this.shapes[offsetA + 2];
 			
 //			TODO: Write explanation!
 			final float distance = ((aX - originX) * surfaceNormalX + (aY - originY) * surfaceNormalY + (aZ - originZ) * surfaceNormalZ) / dotProduct;
@@ -427,10 +413,12 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private float doIntersectSphere(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
+		final int offsetPosition = shapesOffset + Sphere.RELATIVE_OFFSET_POSITION;
+		
 //		TODO: Write explanation!
-		final float positionX = this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION];
-		final float positionY = this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION + 1];
-		final float positionZ = this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION + 2];
+		final float positionX = this.shapes[offsetPosition];
+		final float positionY = this.shapes[offsetPosition + 1];
+		final float positionZ = this.shapes[offsetPosition + 2];
 		
 //		TODO: Write explanation!
 		final float radius = this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_RADIUS];
@@ -472,20 +460,24 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private float doIntersectTriangle(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
+		final int offsetA = shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A;
+		final int offsetB = shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B;
+		final int offsetC = shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C;
+		
 //		Retrieve point A of the triangle:
-		final float aX = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A];
-		final float aY = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A + 1];
-		final float aZ = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A + 2];
+		final float aX = this.shapes[offsetA];
+		final float aY = this.shapes[offsetA + 1];
+		final float aZ = this.shapes[offsetA + 2];
 		
 //		Retrieve point B of the triangle:
-		final float bX = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B];
-		final float bY = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B + 1];
-		final float bZ = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B + 2];
+		final float bX = this.shapes[offsetB];
+		final float bY = this.shapes[offsetB + 1];
+		final float bZ = this.shapes[offsetB + 2];
 		
 //		Retrieve point C of the triangle:
-		final float cX = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C];
-		final float cY = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C + 1];
-		final float cZ = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C + 2];
+		final float cX = this.shapes[offsetC];
+		final float cY = this.shapes[offsetC + 1];
+		final float cZ = this.shapes[offsetC + 2];
 		
 //		Calculate the first edge between the points A and B:
 		final float edge0X = bX - aX;
@@ -638,17 +630,19 @@ public final class RendererKernel extends AbstractKernel {
 //		Retrieve the offset to the pixels array:
 		final int pixelsOffset = pixelIndex * SIZE_PIXEL;
 		
+		final int pixelIndex0 = pixelIndex * 3;
+		
 		final float subSample = this.subSamples[pixelIndex];
 		
 //		Multiply the 'normalized' accumulated pixel color component values with the current sub-sample count:
-		this.accumulatedPixelColorRs[pixelIndex] *= subSample;
-		this.accumulatedPixelColorGs[pixelIndex] *= subSample;
-		this.accumulatedPixelColorBs[pixelIndex] *= subSample;
+		this.accumulatedPixelColors[pixelIndex0] *= subSample;
+		this.accumulatedPixelColors[pixelIndex0 + 1] *= subSample;
+		this.accumulatedPixelColors[pixelIndex0 + 2] *= subSample;
 		
 //		Add the current pixel color component values to the accumulated pixel color component values:
-		this.accumulatedPixelColorRs[pixelIndex] += this.currentPixelColorRs[pixelIndex];
-		this.accumulatedPixelColorGs[pixelIndex] += this.currentPixelColorGs[pixelIndex];
-		this.accumulatedPixelColorBs[pixelIndex] += this.currentPixelColorBs[pixelIndex];
+		this.accumulatedPixelColors[pixelIndex0] += this.currentPixelColors[pixelIndex0];
+		this.accumulatedPixelColors[pixelIndex0 + 1] += this.currentPixelColors[pixelIndex0 + 1];
+		this.accumulatedPixelColors[pixelIndex0 + 2] += this.currentPixelColors[pixelIndex0 + 2];
 		
 //		Increment the current sub-sample count by one:
 		this.subSamples[pixelIndex] += 1;
@@ -658,14 +652,14 @@ public final class RendererKernel extends AbstractKernel {
 		final float currentSubSamplesReciprocal = 1.0F / currentSubSamples;
 		
 //		Multiply the accumulated pixel color component values with the reciprocal of the current sub-sample count to 'normalize' it:
-		this.accumulatedPixelColorRs[pixelIndex] *= currentSubSamplesReciprocal;
-		this.accumulatedPixelColorGs[pixelIndex] *= currentSubSamplesReciprocal;
-		this.accumulatedPixelColorBs[pixelIndex] *= currentSubSamplesReciprocal;
+		this.accumulatedPixelColors[pixelIndex0] *= currentSubSamplesReciprocal;
+		this.accumulatedPixelColors[pixelIndex0 + 1] *= currentSubSamplesReciprocal;
+		this.accumulatedPixelColors[pixelIndex0 + 2] *= currentSubSamplesReciprocal;
 		
 //		Retrieve the 'normalized' accumulated pixel color component values again:
-		float r = this.accumulatedPixelColorRs[pixelIndex];
-		float g = this.accumulatedPixelColorGs[pixelIndex];
-		float b = this.accumulatedPixelColorBs[pixelIndex];
+		float r = this.accumulatedPixelColors[pixelIndex0];
+		float g = this.accumulatedPixelColors[pixelIndex0 + 1];
+		float b = this.accumulatedPixelColors[pixelIndex0 + 2];
 		
 //		Calculate the maximum component value of the 'normalized' accumulated pixel color component values:
 		final float maximumComponentValue = max(r, max(g, b));
@@ -715,7 +709,7 @@ public final class RendererKernel extends AbstractKernel {
 		final float z1 = max(z0, 0.001F);
 		
 //		TODO: Write explanation!
-		final float lengthReciprocal = sqrtReciprocal(x1 * x1 + y1 * y1 + z1 * z1);
+		final float lengthReciprocal = rsqrt(x1 * x1 + y1 * y1 + z1 * z1);
 		
 //		TODO: Write explanation!
 		final float x2 = x1 * lengthReciprocal;
@@ -806,10 +800,12 @@ public final class RendererKernel extends AbstractKernel {
 		final float g = this.matrixRGBToXYZ[3] * x4 + this.matrixRGBToXYZ[4] * y4 + this.matrixRGBToXYZ[5] * z4;
 		final float b = this.matrixRGBToXYZ[6] * x4 + this.matrixRGBToXYZ[7] * y4 + this.matrixRGBToXYZ[8] * z4;
 		
+		final int pixelIndex0 = pixelIndex * 3;
+		
 //		TODO: Write explanation!
-		this.temporaryColorRs[pixelIndex] = r;
-		this.temporaryColorGs[pixelIndex] = g;
-		this.temporaryColorBs[pixelIndex] = b;
+		this.temporaryColors[pixelIndex0] = r;
+		this.temporaryColors[pixelIndex0 + 1] = g;
+		this.temporaryColors[pixelIndex0 + 2] = b;
 	}
 	
 	private void doCalculateSurfaceProperties(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int intersectionsOffset, final int shapesOffset) {
@@ -834,25 +830,30 @@ public final class RendererKernel extends AbstractKernel {
 		final float surfaceIntersectionPointY = originY + directionY * distance;
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
+		final int offsetA = shapesOffset + Plane.RELATIVE_OFFSET_A;
+		final int offsetB = shapesOffset + Plane.RELATIVE_OFFSET_B;
+		final int offsetC = shapesOffset + Plane.RELATIVE_OFFSET_C;
+		final int offsetSurfaceNormal = shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL;
+		
 //		Retrieve the point A of the plane:
-		final float a0X = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_A];
-		final float a0Y = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_A + 1];
-		final float a0Z = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_A + 2];
+		final float a0X = this.shapes[offsetA];
+		final float a0Y = this.shapes[offsetA + 1];
+		final float a0Z = this.shapes[offsetA + 2];
 		
 //		Retrieve the point B of the plane:
-		final float b0X = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_B];
-		final float b0Y = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_B + 1];
-		final float b0Z = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_B + 2];
+		final float b0X = this.shapes[offsetB];
+		final float b0Y = this.shapes[offsetB + 1];
+		final float b0Z = this.shapes[offsetB + 2];
 		
 //		Retrieve the point C of the plane:
-		final float c0X = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_C];
-		final float c0Y = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_C + 1];
-		final float c0Z = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_C + 2];
+		final float c0X = this.shapes[offsetC];
+		final float c0Y = this.shapes[offsetC + 1];
+		final float c0Z = this.shapes[offsetC + 2];
 		
 //		Retrieve the surface normal:
-		final float surfaceNormalX = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL];
-		final float surfaceNormalY = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL + 1];
-		final float surfaceNormalZ = this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL + 2];
+		final float surfaceNormalX = this.shapes[offsetSurfaceNormal];
+		final float surfaceNormalY = this.shapes[offsetSurfaceNormal + 1];
+		final float surfaceNormalZ = this.shapes[offsetSurfaceNormal + 2];
 		
 //		TODO: Write explanation!
 		final float absSurfaceNormalX = abs(surfaceNormalX);
@@ -893,17 +894,21 @@ public final class RendererKernel extends AbstractKernel {
 		final float u = hU * bNU + hV * bNV + bND;
 		final float v = hU * cNU + hV * cNV + cND;
 		
+		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		
 //		Update the intersections array:
 		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = distance;
 		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = shapesOffset;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT] = surfaceIntersectionPointX;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 1] = surfaceIntersectionPointY;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 2] = surfaceIntersectionPointZ;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL] = surfaceNormalX;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1] = surfaceNormalY;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2] = surfaceNormalZ;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES] = u;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES + 1] = v;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint] = surfaceIntersectionPointX;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointY;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZ;
+		this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormalX;
+		this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormalY;
+		this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormalZ;
+		this.intersections[offsetIntersectionUVCoordinates] = u;
+		this.intersections[offsetIntersectionUVCoordinates + 1] = v;
 	}
 	
 	private void doCalculateSurfacePropertiesForSphere(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int intersectionsOffset, final int shapesOffset) {
@@ -912,37 +917,47 @@ public final class RendererKernel extends AbstractKernel {
 		final float surfaceIntersectionPointY = originY + directionY * distance;
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
+		final int offsetPosition = shapesOffset + Sphere.RELATIVE_OFFSET_POSITION;
+		
+		final float x = this.shapes[offsetPosition];
+		final float y = this.shapes[offsetPosition + 1];
+		final float z = this.shapes[offsetPosition + 2];
+		
 //		Calculate the surface normal:
-		final float surfaceNormal0X = surfaceIntersectionPointX - this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION];
-		final float surfaceNormal0Y = surfaceIntersectionPointY - this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION + 1];
-		final float surfaceNormal0Z = surfaceIntersectionPointZ - this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION + 2];
-		final float lengthReciprocal = 1.0F / sqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
+		final float surfaceNormal0X = surfaceIntersectionPointX - x;
+		final float surfaceNormal0Y = surfaceIntersectionPointY - y;
+		final float surfaceNormal0Z = surfaceIntersectionPointZ - z;
+		final float lengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
 		final float surfaceNormal1X = surfaceNormal0X * lengthReciprocal;
 		final float surfaceNormal1Y = surfaceNormal0Y * lengthReciprocal;
 		final float surfaceNormal1Z = surfaceNormal0Z * lengthReciprocal;
 		
 //		Calculate the UV-coordinates:
-		final float direction0X = this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION] - surfaceIntersectionPointX;
-		final float direction0Y = this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION + 1] - surfaceIntersectionPointY;
-		final float direction0Z = this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION + 2] - surfaceIntersectionPointZ;
-		final float direction0LengthReciprocal = 1.0F / sqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+		final float direction0X = x - surfaceIntersectionPointX;
+		final float direction0Y = y - surfaceIntersectionPointY;
+		final float direction0Z = z - surfaceIntersectionPointZ;
+		final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
 		final float direction1X = direction0X * direction0LengthReciprocal;
 		final float direction1Y = direction0Y * direction0LengthReciprocal;
 		final float direction1Z = direction0Z * direction0LengthReciprocal;
 		final float u = 0.5F + atan2(direction1Z, direction1X) * PI_MULTIPLIED_BY_TWO_RECIPROCAL;
 		final float v = 0.5F - asin(direction1Y) * PI_RECIPROCAL;
 		
+		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		
 //		Update the intersections array:
 		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = distance;
 		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = shapesOffset;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT] = surfaceIntersectionPointX;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 1] = surfaceIntersectionPointY;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 2] = surfaceIntersectionPointZ;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL] = surfaceNormal1X;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1] = surfaceNormal1Y;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2] = surfaceNormal1Z;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES] = u;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES + 1] = v;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint] = surfaceIntersectionPointX;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointY;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZ;
+		this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
+		this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
+		this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
+		this.intersections[offsetIntersectionUVCoordinates] = u;
+		this.intersections[offsetIntersectionUVCoordinates + 1] = v;
 	}
 	
 	private void doCalculateSurfacePropertiesForTriangle(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int intersectionsOffset, final int shapesOffset) {
@@ -951,16 +966,24 @@ public final class RendererKernel extends AbstractKernel {
 		final float surfaceIntersectionPointY = originY + directionY * distance;
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
+		final int offsetA = shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A;
+		final int offsetB = shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B;
+		final int offsetC = shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C;
+		final int offsetUVA = shapesOffset + Triangle.RELATIVE_OFFSET_UV_A;
+		final int offsetUVB = shapesOffset + Triangle.RELATIVE_OFFSET_UV_B;
+		final int offsetUVC = shapesOffset + Triangle.RELATIVE_OFFSET_UV_C;
+		final int offsetSurfaceNormalA = shapesOffset + Triangle.RELATIVE_OFFSET_SURFACE_NORMAL_A;
+		
 //		Calculate the Barycentric-coordinates:
-		final float aX = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A];
-		final float aY = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A + 1];
-		final float aZ = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A + 2];
-		final float bX = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B];
-		final float bY = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B + 1];
-		final float bZ = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B + 2];
-		final float cX = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C];
-		final float cY = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C + 1];
-		final float cZ = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C + 2];
+		final float aX = this.shapes[offsetA];
+		final float aY = this.shapes[offsetA + 1];
+		final float aZ = this.shapes[offsetA + 2];
+		final float bX = this.shapes[offsetB];
+		final float bY = this.shapes[offsetB + 1];
+		final float bZ = this.shapes[offsetB + 2];
+		final float cX = this.shapes[offsetC];
+		final float cY = this.shapes[offsetC + 1];
+		final float cZ = this.shapes[offsetC + 2];
 		final float edge0X = bX - aX;
 		final float edge0Y = bY - aY;
 		final float edge0Z = bZ - aZ;
@@ -983,23 +1006,23 @@ public final class RendererKernel extends AbstractKernel {
 		final float w = 1.0F - u0 - v0;
 		
 //		Calculate the UV-coordinates:
-		final float aU = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_A];
-		final float aV = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_A + 1];
-		final float bU = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_B];
-		final float bV = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_B + 1];
-		final float cU = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_C];
-		final float cV = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_C + 1];
+		final float aU = this.shapes[offsetUVA];
+		final float aV = this.shapes[offsetUVA + 1];
+		final float bU = this.shapes[offsetUVB];
+		final float bV = this.shapes[offsetUVB + 1];
+		final float cU = this.shapes[offsetUVC];
+		final float cV = this.shapes[offsetUVC + 1];
 		final float u1 = w * aU + u0 * bU + v0 * cU;
 		final float v1 = w * aV + u0 * bV + v0 * cV;
 		
 //		Calculate the surface normal:
-		final float surfaceNormalAX = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_SURFACE_NORMAL_A];
-		final float surfaceNormalAY = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_SURFACE_NORMAL_A + 1];
-		final float surfaceNormalAZ = this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_SURFACE_NORMAL_A + 2];
+		final float surfaceNormalAX = this.shapes[offsetSurfaceNormalA];
+		final float surfaceNormalAY = this.shapes[offsetSurfaceNormalA + 1];
+		final float surfaceNormalAZ = this.shapes[offsetSurfaceNormalA + 2];
 		final float surfaceNormal0X = edge0Y * edge1Z - edge0Z * edge1Y;
 		final float surfaceNormal0Y = edge0Z * edge1X - edge0X * edge1Z;
 		final float surfaceNormal0Z = edge0X * edge1Y - edge0Y * edge1X;
-		final float surfaceNormal0LengthReciprocal = sqrtReciprocal(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);//1.0F / sqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
+		final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);//1.0F / sqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
 		final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
 		final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
 		final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
@@ -1008,17 +1031,21 @@ public final class RendererKernel extends AbstractKernel {
 		final float surfaceNormal2Y = dotProduct < 0.0F ? -surfaceNormal1Y : surfaceNormal1Y;
 		final float surfaceNormal2Z = dotProduct < 0.0F ? -surfaceNormal1Z : surfaceNormal1Z;
 		
+		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		
 //		Update the intersections array:
 		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = distance;
 		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = shapesOffset;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT] = surfaceIntersectionPointX;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 1] = surfaceIntersectionPointY;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 2] = surfaceIntersectionPointZ;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL] = surfaceNormal2X;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1] = surfaceNormal2Y;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2] = surfaceNormal2Z;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES] = u1;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES + 1] = v1;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint] = surfaceIntersectionPointX;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointY;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZ;
+		this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal2X;
+		this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal2Y;
+		this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal2Z;
+		this.intersections[offsetIntersectionUVCoordinates] = u1;
+		this.intersections[offsetIntersectionUVCoordinates + 1] = v1;
 	}
 	
 	private void doCalculateTextureColor(final int intersectionsOffset, final int pixelIndex, final int relativeOffsetTextures, final int shapesOffset) {
@@ -1040,19 +1067,23 @@ public final class RendererKernel extends AbstractKernel {
 	
 	@SuppressWarnings("unused")
 	private void doCalculateTextureColorForCheckerboardTexture(final int intersectionsOffset, final int pixelIndex, final int shapesOffset, final int texturesOffset) {
-//		TODO: Write explanation!
-		final float u = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES];
-		final float v = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES + 1];
+		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		final int offsetColor0 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_0;
+		final int offsetColor1 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_1;
 		
 //		TODO: Write explanation!
-		final float color0R = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_0];
-		final float color0G = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_0 + 1];
-		final float color0B = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_0 + 2];
+		final float u = this.intersections[offsetUVCoordinates];
+		final float v = this.intersections[offsetUVCoordinates + 1];
 		
 //		TODO: Write explanation!
-		final float color1R = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_1];
-		final float color1G = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_1 + 1];
-		final float color1B = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_1 + 2];
+		final float color0R = this.textures[offsetColor0];
+		final float color0G = this.textures[offsetColor0 + 1];
+		final float color0B = this.textures[offsetColor0 + 2];
+		
+//		TODO: Write explanation!
+		final float color1R = this.textures[offsetColor1];
+		final float color1G = this.textures[offsetColor1 + 1];
+		final float color1B = this.textures[offsetColor1 + 2];
 		
 //		TODO: Write explanation!
 		final float degrees = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_DEGREES];
@@ -1077,6 +1108,8 @@ public final class RendererKernel extends AbstractKernel {
 		final boolean isDarkV = textureV > 0.5F;
 		final boolean isDark = isDarkU ^ isDarkV;
 		
+		final int pixelIndex0 = pixelIndex * 3;
+		
 		if(color0R == color1R && color0G == color1G && color0B == color1B) {
 //			TODO: Write explanation!
 			final float textureMultiplier = isDark ? 0.8F : 1.2F;
@@ -1087,9 +1120,9 @@ public final class RendererKernel extends AbstractKernel {
 			final float b = color0B * textureMultiplier;
 			
 //			TODO: Write explanation!
-			this.temporaryColorRs[pixelIndex] = r;
-			this.temporaryColorGs[pixelIndex] = g;
-			this.temporaryColorBs[pixelIndex] = b;
+			this.temporaryColors[pixelIndex0] = r;
+			this.temporaryColors[pixelIndex0 + 1] = g;
+			this.temporaryColors[pixelIndex0 + 2] = b;
 		} else {
 //			TODO: Write explanation!
 			final float r = isDark ? color0R : color1R;
@@ -1097,17 +1130,19 @@ public final class RendererKernel extends AbstractKernel {
 			final float b = isDark ? color0B : color1B;
 			
 //			TODO: Write explanation!
-			this.temporaryColorRs[pixelIndex] = r;
-			this.temporaryColorGs[pixelIndex] = g;
-			this.temporaryColorBs[pixelIndex] = b;
+			this.temporaryColors[pixelIndex0] = r;
+			this.temporaryColors[pixelIndex0 + 1] = g;
+			this.temporaryColors[pixelIndex0 + 2] = b;
 		}
 	}
 	
 	@SuppressWarnings("unused")
 	private void doCalculateTextureColorForImageTexture(final int intersectionsOffset, final int pixelIndex, final int shapesOffset, final int texturesOffset) {
+		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		
 //		TODO: Write explanation!
-		final float u = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES];
-		final float v = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES + 1];
+		final float u = this.intersections[offsetUVCoordinates];
+		final float v = this.intersections[offsetUVCoordinates + 1];
 		
 //		TODO: Write explanation!
 		final float degrees = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_DEGREES];
@@ -1148,23 +1183,29 @@ public final class RendererKernel extends AbstractKernel {
 		final float g = ((rGB >> 8) & 0xFF) * MAXIMUM_COLOR_COMPONENT_RECIPROCAL;
 		final float b = (rGB & 0xFF) * MAXIMUM_COLOR_COMPONENT_RECIPROCAL;
 		
+		final int pixelIndex0 = pixelIndex * 3;
+		
 //		TODO: Write explanation!
-		this.temporaryColorRs[pixelIndex] = r;
-		this.temporaryColorGs[pixelIndex] = g;
-		this.temporaryColorBs[pixelIndex] = b;
+		this.temporaryColors[pixelIndex0] = r;
+		this.temporaryColors[pixelIndex0 + 1] = g;
+		this.temporaryColors[pixelIndex0 + 2] = b;
 	}
 	
 	@SuppressWarnings("unused")
 	private void doCalculateTextureColorForSolidTexture(final int intersectionsOffset, final int pixelIndex, final int shapesOffset, final int texturesOffset) {
-//		TODO: Write explanation!
-		final float r = this.textures[texturesOffset + SolidTexture.RELATIVE_OFFSET_COLOR];
-		final float g = this.textures[texturesOffset + SolidTexture.RELATIVE_OFFSET_COLOR + 1];
-		final float b = this.textures[texturesOffset + SolidTexture.RELATIVE_OFFSET_COLOR + 2];
+		final int offsetColor0 = texturesOffset + SolidTexture.RELATIVE_OFFSET_COLOR;
 		
 //		TODO: Write explanation!
-		this.temporaryColorRs[pixelIndex] = r;
-		this.temporaryColorGs[pixelIndex] = g;
-		this.temporaryColorBs[pixelIndex] = b;
+		final float r = this.textures[offsetColor0];
+		final float g = this.textures[offsetColor0 + 1];
+		final float b = this.textures[offsetColor0 + 2];
+		
+		final int pixelIndex0 = pixelIndex * 3;
+		
+//		TODO: Write explanation!
+		this.temporaryColors[pixelIndex0] = r;
+		this.temporaryColors[pixelIndex0 + 1] = g;
+		this.temporaryColors[pixelIndex0 + 2] = b;
 	}
 	
 	private void doCreatePrimaryRay(final int pixelIndex) {
@@ -1181,7 +1222,7 @@ public final class RendererKernel extends AbstractKernel {
 		final float up0X = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_UP];
 		final float up0Y = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_UP + 1];
 		final float up0Z = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_UP + 2];
-		final float up0LengthReciprocal = sqrtReciprocal(up0X * up0X + up0Y * up0Y + up0Z * up0Z);//1.0F / sqrt(up0X * up0X + up0Y * up0Y + up0Z * up0Z);
+		final float up0LengthReciprocal = rsqrt(up0X * up0X + up0Y * up0Y + up0Z * up0Z);
 		final float up1X = up0X * up0LengthReciprocal;
 		final float up1Y = up0Y * up0LengthReciprocal;
 		final float up1Z = up0Z * up0LengthReciprocal;
@@ -1190,7 +1231,7 @@ public final class RendererKernel extends AbstractKernel {
 		final float w0X = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W];
 		final float w0Y = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 1];
 		final float w0Z = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 2];
-		final float w0LengthReciprocal = sqrtReciprocal(w0X * w0X + w0Y * w0Y + w0Z * w0Z);//1.0F / sqrt(w0X * w0X + w0Y * w0Y + w0Z * w0Z);
+		final float w0LengthReciprocal = rsqrt(w0X * w0X + w0Y * w0Y + w0Z * w0Z);
 		final float w1X = w0X * w0LengthReciprocal;
 		final float w1Y = w0Y * w0LengthReciprocal;
 		final float w1Z = w0Z * w0LengthReciprocal;
@@ -1199,7 +1240,7 @@ public final class RendererKernel extends AbstractKernel {
 		final float u0X = w1Y * up1Z - w1Z * up1Y;
 		final float u0Y = w1Z * up1X - w1X * up1Z;
 		final float u0Z = w1X * up1Y - w1Y * up1X;
-		final float u0LengthReciprocal = sqrtReciprocal(u0X * u0X + u0Y * u0Y + u0Z * u0Z);//1.0F / sqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
+		final float u0LengthReciprocal = rsqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
 		final float u1X = u0X * u0LengthReciprocal;
 		final float u1Y = u0Y * u0LengthReciprocal;
 		final float u1Z = u0Z * u0LengthReciprocal;
@@ -1208,7 +1249,7 @@ public final class RendererKernel extends AbstractKernel {
 		final float v0X = u1Y * w1Z - u1Z * w1Y;
 		final float v0Y = u1Z * w1X - u1X * w1Z;
 		final float v0Z = u1X * w1Y - u1Y * w1X;
-		final float u1LengthReciprocal = sqrtReciprocal(v0X * v0X + v0Y * v0Y + v0Z * v0Z);//1.0F / sqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
+		final float u1LengthReciprocal = rsqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
 		final float v1X = v0X * u1LengthReciprocal;
 		final float v1Y = v0Y * u1LengthReciprocal;
 		final float v1Z = v0Z * u1LengthReciprocal;
@@ -1242,10 +1283,13 @@ public final class RendererKernel extends AbstractKernel {
 		final float sx = (jitterX + x) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION] - 1.0F);
 		final float sy = (jitterY + y) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION + 1] - 1.0F);
 		
+		final float sx0 = (2.0F * sx - 1.0F);
+		final float sy0 = (2.0F * sy - 1.0F);
+		
 //		TODO: Write explanation!
-		final float pointOnPlaneOneUnitAwayFromEyeX = middleX + (horizontalX * (2.0F * sx - 1.0F)) + (verticalX * (2.0F * sy - 1.0F));
-		final float pointOnPlaneOneUnitAwayFromEyeY = middleY + (horizontalY * (2.0F * sx - 1.0F)) + (verticalY * (2.0F * sy - 1.0F));
-		final float pointOnPlaneOneUnitAwayFromEyeZ = middleZ + (horizontalZ * (2.0F * sx - 1.0F)) + (verticalZ * (2.0F * sy - 1.0F));
+		final float pointOnPlaneOneUnitAwayFromEyeX = middleX + (horizontalX * sx0) + (verticalX * sy0);
+		final float pointOnPlaneOneUnitAwayFromEyeY = middleY + (horizontalY * sx0) + (verticalY * sy0);
+		final float pointOnPlaneOneUnitAwayFromEyeZ = middleZ + (horizontalZ * sx0) + (verticalZ * sy0);
 		
 //		TODO: Write explanation!
 		final float focalDistance = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE];
@@ -1291,7 +1335,7 @@ public final class RendererKernel extends AbstractKernel {
 		final float apertureToImagePlane0Z = pointOnImagePlaneZ - aperturePointZ;
 		
 //		TODO: Write explanation!
-		final float apertureToImagePlane0LengthReciprocal = sqrtReciprocal(apertureToImagePlane0X * apertureToImagePlane0X + apertureToImagePlane0Y * apertureToImagePlane0Y + apertureToImagePlane0Z * apertureToImagePlane0Z);//1.0F / sqrt(apertureToImagePlane0X * apertureToImagePlane0X + apertureToImagePlane0Y * apertureToImagePlane0Y + apertureToImagePlane0Z * apertureToImagePlane0Z);
+		final float apertureToImagePlane0LengthReciprocal = rsqrt(apertureToImagePlane0X * apertureToImagePlane0X + apertureToImagePlane0Y * apertureToImagePlane0Y + apertureToImagePlane0Z * apertureToImagePlane0Z);
 		
 //		TODO: Write explanation!
 		final float apertureToImagePlane1X = apertureToImagePlane0X * apertureToImagePlane0LengthReciprocal;
@@ -1324,15 +1368,18 @@ public final class RendererKernel extends AbstractKernel {
 //		Initialize the current depth:
 		int depthCurrent = 0;
 		
+		final int offsetOrigin = raysOffset + RELATIVE_OFFSET_RAY_ORIGIN;
+		final int offsetDirection = raysOffset + RELATIVE_OFFSET_RAY_DIRECTION;
+		
 //		Initialize the origin from the primary ray:
-		float originX = rays[raysOffset + RELATIVE_OFFSET_RAY_ORIGIN];
-		float originY = rays[raysOffset + RELATIVE_OFFSET_RAY_ORIGIN + 1];
-		float originZ = rays[raysOffset + RELATIVE_OFFSET_RAY_ORIGIN + 2];
+		float originX = rays[offsetOrigin];
+		float originY = rays[offsetOrigin + 1];
+		float originZ = rays[offsetOrigin + 2];
 		
 //		Initialize the direction from the primary ray:
-		float directionX = rays[raysOffset + RELATIVE_OFFSET_RAY_DIRECTION];
-		float directionY = rays[raysOffset + RELATIVE_OFFSET_RAY_DIRECTION + 1];
-		float directionZ = rays[raysOffset + RELATIVE_OFFSET_RAY_DIRECTION + 2];
+		float directionX = rays[offsetDirection];
+		float directionY = rays[offsetDirection + 1];
+		float directionZ = rays[offsetDirection + 2];
 		
 //		Initialize the pixel color to black:
 		float pixelColorR = 0.0F;
@@ -1343,6 +1390,8 @@ public final class RendererKernel extends AbstractKernel {
 		float radianceMultiplierR = 1.0F;
 		float radianceMultiplierG = 1.0F;
 		float radianceMultiplierB = 1.0F;
+		
+		final int pixelIndex0 = pixelIndex * 3;
 		
 //		Run the following while-loop as long as the current depth is less than the maximum depth:
 		while(depthCurrent < depthMaximum) {
@@ -1361,40 +1410,45 @@ public final class RendererKernel extends AbstractKernel {
 				doCalculateColorForSky(pixelIndex, directionX, directionY, directionZ);
 				
 //				Add the color for the sky to the current pixel color:
-				pixelColorR += radianceMultiplierR * this.temporaryColorRs[pixelIndex];
-				pixelColorG += radianceMultiplierG * this.temporaryColorGs[pixelIndex];
-				pixelColorB += radianceMultiplierB * this.temporaryColorBs[pixelIndex];
+				pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
+				pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
+				pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
 				
 //				Update the current pixel color:
-				this.currentPixelColorRs[pixelIndex] = max(min(pixelColorR, 255.0F), 0.0F);
-				this.currentPixelColorGs[pixelIndex] = max(min(pixelColorG, 255.0F), 0.0F);
-				this.currentPixelColorBs[pixelIndex] = max(min(pixelColorB, 255.0F), 0.0F);
+				this.currentPixelColors[pixelIndex0] = max(min(pixelColorR, 255.0F), 0.0F);
+				this.currentPixelColors[pixelIndex0 + 1] = max(min(pixelColorG, 255.0F), 0.0F);
+				this.currentPixelColors[pixelIndex0 + 2] = max(min(pixelColorB, 255.0F), 0.0F);
 				
 				return;
 			}
 			
+			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+			final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+			
 //			Retrieve the surface intersection point:
-			final float surfaceIntersectionPointX = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT];
-			final float surfaceIntersectionPointY = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 1];
-			final float surfaceIntersectionPointZ = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 2];
+			final float surfaceIntersectionPointX = intersections[offsetIntersectionSurfaceIntersectionPoint];
+			final float surfaceIntersectionPointY = intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
+			final float surfaceIntersectionPointZ = intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
 			
 //			Retrieve the surface normal:
-			final float surfaceNormal0X = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL];
-			final float surfaceNormal0Y = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1];
-			final float surfaceNormal0Z = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2];
+			final float surfaceNormalX = intersections[offsetIntersectionSurfaceNormal];
+			final float surfaceNormalY = intersections[offsetIntersectionSurfaceNormal + 1];
+			final float surfaceNormalZ = intersections[offsetIntersectionSurfaceNormal + 2];
 			
 //			Calculate the albedo texture color for the intersected shape:
 			doCalculateTextureColor(intersectionsOffset, pixelIndex, Shape.RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
 			
 //			Get the color of the shape from the albedo texture color that was looked up:
-			float albedoColorR = this.temporaryColorRs[pixelIndex];
-			float albedoColorG = this.temporaryColorGs[pixelIndex];
-			float albedoColorB = this.temporaryColorBs[pixelIndex];
+			float albedoColorR = this.temporaryColors[pixelIndex0];
+			float albedoColorG = this.temporaryColors[pixelIndex0 + 1];
+			float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
+			
+			final int offsetEmission = shapesOffset + Shape.RELATIVE_OFFSET_EMISSION;
 			
 //			Retrieve the emission from the intersected shape:
-			final float emissionR = this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_EMISSION];
-			final float emissionG = this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_EMISSION + 1];
-			final float emissionB = this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_EMISSION + 2];
+			final float emissionR = this.shapes[offsetEmission];
+			final float emissionG = this.shapes[offsetEmission + 1];
+			final float emissionB = this.shapes[offsetEmission + 2];
 			
 //			Add the current radiance multiplied by the emission of the intersected shape to the current pixel color:
 			pixelColorR += radianceMultiplierR * emissionR;
@@ -1418,14 +1472,14 @@ public final class RendererKernel extends AbstractKernel {
 					doCalculateColorForSky(pixelIndex, directionX, directionY, directionZ);
 					
 //					Add the color for the sky to the current pixel color:
-					pixelColorR += radianceMultiplierR * this.temporaryColorRs[pixelIndex];
-					pixelColorG += radianceMultiplierG * this.temporaryColorGs[pixelIndex];
-					pixelColorB += radianceMultiplierB * this.temporaryColorBs[pixelIndex];
+					pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
+					pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
+					pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
 					
 //					Update the current pixel color:
-					this.currentPixelColorRs[pixelIndex] = max(min(pixelColorR, 255.0F), 0.0F);
-					this.currentPixelColorGs[pixelIndex] = max(min(pixelColorG, 255.0F), 0.0F);
-					this.currentPixelColorBs[pixelIndex] = max(min(pixelColorB, 255.0F), 0.0F);
+					this.currentPixelColors[pixelIndex0] = max(min(pixelColorR, 255.0F), 0.0F);
+					this.currentPixelColors[pixelIndex0 + 1] = max(min(pixelColorG, 255.0F), 0.0F);
+					this.currentPixelColors[pixelIndex0 + 2] = max(min(pixelColorB, 255.0F), 0.0F);
 					
 					return;
 				}
@@ -1442,18 +1496,19 @@ public final class RendererKernel extends AbstractKernel {
 //			Retrieve the material type of the intersected shape:
 			final int material = (int)(this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_MATERIAL]);
 			
+//			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
+			final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
+			final float dotProductMultipliedByTwo = dotProduct * 2.0F;
+			
+//			Check if the surface normal is correctly oriented:
+			final boolean isCorrectlyOriented = dotProduct < 0.0F;
+			
+//			Retrieve the correctly oriented surface normal:
+			final float correctlyOrientedSurfaceNormalX = isCorrectlyOriented ? surfaceNormalX : -surfaceNormalX;
+			final float correctlyOrientedSurfaceNormalY = isCorrectlyOriented ? surfaceNormalY : -surfaceNormalY;
+			final float correctlyOrientedSurfaceNormalZ = isCorrectlyOriented ? surfaceNormalZ : -surfaceNormalZ;
+			
 			if(material == MATERIAL_CLEAR_COAT) {
-//				Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
-				final float dotProduct = surfaceNormal0X * directionX + surfaceNormal0Y * directionY + surfaceNormal0Z * directionZ;
-				
-//				Check if the surface normal is correctly oriented:
-				final boolean isCorrectlyOriented = dotProduct < 0.0F;
-				
-//				Retrieve the correctly oriented surface normal:
-				final float surfaceNormal1X = isCorrectlyOriented ? surfaceNormal0X : -surfaceNormal0X;
-				final float surfaceNormal1Y = isCorrectlyOriented ? surfaceNormal0Y : -surfaceNormal0Y;
-				final float surfaceNormal1Z = isCorrectlyOriented ? surfaceNormal0Z : -surfaceNormal0Z;
-				
 //				Initialize the two hard-coded refractive indices that will be used:
 				final float refractiveIndex0 = 1.0F;
 				final float refractiveIndex1 = 1.5F;
@@ -1462,15 +1517,15 @@ public final class RendererKernel extends AbstractKernel {
 				final float nnt = refractiveIndex0 / refractiveIndex1;
 				
 //				TODO: Write explanation!
-				final float ddn = surfaceNormal1X * directionX + surfaceNormal1Y * directionY + surfaceNormal1Z * directionZ;
+				final float ddn = correctlyOrientedSurfaceNormalX * directionX + correctlyOrientedSurfaceNormalY * directionY + correctlyOrientedSurfaceNormalZ * directionZ;
 				
 //				TODO: Write explanation!
 				final float cos2t = 1.0F - nnt * nnt * (1.0F - ddn * ddn);
 				
 //				Calculate the reflection direction:
-				final float reflectionDirectionX = directionX - surfaceNormal0X * 2.0F * dotProduct;
-				final float reflectionDirectionY = directionY - surfaceNormal0Y * 2.0F * dotProduct;
-				final float reflectionDirectionZ = directionZ - surfaceNormal0Z * 2.0F * dotProduct;
+				final float reflectionDirectionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
+				final float reflectionDirectionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
+				final float reflectionDirectionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
 				
 //				Initialize the specular color component values to be used:
 				final float specularColorR = 1.0F;
@@ -1484,9 +1539,9 @@ public final class RendererKernel extends AbstractKernel {
 					radianceMultiplierB *= specularColorB;
 					
 //					Calculate the new ray origin:
-					originX = surfaceIntersectionPointX + surfaceNormal1X * 0.02F;
-					originY = surfaceIntersectionPointY + surfaceNormal1Y * 0.02F;
-					originZ = surfaceIntersectionPointZ + surfaceNormal1Z * 0.02F;
+					originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.02F;
+					originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.02F;
+					originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.02F;
 					
 //					Set the new ray direction to the reflection direction:
 					directionX = reflectionDirectionX;
@@ -1540,9 +1595,9 @@ public final class RendererKernel extends AbstractKernel {
 						radianceMultiplierB *= specularColorB;
 						
 //						TODO: Write explanation!
-						originX = surfaceIntersectionPointX + surfaceNormal1X * 0.02F;
-						originY = surfaceIntersectionPointY + surfaceNormal1Y * 0.02F;
-						originZ = surfaceIntersectionPointZ + surfaceNormal1Z * 0.02F;
+						originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.02F;
+						originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.02F;
+						originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.02F;
 						
 //						TODO: Write explanation!
 						directionX = reflectionDirectionX;
@@ -1550,75 +1605,56 @@ public final class RendererKernel extends AbstractKernel {
 						directionZ = reflectionDirectionZ;
 					} else {
 //						TODO: Write explanation!
-						final float wX = isCorrectlyOriented ? surfaceNormal0X : surfaceNormal0X * -1.0F;
-						final float wY = isCorrectlyOriented ? surfaceNormal0Y : surfaceNormal0Y * -1.0F;
-						final float wZ = isCorrectlyOriented ? surfaceNormal0Z : surfaceNormal0Z * -1.0F;
+						final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
+						final float random0Cos = cos(random0);
+						final float random0Sin = sin(random0);
+						final float random1 = nextFloat();
+						final float random1Squared0 = sqrt(random1);
+						final float random1Squared1 = sqrt(1.0F - random1);
 						
 //						TODO: Write explanation!
-						final float wLengthReciprocal = 1.0F / sqrt(wX * wX + wY * wY + wZ * wZ);
+						final float correctlyOrientedSurfaceNormalLengthReciprocal = rsqrt(correctlyOrientedSurfaceNormalX * correctlyOrientedSurfaceNormalX + correctlyOrientedSurfaceNormalY * correctlyOrientedSurfaceNormalY + correctlyOrientedSurfaceNormalZ * correctlyOrientedSurfaceNormalZ);
 						
 //						TODO: Write explanation!
-						final float w0X = wX * wLengthReciprocal;
-						final float w0Y = wY * wLengthReciprocal;
-						final float w0Z = wZ * wLengthReciprocal;
+						final float w0X = correctlyOrientedSurfaceNormalX * correctlyOrientedSurfaceNormalLengthReciprocal;
+						final float w0Y = correctlyOrientedSurfaceNormalY * correctlyOrientedSurfaceNormalLengthReciprocal;
+						final float w0Z = correctlyOrientedSurfaceNormalZ * correctlyOrientedSurfaceNormalLengthReciprocal;
 						
 //						TODO: Write explanation!
 						final boolean isY = abs(w0X) > 0.1F;
 						
 //						TODO: Write explanation!
-						final float x2 = isY ? 0.0F : 1.0F;
-						final float y2 = isY ? 1.0F : 0.0F;
-						final float z2 = 0.0F;
+						final float u0X = isY ? 0.0F : 1.0F;
+						final float u0Y = isY ? 1.0F : 0.0F;
+						final float u0Z = 0.0F;
+						final float u1X = u0Y * w0Z - u0Z * w0Y;
+						final float u1Y = u0Z * w0X - u0X * w0Z;
+						final float u1Z = u0X * w0Y - u0Y * w0X;
+						final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
+						final float u2X = u1X * u1LengthReciprocal;
+						final float u2Y = u1Y * u1LengthReciprocal;
+						final float u2Z = u1Z * u1LengthReciprocal;
 						
 //						TODO: Write explanation!
-						final float x3 = y2 * w0Z - z2 * w0Y;
-						final float y3 = z2 * w0X - x2 * w0Z;
-						final float z3 = x2 * w0Y - y2 * w0X;
+						final float v0X = correctlyOrientedSurfaceNormalY * u2Z - correctlyOrientedSurfaceNormalZ * u2Y;
+						final float v0Y = correctlyOrientedSurfaceNormalZ * u2X - correctlyOrientedSurfaceNormalX * u2Z;
+						final float v0Z = correctlyOrientedSurfaceNormalX * u2Y - correctlyOrientedSurfaceNormalY * u2X;
 						
 //						TODO: Write explanation!
-						final float lengthReciprocal3 = 1.0F / sqrt(x3 * x3 + y3 * y3 + z3 * z3);
+						final float direction0X = u2X * random0Cos * random1Squared0 + v0X * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalX * random1Squared1;
+						final float direction0Y = u2Y * random0Cos * random1Squared0 + v0Y * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalY * random1Squared1;
+						final float direction0Z = u2Z * random0Cos * random1Squared0 + v0Z * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalZ * random1Squared1;
+						final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
 						
 //						TODO: Write explanation!
-						final float uX = x3 * lengthReciprocal3;
-						final float uY = y3 * lengthReciprocal3;
-						final float uZ = z3 * lengthReciprocal3;
+						originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
+						originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
+						originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
 						
 //						TODO: Write explanation!
-						final float vX = wY * uZ - wZ * uY;
-						final float vY = wZ * uX - wX * uZ;
-						final float vZ = wX * uY - wY * uX;
-						
-//						TODO: Write explanation!
-						final float random0 = 2.0F * PI * nextFloat();
-						final float random1 = nextFloat();
-						
-//						TODO: Write explanation!
-						final float random1Squared = sqrt(random1);
-						
-//						TODO: Write explanation!
-						final float cos0 = cos(random0);
-						final float sin0 = sin(random0);
-						
-//						TODO: Write explanation!
-						final float sqrt0 = sqrt(1.0F - random1);
-						
-//						TODO: Write explanation!
-						final float x4 = uX * cos0 * random1Squared + vX * sin0 * random1Squared + wX * sqrt0;
-						final float y4 = uY * cos0 * random1Squared + vY * sin0 * random1Squared + wY * sqrt0;
-						final float z4 = uZ * cos0 * random1Squared + vZ * sin0 * random1Squared + wZ * sqrt0;
-						
-//						TODO: Write explanation!
-						final float lengthReciprocal4 = 1.0F / sqrt(x4 * x4 + y4 * y4 + z4 * z4);
-						
-//						TODO: Write explanation!
-						originX = surfaceIntersectionPointX + wX * 0.01F;
-						originY = surfaceIntersectionPointY + wY * 0.01F;
-						originZ = surfaceIntersectionPointZ + wZ * 0.01F;
-						
-//						TODO: Write explanation!
-						directionX = x4 * lengthReciprocal4;
-						directionY = y4 * lengthReciprocal4;
-						directionZ = z4 * lengthReciprocal4;
+						directionX = direction0X * direction0LengthReciprocal;
+						directionY = direction0Y * direction0LengthReciprocal;
+						directionZ = direction0Z * direction0LengthReciprocal;
 						
 //						TODO: Write explanation!
 						radianceMultiplierR *= albedoColorR;
@@ -1671,78 +1707,53 @@ public final class RendererKernel extends AbstractKernel {
 				doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
 				
 //				TODO: Write explanation!
-				radianceMultiplierR *= this.temporaryColorRs[pixelIndex];
-				radianceMultiplierG *= this.temporaryColorGs[pixelIndex];
-				radianceMultiplierB *= this.temporaryColorBs[pixelIndex];
+				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
+				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
+				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
 			} else if(material == MATERIAL_DIFFUSE) {
 //				TODO: Write explanation!
-				final float random0 = 2.0F * PI * nextFloat();
+				final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
+				final float random0Cos = cos(random0);
+				final float random0Sin = sin(random0);
 				final float random1 = nextFloat();
+				final float random1Squared0 = sqrt(random1);
+				final float random1Squared1 = sqrt(1.0F - random1);
 				
 //				TODO: Write explanation!
-				final float random1Squared = sqrt(random1);
+				final boolean isY = abs(correctlyOrientedSurfaceNormalX) > 0.1F;
 				
 //				TODO: Write explanation!
-				final float dotProduct = surfaceNormal0X * directionX + surfaceNormal0Y * directionY + surfaceNormal0Z * directionZ;
+				final float u0X = isY ? 0.0F : 1.0F;
+				final float u0Y = isY ? 1.0F : 0.0F;
+				final float u0Z = 0.0F;
+				final float u1X = u0Y * correctlyOrientedSurfaceNormalZ - u0Z * correctlyOrientedSurfaceNormalY;
+				final float u1Y = u0Z * correctlyOrientedSurfaceNormalX - u0X * correctlyOrientedSurfaceNormalZ;
+				final float u1Z = u0X * correctlyOrientedSurfaceNormalY - u0Y * correctlyOrientedSurfaceNormalX;
+				final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
+				final float u2X = u1X * u1LengthReciprocal;
+				final float u2Y = u1Y * u1LengthReciprocal;
+				final float u2Z = u1Z * u1LengthReciprocal;
 				
 //				TODO: Write explanation!
-				final boolean isCorrectlyOriented = dotProduct < 0.0F;
+				final float v0X = correctlyOrientedSurfaceNormalY * u2Z - correctlyOrientedSurfaceNormalZ * u2Y;
+				final float v0Y = correctlyOrientedSurfaceNormalZ * u2X - correctlyOrientedSurfaceNormalX * u2Z;
+				final float v0Z = correctlyOrientedSurfaceNormalX * u2Y - correctlyOrientedSurfaceNormalY * u2X;
 				
 //				TODO: Write explanation!
-				final float wX = isCorrectlyOriented ? surfaceNormal0X : surfaceNormal0X * -1.0F;
-				final float wY = isCorrectlyOriented ? surfaceNormal0Y : surfaceNormal0Y * -1.0F;
-				final float wZ = isCorrectlyOriented ? surfaceNormal0Z : surfaceNormal0Z * -1.0F;
+				final float direction0X = u2X * random0Cos * random1Squared0 + v0X * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalX * random1Squared1;
+				final float direction0Y = u2Y * random0Cos * random1Squared0 + v0Y * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalY * random1Squared1;
+				final float direction0Z = u2Z * random0Cos * random1Squared0 + v0Z * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalZ * random1Squared1;
+				final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
 				
 //				TODO: Write explanation!
-				final boolean isY = abs(wX) > 0.1F;
+				originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
+				originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
+				originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
 				
 //				TODO: Write explanation!
-				final float x1 = isY ? 0.0F : 1.0F;
-				final float y1 = isY ? 1.0F : 0.0F;
-				final float z1 = 0.0F;
-				
-//				TODO: Write explanation!
-				final float x2 = y1 * wZ - z1 * wY;
-				final float y2 = z1 * wX - x1 * wZ;
-				final float z2 = x1 * wY - y1 * wX;
-				
-//				TODO: Write explanation!
-				final float lengthReciprocal2 = 1.0F / sqrt(x2 * x2 + y2 * y2 + z2 * z2);
-				
-//				TODO: Write explanation!
-				final float uX = x2 * lengthReciprocal2;
-				final float uY = y2 * lengthReciprocal2;
-				final float uZ = z2 * lengthReciprocal2;
-				
-//				TODO: Write explanation!
-				final float vX = wY * uZ - wZ * uY;
-				final float vY = wZ * uX - wX * uZ;
-				final float vZ = wX * uY - wY * uX;
-				
-//				TODO: Write explanation!
-				final float cos0 = cos(random0);
-				final float sin0 = sin(random0);
-				
-//				TODO: Write explanation!
-				final float sqrt0 = sqrt(1.0F - random1);
-				
-//				TODO: Write explanation!
-				final float x3 = uX * cos0 * random1Squared + vX * sin0 * random1Squared + wX * sqrt0;
-				final float y3 = uY * cos0 * random1Squared + vY * sin0 * random1Squared + wY * sqrt0;
-				final float z3 = uZ * cos0 * random1Squared + vZ * sin0 * random1Squared + wZ * sqrt0;
-				
-//				TODO: Write explanation!
-				final float lengthReciprocal3 = 1.0F / sqrt(x3 * x3 + y3 * y3 + z3 * z3);
-				
-//				TODO: Write explanation!
-				originX = surfaceIntersectionPointX + wX * 0.01F;
-				originY = surfaceIntersectionPointY + wY * 0.01F;
-				originZ = surfaceIntersectionPointZ + wZ * 0.01F;
-				
-//				TODO: Write explanation!
-				directionX = x3 * lengthReciprocal3;
-				directionY = y3 * lengthReciprocal3;
-				directionZ = z3 * lengthReciprocal3;
+				directionX = direction0X * direction0LengthReciprocal;
+				directionY = direction0Y * direction0LengthReciprocal;
+				directionZ = direction0Z * direction0LengthReciprocal;
 				
 //				TODO: Write explanation!
 				radianceMultiplierR *= albedoColorR;
@@ -1773,7 +1784,7 @@ public final class RendererKernel extends AbstractKernel {
 				final float vector2Z = normalX * vector1Y - normalY * vector1X;
 				
 //				TODO: Write explanation!
-				final float phi = nextFloat() * PI_MULTIPLIED_BY_TWO;
+				final float phi = PI_MULTIPLIED_BY_TWO * nextFloat();
 				final float theta = nextFloat();
 				
 //				TODO: Write explanation!
@@ -1793,12 +1804,14 @@ public final class RendererKernel extends AbstractKernel {
 				doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
 				
 //				TODO: Write explanation!
-				radianceMultiplierR *= this.temporaryColorRs[pixelIndex];
-				radianceMultiplierG *= this.temporaryColorGs[pixelIndex];
-				radianceMultiplierB *= this.temporaryColorBs[pixelIndex];
+				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
+				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
+				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
 			} else if(material == MATERIAL_METAL) {
 //				TODO: Write explanation!
-				final float random0 = 2.0F * PI * nextFloat();
+				final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
+				final float random0Cos = cos(random0);
+				final float random0Sin = sin(random0);
 				final float random1 = nextFloat();
 				
 //				TODO: Write explanation!
@@ -1809,20 +1822,13 @@ public final class RendererKernel extends AbstractKernel {
 				final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
 				
 //				TODO: Write explanation!
-				final float dotProduct = surfaceNormal0X * directionX + surfaceNormal0Y * directionY + surfaceNormal0Z * directionZ;
-				
-//				TODO: Write explanation!
-				final float w0X = directionX - surfaceNormal0X * 2.0F * dotProduct;
-				final float w0Y = directionY - surfaceNormal0Y * 2.0F * dotProduct;
-				final float w0Z = directionZ - surfaceNormal0Z * 2.0F * dotProduct;
-				
-//				TODO: Write explanation!
-				final float lengthReciprocal2 = 1.0F / sqrt(w0X * w0X + w0Y * w0Y + w0Z * w0Z);
-				
-//				TODO: Write explanation!
-				final float w1X = w0X * lengthReciprocal2;
-				final float w1Y = w0Y * lengthReciprocal2;
-				final float w1Z = w0Z * lengthReciprocal2;
+				final float w0X = directionX - surfaceNormalX * dotProductMultipliedByTwo;
+				final float w0Y = directionY - surfaceNormalY * dotProductMultipliedByTwo;
+				final float w0Z = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
+				final float w0LengthReciprocal = rsqrt(w0X * w0X + w0Y * w0Y + w0Z * w0Z);
+				final float w1X = w0X * w0LengthReciprocal;
+				final float w1Y = w0Y * w0LengthReciprocal;
+				final float w1Z = w0Z * w0LengthReciprocal;
 				
 //				TODO: Write explanation!
 				final boolean isY = abs(w1X) > 0.1F;
@@ -1831,19 +1837,13 @@ public final class RendererKernel extends AbstractKernel {
 				final float u0X = isY ? 0.0F : 1.0F;
 				final float u0Y = isY ? 1.0F : 0.0F;
 				final float u0Z = 0.0F;
-				
-//				TODO: Write explanation!
 				final float u1X = u0Y * w1Z - u0Z * w1Y;
 				final float u1Y = u0Z * w1X - u0X * w1Z;
 				final float u1Z = u0X * w1Y - u0Y * w1X;
-				
-//				TODO: Write explanation!
-				final float lengthReciprocal3 = 1.0F / sqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
-				
-//				TODO: Write explanation!
-				final float u2X = u1X * lengthReciprocal3;
-				final float u2Y = u1Y * lengthReciprocal3;
-				final float u2Z = u1Z * lengthReciprocal3;
+				final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
+				final float u2X = u1X * u1LengthReciprocal;
+				final float u2Y = u1Y * u1LengthReciprocal;
+				final float u2Z = u1Z * u1LengthReciprocal;
 				
 //				TODO: Write explanation!
 				final float v0X = w1Y * u2Z - w1Z * u2Y;
@@ -1851,16 +1851,10 @@ public final class RendererKernel extends AbstractKernel {
 				final float v0Z = w1X * u2Y - w1Y * u2X;
 				
 //				TODO: Write explanation!
-				final float cosRandom0 = cos(random0);
-				final float sinRandom0 = sin(random0);
-				
-//				TODO: Write explanation!
-				final float direction0X = u2X * cosRandom0 * sinTheta + v0X * sinRandom0 * sinTheta + w1X * cosTheta;
-				final float direction0Y = u2Y * cosRandom0 * sinTheta + v0Y * sinRandom0 * sinTheta + w1Y * cosTheta;
-				final float direction0Z = u2Z * cosRandom0 * sinTheta + v0Z * sinRandom0 * sinTheta + w1Z * cosTheta;
-				
-//				TODO: Write explanation!
-				final float lengthReciprocal4 = 1.0F / sqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+				final float direction0X = u2X * random0Cos * sinTheta + v0X * random0Sin * sinTheta + w1X * cosTheta;
+				final float direction0Y = u2Y * random0Cos * sinTheta + v0Y * random0Sin * sinTheta + w1Y * cosTheta;
+				final float direction0Z = u2Z * random0Cos * sinTheta + v0Z * random0Sin * sinTheta + w1Z * cosTheta;
+				final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
 				
 //				TODO: Write explanation!
 				originX = surfaceIntersectionPointX + w1X * 0.01F;
@@ -1868,9 +1862,9 @@ public final class RendererKernel extends AbstractKernel {
 				originZ = surfaceIntersectionPointZ + w1Z * 0.01F;
 				
 //				TODO: Write explanation!
-				directionX = direction0X * lengthReciprocal4;
-				directionY = direction0Y * lengthReciprocal4;
-				directionZ = direction0Z * lengthReciprocal4;
+				directionX = direction0X * direction0LengthReciprocal;
+				directionY = direction0Y * direction0LengthReciprocal;
+				directionZ = direction0Z * direction0LengthReciprocal;
 				
 //				TODO: Write explanation!
 				radianceMultiplierR *= albedoColorR;
@@ -1901,7 +1895,7 @@ public final class RendererKernel extends AbstractKernel {
 				final float vector2Z = normalX * vector1Y - normalY * vector1X;
 				
 //				TODO: Write explanation!
-				final float phi = nextFloat() * PI_MULTIPLIED_BY_TWO;
+				final float phi = PI_MULTIPLIED_BY_TWO * nextFloat();
 				final float theta = nextFloat();
 				
 //				TODO: Write explanation!
@@ -1921,23 +1915,12 @@ public final class RendererKernel extends AbstractKernel {
 				doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
 				
 //				TODO: Write explanation!
-				radianceMultiplierR *= this.temporaryColorRs[pixelIndex];
-				radianceMultiplierG *= this.temporaryColorGs[pixelIndex];
-				radianceMultiplierB *= this.temporaryColorBs[pixelIndex];
+				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
+				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
+				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
 			} else if(material == MATERIAL_REFRACTIVE) {
 //				TODO: Write explanation!
-				final float dotProduct = surfaceNormal0X * directionX + surfaceNormal0Y * directionY + surfaceNormal0Z * directionZ;
-				
-//				TODO: Write explanation!
-				final boolean isCorrectlyOriented = dotProduct < 0.0F;
-				
-//				TODO: Write explanation!
-				final float surfaceNormal1X = isCorrectlyOriented ? surfaceNormal0X : -surfaceNormal0X;
-				final float surfaceNormal1Y = isCorrectlyOriented ? surfaceNormal0Y : -surfaceNormal0Y;
-				final float surfaceNormal1Z = isCorrectlyOriented ? surfaceNormal0Z : -surfaceNormal0Z;
-				
-//				TODO: Write explanation!
-				final boolean isGoingIn = surfaceNormal0X * surfaceNormal1X + surfaceNormal0Y * surfaceNormal1Y + surfaceNormal0Z * surfaceNormal1Z > 0.0F;
+				final boolean isGoingIn = surfaceNormalX * correctlyOrientedSurfaceNormalX + surfaceNormalY * correctlyOrientedSurfaceNormalY + surfaceNormalZ * correctlyOrientedSurfaceNormalZ > 0.0F;
 				
 //				TODO: Write explanation!
 				final float refractiveIndex0 = 1.0F;
@@ -1947,21 +1930,21 @@ public final class RendererKernel extends AbstractKernel {
 				final float nnt = isGoingIn ? refractiveIndex0 / refractiveIndex1 : refractiveIndex1 / refractiveIndex0;
 				
 //				TODO: Write explanation!
-				final float ddn = surfaceNormal1X * directionX + surfaceNormal1Y * directionY + surfaceNormal1Z * directionZ;
+				final float ddn = correctlyOrientedSurfaceNormalX * directionX + correctlyOrientedSurfaceNormalY * directionY + correctlyOrientedSurfaceNormalZ * directionZ;
 				
 //				TODO: Write explanation!
 				final float cos2t = 1.0F - nnt * nnt * (1.0F - ddn * ddn);
 				
 //				TODO: Write explanation!
-				final float reflectionDirectionX = directionX - surfaceNormal0X * 2.0F * dotProduct;
-				final float reflectionDirectionY = directionY - surfaceNormal0Y * 2.0F * dotProduct;
-				final float reflectionDirectionZ = directionZ - surfaceNormal0Z * 2.0F * dotProduct;
+				final float reflectionDirectionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
+				final float reflectionDirectionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
+				final float reflectionDirectionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
 				
 				if(cos2t < 0.0F) {
 //					TODO: Write explanation!
-					originX = surfaceIntersectionPointX + surfaceNormal1X * 0.02F;
-					originY = surfaceIntersectionPointY + surfaceNormal1Y * 0.02F;
-					originZ = surfaceIntersectionPointZ + surfaceNormal1Z * 0.02F;
+					originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.02F;
+					originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.02F;
+					originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.02F;
 					
 //					TODO: Write explanation!
 					directionX = reflectionDirectionX;
@@ -1972,12 +1955,12 @@ public final class RendererKernel extends AbstractKernel {
 					final float scalar = isGoingIn ? ddn * nnt + sqrt(cos2t) : -(ddn * nnt + sqrt(cos2t));
 					
 //					TODO: Write explanation!
-					final float x1 = directionX * nnt - surfaceNormal0X * scalar;
-					final float y1 = directionY * nnt - surfaceNormal0Y * scalar;
-					final float z1 = directionZ * nnt - surfaceNormal0Z * scalar;
+					final float x1 = directionX * nnt - surfaceNormalX * scalar;
+					final float y1 = directionY * nnt - surfaceNormalY * scalar;
+					final float z1 = directionZ * nnt - surfaceNormalZ * scalar;
 					
 //					TODO: Write explanation!
-					final float lengthReciprocal1 = 1.0F / sqrt(x1 * x1 + y1 * y1 + z1 * z1);
+					final float lengthReciprocal1 = rsqrt(x1 * x1 + y1 * y1 + z1 * z1);
 					
 //					TODO: Write explanation!
 					final float transmissionDirectionX = x1 * lengthReciprocal1;
@@ -1992,7 +1975,7 @@ public final class RendererKernel extends AbstractKernel {
 					final float r0 = (a * a) / (b * b);
 					
 //					TODO: Write explanation!
-					final float angle1 = (isGoingIn ? -ddn : transmissionDirectionX * surfaceNormal0X + transmissionDirectionY * surfaceNormal0Y + transmissionDirectionZ * surfaceNormal0Z);
+					final float angle1 = (isGoingIn ? -ddn : transmissionDirectionX * surfaceNormalX + transmissionDirectionY * surfaceNormalY + transmissionDirectionZ * surfaceNormalZ);
 					final float angle2 = 1.0F - angle1;
 					
 //					TODO: Write explanation!
@@ -2026,9 +2009,9 @@ public final class RendererKernel extends AbstractKernel {
 					
 					if(isReflectionDirection) {
 //						TODO: Write explanation!
-						originX = surfaceIntersectionPointX + surfaceNormal1X * 0.01F;
-						originY = surfaceIntersectionPointY + surfaceNormal1Y * 0.01F;
-						originZ = surfaceIntersectionPointZ + surfaceNormal1Z * 0.01F;
+						originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
+						originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
+						originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
 						
 //						TODO: Write explanation!
 						directionX = reflectionDirectionX;
@@ -2036,9 +2019,9 @@ public final class RendererKernel extends AbstractKernel {
 						directionZ = reflectionDirectionZ;
 					} else {
 //						TODO: Write explanation!
-						originX = surfaceIntersectionPointX + surfaceNormal1X * 0.000001F;
-						originY = surfaceIntersectionPointY + surfaceNormal1Y * 0.000001F;
-						originZ = surfaceIntersectionPointZ + surfaceNormal1Z * 0.000001F;
+						originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.000001F;
+						originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.000001F;
+						originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.000001F;
 						
 //						TODO: Write explanation!
 						directionX = transmissionDirectionX;
@@ -2051,17 +2034,14 @@ public final class RendererKernel extends AbstractKernel {
 				depthCurrent = depthCurrent;
 			} else if(material == MATERIAL_SPECULAR) {
 //				TODO: Write explanation!
-				final float dotProduct = surfaceNormal0X * directionX + surfaceNormal0Y * directionY + surfaceNormal0Z * directionZ;
+				originX = surfaceIntersectionPointX + surfaceNormalX * 0.000001F;
+				originY = surfaceIntersectionPointY + surfaceNormalY * 0.000001F;
+				originZ = surfaceIntersectionPointZ + surfaceNormalZ * 0.000001F;
 				
 //				TODO: Write explanation!
-				originX = surfaceIntersectionPointX + surfaceNormal0X * 0.000001F;
-				originY = surfaceIntersectionPointY + surfaceNormal0Y * 0.000001F;
-				originZ = surfaceIntersectionPointZ + surfaceNormal0Z * 0.000001F;
-				
-//				TODO: Write explanation!
-				directionX = directionX - surfaceNormal0X * 2.0F * dotProduct;
-				directionY = directionY - surfaceNormal0Y * 2.0F * dotProduct;
-				directionZ = directionZ - surfaceNormal0Z * 2.0F * dotProduct;
+				directionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
+				directionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
+				directionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
 				
 //				TODO: Write explanation!
 				radianceMultiplierR *= albedoColorR;
@@ -2074,14 +2054,14 @@ public final class RendererKernel extends AbstractKernel {
 		doCalculateColorForSky(pixelIndex, directionX, directionY, directionZ);
 		
 //		Add the color for the sky to the current pixel color:
-		pixelColorR += radianceMultiplierR * this.temporaryColorRs[pixelIndex];
-		pixelColorG += radianceMultiplierG * this.temporaryColorGs[pixelIndex];
-		pixelColorB += radianceMultiplierB * this.temporaryColorBs[pixelIndex];
+		pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
+		pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
+		pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
 		
 //		Update the current pixel color:
-		this.currentPixelColorRs[pixelIndex] = max(min(pixelColorR, 255.0F), 0.0F);
-		this.currentPixelColorGs[pixelIndex] = max(min(pixelColorG, 255.0F), 0.0F);
-		this.currentPixelColorBs[pixelIndex] = max(min(pixelColorB, 255.0F), 0.0F);
+		this.currentPixelColors[pixelIndex0] = max(min(pixelColorR, 255.0F), 0.0F);
+		this.currentPixelColors[pixelIndex0 + 1] = max(min(pixelColorG, 255.0F), 0.0F);
+		this.currentPixelColors[pixelIndex0 + 2] = max(min(pixelColorB, 255.0F), 0.0F);
 	}
 	
 	private void doPerformIntersectionTest(final int pixelIndex, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
@@ -2138,26 +2118,19 @@ public final class RendererKernel extends AbstractKernel {
 			final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
 			
 			if(tMaximum >= tMinimum) {
-				final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
+				final int boundingVolumeHierarchyOffset0 = boundingVolumeHierarchyOffset;
+				
+				boundingVolumeHierarchyOffset = -1;
+				
+				final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset0]);
 				
 				if(type == 1) {
-					final int offsetLeft = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 10]);
-					final int offsetRight = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 11]);
-					
-					if(offsetLeft != -1) {
-						boundingVolumeHierarchyOffset = offsetLeft;
-					} else if(offsetRight != -1) {
-						boundingVolumeHierarchyOffset = offsetRight;
-					} else {
-						boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3]);
-					}
-				}
-				
-				if(type == 2) {
-					final int triangleCount = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 10]);
+					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset0 + 10]);
+				} else {
+					final int triangleCount = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset0 + 10]);
 					
 					for(int i = 0; i < triangleCount; i++) {
-						final int offset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 11 + i]);
+						final int offset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset0 + 11 + i]);
 						
 						final float currentDistance = doIntersect(offset, originX, originY, originZ, directionX, directionY, directionZ);
 						
@@ -2171,11 +2144,7 @@ public final class RendererKernel extends AbstractKernel {
 						}
 					}
 					
-					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3]);
-				}
-				
-				if(type != 1 && type != 2) {
-					boundingVolumeHierarchyOffset = -1;
+					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset0 + 3]);
 				}
 				
 //				TODO: Find out why the "child list broken" Exception occurs if the following line is not present!
@@ -2251,15 +2220,20 @@ public final class RendererKernel extends AbstractKernel {
 			
 			final float[] intersections = this.intersections;
 			
-//			TODO: Write explanation!
-			final float r = 2.0F * this.temporaryColorRs[pixelIndex] - 1.0F;
-			final float g = 2.0F * this.temporaryColorGs[pixelIndex] - 1.0F;
-			final float b = 2.0F * this.temporaryColorBs[pixelIndex] - 1.0F;
+			final int pixelIndex0 = pixelIndex * 3;
 			
 //			TODO: Write explanation!
-			final float wX = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL];
-			final float wY = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1];
-			final float wZ = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2];
+			final float r = 2.0F * this.temporaryColors[pixelIndex0] - 1.0F;
+			final float g = 2.0F * this.temporaryColors[pixelIndex0 + 1] - 1.0F;
+			final float b = 2.0F * this.temporaryColors[pixelIndex0 + 2] - 1.0F;
+			
+			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+			final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+			
+//			TODO: Write explanation!
+			final float wX = intersections[offsetIntersectionSurfaceNormal];
+			final float wY = intersections[offsetIntersectionSurfaceNormal + 1];
+			final float wZ = intersections[offsetIntersectionSurfaceNormal + 2];
 			
 //			TODO: Write explanation!
 			final float absWX = abs(wX);
@@ -2272,7 +2246,7 @@ public final class RendererKernel extends AbstractKernel {
 			final float v0Z = absWX < absWY && absWX < absWZ ? -wY : absWY < absWZ ? -wX : 0.0F;
 			
 //			TODO: Write explanation!
-			final float v0LengthReciprocal = 1.0F / sqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
+			final float v0LengthReciprocal = rsqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
 			
 //			TODO: Write explanation!
 			final float v1X = v0X * v0LengthReciprocal;
@@ -2285,7 +2259,7 @@ public final class RendererKernel extends AbstractKernel {
 			final float u0Z = v1X * wY - v1Y * wX;
 			
 //			TODO: Write explanation!
-			final float u0LengthReciprocal = 1.0F / sqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
+			final float u0LengthReciprocal = rsqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
 			
 //			TODO: Write explanation!
 			final float u1X = u0X * u0LengthReciprocal;
@@ -2298,7 +2272,7 @@ public final class RendererKernel extends AbstractKernel {
 			final float surfaceNormal0Z = r * u1Z + g * v1Z + b * wZ;
 			
 //			TODO: Write explanation!
-			final float surfaceNormal0LengthReciprocal = 1.0F / sqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
+			final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
 			
 //			TODO: Write explanation!
 			final float surfaceNormal1X = surfaceNormal0X == 0.0F && surfaceNormal0Y == 0.0F && surfaceNormal0Z == 0.0F ? wX : surfaceNormal0X * surfaceNormal0LengthReciprocal;
@@ -2306,14 +2280,14 @@ public final class RendererKernel extends AbstractKernel {
 			final float surfaceNormal1Z = surfaceNormal0X == 0.0F && surfaceNormal0Y == 0.0F && surfaceNormal0Z == 0.0F ? wZ : surfaceNormal0Z * surfaceNormal0LengthReciprocal;
 			
 //			TODO: Write explanation!
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT] = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT] + surfaceNormal1X * 3.0F;
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 1] = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 1] + surfaceNormal1Y * 3.0F;
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 2] = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 2] + surfaceNormal1Z * 3.0F;
+			intersections[offsetIntersectionSurfaceIntersectionPoint] = intersections[offsetIntersectionSurfaceIntersectionPoint] + surfaceNormal1X * 3.0F;
+			intersections[offsetIntersectionSurfaceIntersectionPoint + 1] = intersections[offsetIntersectionSurfaceIntersectionPoint + 1] + surfaceNormal1Y * 3.0F;
+			intersections[offsetIntersectionSurfaceIntersectionPoint + 2] = intersections[offsetIntersectionSurfaceIntersectionPoint + 2] + surfaceNormal1Z * 3.0F;
 			
 //			TODO: Write explanation!
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL] = surfaceNormal1X;
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1] = surfaceNormal1Y;
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2] = surfaceNormal1Z;
+			intersections[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
+			intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
+			intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
 		}
 	}
 	
@@ -2328,10 +2302,13 @@ public final class RendererKernel extends AbstractKernel {
 		
 //		TODO: Write explanation!
 		if(amount > 0.0F && scale > 0.0F) {
+			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+			final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+			
 //			TODO: Write explanation!
-			final float x0 = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT];
-			final float y0 = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 1];
-			final float z0 = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT + 2];
+			final float x0 = intersections[offsetIntersectionSurfaceIntersectionPoint];
+			final float y0 = intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
+			final float z0 = intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
 			
 			final float scaleReciprocal = 1.0F / scale;
 			
@@ -2346,9 +2323,9 @@ public final class RendererKernel extends AbstractKernel {
 			final float noiseZ = doPerlinNoise(z1, x1, y1);
 			
 //			TODO: Write explanation!
-			final float surfaceNormal0X = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL];
-			final float surfaceNormal0Y = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1];
-			final float surfaceNormal0Z = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2];
+			final float surfaceNormal0X = intersections[offsetIntersectionSurfaceNormal];
+			final float surfaceNormal0Y = intersections[offsetIntersectionSurfaceNormal + 1];
+			final float surfaceNormal0Z = intersections[offsetIntersectionSurfaceNormal + 2];
 			
 //			TODO: Write explanation!
 			final float surfaceNormal1X = surfaceNormal0X + noiseX * amount;
@@ -2356,7 +2333,7 @@ public final class RendererKernel extends AbstractKernel {
 			final float surfaceNormal1Z = surfaceNormal0Z + noiseZ * amount;
 			
 //			TODO: Write explanation!
-			final float surfaceNormal1LengthReciprocal = 1.0F / sqrt(surfaceNormal1X * surfaceNormal1X + surfaceNormal1Y * surfaceNormal1Y + surfaceNormal1Z * surfaceNormal1Z);
+			final float surfaceNormal1LengthReciprocal = rsqrt(surfaceNormal1X * surfaceNormal1X + surfaceNormal1Y * surfaceNormal1Y + surfaceNormal1Z * surfaceNormal1Z);
 			
 //			TODO: Write explanation!
 			final float surfaceNormal2X = surfaceNormal1X * surfaceNormal1LengthReciprocal;
@@ -2364,9 +2341,9 @@ public final class RendererKernel extends AbstractKernel {
 			final float surfaceNormal2Z = surfaceNormal1Z * surfaceNormal1LengthReciprocal;
 			
 //			TODO: Write explanation!
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL] = surfaceNormal2X;
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1] = surfaceNormal2Y;
-			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2] = surfaceNormal2Z;
+			intersections[offsetIntersectionSurfaceNormal] = surfaceNormal2X;
+			intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal2Y;
+			intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal2Z;
 		}
 	}
 }
