@@ -35,6 +35,7 @@ import com.amd.aparapi.Range;
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.camera.Camera;
 import org.dayflower.pathtracer.kernel.RendererKernel;
+import org.dayflower.pathtracer.kernel.RendererKernel2;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.shape.Sphere;
@@ -47,7 +48,7 @@ public final class TestApplication extends AbstractApplication {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private final RendererKernel rendererKernel;
+	private final RendererKernel2 rendererKernel;
 	private final Camera camera = new Camera();
 	private final Label labelApertureRadius = new Label("Aperture radius: N/A");
 	private final Label labelFieldOfView = new Label("Field of view: N/A - N/A");
@@ -57,7 +58,7 @@ public final class TestApplication extends AbstractApplication {
 	private final Label labelRenderPass = new Label("Render pass: 0");
 	private final Label labelRenderTime = new Label("Render time: 00:00:00");
 	private final Label labelRenderType = new Label("Render type: Path Tracer");
-	private final Scene scene = Scenes.newMeshScene();
+	private final Scene scene = Scenes.newTestScene();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -65,7 +66,7 @@ public final class TestApplication extends AbstractApplication {
 	public TestApplication() {
 		super(String.format("%s %s", ENGINE_NAME, ENGINE_VERSION));
 		
-		this.rendererKernel = new RendererKernel(false, true, CANVAS_WIDTH, CANVAS_HEIGHT, this.camera, this.scene);
+		this.rendererKernel = new RendererKernel2(false, false, CANVAS_WIDTH, CANVAS_HEIGHT, this.camera, this.scene);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +197,7 @@ public final class TestApplication extends AbstractApplication {
 		
 		final Range range = Range.create(CANVAS_WIDTH * CANVAS_HEIGHT);
 		
-		final RendererKernel rendererKernel = this.rendererKernel;
+		final RendererKernel2 rendererKernel = this.rendererKernel;
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> rendererKernel.dispose()));
 		

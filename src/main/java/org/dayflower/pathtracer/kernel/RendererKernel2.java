@@ -37,7 +37,7 @@ import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SolidTexture;
 
 //TODO: Add Javadocs.
-public final class RendererKernel extends AbstractKernel {
+public final class RendererKernel2 extends AbstractKernel {
 //	TODO: Add Javadocs.
 	public static final int DEPTH_MAXIMUM = 10;
 	
@@ -65,7 +65,7 @@ public final class RendererKernel extends AbstractKernel {
 	private static final int RELATIVE_OFFSET_RAY_ORIGIN = 0;
 	private static final int SIZE_INTERSECTION = 10;
 	private static final int SIZE_PIXEL = 4;
-	private static final int SIZE_RAY = 6;
+	private static final int SIZE_RAY = 7;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -103,6 +103,7 @@ public final class RendererKernel extends AbstractKernel {
 	@Constant
 	private final float[] boundingVolumeHierarchy;
 	private final float[] cameraArray;
+	private final float[] colors;
 	private final float[] currentPixelColors;
 	private final float[] intersections;
 	@Constant
@@ -146,7 +147,7 @@ public final class RendererKernel extends AbstractKernel {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
-	public RendererKernel(final boolean isResettingFully, final boolean isUsingBoundingVolumeHierarchy, final int width, final int height, final Camera camera, final Scene scene) {
+	public RendererKernel2(final boolean isResettingFully, final boolean isUsingBoundingVolumeHierarchy, final int width, final int height, final Camera camera, final Scene scene) {
 		final CompiledScene compiledScene = CompiledScene.compile(camera, scene);
 		
 		this.isResettingFully = isResettingFully;
@@ -158,6 +159,7 @@ public final class RendererKernel extends AbstractKernel {
 		this.shapes = compiledScene.getShapes();
 		this.textures = compiledScene.getTextures();
 		this.accumulatedPixelColors = new float[width * height * 3];
+		this.colors = new float[width * height * 6];
 		this.currentPixelColors = new float[width * height * 3];
 		this.intersections = new float[width * height * SIZE_INTERSECTION];
 		this.rays = new float[width * height * SIZE_RAY];
@@ -272,7 +274,7 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 //	TODO: Add Javadocs.
-	public RendererKernel compile(final byte[] pixels, final int width, final int height) {
+	public RendererKernel2 compile(final byte[] pixels, final int width, final int height) {
 		this.pixels = pixels;
 		
 		setExecutionMode(EXECUTION_MODE.GPU);
@@ -285,6 +287,7 @@ public final class RendererKernel extends AbstractKernel {
 		put(this.accumulatedPixelColors);
 		put(this.boundingVolumeHierarchy);
 		put(this.cameraArray);
+		put(this.colors);
 		put(this.currentPixelColors);
 		put(this.intersections);
 		put(this.matrixRGBToXYZ);
@@ -309,7 +312,7 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 //	TODO: Add Javadocs.
-	public RendererKernel reset() {
+	public RendererKernel2 reset() {
 		setDepthMaximum(getDepthMinimum());
 		
 		for(int i = 0; i < this.subSamples.length; i++) {
@@ -633,6 +636,12 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private void doCalculateColor(final int pixelIndex) {
+		final int depth = (int)(this.rays[pixelIndex * SIZE_RAY + 6]);
+		
+		if(depth > 0) {
+			return;
+		}
+		
 //		Retrieve the offset to the pixels array:
 		final int pixelsOffset = pixelIndex * SIZE_PIXEL;
 		
@@ -1231,6 +1240,28 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private void doCreatePrimaryRay(final int pixelIndex) {
+//		TODO: Write explanation!
+		final int depth = (int)(this.rays[pixelIndex * SIZE_RAY + 6]);
+		
+//		TODO: Write explanation!
+		if(depth > 0) {
+			return;
+		}
+		
+//		TODO: Write explanation!
+		final float[] colors = this.colors;
+		
+//		TODO: Write explanation!
+		final int offsetColors = pixelIndex * 6;
+		
+//		TODO: Write explanation!
+		colors[offsetColors] = 0.0F;
+		colors[offsetColors + 1] = 0.0F;
+		colors[offsetColors + 2] = 0.0F;
+		colors[offsetColors + 3] = 1.0F;
+		colors[offsetColors + 4] = 1.0F;
+		colors[offsetColors + 5] = 1.0F;
+		
 //		Calculate the X- and Y-coordinates on the screen:
 		final int x = pixelIndex % this.width;
 		final int y = pixelIndex / this.width;
@@ -1382,15 +1413,12 @@ public final class RendererKernel extends AbstractKernel {
 		final float[] intersections = this.intersections;
 		final float[] rays = this.rays;
 		
-//		Retrieve the maximum depth allowed:
-		final int depthMaximum = this.depthMaximum;
-		
 //		Calculate the current offsets to the intersections and rays arrays:
 		final int intersectionsOffset = pixelIndex * SIZE_INTERSECTION;
 		final int raysOffset = pixelIndex * SIZE_RAY;
 		
 //		Initialize the current depth:
-		int depthCurrent = 0;
+		int depthCurrent = (int)(rays[raysOffset + 6]);
 		
 //		TODO: Write explanation!
 		final int offsetOrigin = raysOffset + RELATIVE_OFFSET_RAY_ORIGIN;
@@ -1406,32 +1434,104 @@ public final class RendererKernel extends AbstractKernel {
 		float directionY = rays[offsetDirection + 1];
 		float directionZ = rays[offsetDirection + 2];
 		
+//		TODO: Write explanation!
+		final int offsetColors = pixelIndex * 6;
+		
+//		TODO: Write explanation!
+		final float[] colors = this.colors;
+		
 //		Initialize the pixel color to black:
-		float pixelColorR = 0.0F;
-		float pixelColorG = 0.0F;
-		float pixelColorB = 0.0F;
+		float pixelColorR = colors[offsetColors];
+		float pixelColorG = colors[offsetColors + 1];
+		float pixelColorB = colors[offsetColors + 2];
 		
 //		Initialize the radiance multiplier to white:
-		float radianceMultiplierR = 1.0F;
-		float radianceMultiplierG = 1.0F;
-		float radianceMultiplierB = 1.0F;
+		float radianceMultiplierR = colors[offsetColors + 3];
+		float radianceMultiplierG = colors[offsetColors + 4];
+		float radianceMultiplierB = colors[offsetColors + 5];
 		
 //		TODO: Write explanation!
 		final int pixelIndex0 = pixelIndex * 3;
 		
-//		Run the following while-loop as long as the current depth is less than the maximum depth:
-		while(depthCurrent < depthMaximum) {
-//			Perform an intersection test:
-			doPerformIntersectionTest(pixelIndex, originX, originY, originZ, directionX, directionY, directionZ);
+//		Perform an intersection test:
+		doPerformIntersectionTest(pixelIndex, originX, originY, originZ, directionX, directionY, directionZ);
+		
+//		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
+		final float distance = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+		
+//		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
+		final int shapesOffset = (int)(intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+		
+//		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
+		if(distance == INFINITY || shapesOffset == -1) {
+//			Calculate the color for the sky in the current direction:
+			doCalculateColorForSky(pixelIndex, directionX, directionY, directionZ);
 			
-//			Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
-			final float distance = intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+//			Add the color for the sky to the current pixel color:
+			pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
+			pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
+			pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
 			
-//			Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
-			final int shapesOffset = (int)(intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+//			Update the current pixel color:
+			this.currentPixelColors[pixelIndex0] = max(min(pixelColorR, 255.0F), 0.0F);
+			this.currentPixelColors[pixelIndex0 + 1] = max(min(pixelColorG, 255.0F), 0.0F);
+			this.currentPixelColors[pixelIndex0 + 2] = max(min(pixelColorB, 255.0F), 0.0F);
 			
-//			Test that an intersection was actually made, and if not, return black color (or possibly the background color):
-			if(distance == INFINITY || shapesOffset == -1) {
+			rays[raysOffset + 6] = 0.0F;
+			
+			return;
+		}
+		
+//		TODO: Write explanation!
+		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		
+//		Retrieve the surface intersection point:
+		final float surfaceIntersectionPointX = intersections[offsetIntersectionSurfaceIntersectionPoint];
+		final float surfaceIntersectionPointY = intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
+		final float surfaceIntersectionPointZ = intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
+		
+//		Retrieve the surface normal:
+		final float surfaceNormalX = intersections[offsetIntersectionSurfaceNormal];
+		final float surfaceNormalY = intersections[offsetIntersectionSurfaceNormal + 1];
+		final float surfaceNormalZ = intersections[offsetIntersectionSurfaceNormal + 2];
+		
+//		Calculate the albedo texture color for the intersected shape:
+		doCalculateTextureColor(intersectionsOffset, pixelIndex, Shape.RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
+		
+//		Get the color of the shape from the albedo texture color that was looked up:
+		float albedoColorR = this.temporaryColors[pixelIndex0];
+		float albedoColorG = this.temporaryColors[pixelIndex0 + 1];
+		float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
+		
+//		TODO: Write explanation!
+		final int offsetEmission = shapesOffset + Shape.RELATIVE_OFFSET_EMISSION;
+		
+//		Retrieve the emission from the intersected shape:
+		final float emissionR = this.shapes[offsetEmission];
+		final float emissionG = this.shapes[offsetEmission + 1];
+		final float emissionB = this.shapes[offsetEmission + 2];
+		
+//		Add the current radiance multiplied by the emission of the intersected shape to the current pixel color:
+		pixelColorR += radianceMultiplierR * emissionR;
+		pixelColorG += radianceMultiplierG * emissionG;
+		pixelColorB += radianceMultiplierB * emissionB;
+		
+//		Increment the current depth:
+		depthCurrent++;
+		
+		rays[raysOffset + 6] = depthCurrent;
+		
+//		Check if the current depth is great enough to perform Russian Roulette to probabilistically terminate the path:
+		if(depthCurrent > DEPTH_RUSSIAN_ROULETTE) {
+//			Calculate the Russian Roulette Probability Density Function (PDF) using the maximum color component of the albedo of the intersected shape:
+			final float probabilityDensityFunction = max(albedoColorR, max(albedoColorG, albedoColorB));
+			
+//			Calculate a random number that will be used when determinating whether or not the path should be terminated:
+			final float random = nextFloat();
+			
+//			If the random number is greater than or equal to the Russian Roulette PDF, then terminate the path:
+			if(random >= probabilityDensityFunction) {
 //				Calculate the color for the sky in the current direction:
 				doCalculateColorForSky(pixelIndex, directionX, directionY, directionZ);
 				
@@ -1445,530 +1545,121 @@ public final class RendererKernel extends AbstractKernel {
 				this.currentPixelColors[pixelIndex0 + 1] = max(min(pixelColorG, 255.0F), 0.0F);
 				this.currentPixelColors[pixelIndex0 + 2] = max(min(pixelColorB, 255.0F), 0.0F);
 				
+				rays[raysOffset + 6] = 0.0F;
+				
 				return;
 			}
 			
+//			Calculate the reciprocal of the Russian Roulette PDF, so no divisions are needed next:
+			final float probabilityDensityFunctionReciprocal = 1.0F / probabilityDensityFunction;
+			
+//			Because the path was not terminated this time, the albedo color has to be multiplied with the reciprocal of the Russian Roulette PDF:
+			albedoColorR *= probabilityDensityFunctionReciprocal;
+			albedoColorG *= probabilityDensityFunctionReciprocal;
+			albedoColorB *= probabilityDensityFunctionReciprocal;
+		}
+		
+//		Retrieve the material type of the intersected shape:
+		final int material = (int)(this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_MATERIAL]);
+		
+//		Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
+		final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
+		final float dotProductMultipliedByTwo = dotProduct * 2.0F;
+		
+//		Check if the surface normal is correctly oriented:
+		final boolean isCorrectlyOriented = dotProduct < 0.0F;
+		
+//		Retrieve the correctly oriented surface normal:
+		final float correctlyOrientedSurfaceNormalX = isCorrectlyOriented ? surfaceNormalX : -surfaceNormalX;
+		final float correctlyOrientedSurfaceNormalY = isCorrectlyOriented ? surfaceNormalY : -surfaceNormalY;
+		final float correctlyOrientedSurfaceNormalZ = isCorrectlyOriented ? surfaceNormalZ : -surfaceNormalZ;
+		
+		if(material == MATERIAL_CLEAR_COAT) {
+//			Initialize the two hard-coded refractive indices that will be used:
+			final float refractiveIndex0 = 1.0F;
+			final float refractiveIndex1 = 1.5F;
+			
 //			TODO: Write explanation!
-			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-			final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
-			
-//			Retrieve the surface intersection point:
-			final float surfaceIntersectionPointX = intersections[offsetIntersectionSurfaceIntersectionPoint];
-			final float surfaceIntersectionPointY = intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
-			final float surfaceIntersectionPointZ = intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
-			
-//			Retrieve the surface normal:
-			final float surfaceNormalX = intersections[offsetIntersectionSurfaceNormal];
-			final float surfaceNormalY = intersections[offsetIntersectionSurfaceNormal + 1];
-			final float surfaceNormalZ = intersections[offsetIntersectionSurfaceNormal + 2];
-			
-//			Calculate the albedo texture color for the intersected shape:
-			doCalculateTextureColor(intersectionsOffset, pixelIndex, Shape.RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
-			
-//			Get the color of the shape from the albedo texture color that was looked up:
-			float albedoColorR = this.temporaryColors[pixelIndex0];
-			float albedoColorG = this.temporaryColors[pixelIndex0 + 1];
-			float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
+			final float nnt = refractiveIndex0 / refractiveIndex1;
 			
 //			TODO: Write explanation!
-			final int offsetEmission = shapesOffset + Shape.RELATIVE_OFFSET_EMISSION;
+			final float ddn = correctlyOrientedSurfaceNormalX * directionX + correctlyOrientedSurfaceNormalY * directionY + correctlyOrientedSurfaceNormalZ * directionZ;
 			
-//			Retrieve the emission from the intersected shape:
-			final float emissionR = this.shapes[offsetEmission];
-			final float emissionG = this.shapes[offsetEmission + 1];
-			final float emissionB = this.shapes[offsetEmission + 2];
+//			TODO: Write explanation!
+			final float cos2t = 1.0F - nnt * nnt * (1.0F - ddn * ddn);
 			
-//			Add the current radiance multiplied by the emission of the intersected shape to the current pixel color:
-			pixelColorR += radianceMultiplierR * emissionR;
-			pixelColorG += radianceMultiplierG * emissionG;
-			pixelColorB += radianceMultiplierB * emissionB;
+//			Calculate the reflection direction:
+			final float reflectionDirectionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
+			final float reflectionDirectionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
+			final float reflectionDirectionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
 			
-//			Increment the current depth:
-			depthCurrent++;
+//			Initialize the specular color component values to be used:
+			final float specularColorR = 1.0F;
+			final float specularColorG = 1.0F;
+			final float specularColorB = 1.0F;
 			
-//			Check if the current depth is great enough to perform Russian Roulette to probabilistically terminate the path:
-			if(depthCurrent > DEPTH_RUSSIAN_ROULETTE) {
-//				Calculate the Russian Roulette Probability Density Function (PDF) using the maximum color component of the albedo of the intersected shape:
-				final float probabilityDensityFunction = max(albedoColorR, max(albedoColorG, albedoColorB));
+			if(cos2t < 0.0F) {
+//				Multiply the radiance multiplier with the specular color:
+				radianceMultiplierR *= specularColorR;
+				radianceMultiplierG *= specularColorG;
+				radianceMultiplierB *= specularColorB;
 				
-//				Calculate a random number that will be used when determinating whether or not the path should be terminated:
+//				Calculate the new ray origin:
+				originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.02F;
+				originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.02F;
+				originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.02F;
+				
+//				Set the new ray direction to the reflection direction:
+				directionX = reflectionDirectionX;
+				directionY = reflectionDirectionY;
+				directionZ = reflectionDirectionZ;
+			} else {
+//				TODO: Write explanation!
+				final float a = refractiveIndex1 - refractiveIndex0;
+				final float b = refractiveIndex1 + refractiveIndex0;
+				
+//				TODO: Write explanation!
+				final float r0 = (a * a) / (b * b);
+				
+//				TODO: Write explanation!
+				final float angle1 = -ddn;
+				final float angle2 = 1.0F - angle1;
+				
+//				TODO: Write explanation!
+				final float reflectance = r0 + (1.0F - r0) * angle2 * angle2 * angle2 * angle2 * angle2;
+				
+//				TODO: Write explanation!
+				final float transmittance = 1.0F - reflectance;
+				
+//				TODO: Write explanation!
+				final float probability = 0.25F + 0.5F * reflectance;
+				
+//				TODO: Write explanation!
+				final float reflectanceProbability = reflectance / probability;
+				
+//				TODO: Write explanation!
+				final float transmittanceProbability = transmittance / (1.0F - probability);
+				
+//				TODO: Write explanation!
 				final float random = nextFloat();
 				
-//				If the random number is greater than or equal to the Russian Roulette PDF, then terminate the path:
-				if(random >= probabilityDensityFunction) {
-//					Calculate the color for the sky in the current direction:
-					doCalculateColorForSky(pixelIndex, directionX, directionY, directionZ);
-					
-//					Add the color for the sky to the current pixel color:
-					pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
-					pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
-					pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
-					
-//					Update the current pixel color:
-					this.currentPixelColors[pixelIndex0] = max(min(pixelColorR, 255.0F), 0.0F);
-					this.currentPixelColors[pixelIndex0 + 1] = max(min(pixelColorG, 255.0F), 0.0F);
-					this.currentPixelColors[pixelIndex0 + 2] = max(min(pixelColorB, 255.0F), 0.0F);
-					
-					return;
-				}
-				
-//				Calculate the reciprocal of the Russian Roulette PDF, so no divisions are needed next:
-				final float probabilityDensityFunctionReciprocal = 1.0F / probabilityDensityFunction;
-				
-//				Because the path was not terminated this time, the albedo color has to be multiplied with the reciprocal of the Russian Roulette PDF:
-				albedoColorR *= probabilityDensityFunctionReciprocal;
-				albedoColorG *= probabilityDensityFunctionReciprocal;
-				albedoColorB *= probabilityDensityFunctionReciprocal;
-			}
-			
-//			Retrieve the material type of the intersected shape:
-			final int material = (int)(this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_MATERIAL]);
-			
-//			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
-			final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
-			final float dotProductMultipliedByTwo = dotProduct * 2.0F;
-			
-//			Check if the surface normal is correctly oriented:
-			final boolean isCorrectlyOriented = dotProduct < 0.0F;
-			
-//			Retrieve the correctly oriented surface normal:
-			final float correctlyOrientedSurfaceNormalX = isCorrectlyOriented ? surfaceNormalX : -surfaceNormalX;
-			final float correctlyOrientedSurfaceNormalY = isCorrectlyOriented ? surfaceNormalY : -surfaceNormalY;
-			final float correctlyOrientedSurfaceNormalZ = isCorrectlyOriented ? surfaceNormalZ : -surfaceNormalZ;
-			
-			if(material == MATERIAL_CLEAR_COAT) {
-//				Initialize the two hard-coded refractive indices that will be used:
-				final float refractiveIndex0 = 1.0F;
-				final float refractiveIndex1 = 1.5F;
+//				TODO: Write explanation!
+				final boolean isReflectionDirection = random < probability;
 				
 //				TODO: Write explanation!
-				final float nnt = refractiveIndex0 / refractiveIndex1;
+				final float multiplier = isReflectionDirection ? reflectanceProbability : transmittanceProbability;
 				
 //				TODO: Write explanation!
-				final float ddn = correctlyOrientedSurfaceNormalX * directionX + correctlyOrientedSurfaceNormalY * directionY + correctlyOrientedSurfaceNormalZ * directionZ;
+				radianceMultiplierR *= multiplier;
+				radianceMultiplierG *= multiplier;
+				radianceMultiplierB *= multiplier;
 				
-//				TODO: Write explanation!
-				final float cos2t = 1.0F - nnt * nnt * (1.0F - ddn * ddn);
-				
-//				Calculate the reflection direction:
-				final float reflectionDirectionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
-				final float reflectionDirectionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
-				final float reflectionDirectionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
-				
-//				Initialize the specular color component values to be used:
-				final float specularColorR = 1.0F;
-				final float specularColorG = 1.0F;
-				final float specularColorB = 1.0F;
-				
-				if(cos2t < 0.0F) {
-//					Multiply the radiance multiplier with the specular color:
+				if(isReflectionDirection) {
+//					TODO: Write explanation!
 					radianceMultiplierR *= specularColorR;
 					radianceMultiplierG *= specularColorG;
 					radianceMultiplierB *= specularColorB;
 					
-//					Calculate the new ray origin:
-					originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.02F;
-					originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.02F;
-					originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.02F;
-					
-//					Set the new ray direction to the reflection direction:
-					directionX = reflectionDirectionX;
-					directionY = reflectionDirectionY;
-					directionZ = reflectionDirectionZ;
-				} else {
-//					TODO: Write explanation!
-					final float a = refractiveIndex1 - refractiveIndex0;
-					final float b = refractiveIndex1 + refractiveIndex0;
-					
-//					TODO: Write explanation!
-					final float r0 = (a * a) / (b * b);
-					
-//					TODO: Write explanation!
-					final float angle1 = -ddn;
-					final float angle2 = 1.0F - angle1;
-					
-//					TODO: Write explanation!
-					final float reflectance = r0 + (1.0F - r0) * angle2 * angle2 * angle2 * angle2 * angle2;
-					
-//					TODO: Write explanation!
-					final float transmittance = 1.0F - reflectance;
-					
-//					TODO: Write explanation!
-					final float probability = 0.25F + 0.5F * reflectance;
-					
-//					TODO: Write explanation!
-					final float reflectanceProbability = reflectance / probability;
-					
-//					TODO: Write explanation!
-					final float transmittanceProbability = transmittance / (1.0F - probability);
-					
-//					TODO: Write explanation!
-					final float random = nextFloat();
-					
-//					TODO: Write explanation!
-					final boolean isReflectionDirection = random < probability;
-					
-//					TODO: Write explanation!
-					final float multiplier = isReflectionDirection ? reflectanceProbability : transmittanceProbability;
-					
-//					TODO: Write explanation!
-					radianceMultiplierR *= multiplier;
-					radianceMultiplierG *= multiplier;
-					radianceMultiplierB *= multiplier;
-					
-					if(isReflectionDirection) {
-//						TODO: Write explanation!
-						radianceMultiplierR *= specularColorR;
-						radianceMultiplierG *= specularColorG;
-						radianceMultiplierB *= specularColorB;
-						
-//						TODO: Write explanation!
-						originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.02F;
-						originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.02F;
-						originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.02F;
-						
-//						TODO: Write explanation!
-						directionX = reflectionDirectionX;
-						directionY = reflectionDirectionY;
-						directionZ = reflectionDirectionZ;
-					} else {
-//						TODO: Write explanation!
-						final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
-						final float random0Cos = cos(random0);
-						final float random0Sin = sin(random0);
-						final float random1 = nextFloat();
-						final float random1Squared0 = sqrt(random1);
-						final float random1Squared1 = sqrt(1.0F - random1);
-						
-//						TODO: Write explanation!
-						final float correctlyOrientedSurfaceNormalLengthReciprocal = rsqrt(correctlyOrientedSurfaceNormalX * correctlyOrientedSurfaceNormalX + correctlyOrientedSurfaceNormalY * correctlyOrientedSurfaceNormalY + correctlyOrientedSurfaceNormalZ * correctlyOrientedSurfaceNormalZ);
-						
-//						TODO: Write explanation!
-						final float w0X = correctlyOrientedSurfaceNormalX * correctlyOrientedSurfaceNormalLengthReciprocal;
-						final float w0Y = correctlyOrientedSurfaceNormalY * correctlyOrientedSurfaceNormalLengthReciprocal;
-						final float w0Z = correctlyOrientedSurfaceNormalZ * correctlyOrientedSurfaceNormalLengthReciprocal;
-						
-//						TODO: Write explanation!
-						final boolean isY = abs(w0X) > 0.1F;
-						
-//						TODO: Write explanation!
-						final float u0X = isY ? 0.0F : 1.0F;
-						final float u0Y = isY ? 1.0F : 0.0F;
-						final float u0Z = 0.0F;
-						final float u1X = u0Y * w0Z - u0Z * w0Y;
-						final float u1Y = u0Z * w0X - u0X * w0Z;
-						final float u1Z = u0X * w0Y - u0Y * w0X;
-						final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
-						final float u2X = u1X * u1LengthReciprocal;
-						final float u2Y = u1Y * u1LengthReciprocal;
-						final float u2Z = u1Z * u1LengthReciprocal;
-						
-//						TODO: Write explanation!
-						final float v0X = correctlyOrientedSurfaceNormalY * u2Z - correctlyOrientedSurfaceNormalZ * u2Y;
-						final float v0Y = correctlyOrientedSurfaceNormalZ * u2X - correctlyOrientedSurfaceNormalX * u2Z;
-						final float v0Z = correctlyOrientedSurfaceNormalX * u2Y - correctlyOrientedSurfaceNormalY * u2X;
-						
-//						TODO: Write explanation!
-						final float direction0X = u2X * random0Cos * random1Squared0 + v0X * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalX * random1Squared1;
-						final float direction0Y = u2Y * random0Cos * random1Squared0 + v0Y * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalY * random1Squared1;
-						final float direction0Z = u2Z * random0Cos * random1Squared0 + v0Z * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalZ * random1Squared1;
-						final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
-						
-//						TODO: Write explanation!
-						originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
-						originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
-						originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
-						
-//						TODO: Write explanation!
-						directionX = direction0X * direction0LengthReciprocal;
-						directionY = direction0Y * direction0LengthReciprocal;
-						directionZ = direction0Z * direction0LengthReciprocal;
-						
-//						TODO: Write explanation!
-						radianceMultiplierR *= albedoColorR;
-						radianceMultiplierG *= albedoColorG;
-						radianceMultiplierB *= albedoColorB;
-					}
-				}
-				
-//				TODO: Write explanation!
-				final float normalX = directionX;
-				final float normalY = directionY;
-				final float normalZ = directionZ;
-				
-//				TODO: Write explanation!
-				final float scale = 0.5F;
-				
-//				TODO: Write explanation!
-				final float vector0X = normalX < 0.5F ? 1.0F : 0.0F;
-				final float vector0Y = normalX < 0.5F ? 0.0F : 1.0F;
-				final float vector0Z = 0.0F;
-				
-//				TODO: Write explanation!
-				final float vector1X = normalY * vector0Z - normalZ * vector0Y;
-				final float vector1Y = normalZ * vector0X - normalX * vector0Z;
-				final float vector1Z = normalX * vector0Y - normalY * vector0X;
-				
-//				TODO: Write explanation!
-				final float vector2X = normalY * vector1Z - normalZ * vector1Y;
-				final float vector2Y = normalZ * vector1X - normalX * vector1Z;
-				final float vector2Z = normalX * vector1Y - normalY * vector1X;
-				
-//				TODO: Write explanation!
-				final float phi = nextFloat() * PI_MULTIPLIED_BY_TWO;
-				final float theta = nextFloat();
-				
-//				TODO: Write explanation!
-				final float radius = sqrt(1.0F - theta) * scale;
-				
-//				TODO: Write explanation!
-				final float vector3X = cos(phi) * radius;
-				final float vector3Y = sin(phi) * radius;
-				final float vector3Z = sqrt(radius);
-				
-//				TODO: Write explanation!
-				final float vector4X = vector1X * vector3X + vector2X * vector3Y + normalX * vector3Z;
-				final float vector4Y = vector1Y * vector3X + vector2Y * vector3Y + normalY * vector3Z;
-				final float vector4Z = vector1Z * vector3X + vector2Z * vector3Y + normalZ * vector3Z;
-				
-//				TODO: Write explanation!
-				doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
-				
-//				TODO: Write explanation!
-				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
-				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
-				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
-			} else if(material == MATERIAL_DIFFUSE) {
-//				TODO: Write explanation!
-				final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
-				final float random0Cos = cos(random0);
-				final float random0Sin = sin(random0);
-				final float random1 = nextFloat();
-				final float random1Squared0 = sqrt(random1);
-				final float random1Squared1 = sqrt(1.0F - random1);
-				
-//				TODO: Write explanation!
-				final boolean isY = abs(correctlyOrientedSurfaceNormalX) > 0.1F;
-				
-//				TODO: Write explanation!
-				final float u0X = isY ? 0.0F : 1.0F;
-				final float u0Y = isY ? 1.0F : 0.0F;
-				final float u0Z = 0.0F;
-				final float u1X = u0Y * correctlyOrientedSurfaceNormalZ - u0Z * correctlyOrientedSurfaceNormalY;
-				final float u1Y = u0Z * correctlyOrientedSurfaceNormalX - u0X * correctlyOrientedSurfaceNormalZ;
-				final float u1Z = u0X * correctlyOrientedSurfaceNormalY - u0Y * correctlyOrientedSurfaceNormalX;
-				final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
-				final float u2X = u1X * u1LengthReciprocal;
-				final float u2Y = u1Y * u1LengthReciprocal;
-				final float u2Z = u1Z * u1LengthReciprocal;
-				
-//				TODO: Write explanation!
-				final float v0X = correctlyOrientedSurfaceNormalY * u2Z - correctlyOrientedSurfaceNormalZ * u2Y;
-				final float v0Y = correctlyOrientedSurfaceNormalZ * u2X - correctlyOrientedSurfaceNormalX * u2Z;
-				final float v0Z = correctlyOrientedSurfaceNormalX * u2Y - correctlyOrientedSurfaceNormalY * u2X;
-				
-//				TODO: Write explanation!
-				final float direction0X = u2X * random0Cos * random1Squared0 + v0X * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalX * random1Squared1;
-				final float direction0Y = u2Y * random0Cos * random1Squared0 + v0Y * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalY * random1Squared1;
-				final float direction0Z = u2Z * random0Cos * random1Squared0 + v0Z * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalZ * random1Squared1;
-				final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
-				
-//				TODO: Write explanation!
-				originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
-				originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
-				originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
-				
-//				TODO: Write explanation!
-				directionX = direction0X * direction0LengthReciprocal;
-				directionY = direction0Y * direction0LengthReciprocal;
-				directionZ = direction0Z * direction0LengthReciprocal;
-				
-//				TODO: Write explanation!
-				radianceMultiplierR *= albedoColorR;
-				radianceMultiplierG *= albedoColorG;
-				radianceMultiplierB *= albedoColorB;
-				
-//				TODO: Write explanation!
-				final float normalX = directionX;
-				final float normalY = directionY;
-				final float normalZ = directionZ;
-				
-//				TODO: Write explanation!
-				final float scale = 0.5F;
-				
-//				TODO: Write explanation!
-				final float vector0X = normalX < 0.5F ? 1.0F : 0.0F;
-				final float vector0Y = normalX < 0.5F ? 0.0F : 1.0F;
-				final float vector0Z = 0.0F;
-				
-//				TODO: Write explanation!
-				final float vector1X = normalY * vector0Z - normalZ * vector0Y;
-				final float vector1Y = normalZ * vector0X - normalX * vector0Z;
-				final float vector1Z = normalX * vector0Y - normalY * vector0X;
-				
-//				TODO: Write explanation!
-				final float vector2X = normalY * vector1Z - normalZ * vector1Y;
-				final float vector2Y = normalZ * vector1X - normalX * vector1Z;
-				final float vector2Z = normalX * vector1Y - normalY * vector1X;
-				
-//				TODO: Write explanation!
-				final float phi = PI_MULTIPLIED_BY_TWO * nextFloat();
-				final float theta = nextFloat();
-				
-//				TODO: Write explanation!
-				final float radius = sqrt(1.0F - theta) * scale;
-				
-//				TODO: Write explanation!
-				final float vector3X = cos(phi) * radius;
-				final float vector3Y = sin(phi) * radius;
-				final float vector3Z = sqrt(radius);
-				
-//				TODO: Write explanation!
-				final float vector4X = vector1X * vector3X + vector2X * vector3Y + normalX * vector3Z;
-				final float vector4Y = vector1Y * vector3X + vector2Y * vector3Y + normalY * vector3Z;
-				final float vector4Z = vector1Z * vector3X + vector2Z * vector3Y + normalZ * vector3Z;
-				
-//				TODO: Write explanation!
-				doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
-				
-//				TODO: Write explanation!
-				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
-				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
-				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
-			} else if(material == MATERIAL_METAL) {
-//				TODO: Write explanation!
-				final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
-				final float random0Cos = cos(random0);
-				final float random0Sin = sin(random0);
-				final float random1 = nextFloat();
-				
-//				TODO: Write explanation!
-				final float phongExponent = 20.0F;
-				
-//				TODO: Write explanation!
-				final float cosTheta = pow(1.0F - random1, 1.0F / (phongExponent + 1.0F));
-				final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
-				
-//				TODO: Write explanation!
-				final float w0X = directionX - surfaceNormalX * dotProductMultipliedByTwo;
-				final float w0Y = directionY - surfaceNormalY * dotProductMultipliedByTwo;
-				final float w0Z = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
-				final float w0LengthReciprocal = rsqrt(w0X * w0X + w0Y * w0Y + w0Z * w0Z);
-				final float w1X = w0X * w0LengthReciprocal;
-				final float w1Y = w0Y * w0LengthReciprocal;
-				final float w1Z = w0Z * w0LengthReciprocal;
-				
-//				TODO: Write explanation!
-				final boolean isY = abs(w1X) > 0.1F;
-				
-//				TODO: Write explanation!
-				final float u0X = isY ? 0.0F : 1.0F;
-				final float u0Y = isY ? 1.0F : 0.0F;
-				final float u0Z = 0.0F;
-				final float u1X = u0Y * w1Z - u0Z * w1Y;
-				final float u1Y = u0Z * w1X - u0X * w1Z;
-				final float u1Z = u0X * w1Y - u0Y * w1X;
-				final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
-				final float u2X = u1X * u1LengthReciprocal;
-				final float u2Y = u1Y * u1LengthReciprocal;
-				final float u2Z = u1Z * u1LengthReciprocal;
-				
-//				TODO: Write explanation!
-				final float v0X = w1Y * u2Z - w1Z * u2Y;
-				final float v0Y = w1Z * u2X - w1X * u2Z;
-				final float v0Z = w1X * u2Y - w1Y * u2X;
-				
-//				TODO: Write explanation!
-				final float direction0X = u2X * random0Cos * sinTheta + v0X * random0Sin * sinTheta + w1X * cosTheta;
-				final float direction0Y = u2Y * random0Cos * sinTheta + v0Y * random0Sin * sinTheta + w1Y * cosTheta;
-				final float direction0Z = u2Z * random0Cos * sinTheta + v0Z * random0Sin * sinTheta + w1Z * cosTheta;
-				final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
-				
-//				TODO: Write explanation!
-				originX = surfaceIntersectionPointX + w1X * 0.01F;
-				originY = surfaceIntersectionPointY + w1Y * 0.01F;
-				originZ = surfaceIntersectionPointZ + w1Z * 0.01F;
-				
-//				TODO: Write explanation!
-				directionX = direction0X * direction0LengthReciprocal;
-				directionY = direction0Y * direction0LengthReciprocal;
-				directionZ = direction0Z * direction0LengthReciprocal;
-				
-//				TODO: Write explanation!
-				radianceMultiplierR *= albedoColorR;
-				radianceMultiplierG *= albedoColorG;
-				radianceMultiplierB *= albedoColorB;
-				
-//				TODO: Write explanation!
-				final float normalX = directionX;
-				final float normalY = directionY;
-				final float normalZ = directionZ;
-				
-//				TODO: Write explanation!
-				final float scale = 0.5F;
-				
-//				TODO: Write explanation!
-				final float vector0X = normalX < 0.5F ? 1.0F : 0.0F;
-				final float vector0Y = normalX < 0.5F ? 0.0F : 1.0F;
-				final float vector0Z = 0.0F;
-				
-//				TODO: Write explanation!
-				final float vector1X = normalY * vector0Z - normalZ * vector0Y;
-				final float vector1Y = normalZ * vector0X - normalX * vector0Z;
-				final float vector1Z = normalX * vector0Y - normalY * vector0X;
-				
-//				TODO: Write explanation!
-				final float vector2X = normalY * vector1Z - normalZ * vector1Y;
-				final float vector2Y = normalZ * vector1X - normalX * vector1Z;
-				final float vector2Z = normalX * vector1Y - normalY * vector1X;
-				
-//				TODO: Write explanation!
-				final float phi = PI_MULTIPLIED_BY_TWO * nextFloat();
-				final float theta = nextFloat();
-				
-//				TODO: Write explanation!
-				final float radius = sqrt(1.0F - theta) * scale;
-				
-//				TODO: Write explanation!
-				final float vector3X = cos(phi) * radius;
-				final float vector3Y = sin(phi) * radius;
-				final float vector3Z = sqrt(radius);
-				
-//				TODO: Write explanation!
-				final float vector4X = vector1X * vector3X + vector2X * vector3Y + normalX * vector3Z;
-				final float vector4Y = vector1Y * vector3X + vector2Y * vector3Y + normalY * vector3Z;
-				final float vector4Z = vector1Z * vector3X + vector2Z * vector3Y + normalZ * vector3Z;
-				
-//				TODO: Write explanation!
-				doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
-				
-//				TODO: Write explanation!
-				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
-				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
-				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
-			} else if(material == MATERIAL_REFRACTIVE) {
-//				TODO: Write explanation!
-				final boolean isGoingIn = surfaceNormalX * correctlyOrientedSurfaceNormalX + surfaceNormalY * correctlyOrientedSurfaceNormalY + surfaceNormalZ * correctlyOrientedSurfaceNormalZ > 0.0F;
-				
-//				TODO: Write explanation!
-				final float refractiveIndex0 = 1.0F;
-				final float refractiveIndex1 = 1.5F;
-				
-//				TODO: Write explanation!
-				final float nnt = isGoingIn ? refractiveIndex0 / refractiveIndex1 : refractiveIndex1 / refractiveIndex0;
-				
-//				TODO: Write explanation!
-				final float ddn = correctlyOrientedSurfaceNormalX * directionX + correctlyOrientedSurfaceNormalY * directionY + correctlyOrientedSurfaceNormalZ * directionZ;
-				
-//				TODO: Write explanation!
-				final float cos2t = 1.0F - nnt * nnt * (1.0F - ddn * ddn);
-				
-//				TODO: Write explanation!
-				final float reflectionDirectionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
-				final float reflectionDirectionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
-				final float reflectionDirectionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
-				
-				if(cos2t < 0.0F) {
 //					TODO: Write explanation!
 					originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.02F;
 					originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.02F;
@@ -1980,116 +1671,478 @@ public final class RendererKernel extends AbstractKernel {
 					directionZ = reflectionDirectionZ;
 				} else {
 //					TODO: Write explanation!
-					final float scalar = isGoingIn ? ddn * nnt + sqrt(cos2t) : -(ddn * nnt + sqrt(cos2t));
+					final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
+					final float random0Cos = cos(random0);
+					final float random0Sin = sin(random0);
+					final float random1 = nextFloat();
+					final float random1Squared0 = sqrt(random1);
+					final float random1Squared1 = sqrt(1.0F - random1);
 					
 //					TODO: Write explanation!
-					final float x1 = directionX * nnt - surfaceNormalX * scalar;
-					final float y1 = directionY * nnt - surfaceNormalY * scalar;
-					final float z1 = directionZ * nnt - surfaceNormalZ * scalar;
+					final float correctlyOrientedSurfaceNormalLengthReciprocal = rsqrt(correctlyOrientedSurfaceNormalX * correctlyOrientedSurfaceNormalX + correctlyOrientedSurfaceNormalY * correctlyOrientedSurfaceNormalY + correctlyOrientedSurfaceNormalZ * correctlyOrientedSurfaceNormalZ);
 					
 //					TODO: Write explanation!
-					final float lengthReciprocal1 = rsqrt(x1 * x1 + y1 * y1 + z1 * z1);
+					final float w0X = correctlyOrientedSurfaceNormalX * correctlyOrientedSurfaceNormalLengthReciprocal;
+					final float w0Y = correctlyOrientedSurfaceNormalY * correctlyOrientedSurfaceNormalLengthReciprocal;
+					final float w0Z = correctlyOrientedSurfaceNormalZ * correctlyOrientedSurfaceNormalLengthReciprocal;
 					
 //					TODO: Write explanation!
-					final float transmissionDirectionX = x1 * lengthReciprocal1;
-					final float transmissionDirectionY = y1 * lengthReciprocal1;
-					final float transmissionDirectionZ = z1 * lengthReciprocal1;
+					final boolean isY = abs(w0X) > 0.1F;
 					
 //					TODO: Write explanation!
-					final float a = refractiveIndex1 - refractiveIndex0;
-					final float b = refractiveIndex1 + refractiveIndex0;
+					final float u0X = isY ? 0.0F : 1.0F;
+					final float u0Y = isY ? 1.0F : 0.0F;
+					final float u0Z = 0.0F;
+					final float u1X = u0Y * w0Z - u0Z * w0Y;
+					final float u1Y = u0Z * w0X - u0X * w0Z;
+					final float u1Z = u0X * w0Y - u0Y * w0X;
+					final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
+					final float u2X = u1X * u1LengthReciprocal;
+					final float u2Y = u1Y * u1LengthReciprocal;
+					final float u2Z = u1Z * u1LengthReciprocal;
 					
 //					TODO: Write explanation!
-					final float r0 = (a * a) / (b * b);
+					final float v0X = correctlyOrientedSurfaceNormalY * u2Z - correctlyOrientedSurfaceNormalZ * u2Y;
+					final float v0Y = correctlyOrientedSurfaceNormalZ * u2X - correctlyOrientedSurfaceNormalX * u2Z;
+					final float v0Z = correctlyOrientedSurfaceNormalX * u2Y - correctlyOrientedSurfaceNormalY * u2X;
 					
 //					TODO: Write explanation!
-					final float angle1 = (isGoingIn ? -ddn : transmissionDirectionX * surfaceNormalX + transmissionDirectionY * surfaceNormalY + transmissionDirectionZ * surfaceNormalZ);
-					final float angle2 = 1.0F - angle1;
+					final float direction0X = u2X * random0Cos * random1Squared0 + v0X * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalX * random1Squared1;
+					final float direction0Y = u2Y * random0Cos * random1Squared0 + v0Y * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalY * random1Squared1;
+					final float direction0Z = u2Z * random0Cos * random1Squared0 + v0Z * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalZ * random1Squared1;
+					final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
 					
 //					TODO: Write explanation!
-					final float reflectance = r0 + (1.0F - r0) * angle2 * angle2 * angle2 * angle2 * angle2;
+					originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
+					originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
+					originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
 					
 //					TODO: Write explanation!
-					final float transmittance = 1.0F - reflectance;
+					directionX = direction0X * direction0LengthReciprocal;
+					directionY = direction0Y * direction0LengthReciprocal;
+					directionZ = direction0Z * direction0LengthReciprocal;
 					
 //					TODO: Write explanation!
-					final float probability = 0.25F + 0.5F * reflectance;
-					
-//					TODO: Write explanation!
-					final float reflectanceProbability = reflectance / probability;
-					
-//					TODO: Write explanation!
-					final float transmittanceProbability = transmittance / (1.0F - probability);
-					
-//					TODO: Write explanation!
-					final float random = nextFloat();
-					
-//					TODO: Write explanation!
-					final boolean isReflectionDirection = random < probability;
-					
-//					TODO: Write explanation!
-					final float multiplier = isReflectionDirection ? reflectanceProbability : transmittanceProbability;
-					
-//					TODO: Write explanation!
-					radianceMultiplierR *= multiplier;
-					radianceMultiplierG *= multiplier;
-					radianceMultiplierB *= multiplier;
-					
-					if(isReflectionDirection) {
-//						TODO: Write explanation!
-						originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
-						originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
-						originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
-						
-//						TODO: Write explanation!
-						directionX = reflectionDirectionX;
-						directionY = reflectionDirectionY;
-						directionZ = reflectionDirectionZ;
-					} else {
-//						TODO: Write explanation!
-						originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.000001F;
-						originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.000001F;
-						originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.000001F;
-						
-//						TODO: Write explanation!
-						directionX = transmissionDirectionX;
-						directionY = transmissionDirectionY;
-						directionZ = transmissionDirectionZ;
-					}
+					radianceMultiplierR *= albedoColorR;
+					radianceMultiplierG *= albedoColorG;
+					radianceMultiplierB *= albedoColorB;
 				}
-				
-//				TODO: Find out why the "child list broken" Exception occurs if the following line is not present!
-				depthCurrent = depthCurrent;
-			} else if(material == MATERIAL_SPECULAR) {
-//				TODO: Write explanation!
-				originX = surfaceIntersectionPointX + surfaceNormalX * 0.000001F;
-				originY = surfaceIntersectionPointY + surfaceNormalY * 0.000001F;
-				originZ = surfaceIntersectionPointZ + surfaceNormalZ * 0.000001F;
-				
-//				TODO: Write explanation!
-				directionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
-				directionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
-				directionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
-				
-//				TODO: Write explanation!
-				radianceMultiplierR *= albedoColorR;
-				radianceMultiplierG *= albedoColorG;
-				radianceMultiplierB *= albedoColorB;
 			}
+			
+//			TODO: Write explanation!
+			final float normalX = directionX;
+			final float normalY = directionY;
+			final float normalZ = directionZ;
+			
+//			TODO: Write explanation!
+			final float scale = 0.5F;
+			
+//			TODO: Write explanation!
+			final float vector0X = normalX < 0.5F ? 1.0F : 0.0F;
+			final float vector0Y = normalX < 0.5F ? 0.0F : 1.0F;
+			final float vector0Z = 0.0F;
+			
+//			TODO: Write explanation!
+			final float vector1X = normalY * vector0Z - normalZ * vector0Y;
+			final float vector1Y = normalZ * vector0X - normalX * vector0Z;
+			final float vector1Z = normalX * vector0Y - normalY * vector0X;
+			
+//			TODO: Write explanation!
+			final float vector2X = normalY * vector1Z - normalZ * vector1Y;
+			final float vector2Y = normalZ * vector1X - normalX * vector1Z;
+			final float vector2Z = normalX * vector1Y - normalY * vector1X;
+			
+//			TODO: Write explanation!
+			final float phi = nextFloat() * PI_MULTIPLIED_BY_TWO;
+			final float theta = nextFloat();
+			
+//			TODO: Write explanation!
+			final float radius = sqrt(1.0F - theta) * scale;
+			
+//			TODO: Write explanation!
+			final float vector3X = cos(phi) * radius;
+			final float vector3Y = sin(phi) * radius;
+			final float vector3Z = sqrt(radius);
+			
+//			TODO: Write explanation!
+			final float vector4X = vector1X * vector3X + vector2X * vector3Y + normalX * vector3Z;
+			final float vector4Y = vector1Y * vector3X + vector2Y * vector3Y + normalY * vector3Z;
+			final float vector4Z = vector1Z * vector3X + vector2Z * vector3Y + normalZ * vector3Z;
+			
+//			TODO: Write explanation!
+			doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
+			
+//			TODO: Write explanation!
+			radianceMultiplierR *= this.temporaryColors[pixelIndex0];
+			radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
+			radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
+		} else if(material == MATERIAL_DIFFUSE) {
+//			TODO: Write explanation!
+			final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
+			final float random0Cos = cos(random0);
+			final float random0Sin = sin(random0);
+			final float random1 = nextFloat();
+			final float random1Squared0 = sqrt(random1);
+			final float random1Squared1 = sqrt(1.0F - random1);
+			
+//			TODO: Write explanation!
+			final boolean isY = abs(correctlyOrientedSurfaceNormalX) > 0.1F;
+			
+//			TODO: Write explanation!
+			final float u0X = isY ? 0.0F : 1.0F;
+			final float u0Y = isY ? 1.0F : 0.0F;
+			final float u0Z = 0.0F;
+			final float u1X = u0Y * correctlyOrientedSurfaceNormalZ - u0Z * correctlyOrientedSurfaceNormalY;
+			final float u1Y = u0Z * correctlyOrientedSurfaceNormalX - u0X * correctlyOrientedSurfaceNormalZ;
+			final float u1Z = u0X * correctlyOrientedSurfaceNormalY - u0Y * correctlyOrientedSurfaceNormalX;
+			final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
+			final float u2X = u1X * u1LengthReciprocal;
+			final float u2Y = u1Y * u1LengthReciprocal;
+			final float u2Z = u1Z * u1LengthReciprocal;
+			
+//			TODO: Write explanation!
+			final float v0X = correctlyOrientedSurfaceNormalY * u2Z - correctlyOrientedSurfaceNormalZ * u2Y;
+			final float v0Y = correctlyOrientedSurfaceNormalZ * u2X - correctlyOrientedSurfaceNormalX * u2Z;
+			final float v0Z = correctlyOrientedSurfaceNormalX * u2Y - correctlyOrientedSurfaceNormalY * u2X;
+			
+//			TODO: Write explanation!
+			final float direction0X = u2X * random0Cos * random1Squared0 + v0X * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalX * random1Squared1;
+			final float direction0Y = u2Y * random0Cos * random1Squared0 + v0Y * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalY * random1Squared1;
+			final float direction0Z = u2Z * random0Cos * random1Squared0 + v0Z * random0Sin * random1Squared0 + correctlyOrientedSurfaceNormalZ * random1Squared1;
+			final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+			
+//			TODO: Write explanation!
+			originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
+			originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
+			originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
+			
+//			TODO: Write explanation!
+			directionX = direction0X * direction0LengthReciprocal;
+			directionY = direction0Y * direction0LengthReciprocal;
+			directionZ = direction0Z * direction0LengthReciprocal;
+			
+//			TODO: Write explanation!
+			radianceMultiplierR *= albedoColorR;
+			radianceMultiplierG *= albedoColorG;
+			radianceMultiplierB *= albedoColorB;
+			
+//			TODO: Write explanation!
+			final float normalX = directionX;
+			final float normalY = directionY;
+			final float normalZ = directionZ;
+			
+//			TODO: Write explanation!
+			final float scale = 0.5F;
+			
+//			TODO: Write explanation!
+			final float vector0X = normalX < 0.5F ? 1.0F : 0.0F;
+			final float vector0Y = normalX < 0.5F ? 0.0F : 1.0F;
+			final float vector0Z = 0.0F;
+			
+//			TODO: Write explanation!
+			final float vector1X = normalY * vector0Z - normalZ * vector0Y;
+			final float vector1Y = normalZ * vector0X - normalX * vector0Z;
+			final float vector1Z = normalX * vector0Y - normalY * vector0X;
+			
+//			TODO: Write explanation!
+			final float vector2X = normalY * vector1Z - normalZ * vector1Y;
+			final float vector2Y = normalZ * vector1X - normalX * vector1Z;
+			final float vector2Z = normalX * vector1Y - normalY * vector1X;
+			
+//			TODO: Write explanation!
+			final float phi = PI_MULTIPLIED_BY_TWO * nextFloat();
+			final float theta = nextFloat();
+			
+//			TODO: Write explanation!
+			final float radius = sqrt(1.0F - theta) * scale;
+			
+//			TODO: Write explanation!
+			final float vector3X = cos(phi) * radius;
+			final float vector3Y = sin(phi) * radius;
+			final float vector3Z = sqrt(radius);
+			
+//			TODO: Write explanation!
+			final float vector4X = vector1X * vector3X + vector2X * vector3Y + normalX * vector3Z;
+			final float vector4Y = vector1Y * vector3X + vector2Y * vector3Y + normalY * vector3Z;
+			final float vector4Z = vector1Z * vector3X + vector2Z * vector3Y + normalZ * vector3Z;
+			
+//			TODO: Write explanation!
+			doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
+			
+//			TODO: Write explanation!
+			radianceMultiplierR *= this.temporaryColors[pixelIndex0];
+			radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
+			radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
+		} else if(material == MATERIAL_METAL) {
+//			TODO: Write explanation!
+			final float random0 = PI_MULTIPLIED_BY_TWO * nextFloat();
+			final float random0Cos = cos(random0);
+			final float random0Sin = sin(random0);
+			final float random1 = nextFloat();
+			
+//			TODO: Write explanation!
+			final float phongExponent = 20.0F;
+			
+//			TODO: Write explanation!
+			final float cosTheta = pow(1.0F - random1, 1.0F / (phongExponent + 1.0F));
+			final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
+			
+//			TODO: Write explanation!
+			final float w0X = directionX - surfaceNormalX * dotProductMultipliedByTwo;
+			final float w0Y = directionY - surfaceNormalY * dotProductMultipliedByTwo;
+			final float w0Z = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
+			final float w0LengthReciprocal = rsqrt(w0X * w0X + w0Y * w0Y + w0Z * w0Z);
+			final float w1X = w0X * w0LengthReciprocal;
+			final float w1Y = w0Y * w0LengthReciprocal;
+			final float w1Z = w0Z * w0LengthReciprocal;
+			
+//			TODO: Write explanation!
+			final boolean isY = abs(w1X) > 0.1F;
+			
+//			TODO: Write explanation!
+			final float u0X = isY ? 0.0F : 1.0F;
+			final float u0Y = isY ? 1.0F : 0.0F;
+			final float u0Z = 0.0F;
+			final float u1X = u0Y * w1Z - u0Z * w1Y;
+			final float u1Y = u0Z * w1X - u0X * w1Z;
+			final float u1Z = u0X * w1Y - u0Y * w1X;
+			final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
+			final float u2X = u1X * u1LengthReciprocal;
+			final float u2Y = u1Y * u1LengthReciprocal;
+			final float u2Z = u1Z * u1LengthReciprocal;
+			
+//			TODO: Write explanation!
+			final float v0X = w1Y * u2Z - w1Z * u2Y;
+			final float v0Y = w1Z * u2X - w1X * u2Z;
+			final float v0Z = w1X * u2Y - w1Y * u2X;
+			
+//			TODO: Write explanation!
+			final float direction0X = u2X * random0Cos * sinTheta + v0X * random0Sin * sinTheta + w1X * cosTheta;
+			final float direction0Y = u2Y * random0Cos * sinTheta + v0Y * random0Sin * sinTheta + w1Y * cosTheta;
+			final float direction0Z = u2Z * random0Cos * sinTheta + v0Z * random0Sin * sinTheta + w1Z * cosTheta;
+			final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+			
+//			TODO: Write explanation!
+			originX = surfaceIntersectionPointX + w1X * 0.01F;
+			originY = surfaceIntersectionPointY + w1Y * 0.01F;
+			originZ = surfaceIntersectionPointZ + w1Z * 0.01F;
+			
+//			TODO: Write explanation!
+			directionX = direction0X * direction0LengthReciprocal;
+			directionY = direction0Y * direction0LengthReciprocal;
+			directionZ = direction0Z * direction0LengthReciprocal;
+			
+//			TODO: Write explanation!
+			radianceMultiplierR *= albedoColorR;
+			radianceMultiplierG *= albedoColorG;
+			radianceMultiplierB *= albedoColorB;
+			
+//			TODO: Write explanation!
+			final float normalX = directionX;
+			final float normalY = directionY;
+			final float normalZ = directionZ;
+			
+//			TODO: Write explanation!
+			final float scale = 0.5F;
+			
+//			TODO: Write explanation!
+			final float vector0X = normalX < 0.5F ? 1.0F : 0.0F;
+			final float vector0Y = normalX < 0.5F ? 0.0F : 1.0F;
+			final float vector0Z = 0.0F;
+			
+//			TODO: Write explanation!
+			final float vector1X = normalY * vector0Z - normalZ * vector0Y;
+			final float vector1Y = normalZ * vector0X - normalX * vector0Z;
+			final float vector1Z = normalX * vector0Y - normalY * vector0X;
+			
+//			TODO: Write explanation!
+			final float vector2X = normalY * vector1Z - normalZ * vector1Y;
+			final float vector2Y = normalZ * vector1X - normalX * vector1Z;
+			final float vector2Z = normalX * vector1Y - normalY * vector1X;
+			
+//			TODO: Write explanation!
+			final float phi = PI_MULTIPLIED_BY_TWO * nextFloat();
+			final float theta = nextFloat();
+			
+//			TODO: Write explanation!
+			final float radius = sqrt(1.0F - theta) * scale;
+			
+//			TODO: Write explanation!
+			final float vector3X = cos(phi) * radius;
+			final float vector3Y = sin(phi) * radius;
+			final float vector3Z = sqrt(radius);
+			
+//			TODO: Write explanation!
+			final float vector4X = vector1X * vector3X + vector2X * vector3Y + normalX * vector3Z;
+			final float vector4Y = vector1Y * vector3X + vector2Y * vector3Y + normalY * vector3Z;
+			final float vector4Z = vector1Z * vector3X + vector2Z * vector3Y + normalZ * vector3Z;
+			
+//			TODO: Write explanation!
+			doCalculateColorForSky(pixelIndex, vector4X, vector4Y, vector4Z);
+			
+//			TODO: Write explanation!
+			radianceMultiplierR *= this.temporaryColors[pixelIndex0];
+			radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
+			radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
+		} else if(material == MATERIAL_REFRACTIVE) {
+//			TODO: Write explanation!
+			final boolean isGoingIn = surfaceNormalX * correctlyOrientedSurfaceNormalX + surfaceNormalY * correctlyOrientedSurfaceNormalY + surfaceNormalZ * correctlyOrientedSurfaceNormalZ > 0.0F;
+			
+//			TODO: Write explanation!
+			final float refractiveIndex0 = 1.0F;
+			final float refractiveIndex1 = 1.5F;
+			
+//			TODO: Write explanation!
+			final float nnt = isGoingIn ? refractiveIndex0 / refractiveIndex1 : refractiveIndex1 / refractiveIndex0;
+			
+//			TODO: Write explanation!
+			final float ddn = correctlyOrientedSurfaceNormalX * directionX + correctlyOrientedSurfaceNormalY * directionY + correctlyOrientedSurfaceNormalZ * directionZ;
+			
+//			TODO: Write explanation!
+			final float cos2t = 1.0F - nnt * nnt * (1.0F - ddn * ddn);
+			
+//			TODO: Write explanation!
+			final float reflectionDirectionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
+			final float reflectionDirectionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
+			final float reflectionDirectionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
+			
+			if(cos2t < 0.0F) {
+//				TODO: Write explanation!
+				originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.02F;
+				originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.02F;
+				originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.02F;
+				
+//				TODO: Write explanation!
+				directionX = reflectionDirectionX;
+				directionY = reflectionDirectionY;
+				directionZ = reflectionDirectionZ;
+			} else {
+//				TODO: Write explanation!
+				final float scalar = isGoingIn ? ddn * nnt + sqrt(cos2t) : -(ddn * nnt + sqrt(cos2t));
+				
+//				TODO: Write explanation!
+				final float x1 = directionX * nnt - surfaceNormalX * scalar;
+				final float y1 = directionY * nnt - surfaceNormalY * scalar;
+				final float z1 = directionZ * nnt - surfaceNormalZ * scalar;
+				
+//				TODO: Write explanation!
+				final float lengthReciprocal1 = rsqrt(x1 * x1 + y1 * y1 + z1 * z1);
+				
+//				TODO: Write explanation!
+				final float transmissionDirectionX = x1 * lengthReciprocal1;
+				final float transmissionDirectionY = y1 * lengthReciprocal1;
+				final float transmissionDirectionZ = z1 * lengthReciprocal1;
+				
+//				TODO: Write explanation!
+				final float a = refractiveIndex1 - refractiveIndex0;
+				final float b = refractiveIndex1 + refractiveIndex0;
+				
+//				TODO: Write explanation!
+				final float r0 = (a * a) / (b * b);
+				
+//				TODO: Write explanation!
+				final float angle1 = (isGoingIn ? -ddn : transmissionDirectionX * surfaceNormalX + transmissionDirectionY * surfaceNormalY + transmissionDirectionZ * surfaceNormalZ);
+				final float angle2 = 1.0F - angle1;
+				
+//				TODO: Write explanation!
+				final float reflectance = r0 + (1.0F - r0) * angle2 * angle2 * angle2 * angle2 * angle2;
+				
+//				TODO: Write explanation!
+				final float transmittance = 1.0F - reflectance;
+				
+//				TODO: Write explanation!
+				final float probability = 0.25F + 0.5F * reflectance;
+				
+//				TODO: Write explanation!
+				final float reflectanceProbability = reflectance / probability;
+				
+//				TODO: Write explanation!
+				final float transmittanceProbability = transmittance / (1.0F - probability);
+				
+//				TODO: Write explanation!
+				final float random = nextFloat();
+				
+//				TODO: Write explanation!
+				final boolean isReflectionDirection = random < probability;
+				
+//				TODO: Write explanation!
+				final float multiplier = isReflectionDirection ? reflectanceProbability : transmittanceProbability;
+				
+//				TODO: Write explanation!
+				radianceMultiplierR *= multiplier;
+				radianceMultiplierG *= multiplier;
+				radianceMultiplierB *= multiplier;
+				
+				if(isReflectionDirection) {
+//					TODO: Write explanation!
+					originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.01F;
+					originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.01F;
+					originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.01F;
+					
+//					TODO: Write explanation!
+					directionX = reflectionDirectionX;
+					directionY = reflectionDirectionY;
+					directionZ = reflectionDirectionZ;
+				} else {
+//					TODO: Write explanation!
+					originX = surfaceIntersectionPointX + correctlyOrientedSurfaceNormalX * 0.000001F;
+					originY = surfaceIntersectionPointY + correctlyOrientedSurfaceNormalY * 0.000001F;
+					originZ = surfaceIntersectionPointZ + correctlyOrientedSurfaceNormalZ * 0.000001F;
+					
+//					TODO: Write explanation!
+					directionX = transmissionDirectionX;
+					directionY = transmissionDirectionY;
+					directionZ = transmissionDirectionZ;
+				}
+			}
+			
+//			TODO: Find out why the "child list broken" Exception occurs if the following line is not present!
+			depthCurrent = depthCurrent;
+		} else if(material == MATERIAL_SPECULAR) {
+//			TODO: Write explanation!
+			originX = surfaceIntersectionPointX + surfaceNormalX * 0.000001F;
+			originY = surfaceIntersectionPointY + surfaceNormalY * 0.000001F;
+			originZ = surfaceIntersectionPointZ + surfaceNormalZ * 0.000001F;
+			
+//			TODO: Write explanation!
+			directionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
+			directionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
+			directionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
+			
+//			TODO: Write explanation!
+			radianceMultiplierR *= albedoColorR;
+			radianceMultiplierG *= albedoColorG;
+			radianceMultiplierB *= albedoColorB;
 		}
 		
-//		Calculate the color for the sky in the current direction:
-		doCalculateColorForSky(pixelIndex, directionX, directionY, directionZ);
+		rays[offsetOrigin] = originX;
+		rays[offsetOrigin + 1] = originY;
+		rays[offsetOrigin + 2] = originZ;
+		rays[offsetDirection] = directionX;
+		rays[offsetDirection + 1] = directionY;
+		rays[offsetDirection + 2] = directionZ;
 		
-//		Add the color for the sky to the current pixel color:
-		pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
-		pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
-		pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
+		colors[offsetColors] = pixelColorR;
+		colors[offsetColors + 1] = pixelColorG;
+		colors[offsetColors + 2] = pixelColorB;
+		colors[offsetColors + 3] = radianceMultiplierR;
+		colors[offsetColors + 4] = radianceMultiplierG;
+		colors[offsetColors + 5] = radianceMultiplierB;
 		
-//		Update the current pixel color:
-		this.currentPixelColors[pixelIndex0] = max(min(pixelColorR, 255.0F), 0.0F);
-		this.currentPixelColors[pixelIndex0 + 1] = max(min(pixelColorG, 255.0F), 0.0F);
-		this.currentPixelColors[pixelIndex0 + 2] = max(min(pixelColorB, 255.0F), 0.0F);
+		if(rays[raysOffset + 6] == 0.0F) {
+//			Calculate the color for the sky in the current direction:
+			doCalculateColorForSky(pixelIndex, directionX, directionY, directionZ);
+			
+//			Add the color for the sky to the current pixel color:
+			pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
+			pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
+			pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
+			
+//			Update the current pixel color:
+			this.currentPixelColors[pixelIndex0] = max(min(pixelColorR, 255.0F), 0.0F);
+			this.currentPixelColors[pixelIndex0 + 1] = max(min(pixelColorG, 255.0F), 0.0F);
+			this.currentPixelColors[pixelIndex0 + 2] = max(min(pixelColorB, 255.0F), 0.0F);
+		}
 	}
 	
 	private void doPerformIntersectionTest(final int pixelIndex, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
