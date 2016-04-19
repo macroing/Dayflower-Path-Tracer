@@ -168,7 +168,6 @@ public final class Triangle extends Shape {
 		};
 	}
 	
-	
 //	TODO: Add Javadocs.
 	@Override
 	public int size() {
@@ -209,6 +208,39 @@ public final class Triangle extends Shape {
 	@Override
 	public String toString() {
 		return String.format("Triangle: A=%s, B=%s, C=%s", getPointA(), getPointB(), getPointC());
+	}
+	
+//	TODO: Add Javadocs.
+	public Triangle scale(final float s) {
+		final float a0X = this.pointA.x;
+		final float a0Y = this.pointA.y;
+		final float a0Z = this.pointA.z;
+		
+		final float b0X = this.pointB.x;
+		final float b0Y = this.pointB.y;
+		final float b0Z = this.pointB.z;
+		
+		final float c0X = this.pointC.x;
+		final float c0Y = this.pointC.y;
+		final float c0Z = this.pointC.z;
+		
+		final float centerX = (a0X + b0X + c0X) / 3.0F;
+		final float centerY = (a0Y + b0Y + c0Y) / 3.0F;
+		final float centerZ = (a0Z + b0Z + c0Z) / 3.0F;
+		
+		final float a1X = centerX + (a0X - centerX) * s;
+		final float a1Y = centerY + (a0Y - centerY) * s;
+		final float a1Z = centerZ + (a0Z - centerZ) * s;
+		
+		final float b1X = centerX + (b0X - centerX) * s;
+		final float b1Y = centerY + (b0Y - centerY) * s;
+		final float b1Z = centerZ + (b0Z - centerZ) * s;
+		
+		final float c1X = centerX + (c0X - centerX) * s;
+		final float c1Y = centerY + (c0Y - centerY) * s;
+		final float c1Z = centerZ + (c0Z - centerZ) * s;
+		
+		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), new Point3(a1X, a1Y, a1Z), new Point3(b1X, b1Y, b1Z), new Point3(c1X, c1Y, c1Z), this.surfaceNormalA, this.surfaceNormalB, this.surfaceNormalC, this.uVA, this.uVB, this.uVC);
 	}
 	
 //	TODO: Add Javadocs.

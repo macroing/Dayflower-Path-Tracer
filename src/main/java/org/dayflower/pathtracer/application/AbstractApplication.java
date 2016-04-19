@@ -86,9 +86,14 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private final AtomicBoolean hasUpdatedCursor = new AtomicBoolean();
+	private final AtomicBoolean hasUpdatedResolution = new AtomicBoolean(true);
 	private final AtomicBoolean isCursorHidden = new AtomicBoolean();
 	private final AtomicBoolean isDraggingMouse = new AtomicBoolean();
 	private final AtomicBoolean isRecenteringMouse = new AtomicBoolean();
+	private final AtomicInteger canvasHeight = new AtomicInteger(CANVAS_HEIGHT);
+	private final AtomicInteger canvasHeightScale = new AtomicInteger(CANVAS_HEIGHT_SCALE);
+	private final AtomicInteger canvasWidth = new AtomicInteger(CANVAS_WIDTH);
+	private final AtomicInteger canvasWidthScale = new AtomicInteger(CANVAS_WIDTH_SCALE);
 	private final AtomicInteger mouseDraggedDeltaX = new AtomicInteger();
 	private final AtomicInteger mouseDraggedDeltaY = new AtomicInteger();
 	private final AtomicInteger mouseMovedDeltaX = new AtomicInteger();
@@ -165,6 +170,26 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 //	TODO: Add Javadocs.
+	protected final int getCanvasHeight() {
+		return this.canvasHeight.get();
+	}
+	
+//	TODO: Add Javadocs.
+	protected final int getCanvasHeightScale() {
+		return this.canvasHeightScale.get();
+	}
+	
+//	TODO: Add Javadocs.
+	protected final int getCanvasWidth() {
+		return this.canvasWidth.get();
+	}
+	
+//	TODO: Add Javadocs.
+	protected final int getCanvasWidthScale() {
+		return this.canvasWidthScale.get();
+	}
+	
+//	TODO: Add Javadocs.
 	protected final Lock getLock() {
 		return this.lock;
 	}
@@ -192,6 +217,30 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 //	TODO: Add Javadocs.
+	protected final void setCanvasHeight(final int canvasHeight) {
+		this.canvasHeight.set(canvasHeight);
+		this.hasUpdatedResolution.set(true);
+	}
+	
+//	TODO: Add Javadocs.
+	protected final void setCanvasHeightScale(final int canvasHeightScale) {
+		this.canvasHeightScale.set(canvasHeightScale);
+		this.hasUpdatedResolution.set(true);
+	}
+	
+//	TODO: Add Javadocs.
+	protected final void setCanvasWidth(final int canvasWidth) {
+		this.canvasWidth.set(canvasWidth);
+		this.hasUpdatedResolution.set(true);
+	}
+	
+//	TODO: Add Javadocs.
+	protected final void setCanvasWidthScale(final int canvasWidthScale) {
+		this.canvasWidthScale.set(canvasWidthScale);
+		this.hasUpdatedResolution.set(true);
+	}
+	
+//	TODO: Add Javadocs.
 	protected final void setCursorHidden(final boolean isCursorHidden) {
 		if(this.isCursorHidden.compareAndSet(!isCursorHidden, isCursorHidden)) {
 			this.hasUpdatedCursor.set(true);
@@ -208,26 +257,15 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	public final void start(final Stage stage) {
 		final Robot robot = doCreateRobot();
 		
-		final WritableImage writableImage = new WritableImage(CANVAS_WIDTH, CANVAS_HEIGHT);
-		
-		final PixelWriter pixelWriter = writableImage.getPixelWriter();
-		
-		final ByteBuffer byteBuffer = ByteBuffer.allocate(CANVAS_WIDTH * CANVAS_HEIGHT * 4);
-		
-		final byte[] pixels = byteBuffer.array();
-		
 		final TextArea textArea = new TextArea();
 		
 		addPrintConsumer(string -> Platform.runLater(() -> textArea.appendText(string + "\n")));
 		
-		doConfigurePixels(pixels);
-		
 		final
-		ImageView imageView = new ImageView(writableImage);
-		imageView.setViewport(new Rectangle2D(0.0D, 0.0D, CANVAS_WIDTH, CANVAS_HEIGHT));
+		ImageView imageView = new ImageView();
 		imageView.setSmooth(true);
 		
-		final Canvas canvas = new Canvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+		final Canvas canvas = new Canvas(getCanvasWidth(), getCanvasHeight());
 		
 		final ScrollPane scrollPane = new ScrollPane(canvas);
 		
@@ -357,10 +395,30 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		final PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraPreInstance();
 		
 		final AtomicBoolean hasUpdatedCursor = this.hasUpdatedCursor;
+		final AtomicBoolean hasUpdatedResolution = this.hasUpdatedResolution;
+		
+		final PixelWriter[] pixelWriter = new PixelWriter[1];
+		
+		final ByteBuffer[] byteBuffer = new ByteBuffer[1];
 		
 		new AnimationTimer() {
 			@Override
 			public void handle(final long now) {
+				if(hasUpdatedResolution.compareAndSet(true, false)) {
+					final WritableImage writableImage = new WritableImage(getCanvasWidth(), getCanvasHeight());
+					
+					pixelWriter[0] = writableImage.getPixelWriter();
+					
+					byteBuffer[0] = ByteBuffer.allocate(getCanvasWidth() * getCanvasHeight() * 4);
+					
+					final byte[] pixels = byteBuffer[0].array();
+					
+					imageView.setImage(writableImage);
+					imageView.setViewport(new Rectangle2D(0.0D, 0.0D, getCanvasWidth(), getCanvasHeight()));
+					
+					doConfigurePixels(pixels);
+				}
+				
 				if(hasUpdatedCursor.compareAndSet(true, false)) {
 					scene.setCursor(isCursorHidden() ? Cursor.NONE : Cursor.DEFAULT);
 				}
@@ -370,7 +428,13 @@ public abstract class AbstractApplication extends Application implements Runnabl
 				lock.lock();
 				
 				try {
-					pixelWriter.setPixels(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, pixelFormat, byteBuffer, CANVAS_WIDTH * 4);
+					final PixelWriter pixelWriter0 = pixelWriter[0];
+					
+					final ByteBuffer byteBuffer0 = byteBuffer[0];
+					
+					if(pixelWriter0 != null && byteBuffer0 != null) {
+						pixelWriter0.setPixels(0, 0, getCanvasWidth(), getCanvasHeight(), pixelFormat, byteBuffer0, getCanvasWidth() * 4);
+					}
 				} finally {
 					lock.unlock();
 				}

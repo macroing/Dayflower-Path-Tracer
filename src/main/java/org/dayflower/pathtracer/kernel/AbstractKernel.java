@@ -59,6 +59,11 @@ public abstract class AbstractKernel extends Kernel {
 	public static final float PI_DIVIDED_BY_180 = PI / 180.0F;
 	
 	/**
+	 * The {@code float} value that is closer than any other to pi, the ratio of the circumference of a circle to its diameter, divided by {@code 360.0F}.
+	 */
+	public static final float PI_DIVIDED_BY_360 = PI / 360.0F;
+	
+	/**
 	 * The {@code float} value that is closer than any other to pi, the ratio of the circumference of a circle to its diameter, multiplied by {@code 2.0F}.
 	 */
 	public static final float PI_MULTIPLIED_BY_TWO = PI * 2.0F;

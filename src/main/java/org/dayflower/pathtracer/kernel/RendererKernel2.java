@@ -71,8 +71,6 @@ public final class RendererKernel2 extends AbstractKernel {
 	
 	@Local
 	private final boolean isResettingFully;
-	@Local
-	private final boolean isUsingBoundingVolumeHierarchy;
 	private byte[] pixels;
 	private final Camera camera;
 	@Local
@@ -131,7 +129,7 @@ public final class RendererKernel2 extends AbstractKernel {
 	private int depthMaximum = DEPTH_MAXIMUM;
 	private int depthMinimum = DEPTH_MAXIMUM;
 	@Local
-	private int shapesLength;
+	private int shapeOffsetsLength;
 	@Local
 	private final int width;
 	@Constant
@@ -142,16 +140,16 @@ public final class RendererKernel2 extends AbstractKernel {
 	private final int[] permutations0 = {151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180};
 	@Constant
 	private final int[] permutations1 = new int[512];
+	private final int[] shapeOffsets;
 	private final long[] subSamples;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
-	public RendererKernel2(final boolean isResettingFully, final boolean isUsingBoundingVolumeHierarchy, final int width, final int height, final Camera camera, final Scene scene) {
+	public RendererKernel2(final boolean isResettingFully, final int width, final int height, final Camera camera, final Scene scene) {
 		final CompiledScene compiledScene = CompiledScene.compile(camera, scene);
 		
 		this.isResettingFully = isResettingFully;
-		this.isUsingBoundingVolumeHierarchy = isUsingBoundingVolumeHierarchy;
 		this.width = width;
 		this.camera = camera;
 		this.boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
@@ -164,7 +162,8 @@ public final class RendererKernel2 extends AbstractKernel {
 		this.intersections = new float[width * height * SIZE_INTERSECTION];
 		this.rays = new float[width * height * SIZE_RAY];
 		this.temporaryColors = new float[width * height * 3];
-		this.shapesLength = this.shapes.length;
+		this.shapeOffsets = compiledScene.getShapeOffsets();
+		this.shapeOffsetsLength = this.shapeOffsets.length;
 		this.subSamples = new long[width * height];
 		this.breakPoint = 0.00304F;
 		this.gamma = 2.4F;
@@ -306,6 +305,7 @@ public final class RendererKernel2 extends AbstractKernel {
 		put(this.gammaCurveReciprocal);
 		put(this.permutations0);
 		put(this.permutations1);
+		put(this.shapeOffsets);
 		put(this.subSamples);
 		
 		return this;
@@ -2146,14 +2146,6 @@ public final class RendererKernel2 extends AbstractKernel {
 	}
 	
 	private void doPerformIntersectionTest(final int pixelIndex, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
-		if(this.isUsingBoundingVolumeHierarchy) {
-			doPerformIntersectionTestUsingBoundingVolumeHierarchy(pixelIndex, originX, originY, originZ, directionX, directionY, directionZ);
-		} else {
-			doPerformIntersectionTestWithoutAccelerationStructure(pixelIndex, originX, originY, originZ, directionX, directionY, directionZ);
-		}
-	}
-	
-	private void doPerformIntersectionTestUsingBoundingVolumeHierarchy(final int pixelIndex, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
 //		TODO: Write explanation!
 		final int intersectionsOffset = pixelIndex * SIZE_INTERSECTION;
 		
@@ -2256,6 +2248,24 @@ public final class RendererKernel2 extends AbstractKernel {
 			}
 		}
 		
+//		TODO: Write explanation!
+		for(int i = 0; i < this.shapeOffsetsLength; i++) {
+//			TODO: Write explanation!
+			final int currentShapesOffset = this.shapeOffsets[i];
+			
+//			TODO: Write explanation!
+			final float currentDistance = doIntersect(currentShapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
+			
+//			TODO: Write explanation!
+			if(currentDistance < minimumDistance) {
+//				TODO: Write explanation!
+				minimumDistance = currentDistance;
+				
+//				TODO: Write explanation!
+				shapesOffset = currentShapesOffset;
+			}
+		}
+		
 		if(minimumDistance < INFINITY && shapesOffset > -1) {
 //			TODO: Write explanation!
 			doCalculateSurfaceProperties(minimumDistance, originX, originY, originZ, directionX, directionY, directionZ, intersectionsOffset, shapesOffset);
@@ -2272,50 +2282,6 @@ public final class RendererKernel2 extends AbstractKernel {
 //			TODO: Write explanation!
 			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
 			intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = -1;
-		}
-	}
-	
-	private void doPerformIntersectionTestWithoutAccelerationStructure(final int pixelIndex, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
-//		TODO: Write explanation!
-		final int intersectionsOffset = pixelIndex * SIZE_INTERSECTION;
-		
-//		TODO: Write explanation!
-		float minimumDistance = INFINITY;
-		
-//		TODO: Write explanation!
-		int shapesOffset = -1;
-		
-//		TODO: Write explanation!
-		for(int i = 0, j = 0; i < this.shapesLength; i += j) {
-//			TODO: Write explanation!
-			j = (int)(this.shapes[i + Shape.RELATIVE_OFFSET_SIZE]);
-			
-//			TODO: Write explanation!
-			final float currentDistance = doIntersect(i, originX, originY, originZ, directionX, directionY, directionZ);
-			
-//			TODO: Write explanation!
-			if(currentDistance < minimumDistance) {
-//				TODO: Write explanation!
-				minimumDistance = currentDistance;
-				
-//				TODO: Write explanation!
-				shapesOffset = i;
-			}
-		}
-		
-		if(minimumDistance < INFINITY && shapesOffset > -1) {
-//			TODO: Write explanation!
-			doCalculateSurfaceProperties(minimumDistance, originX, originY, originZ, directionX, directionY, directionZ, intersectionsOffset, shapesOffset);
-			
-//			TODO: Write explanation!
-			doPerformNormalMapping(intersectionsOffset, pixelIndex, shapesOffset);
-			
-//			TODO: Write explanation!
-			doPerformPerlinNoiseNormalMapping(intersectionsOffset, shapesOffset);
-		} else {
-//			TODO: Write explanation!
-			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
-			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = -1;
 		}
 	}
 	

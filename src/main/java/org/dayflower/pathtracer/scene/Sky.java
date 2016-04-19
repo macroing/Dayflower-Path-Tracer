@@ -65,7 +65,7 @@ public final class Sky {
 	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.z(), Vector3.y());
 //	private final SpectralCurve radiance;
 	private final Vector3 sunDirection;
-	private final Vector3 sunDirectionWorld = new Vector3(2.0F, 1.0F, 1.0F).normalize();//Vector3.direction(new Point3(), new Point3(1000.0F, 3000.0F, 1000.0F)).normalize();
+	private final Vector3 sunDirectionWorld = new Vector3(1.0F, 1.0F, 1.0F).normalize();//Vector3.direction(new Point3(), new Point3(1000.0F, 3000.0F, 1000.0F)).normalize();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

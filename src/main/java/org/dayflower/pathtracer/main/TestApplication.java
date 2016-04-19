@@ -19,6 +19,7 @@
 package org.dayflower.pathtracer.main;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -48,7 +49,7 @@ public final class TestApplication extends AbstractApplication {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private final RendererKernel2 rendererKernel;
+	private final RendererKernel rendererKernel;
 	private final Camera camera = new Camera();
 	private final Label labelApertureRadius = new Label("Aperture radius: N/A");
 	private final Label labelFieldOfView = new Label("Field of view: N/A - N/A");
@@ -66,7 +67,7 @@ public final class TestApplication extends AbstractApplication {
 	public TestApplication() {
 		super(String.format("%s %s", ENGINE_NAME, ENGINE_VERSION));
 		
-		this.rendererKernel = new RendererKernel2(false, false, CANVAS_WIDTH, CANVAS_HEIGHT, this.camera, this.scene);
+		this.rendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.scene);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +75,21 @@ public final class TestApplication extends AbstractApplication {
 //	TODO: Add Javadocs.
 	@Override
 	protected void doConfigurePixels(final byte[] pixels) {
-		this.rendererKernel.compile(pixels, CANVAS_WIDTH, CANVAS_HEIGHT);
+		this.rendererKernel.compile(pixels, getCanvasWidth(), getCanvasHeight());
+		
+		final
+		Camera camera = this.camera;
+		camera.setApertureRadius(0.004F);
+		camera.setCameraPredicate(this::doTest);
+		camera.setCenter(55.0F, 42.0F, 155.6F);
+		camera.setFieldOfViewX(40.0F);
+		camera.setFocalDistance(4.0F);
+		camera.setPitch(0.0F);
+		camera.setRadius(4.0F);
+		camera.setResolution(800.0F / getCanvasWidthScale(), 800.0F / getCanvasHeightScale());
+		camera.setWalkLockEnabled(true);
+		camera.setYaw(0.0F);
+		camera.update();
 	}
 	
 //	TODO: Add Javadocs.
@@ -152,20 +167,6 @@ public final class TestApplication extends AbstractApplication {
 		print("- Cosine-Weighted Hemisphere-Sampling of Sun");
 		print("- Acceleration Structure: Bounding Volume Hierarchy");
 		
-		final
-		Camera camera = this.camera;
-		camera.setApertureRadius(0.004F);
-		camera.setCameraPredicate(this::doTest);
-		camera.setCenter(55.0F, 42.0F, 155.6F);
-		camera.setFieldOfViewX(40.0F);
-		camera.setFocalDistance(4.0F);
-		camera.setPitch(0.0F);
-		camera.setRadius(4.0F);
-		camera.setResolution(800.0F / CANVAS_WIDTH_SCALE, 800.0F / CANVAS_HEIGHT_SCALE);
-		camera.setWalkLockEnabled(true);
-		camera.setYaw(0.0F);
-		camera.update();
-		
 		setCursorHidden(true);
 		setRecenteringMouse(true);
 	}
@@ -195,13 +196,16 @@ public final class TestApplication extends AbstractApplication {
 		
 		final FPSCounter fPSCounter = getFPSCounter();
 		
-		final Range range = Range.create(CANVAS_WIDTH * CANVAS_HEIGHT);
-		
-		final RendererKernel2 rendererKernel = this.rendererKernel;
+		final RendererKernel rendererKernel = this.rendererKernel;
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> rendererKernel.dispose()));
 		
+		final AtomicBoolean hasReleasedF = new AtomicBoolean(true);
+		final AtomicBoolean hasReleasedG = new AtomicBoolean(true);
+		
 		while(true) {
+			final Range range = Range.create(getCanvasWidth() * getCanvasHeight());
+			
 			final float velocity = 250.0F;
 			final float movement = fPSCounter.getFrameTimeMillis() / 1000.0F * velocity;
 			
@@ -223,6 +227,24 @@ public final class TestApplication extends AbstractApplication {
 			
 			if(isKeyPressed(KeyCode.ESCAPE)) {
 				Platform.exit();
+			}
+			
+			if(isKeyPressed(KeyCode.F) && hasReleasedF.compareAndSet(true, false)) {
+				setCanvasWidthScale(Math.min(getCanvasWidthScale() + 1, 8));
+				setCanvasHeightScale(Math.min(getCanvasHeightScale() + 1, 8));
+				setCanvasWidth(1024 / getCanvasWidthScale());
+				setCanvasHeight(768 / getCanvasHeightScale());
+			} else if(!isKeyPressed(KeyCode.F)) {
+				hasReleasedF.set(true);
+			}
+			
+			if(isKeyPressed(KeyCode.G) && hasReleasedG.compareAndSet(true, false)) {
+				setCanvasWidthScale(Math.max(getCanvasWidthScale() - 1, 1));
+				setCanvasHeightScale(Math.max(getCanvasHeightScale() - 1, 1));
+				setCanvasWidth(1024 / getCanvasWidthScale());
+				setCanvasHeight(768 / getCanvasHeightScale());
+			} else if(!isKeyPressed(KeyCode.G)) {
+				hasReleasedG.set(true);
 			}
 			
 			if(isKeyPressed(KeyCode.I)) {

@@ -40,14 +40,16 @@ public final class CompiledScene {
 	private final float[] camera;
 	private final float[] shapes;
 	private final float[] textures;
+	private final int[] shapeOffsets;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private CompiledScene(final float[] boundingVolumeHierarchy, final float[] camera, final float[] shapes, final float[] textures) {
+	private CompiledScene(final float[] boundingVolumeHierarchy, final float[] camera, final float[] shapes, final float[] textures, final int[] shapeOffsets) {
 		this.boundingVolumeHierarchy = Objects.requireNonNull(boundingVolumeHierarchy, "boundingVolumeHierarchy == null");
 		this.camera = Objects.requireNonNull(camera, "camera == null");
 		this.shapes = Objects.requireNonNull(shapes, "shapes == null");
 		this.textures = Objects.requireNonNull(textures, "textures == null");
+		this.shapeOffsets = Objects.requireNonNull(shapeOffsets, "shapeOffsets == null");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,11 +74,16 @@ public final class CompiledScene {
 		return this.textures;
 	}
 	
+//	TODO: Add Javadocs.
+	public int[] getShapeOffsets() {
+		return this.shapeOffsets;
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
 	public static CompiledScene compile(final Camera camera, final Scene scene) {
-		return new CompiledScene(doCompileBoundingVolumeHierarchy(scene), camera.getArray(), doCompileShapes(scene), doCompileTextures(scene));
+		return new CompiledScene(doCompileBoundingVolumeHierarchy(scene), camera.getArray(), doCompileShapes(scene), doCompileTextures(scene), doCompileShapeOffsets(scene));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -266,6 +273,30 @@ public final class CompiledScene {
 		}
 		
 		return size;
+	}
+	
+	private static int[] doCompileShapeOffsets(final Scene scene) {
+		final List<Shape> shapes = scene.getShapes();
+		
+		int count = 0;
+		
+		for(final Shape shape : shapes) {
+			if(!(shape instanceof Triangle)) {
+				count++;
+			}
+		}
+		
+		final int[] shapeOffsets = new int[count];
+		
+		int index = 0;
+		
+		for(final Shape shape : shapes) {
+			if(!(shape instanceof Triangle)) {
+				shapeOffsets[index++] = shape.getOffset();
+			}
+		}
+		
+		return shapeOffsets;
 	}
 	
 	private static List<Node> doToList(final Node node) {
