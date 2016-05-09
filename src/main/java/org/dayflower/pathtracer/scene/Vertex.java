@@ -22,6 +22,7 @@ import java.lang.reflect.Field;//TODO: Add Javadocs.
 
 //TODO: Add Javadocs.
 public final class Vertex {
+	private final String material;
 	private final Vector4 normal;
 	private final Vector4 position;
 	private final Vector4 textureCoordinates;
@@ -29,7 +30,8 @@ public final class Vertex {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
-	public Vertex(final Vector4 normal, final Vector4 position, final Vector4 textureCoordinates) {
+	public Vertex(final String material, final Vector4 normal, final Vector4 position, final Vector4 textureCoordinates) {
+		this.material = material;
 		this.normal = normal;
 		this.position = position;
 		this.textureCoordinates = textureCoordinates;
@@ -84,6 +86,11 @@ public final class Vertex {
 	}
 	
 //	TODO: Add Javadocs.
+	public String getMaterial() {
+		return this.material;
+	}
+	
+//	TODO: Add Javadocs.
 	public Vector4 getNormal() {
 		return this.normal;
 	}
@@ -100,11 +107,11 @@ public final class Vertex {
 	
 //	TODO: Add Javadocs.
 	public Vertex linearInterpolation(final Vertex vertex, final float fraction) {
-		return new Vertex(this.normal.linearInterpolation(vertex.getNormal(), fraction), this.position.linearInterpolation(vertex.getPosition(), fraction), this.textureCoordinates.linearInterpolation(vertex.getTextureCoordinates(), fraction));
+		return new Vertex(this.material, this.normal.linearInterpolation(vertex.getNormal(), fraction), this.position.linearInterpolation(vertex.getPosition(), fraction), this.textureCoordinates.linearInterpolation(vertex.getTextureCoordinates(), fraction));
 	}
 	
 //	TODO: Add Javadocs.
 	public Vertex perspectiveDivide() {
-		return new Vertex(this.normal, new Vector4(this.position.x / this.position.w, this.position.y / this.position.w, this.position.z / this.position.w, this.position.w), this.textureCoordinates);
+		return new Vertex(this.material, this.normal, new Vector4(this.position.x / this.position.w, this.position.y / this.position.w, this.position.z / this.position.w, this.position.w), this.textureCoordinates);
 	}
 }

@@ -24,6 +24,7 @@ import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.Material;
+import org.dayflower.pathtracer.scene.Matrix44;
 import org.dayflower.pathtracer.scene.Point2;
 import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Shape;
@@ -112,6 +113,47 @@ public final class Triangle extends Shape {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	@Override
+	public byte[] toByteArray() {
+		return new byte[] {
+			(byte)(TYPE),
+			(byte)(SIZE),
+//			TODO: getEmission().r
+//			TODO: getEmission().g
+//			TODO: getEmission().b
+			(byte)(getMaterial().ordinal()),
+//			TODO: getTextureAlbedo().getOffset()
+//			TODO: getTextureNormal().getOffset()
+//			TODO: getPerlinNoiseAmount()
+//			TODO: getPerlinNoiseScale()
+//			TODO: getPointA().x
+//			TODO: getPointA().y
+//			TODO: getPointA().z
+//			TODO: getPointB().x
+//			TODO: getPointB().y
+//			TODO: getPointB().z
+//			TODO: getPointC().x
+//			TODO: getPointC().y
+//			TODO: getPointC().z
+//			TODO: getSurfaceNormalA().x
+//			TODO: getSurfaceNormalA().y
+//			TODO: getSurfaceNormalA().z
+//			TODO: getSurfaceNormalB().x
+//			TODO: getSurfaceNormalB().y
+//			TODO: getSurfaceNormalB().z
+//			TODO: getSurfaceNormalC().x
+//			TODO: getSurfaceNormalC().y
+//			TODO: getSurfaceNormalC().z
+//			TODO: getUVA().x
+//			TODO: getUVA().y
+//			TODO: getUVB().x
+//			TODO: getUVB().y
+//			TODO: getUVC().x
+//			TODO: getUVC().y
+		};
+	}
 	
 //	TODO: Add Javadocs.
 	@Override
@@ -208,6 +250,13 @@ public final class Triangle extends Shape {
 	@Override
 	public String toString() {
 		return String.format("Triangle: A=%s, B=%s, C=%s", getPointA(), getPointB(), getPointC());
+	}
+	
+//	TODO: Add Javadocs.
+	public Triangle rotate(final Vector3 v, final Vector3 w) {
+		final Matrix44 m = Matrix44.rotation(v, w);
+		
+		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), this.pointA.transform(m), this.pointB.transform(m), this.pointC.transform(m), this.surfaceNormalA, this.surfaceNormalB, this.surfaceNormalC, this.uVA, this.uVB, this.uVC);
 	}
 	
 //	TODO: Add Javadocs.

@@ -78,6 +78,35 @@ public final class Plane extends Shape {
 	
 //	TODO: Add Javadocs.
 	@Override
+	public byte[] toByteArray() {
+		return new byte[] {
+			(byte)(TYPE),
+			(byte)(SIZE),
+//			TODO: getEmission().r
+//			TODO: getEmission().g
+//			TODO: getEmission().b
+			(byte)(getMaterial().ordinal()),
+//			TODO: getTextureAlbedo().getOffset()
+//			TODO: getTextureNormal().getOffset()
+//			TODO: getPerlinNoiseAmount()
+//			TODO: getPerlinNoiseScale()
+//			TODO: getA().x
+//			TODO: getA().y
+//			TODO: getA().z
+//			TODO: getB().x
+//			TODO: getB().y
+//			TODO: getB().z
+//			TODO: getC().x
+//			TODO: getC().y
+//			TODO: getC().z
+//			TODO: getSurfaceNormal().x
+//			TODO: getSurfaceNormal().y
+//			TODO: getSurfaceNormal().z
+		};
+	}
+	
+//	TODO: Add Javadocs.
+	@Override
 	public float[] toFloatArray() {
 		return new float[] {
 			TYPE,

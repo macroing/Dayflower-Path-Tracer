@@ -83,7 +83,59 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static CompiledScene compile(final Camera camera, final Scene scene) {
-		return new CompiledScene(doCompileBoundingVolumeHierarchy(scene), camera.getArray(), doCompileShapes(scene), doCompileTextures(scene), doCompileShapeOffsets(scene));
+		return new CompiledScene(doCompileBoundingVolumeHierarchy(scene), camera.getArray(), doCompileShapes(scene), doCompileTextures(scene), doCompileShapeOffsets(scene)).doReorderShapes();
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private CompiledScene doReorderShapes() {
+		final float[] shapes0 = this.shapes;
+		final float[] shapes1 = new float[shapes0.length];
+		
+		int boundingVolumeHierarchyOffset = 0;
+		int shapes1Offset = 0;
+		
+		while(boundingVolumeHierarchyOffset != -1) {
+			final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
+			
+			if(type == 1) {
+				boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
+			} else if(type == 2) {
+				for(int i = 0; i < (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]); i++) {
+					final int index = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
+					final int size = (int)(shapes0[index + Shape.RELATIVE_OFFSET_SIZE]);
+					
+					System.arraycopy(shapes0, index, shapes1, shapes1Offset, size);
+					
+					this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i] = shapes1Offset;
+					
+					shapes1Offset += size;
+				}
+				
+				boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
+			}
+		}
+		
+		for(int i = 0, j = 0, k = 0; i < shapes0.length; i += j) {
+			final int type = (int)(shapes0[i + Shape.RELATIVE_OFFSET_TYPE]);
+			final int size = (int)(shapes0[i + Shape.RELATIVE_OFFSET_SIZE]);
+			
+			j = size;
+			
+			if(type != Triangle.TYPE) {
+				System.arraycopy(shapes0, i, shapes1, shapes1Offset, size);
+				
+				this.shapeOffsets[k] = shapes1Offset;
+				
+				shapes1Offset += size;
+				
+				k++;
+			}
+		}
+		
+		System.arraycopy(shapes1, 0, shapes0, 0, shapes1.length);
+		
+		return this;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -116,9 +168,9 @@ public final class CompiledScene {
 			final Node node = nodes.get(i);
 			
 			if(node instanceof LeafNode) {
-				j += 16;
+				j += 9 + LeafNode.class.cast(node).getTriangles().size();
 			} else if(node instanceof TreeNode) {
-				j += 16;
+				j += 9;
 			}
 		}
 		
@@ -142,23 +194,21 @@ public final class CompiledScene {
 					}
 				}
 				
-				boundingVolumeHierarchyArray[j +  0] = 2.0F;
-				boundingVolumeHierarchyArray[j +  1] = 16.0F;
-				boundingVolumeHierarchyArray[j +  2] = depth;
-				boundingVolumeHierarchyArray[j +  3] = next;
-				boundingVolumeHierarchyArray[j +  4] = leafNode.getMinimum().x;
-				boundingVolumeHierarchyArray[j +  5] = leafNode.getMinimum().y;
-				boundingVolumeHierarchyArray[j +  6] = leafNode.getMinimum().z;
-				boundingVolumeHierarchyArray[j +  7] = leafNode.getMaximum().x;
-				boundingVolumeHierarchyArray[j +  8] = leafNode.getMaximum().y;
-				boundingVolumeHierarchyArray[j +  9] = leafNode.getMaximum().z;
-				boundingVolumeHierarchyArray[j + 10] = leafNode.getTriangles().size();
+				boundingVolumeHierarchyArray[j + 0] = 2.0F;
+				boundingVolumeHierarchyArray[j + 1] = next;
+				boundingVolumeHierarchyArray[j + 2] = leafNode.getMinimum().x;
+				boundingVolumeHierarchyArray[j + 3] = leafNode.getMinimum().y;
+				boundingVolumeHierarchyArray[j + 4] = leafNode.getMinimum().z;
+				boundingVolumeHierarchyArray[j + 5] = leafNode.getMaximum().x;
+				boundingVolumeHierarchyArray[j + 6] = leafNode.getMaximum().y;
+				boundingVolumeHierarchyArray[j + 7] = leafNode.getMaximum().z;
+				boundingVolumeHierarchyArray[j + 8] = leafNode.getTriangles().size();
 				
 				for(int k = 0; k < leafNode.getTriangles().size(); k++) {
-					boundingVolumeHierarchyArray[j + 11 + k] = leafNode.getTriangles().get(k).getOffset();
+					boundingVolumeHierarchyArray[j + 9 + k] = leafNode.getTriangles().get(k).getOffset();
 				}
 				
-				j += 16;
+				j += 9.0F + leafNode.getTriangles().size();
 			} else if(node instanceof TreeNode) {
 				final TreeNode treeNode = TreeNode.class.cast(node);
 				
@@ -166,7 +216,7 @@ public final class CompiledScene {
 				
 				int next = -1;
 				int leftIndex = -1;
-				int rightIndex = -1;
+//				int rightIndex = -1;
 				
 				for(int k = i + 1; k < nodes.size(); k++) {
 					final Node node0 = nodes.get(k);
@@ -185,27 +235,24 @@ public final class CompiledScene {
 						if(l == 0) {
 							leftIndex = offsets[k];
 						} else if(l == 1) {
-							rightIndex = offsets[k];
+//							rightIndex = offsets[k];
 						}
 						
 						l++;
 					}
 				}
 				
-				boundingVolumeHierarchyArray[j +  0] = 1.0F;
-				boundingVolumeHierarchyArray[j +  1] = 16.0F;
-				boundingVolumeHierarchyArray[j +  2] = depth;
-				boundingVolumeHierarchyArray[j +  3] = next;
-				boundingVolumeHierarchyArray[j +  4] = treeNode.getMinimum().x;
-				boundingVolumeHierarchyArray[j +  5] = treeNode.getMinimum().y;
-				boundingVolumeHierarchyArray[j +  6] = treeNode.getMinimum().z;
-				boundingVolumeHierarchyArray[j +  7] = treeNode.getMaximum().x;
-				boundingVolumeHierarchyArray[j +  8] = treeNode.getMaximum().y;
-				boundingVolumeHierarchyArray[j +  9] = treeNode.getMaximum().z;
-				boundingVolumeHierarchyArray[j + 10] = leftIndex;
-				boundingVolumeHierarchyArray[j + 11] = rightIndex;
+				boundingVolumeHierarchyArray[j + 0] = 1.0F;
+				boundingVolumeHierarchyArray[j + 1] = next;
+				boundingVolumeHierarchyArray[j + 2] = treeNode.getMinimum().x;
+				boundingVolumeHierarchyArray[j + 3] = treeNode.getMinimum().y;
+				boundingVolumeHierarchyArray[j + 4] = treeNode.getMinimum().z;
+				boundingVolumeHierarchyArray[j + 5] = treeNode.getMaximum().x;
+				boundingVolumeHierarchyArray[j + 6] = treeNode.getMaximum().y;
+				boundingVolumeHierarchyArray[j + 7] = treeNode.getMaximum().z;
+				boundingVolumeHierarchyArray[j + 8] = leftIndex;
 				
-				j += 16;//11;
+				j += 9;
 			}
 		}
 		
@@ -256,12 +303,12 @@ public final class CompiledScene {
 		int size = 0;
 		
 		if(node instanceof LeafNode) {
-			size += 16;
+			size += 9 + LeafNode.class.cast(node).getTriangles().size();
 		} else if(node instanceof TreeNode) {
 			final Optional<Node> left = TreeNode.class.cast(node).getLeft();
 			final Optional<Node> right = TreeNode.class.cast(node).getRight();
 			
-			size += 16;
+			size += 9;
 			
 			if(left.isPresent()) {
 				size += doSize(left.get());

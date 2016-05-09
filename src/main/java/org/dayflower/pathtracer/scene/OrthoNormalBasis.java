@@ -54,10 +54,11 @@ public final class OrthoNormalBasis {
 		
 		final float absWX = abs(this.w.x);
 		final float absWY = abs(this.w.y);
+		final float absWZ = abs(this.w.z);
 		
-		final float vX = absWX < 0.0F ? 0.0F : absWY < 0.0F ? this.w.z : this.w.y;
-		final float vY = absWX < 0.0F ? this.w.z : absWY < 0.0F ? 0.0F : -this.w.x;
-		final float vZ = absWX < 0.0F ? -this.w.y : absWY < 0.0F ? -this.w.x : 0.0F;
+		final float vX = absWX < absWY && absWX < absWZ ? 0.0F : absWY < absWZ ? this.w.z : this.w.y;
+		final float vY = absWX < absWY && absWX < absWZ ? this.w.z : absWY < absWZ ? 0.0F : -this.w.x;
+		final float vZ = absWX < absWY && absWX < absWZ ? -this.w.y : absWY < absWZ ? -this.w.x : 0.0F;
 		
 		this.v = new Vector3(vX, vY, vZ).normalize();
 		this.u = this.v.crossProduct(this.w);

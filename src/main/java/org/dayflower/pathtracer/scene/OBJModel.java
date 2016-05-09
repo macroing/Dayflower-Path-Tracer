@@ -34,6 +34,7 @@ public final class OBJModel {
 	private final AtomicBoolean hasNormals = new AtomicBoolean();
 	private final AtomicBoolean hasTextureCoordinates = new AtomicBoolean();
 	private final List<OBJIndex> indices = new ArrayList<>();
+	private final List<String> materials = new ArrayList<>();
 	private final List<Vector4> normals = new ArrayList<>();
 	private final List<Vector4> positions = new ArrayList<>();
 	private final List<Vector4> textureCoordinates = new ArrayList<>();
@@ -42,23 +43,36 @@ public final class OBJModel {
 	
 //	TODO: Add Javadocs!
 	public OBJModel(final String fileName) throws IOException {
+		this(fileName, 1.0F);
+	}
+	
+//	TODO: Add Javadocs!
+	public OBJModel(final String fileName, final float scale) throws IOException {
+		String material = "";
+		
 		try(final BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
 			for(String line = bufferedReader.readLine(); line != null; line = bufferedReader.readLine()) {
 				final String[] tokens = doRemoveEmptyStrings(line.split(" "));
 				
 				if(tokens.length == 0 || tokens[0].equals("#")) {
 					continue;
+				} else if(tokens[0].equals("usemtl")) {
+					material = tokens[1];
 				} else if(tokens[0].equals("v")) {
-					this.positions.add(new Vector4(Float.valueOf(tokens[1]).floatValue(), Float.valueOf(tokens[2]).floatValue(), Float.valueOf(tokens[3]).floatValue(), 1.0F));
+					this.positions.add(new Vector4(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale, 1.0F));
 				} else if(tokens[0].equals("vt")) {
-					this.textureCoordinates.add(new Vector4(Float.valueOf(tokens[1]).floatValue(), 1.0F - Float.valueOf(tokens[2]).floatValue(), 0.0F, 0.0F));
+					this.textureCoordinates.add(new Vector4(Float.valueOf(tokens[1]).floatValue() * scale, 1.0F - Float.valueOf(tokens[2]).floatValue() * scale, 0.0F, 0.0F));
 				} else if(tokens[0].equals("vn")) {
-					this.normals.add(new Vector4(Float.valueOf(tokens[1]).floatValue(), Float.valueOf(tokens[2]).floatValue(), Float.valueOf(tokens[3]).floatValue(), 0.0F));
+					this.normals.add(new Vector4(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale, 0.0F));
 				} else if(tokens[0].equals("f")) {
 					for(int i = 0; i < tokens.length - 3; i++) {
 						this.indices.add(doParseOBJIndex(tokens[1 + 0]));
 						this.indices.add(doParseOBJIndex(tokens[2 + i]));
 						this.indices.add(doParseOBJIndex(tokens[3 + i]));
+						
+						this.materials.add(material);
+						this.materials.add(material);
+						this.materials.add(material);
 					}
 				}
 			}
@@ -79,6 +93,8 @@ public final class OBJModel {
 		for(int i = 0; i < this.indices.size(); i++) {
 			final OBJIndex currentOBJIndex = this.indices.get(i);
 			
+			final String currentMaterial = this.materials.get(i);
+			
 			final Vector4 currentNormal = this.hasNormals.get() ? this.normals.get(currentOBJIndex.getNormalIndex()) : new Vector4(0.0F, 0.0F, 0.0F, 0.0F);
 			final Vector4 currentPosition = this.positions.get(currentOBJIndex.getVertexIndex());
 			final Vector4 currentTextureCoordinate = this.hasTextureCoordinates.get() ? this.textureCoordinates.get(currentOBJIndex.getTextureCoordinateIndex()) : new Vector4(0.0F, 0.0F, 0.0F, 0.0F);
@@ -90,6 +106,7 @@ public final class OBJModel {
 				
 				modelVertexIndices.put(currentOBJIndex, modelVertexIndex);
 				
+				indexedModel0.getMaterials().add(currentMaterial);
 				indexedModel0.getPositions().add(currentPosition);
 				indexedModel0.getTextureCoordinates().add(currentTextureCoordinate);
 				
@@ -105,6 +122,7 @@ public final class OBJModel {
 				
 				normalModelIndices0.put(Integer.valueOf(currentOBJIndex.getVertexIndex()), normalModelIndex);
 				
+				indexedModel1.getMaterials().add(currentMaterial);
 				indexedModel1.getPositions().add(currentPosition);
 				indexedModel1.getTextureCoordinates().add(currentTextureCoordinate);
 				indexedModel1.getNormals().add(currentNormal);

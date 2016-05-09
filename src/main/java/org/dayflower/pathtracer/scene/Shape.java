@@ -79,6 +79,9 @@ public abstract class Shape {
 	}
 	
 //	TODO: Add Javadocs.
+	public abstract byte[] toByteArray();
+	
+//	TODO: Add Javadocs.
 	public final Color getEmission() {
 		return this.emission;
 	}

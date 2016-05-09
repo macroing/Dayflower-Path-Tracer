@@ -52,7 +52,7 @@ public final class Sky {
 //	private final Color color;
 //	private final float jacobian;
 	private final float theta;
-	private final float turbidity = 6.0F;
+	private final float turbidity = 2.0F;
 	private final float zenithRelativeLuminance;
 	private final float zenithX;
 	private final float zenithY;
@@ -62,7 +62,7 @@ public final class Sky {
 	private final float[] perezY = new float[5];
 	private final float[][] imageHistogram;
 //	private final int samples = 4;
-	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.z(), Vector3.y());
+	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y());
 //	private final SpectralCurve radiance;
 	private final Vector3 sunDirection;
 	private final Vector3 sunDirectionWorld = new Vector3(1.0F, 1.0F, 1.0F).normalize();//Vector3.direction(new Point3(), new Point3(1000.0F, 3000.0F, 1000.0F)).normalize();
@@ -184,6 +184,11 @@ public final class Sky {
 //	TODO: Add Javadocs.
 	public float[] getPerezY() {
 		return this.perezY.clone();
+	}
+	
+//	TODO: Add Javadocs.
+	public OrthoNormalBasis getOrthoNormalBasis() {
+		return this.orthoNormalBasis;
 	}
 	
 //	TODO: Add Javadocs.

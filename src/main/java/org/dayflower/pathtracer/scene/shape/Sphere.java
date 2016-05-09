@@ -76,6 +76,27 @@ public final class Sphere extends Shape {
 	}
 	
 //	TODO: Add Javadocs.
+	@Override
+	public byte[] toByteArray() {
+		return new byte[] {
+			(byte)(TYPE),
+			(byte)(SIZE),
+//			TODO: getEmission().r
+//			TODO: getEmission().g
+//			TODO: getEmission().b
+			(byte)(getMaterial().ordinal()),
+//			TODO: getTextureAlbedo().getOffset()
+//			TODO: getTextureNormal().getOffset()
+//			TODO: getPerlinNoiseAmount()
+//			TODO: getPerlinNoiseScale()
+//			TODO: getRadius()
+//			TODO: getPosition().x
+//			TODO: getPosition().y
+//			TODO: getPosition().z
+		};
+	}
+	
+//	TODO: Add Javadocs.
 	public float getRadius() {
 		return this.radius;
 	}

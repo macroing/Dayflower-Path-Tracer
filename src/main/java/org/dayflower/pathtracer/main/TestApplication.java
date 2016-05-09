@@ -19,7 +19,6 @@
 package org.dayflower.pathtracer.main;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -36,7 +35,6 @@ import com.amd.aparapi.Range;
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.camera.Camera;
 import org.dayflower.pathtracer.kernel.RendererKernel;
-import org.dayflower.pathtracer.kernel.RendererKernel2;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.shape.Sphere;
@@ -45,7 +43,7 @@ import org.dayflower.pathtracer.util.FPSCounter;
 //TODO: Add Javadocs.
 public final class TestApplication extends AbstractApplication {
 	private static final String ENGINE_NAME = "Dayflower Engine";
-	private static final String ENGINE_VERSION = "v.0.0.10";
+	private static final String ENGINE_VERSION = "v.0.0.11";
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -59,7 +57,7 @@ public final class TestApplication extends AbstractApplication {
 	private final Label labelRenderPass = new Label("Render pass: 0");
 	private final Label labelRenderTime = new Label("Render time: 00:00:00");
 	private final Label labelRenderType = new Label("Render type: Path Tracer");
-	private final Scene scene = Scenes.newTestScene();
+	private final Scene scene = Scenes.newCarScene();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -160,8 +158,7 @@ public final class TestApplication extends AbstractApplication {
 		print("- Texture: Checkerboard");
 		print("- Texture: Image");
 		print("- Texture: Solid");
-		print("- Sun Sky Model");
-		print("- Normal Mapping: Texture: Checkerboard");
+		print("- Perez Sun Sky Model");
 		print("- Normal Mapping: Texture: Image");
 		print("- Normal Mapping: Perlin Noise");
 		print("- Cosine-Weighted Hemisphere-Sampling of Sun");
@@ -181,8 +178,10 @@ public final class TestApplication extends AbstractApplication {
 //	TODO: Add Javadocs.
 	@Override
 	protected void onMouseMoved(final float x, final float y) {
-		this.camera.changeYaw(x * 0.005F);
-		this.camera.changePitch(-(y * 0.005F));
+		if(isRecenteringMouse()) {
+			this.camera.changeYaw(x * 0.005F);
+			this.camera.changePitch(-(y * 0.005F));
+		}
 	}
 	
 //	TODO: Add Javadocs.
@@ -199,9 +198,6 @@ public final class TestApplication extends AbstractApplication {
 		final RendererKernel rendererKernel = this.rendererKernel;
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> rendererKernel.dispose()));
-		
-		final AtomicBoolean hasReleasedF = new AtomicBoolean(true);
-		final AtomicBoolean hasReleasedG = new AtomicBoolean(true);
 		
 		while(true) {
 			final Range range = Range.create(getCanvasWidth() * getCanvasHeight());
@@ -229,26 +225,31 @@ public final class TestApplication extends AbstractApplication {
 				Platform.exit();
 			}
 			
-			if(isKeyPressed(KeyCode.F) && hasReleasedF.compareAndSet(true, false)) {
+			if(isKeyClicked(KeyCode.F)) {
 				setCanvasWidthScale(Math.min(getCanvasWidthScale() + 1, 8));
 				setCanvasHeightScale(Math.min(getCanvasHeightScale() + 1, 8));
 				setCanvasWidth(1024 / getCanvasWidthScale());
 				setCanvasHeight(768 / getCanvasHeightScale());
-			} else if(!isKeyPressed(KeyCode.F)) {
-				hasReleasedF.set(true);
 			}
 			
-			if(isKeyPressed(KeyCode.G) && hasReleasedG.compareAndSet(true, false)) {
+			if(isKeyClicked(KeyCode.G)) {
 				setCanvasWidthScale(Math.max(getCanvasWidthScale() - 1, 1));
 				setCanvasHeightScale(Math.max(getCanvasHeightScale() - 1, 1));
 				setCanvasWidth(1024 / getCanvasWidthScale());
 				setCanvasHeight(768 / getCanvasHeightScale());
-			} else if(!isKeyPressed(KeyCode.G)) {
-				hasReleasedG.set(true);
 			}
 			
 			if(isKeyPressed(KeyCode.I)) {
 				camera.changeFocalDistance(-0.1F);
+			}
+			
+			if(isKeyClicked(KeyCode.K)) {
+				camera.setWalkLockEnabled(!camera.isWalkLockEnabled());
+			}
+			
+			if(isKeyClicked(KeyCode.L)) {
+				setCursorHidden(!isCursorHidden());
+				setRecenteringMouse(!isRecenteringMouse());
 			}
 			
 			if(isKeyPressed(KeyCode.LEFT)) {
@@ -295,7 +296,7 @@ public final class TestApplication extends AbstractApplication {
 				camera.changeApertureDiameter(-0.1F);
 			}
 			
-			if(isDraggingMouse() || isMovingMouse() || isPressingKey()) {
+			if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || isPressingKey()) {
 				rendererKernel.reset();
 				
 				renderPass.set(0);

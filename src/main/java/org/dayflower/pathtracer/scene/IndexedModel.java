@@ -25,6 +25,7 @@ import java.util.List;
 //TODO: Add Javadocs.
 public final class IndexedModel {
 	private final List<Integer> indices = new ArrayList<>();
+	private final List<String> materials = new ArrayList<>();
 	private final List<Vector4> normals = new ArrayList<>();
 	private final List<Vector4> positions = new ArrayList<>();
 	private final List<Vector4> tangents = new ArrayList<>();
@@ -42,6 +43,11 @@ public final class IndexedModel {
 //	TODO: Add Javadocs.
 	public List<Integer> getIndices() {
 		return this.indices;
+	}
+	
+//	TODO: Add Javadocs.
+	public List<String> getMaterials() {
+		return this.materials;
 	}
 	
 //	TODO: Add Javadocs.
