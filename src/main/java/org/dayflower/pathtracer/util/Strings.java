@@ -18,9 +18,12 @@
  */
 package org.dayflower.pathtracer.util;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs!
+/**
+ * A class that consists exclusively of static methods that operates on or returns {@code String}s.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Strings {
 	private Strings() {
 		
@@ -28,7 +31,17 @@ public final class Strings {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code String} that consists of {@code string} repeated {@code repetition} times.
+	 * <p>
+	 * If {@code string} is {@code null}, the {@code String} literal {@code "null"} will be repeated {@code repetition} times.
+	 * <p>
+	 * If {@code repetition} is less than or equal to {@code 0}, an empty {@code String} will be returned.
+	 * 
+	 * @param string the {@code String} to repeat, which may be {@code null}
+	 * @param repetition how many times {@code string} should be repeated
+	 * @return a {@code String} that consists of {@code string} repeated {@code repetition} times
+	 */
 	public static String repeat(final String string, final int repetition) {
 		final StringBuilder stringBuilder = new StringBuilder();
 		

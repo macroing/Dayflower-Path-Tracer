@@ -49,10 +49,10 @@ public final class RendererKernel extends AbstractKernel {
 	private static final float REFRACTIVE_INDEX_1_DIVIDED_BY_REFRACTIVE_INDEX_0 = REFRACTIVE_INDEX_1 / REFRACTIVE_INDEX_0;
 	private static final float REFRACTIVE_INDEX_R0 = (REFRACTIVE_INDEX_A * REFRACTIVE_INDEX_A) / (REFRACTIVE_INDEX_B * REFRACTIVE_INDEX_B);
 	private static final int MATERIAL_CLEAR_COAT = 0;
-	private static final int MATERIAL_DIFFUSE = 1;
-	private static final int MATERIAL_METAL = 2;
-	private static final int MATERIAL_REFRACTIVE = 3;
-	private static final int MATERIAL_SPECULAR = 4;
+	private static final int MATERIAL_GLASS = 1;
+	private static final int MATERIAL_LAMBERTIAN_DIFFUSE = 2;
+	private static final int MATERIAL_MIRROR = 3;
+	private static final int MATERIAL_PHONG_METAL = 4;
 	private static final int RELATIVE_OFFSET_INTERSECTION_DISTANCE = 0;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET = 1;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT = 2;
@@ -1769,7 +1769,7 @@ public final class RendererKernel extends AbstractKernel {
 //-				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
 //-				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
 //-				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
-			} else if(material == MATERIAL_DIFFUSE) {
+			} else if(material == MATERIAL_LAMBERTIAN_DIFFUSE) {
 //				TODO: Write explanation!
 				final float random0 = PI_MULTIPLIED_BY_TWO * randomA;
 				final float random0Cos = cos(random0);
@@ -1864,7 +1864,7 @@ public final class RendererKernel extends AbstractKernel {
 //-				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
 //-				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
 //-				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
-			} else if(material == MATERIAL_METAL) {
+			} else if(material == MATERIAL_PHONG_METAL) {
 //				TODO: Write explanation!
 				final float random0 = PI_MULTIPLIED_BY_TWO * randomA;
 				final float random0Cos = cos(random0);
@@ -1970,7 +1970,7 @@ public final class RendererKernel extends AbstractKernel {
 //-				radianceMultiplierR *= this.temporaryColors[pixelIndex0];
 //-				radianceMultiplierG *= this.temporaryColors[pixelIndex0 + 1];
 //-				radianceMultiplierB *= this.temporaryColors[pixelIndex0 + 2];
-			} else if(material == MATERIAL_REFRACTIVE) {
+			} else if(material == MATERIAL_GLASS) {
 //				TODO: Write explanation!
 				final boolean isGoingIn = surfaceNormalX * w0X + surfaceNormalY * w0Y + surfaceNormalZ * w0Z > 0.0F;
 				
@@ -2060,7 +2060,7 @@ public final class RendererKernel extends AbstractKernel {
 				
 //				TODO: Find out why the "child list broken" Exception occurs if the following line is not present!
 				depthCurrent = depthCurrent;
-			} else if(material == MATERIAL_SPECULAR) {
+			} else if(material == MATERIAL_MIRROR) {
 //				Update the ray origin for the next iteration:
 				originX = surfaceIntersectionPointX + surfaceNormalX * 0.000001F;
 				originY = surfaceIntersectionPointY + surfaceNormalY * 0.000001F;

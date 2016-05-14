@@ -23,7 +23,6 @@ import static org.dayflower.pathtracer.math.Math2.cos;
 import static org.dayflower.pathtracer.math.Math2.sin;
 import static org.dayflower.pathtracer.math.Math2.sqrt;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import org.dayflower.pathtracer.math.Math2;
@@ -115,7 +114,16 @@ public final class Point3 {
 		}
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns {@code true} if, and only if, {@code p} is contained in the sphere defined with the center as this {@code Point3} instance and a radius of {@code radius}, {@code false} otherwise.
+	 * <p>
+	 * If {@code p} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param p the {@code Point3} instance to check
+	 * @param radius the radius to use
+	 * @return {@code true} if, and only if, {@code p} is contained in the sphere defined with the center as this {@code Point3} instance and a radius of {@code radius}, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code p} is {@code null}
+	 */
 	public boolean isWithinSphereRadius(final Point3 p, final float radius) {
 		final float x = abs(this.x - p.x);
 		final float y = abs(this.y - p.y);
@@ -124,12 +132,28 @@ public final class Point3 {
 		return x * x + y * y + z * z < radius;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the distance from this {@code Point3} to {@code p}.
+	 * <p>
+	 * If {@code p} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param p a {@code Point3} instance
+	 * @return the distance from this {@code Point3} to {@code p}
+	 * @throws NullPointerException thrown if, and only if, {@code p} is {@code null}
+	 */
 	public float distanceTo(final Point3 p) {
 		return sqrt(distanceToSquared(p));
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the squared distance from this {@code Point3} to {@code p}.
+	 * <p>
+	 * If {@code p} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param p a {@code Point3} instance
+	 * @return the squared distance from this {@code Point3} to {@code p}
+	 * @throws NullPointerException thrown if, and only if, {@code p} is {@code null}
+	 */
 	public float distanceToSquared(final Point3 p) {
 		final float deltaX = this.x - p.x;
 		final float deltaY = this.y - p.y;
@@ -148,12 +172,31 @@ public final class Point3 {
 		return Objects.hash(Float.valueOf(this.x), Float.valueOf(this.y), Float.valueOf(this.z));
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code Point3} offset from this {@code Point3} in the direction of {@code v} and with the distance of {@code t}.
+	 * <p>
+	 * If {@code v} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param v a {@link Vector3} with the direction of the {@code Point3} to return
+	 * @param t the distance to the {@code Point3} to return
+	 * @return a {@code Point3} offset from this {@code Point3} in the direction of {@code v} and with the distance of {@code t}
+	 * @throws NullPointerException thrown if, and only if, {@code v} is {@code null}
+	 */
 	public Point3 pointAt(final Vector3 v, final float t) {
 		return new Point3(this.x + v.x * t, this.y + v.y * t, this.z + v.z * t);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Performs a transformation.
+	 * <p>
+	 * Returns a new {@code Point3} with the transformation performed.
+	 * <p>
+	 * If {@code m} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param m the {@link Matrix44} to perform the transformation with
+	 * @return a new {@code Point3} with the transformation performed
+	 * @throws NullPointerException thrown if, and only if, {@code m} is {@code null}
+	 */
 	public Point3 transform(final Matrix44 m) {
 		final float x = m.e11 * this.x + m.e12 * this.y + m.e13 * this.z + m.e14 * 1.0F;
 		final float y = m.e21 * this.x + m.e22 * this.y + m.e23 * this.z + m.e24 * 1.0F;
@@ -162,7 +205,17 @@ public final class Point3 {
 		return new Point3(x, y, z);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Performs a transformation and a divide.
+	 * <p>
+	 * Returns a new {@code Point3} with the transformation and divide performed.
+	 * <p>
+	 * If {@code m} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param m the {@link Matrix44} to perform the transformation with
+	 * @return a new {@code Point3} with the transformation and divide performed
+	 * @throws NullPointerException thrown if, and only if, {@code m} is {@code null}
+	 */
 	public Point3 transformAndDivide(final Matrix44 m) {
 		final float x = m.e11 * this.x + m.e12 * this.y + m.e13 * this.z + m.e14 * 1.0F;
 		final float y = m.e21 * this.x + m.e22 * this.y + m.e23 * this.z + m.e24 * 1.0F;
@@ -172,17 +225,38 @@ public final class Point3 {
 		return Math2.equals(w, 1.0F) ? new Point3(x / w, y / w, z / w) : new Point3(x, y, z);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Performs a translation on the X-axis.
+	 * <p>
+	 * Returns a new {@code Point3} with the translation performed.
+	 * 
+	 * @param x a delta value to add to the value of the X-coordinate
+	 * @return a new {@code Point3} with the translation performed
+	 */
 	public Point3 translateX(final float x) {
 		return new Point3(this.x + x, this.y, this.z);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Performs a translation on the Y-axis.
+	 * <p>
+	 * Returns a new {@code Point3} with the translation performed.
+	 * 
+	 * @param y a delta value to add to the value of the Y-coordinate
+	 * @return a new {@code Point3} with the translation performed
+	 */
 	public Point3 translateY(final float y) {
 		return new Point3(this.x, this.y + y, this.z);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Performs a translation on the Z-axis.
+	 * <p>
+	 * Returns a new {@code Point3} with the translation performed.
+	 * 
+	 * @param z a delta value to add to the value of the Z-coordinate
+	 * @return a new {@code Point3} with the translation performed
+	 */
 	public Point3 translateZ(final float z) {
 		return new Point3(this.x, this.y, this.z + z);
 	}
@@ -199,7 +273,16 @@ public final class Point3 {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code Point3} denoting the center between {@code p0} and {@code p1}.
+	 * <p>
+	 * If either {@code p0} or {@code p1} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param p0 a {@code Point3}
+	 * @param p1 a {@code Point3}
+	 * @return a {@code Point3} denoting the center between {@code p0} and {@code p1}
+	 * @throws NullPointerException thrown if, and only if, either {@code p0} or {@code p1} are {@code null}
+	 */
 	public static Point3 center(final Point3 p0, final Point3 p1) {
 		final float centerX = (p0.x + p1.x) * 0.5F;
 		final float centerY = (p0.y + p1.y) * 0.5F;
@@ -208,12 +291,25 @@ public final class Point3 {
 		return new Point3(centerX, centerY, centerZ);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the maximum {@code Point3}.
+	 * 
+	 * @return the maximum {@code Point3}
+	 */
 	public static Point3 maximum() {
 		return new Point3(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the maximum {@code Point3} given the bounds represented by {@code p0} and {@code p1}.
+	 * <p>
+	 * If either {@code p0} or {@code p1} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param p0 one of the {@code Point3}s defining the bounds
+	 * @param p1 one of the {@code Point3}s defining the bounds
+	 * @return the maximum {@code Point3} given the bounds represented by {@code p0} and {@code p1}
+	 * @throws NullPointerException thrown if, and only if, either {@code p0} or {@code p1} are {@code null}
+	 */
 	public static Point3 maximum(final Point3 p0, final Point3 p1) {
 		final float maximumX = p0.x > p1.x ? p0.x : p1.x;
 		final float maximumY = p0.y > p1.y ? p0.y : p1.y;
@@ -222,7 +318,17 @@ public final class Point3 {
 		return new Point3(maximumX, maximumY, maximumZ);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the maximum {@code Point3} given the bounds represented by {@code p0}, {@code p1} and {@code p2}.
+	 * <p>
+	 * If either {@code p0}, {@code p1} or {@code p2} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param p0 one of the {@code Point3}s defining the bounds
+	 * @param p1 one of the {@code Point3}s defining the bounds
+	 * @param p2 one of the {@code Point3}s defining the bounds
+	 * @return the maximum {@code Point3} given the bounds represented by {@code p0}, {@code p1} and {@code p2}
+	 * @throws NullPointerException thrown if, and only if, either {@code p0}, {@code p1} or {@code p2} are {@code null}
+	 */
 	public static Point3 maximum(final Point3 p0, final Point3 p1, final Point3 p2) {
 		final float maximumX = p0.x > p1.x && p0.x > p2.x ? p0.x : p1.x > p2.x ? p1.x : p2.x;
 		final float maximumY = p0.y > p1.y && p0.y > p2.y ? p0.y : p1.y > p2.y ? p1.y : p2.y;
@@ -231,12 +337,25 @@ public final class Point3 {
 		return new Point3(maximumX, maximumY, maximumZ);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the minimum {@code Point3}.
+	 * 
+	 * @return the minimum {@code Point3}
+	 */
 	public static Point3 minimum() {
 		return new Point3(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the minimum {@code Point3} given the bounds represented by {@code p0} and {@code p1}.
+	 * <p>
+	 * If either {@code p0} or {@code p1} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param p0 one of the {@code Point3}s defining the bounds
+	 * @param p1 one of the {@code Point3}s defining the bounds
+	 * @return the minimum {@code Point3} given the bounds represented by {@code p0} and {@code p1}
+	 * @throws NullPointerException thrown if, and only if, either {@code p0} or {@code p1} are {@code null}
+	 */
 	public static Point3 minimum(final Point3 p0, final Point3 p1) {
 		final float minimumX = p0.x < p1.x ? p0.x : p1.x;
 		final float minimumY = p0.y < p1.y ? p0.y : p1.y;
@@ -245,7 +364,17 @@ public final class Point3 {
 		return new Point3(minimumX, minimumY, minimumZ);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the minimum {@code Point3} given the bounds represented by {@code p0}, {@code p1} and {@code p2}.
+	 * <p>
+	 * If either {@code p0}, {@code p1} or {@code p2} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param p0 one of the {@code Point3}s defining the bounds
+	 * @param p1 one of the {@code Point3}s defining the bounds
+	 * @param p2 one of the {@code Point3}s defining the bounds
+	 * @return the minimum {@code Point3} given the bounds represented by {@code p0}, {@code p1} and {@code p2}
+	 * @throws NullPointerException thrown if, and only if, either {@code p0}, {@code p1} or {@code p2} are {@code null}
+	 */
 	public static Point3 minimum(final Point3 p0, final Point3 p1, final Point3 p2) {
 		final float minimumX = p0.x < p1.x && p0.x < p2.x ? p0.x : p1.x < p2.x ? p1.x : p2.x;
 		final float minimumY = p0.y < p1.y && p0.y < p2.y ? p0.y : p1.y < p2.y ? p1.y : p2.y;
@@ -254,7 +383,20 @@ public final class Point3 {
 		return new Point3(minimumX, minimumY, minimumZ);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Performs a rotation around an arbitrary line.
+	 * <p>
+	 * Returns a {@code Point3}.
+	 * <p>
+	 * If either {@code axis}, {@code direction} or {@code point} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param axis a {@code Point3}
+	 * @param direction a {@link Vector3}
+	 * @param point a {@code Point3}
+	 * @param theta a scalar
+	 * @return a {@code Point3}
+	 * @throws NullPointerException thrown if, and only if, either {@code axis}, {@code direction} or {@code point} are {@code null}
+	 */
 	public static Point3 rotate(final Point3 axis, final Vector3 direction, final Point3 point, final float theta) {
 		final Vector3 d = direction.normalize();
 		

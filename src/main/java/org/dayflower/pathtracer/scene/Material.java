@@ -18,24 +18,41 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs.
+/**
+ * A {@code Material} denotes a type of material.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public enum Material {
-//	TODO: Add Javadocs.
+	/**
+	 * A {@code Material} that represents a clear coat material, such as the surface of a car.
+	 * <p>
+	 * It is implemented as a combination of {@link #LAMBERTIAN_DIFFUSE} and {@link #MIRROR}.
+	 */
 	CLEAR_COAT,
 	
-//	TODO: Add Javadocs.
-	DIFFUSE,
+	/**
+	 * A {@code Material} that represents the material of glass.
+	 * <p>
+	 * It is implemented as a combination of a refractive material and {@link #MIRROR}.
+	 */
+	GLASS,
 	
-//	TODO: Add Javadocs.
-	METAL,
+	/**
+	 * A {@code Material} that represents a Lambertian diffuse material.
+	 */
+	LAMBERTIAN_DIFFUSE,
 	
-//	TODO: Add Javadocs.
-	REFRACTIVE,
+	/**
+	 * A {@code Material} that represents the material of a mirror.
+	 */
+	MIRROR,
 	
-//	TODO: Add Javadocs.
-	SPECULAR;
+	/**
+	 * A {@code Material} that represents a Phong metal material.
+	 */
+	PHONG_METAL;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

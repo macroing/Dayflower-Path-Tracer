@@ -18,10 +18,14 @@
  */
 package org.dayflower.pathtracer.util;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.concurrent.atomic.AtomicLong;
 
-//TODO: Add Javadocs.
+/**
+ * An {@code FPSCounter} is used for calculating frames per second (FPS).
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class FPSCounter {
 	private final AtomicLong newFPS = new AtomicLong();
 	private final AtomicLong newFPSReferenceTimeMillis = new AtomicLong();
@@ -31,24 +35,38 @@ public final class FPSCounter {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code FPSCounter} instance.
+	 */
 	public FPSCounter() {
 		
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the current FPS.
+	 * 
+	 * @return the current FPS
+	 */
 	public long getFPS() {
 		return this.oldFPS.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the milliseconds since the last update.
+	 * 
+	 * @return the milliseconds since the last update
+	 */
 	public long getFrameTimeMillis() {
 		return this.oldFrameTimeMillis.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Updates this {@code FPSCounter}.
+	 * <p>
+	 * This method should be called once every frame.
+	 */
 	public void update() {
 		final long currentTimeMillis = System.currentTimeMillis();
 		
