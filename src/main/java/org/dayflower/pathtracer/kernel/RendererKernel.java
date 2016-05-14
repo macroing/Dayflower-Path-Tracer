@@ -18,24 +18,22 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
+import java.util.Objects;
 import java.util.Optional;
 
 import org.dayflower.pathtracer.camera.Camera;
 import org.dayflower.pathtracer.scene.Scene;
-import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Sky;
-import org.dayflower.pathtracer.scene.Texture;
-import org.dayflower.pathtracer.scene.shape.Plane;
-import org.dayflower.pathtracer.scene.shape.Sphere;
-import org.dayflower.pathtracer.scene.shape.Triangle;
-import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
-import org.dayflower.pathtracer.scene.texture.ImageTexture;
-import org.dayflower.pathtracer.scene.texture.SolidTexture;
 
-//TODO: Add Javadocs.
+/**
+ * An extension of the {@code AbstractKernel} class that performs Path Tracing.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class RendererKernel extends AbstractKernel {
 	private static final float GAMMA = 2.2F;
+	@SuppressWarnings("unused")
 	private static final float GAMMA_RECIPROCAL = 1.0F / GAMMA;
 	private static final float MAXIMUM_COLOR_COMPONENT = 255.0F;
 	private static final float MAXIMUM_COLOR_COMPONENT_RECIPROCAL = 1.0F / MAXIMUM_COLOR_COMPONENT;
@@ -69,6 +67,15 @@ public final class RendererKernel extends AbstractKernel {
 	private final boolean isResettingFully;
 	private byte[] pixels;
 	private final Camera camera;
+	private final float orthoNormalBasisUX;
+	private final float orthoNormalBasisUY;
+	private final float orthoNormalBasisUZ;
+	private final float orthoNormalBasisVX;
+	private final float orthoNormalBasisVY;
+	private final float orthoNormalBasisVZ;
+	private final float orthoNormalBasisWX;
+	private final float orthoNormalBasisWY;
+	private final float orthoNormalBasisWZ;
 	private final float sunDirectionX;
 	private final float sunDirectionY;
 	private final float sunDirectionZ;
@@ -102,19 +109,20 @@ public final class RendererKernel extends AbstractKernel {
 	private final int[] shapeOffsets;
 	private final long[] subSamples;
 	
-	private final float orthoNormalBasisUX;
-	private final float orthoNormalBasisUY;
-	private final float orthoNormalBasisUZ;
-	private final float orthoNormalBasisVX;
-	private final float orthoNormalBasisVY;
-	private final float orthoNormalBasisVZ;
-	private final float orthoNormalBasisWX;
-	private final float orthoNormalBasisWY;
-	private final float orthoNormalBasisWZ;
-	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code RendererKernel} instance.
+	 * <p>
+	 * If either {@code camera} or {@code scene} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param isResettingFully {@code true} if full resetting should be performed, {@code false} otherwise
+	 * @param width the width to use
+	 * @param height the height to use
+	 * @param camera the {@link Camera} to use
+	 * @param scene the {@link Scene} to use
+	 * @throws NullPointerException thrown if, and only if, either {@code camera} or {@code scene} are {@code null}
+	 */
 	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final Scene scene) {
 		final CompiledScene compiledScene = CompiledScene.compile(camera, scene);
 		
@@ -164,29 +172,57 @@ public final class RendererKernel extends AbstractKernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@code byte} array with the pixels.
+	 * 
+	 * @return the {@code byte} array with the pixels
+	 */
 	public byte[] getPixels() {
 		return this.pixels;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the maximum depth for path termination.
+	 * 
+	 * @return the maximum depth for path termination
+	 */
 	public int getDepthMaximum() {
 		return this.depthMaximum;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the depth used for Russian Roulette path termination.
+	 * 
+	 * @return the depth used for Russian Roulette path termination
+	 */
 	public int getDepthRussianRoulette() {
 		return this.depthRussianRoulette;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the optional {@link Camera} instance assigned to this {@code RendererKernel} instance.
+	 * 
+	 * @return the optional {@code Camera} instance assigned to this {@code RendererKernel} instance
+	 */
 	public Optional<Camera> getCamera() {
 		return Optional.ofNullable(this.camera);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Compiles this {@code RendererKernel} instance.
+	 * <p>
+	 * Returns itself for method chaining.
+	 * <p>
+	 * If {@code pixels} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param pixels a {@code byte} array with the pixels
+	 * @param width the width to use
+	 * @param height the height to use
+	 * @return itself for method chaining
+	 * @throws NullPointerException thrown if, and only if, {@code pixels} is {@code null}
+	 */
 	public RendererKernel compile(final byte[] pixels, final int width, final int height) {
-		this.pixels = pixels;
+		this.pixels = Objects.requireNonNull(pixels, "pixels == null");
 		
 		setExecutionMode(EXECUTION_MODE.GPU);
 		setExplicit(true);
@@ -215,7 +251,13 @@ public final class RendererKernel extends AbstractKernel {
 		return this;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Resets this {@code RendererKernel} instance.
+	 * <p>
+	 * Returns itself for method chaining.
+	 * 
+	 * @return itself for method chaining
+	 */
 	public RendererKernel reset() {
 		for(int i = 0; i < this.subSamples.length; i++) {
 			if(this.isResettingFully) {
@@ -245,7 +287,9 @@ public final class RendererKernel extends AbstractKernel {
 		return this;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Performs the Path Tracing.
+	 */
 	@Override
 	public void run() {
 		final int pixelIndex = getGlobalId();
@@ -255,12 +299,20 @@ public final class RendererKernel extends AbstractKernel {
 		doCalculateColor(pixelIndex);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the maximum depth to be used for path termination.
+	 * 
+	 * @param depthMaximum the maximum depth
+	 */
 	public void setDepthMaximum(final int depthMaximum) {
 		this.depthMaximum = depthMaximum;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the depth to be used for Russian Roulette path termination.
+	 * 
+	 * @param depthRussianRoulette the depth to use
+	 */
 	public void setDepthRussianRoulette(final int depthRussianRoulette) {
 		this.depthRussianRoulette = depthRussianRoulette;
 	}

@@ -18,7 +18,6 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -39,150 +38,54 @@ import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SolidTexture;
 
-//TODO: Add Javadocs.
-public final class CompiledScene {
-//	TODO: Add Javadocs.
+final class CompiledScene {
 	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0 = 2;
-	
-//	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1 = 5;
-	
-//	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_DEGREES = 8;
-	
-//	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U = 9;
-	
-//	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_V = 10;
-	
-//	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_SIZE = 11;
-	
-//	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_TYPE = 1;
-	
-//	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_DATA = 7;
-	
-//	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_DEGREES = 2;
-	
-//	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_HEIGHT = 4;
-	
-//	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_U = 5;
-	
-//	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_V = 6;
-	
-//	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_WIDTH = 3;
-	
-//	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_TYPE = 3;
-	
-//	TODO: Add Javadocs.
 	public static final int PLANE_RELATIVE_OFFSET_A = 10;
-	
-//	TODO: Add Javadocs.
 	public static final int PLANE_RELATIVE_OFFSET_B = 13;
-	
-//	TODO: Add Javadocs.
 	public static final int PLANE_RELATIVE_OFFSET_C = 16;
-	
-//	TODO: Add Javadocs.
 	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL = 19;
-	
-//	TODO: Add Javadocs.
 	public static final int PLANE_SIZE = 22;
-	
-//	TODO: Add Javadocs.
 	public static final int PLANE_TYPE = 3;
-	
-//	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_EMISSION = 2;
-	
-//	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_MATERIAL = 5;
-	
-//	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT = 8;
-	
-//	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE = 9;
-	
-//	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_SIZE = 1;
-	
-//	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO = 6;
-	
-//	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL = 7;
-	
-//	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_TYPE = 0;
-	
-//	TODO: Add Javadocs.
 	public static final int SOLID_TEXTURE_RELATIVE_OFFSET_COLOR = 2;
-	
-//	TODO: Add Javadocs.
 	public static final int SOLID_TEXTURE_SIZE = 5;
-	
-//	TODO: Add Javadocs.
 	public static final int SOLID_TEXTURE_TYPE = 2;
-	
-//	TODO: Add Javadocs.
 	public static final int SPHERE_RELATIVE_OFFSET_POSITION = 11;
-	
-//	TODO: Add Javadocs.
 	public static final int SPHERE_RELATIVE_OFFSET_RADIUS = 10;
-	
-//	TODO: Add Javadocs.
 	public static final int SPHERE_SIZE = 14;
-	
-//	TODO: Add Javadocs.
 	public static final int SPHERE_TYPE = 1;
-	
-//	TODO: Add Javadocs.
 	public static final int TEXTURE_RELATIVE_OFFSET_SIZE = 1;
-	
-//	TODO: Add Javadocs.
 	public static final int TEXTURE_RELATIVE_OFFSET_TYPE = 0;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A = 10;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B = 13;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C = 16;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A = 19;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B = 22;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C = 25;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A = 28;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B = 30;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C = 32;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_SIZE = 34;
-	
-//	TODO: Add Javadocs.
 	public static final int TRIANGLE_TYPE = 2;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -205,34 +108,28 @@ public final class CompiledScene {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
 	public float[] getBoundingVolumeHierarchy() {
 		return this.boundingVolumeHierarchy;
 	}
 	
-//	TODO: Add Javadocs.
 	public float[] getCamera() {
 		return this.camera;
 	}
 	
-//	TODO: Add Javadocs.
 	public float[] getShapes() {
 		return this.shapes;
 	}
 	
-//	TODO: Add Javadocs.
 	public float[] getTextures() {
 		return this.textures;
 	}
 	
-//	TODO: Add Javadocs.
 	public int[] getShapeOffsets() {
 		return this.shapeOffsets;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
 	public static CompiledScene compile(final Camera camera, final Scene scene) {
 		return new CompiledScene(doCompileBoundingVolumeHierarchy(scene), camera.getArray(), doCompileShapes(scene), doCompileTextures(scene), doCompileShapeOffsets(scene)).doReorderShapes();
 	}
