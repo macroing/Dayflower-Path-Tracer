@@ -18,50 +18,39 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
 
-//TODO: Add Javadocs.
+/**
+ * A {@code Shape} is a model of a shape.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public abstract class Shape {
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_EMISSION = 2;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_MATERIAL = 5;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT = 8;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_PERLIN_NOISE_SCALE = 9;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SIZE = 1;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO = 6;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL = 7;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_TYPE = 0;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
 	private final Color emission;
 	private final float perlinNoiseAmount;
 	private final float perlinNoiseScale;
-	private int offset;
 	private final Material material;
 	private final Texture textureAlbedo;
 	private final Texture textureNormal;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Shape} instance.
+	 * <p>
+	 * If either {@code emission}, {@code material}, {@code textureAlbedo} or {@code textureNormal} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param emission a {@link Color} denoting the emissivity of this {@code Shape}
+	 * @param perlinNoiseAmount the Perlin Noise amount associated with this {@code Shape}, used for Perlin Noise Normal Mapping
+	 * @param perlinNoiseScale the Perlin Noise scale associated with this {@code Shape}, used for Perlin Noise Normal Mapping
+	 * @param material the {@link Material} used for this {@code Shape}
+	 * @param textureAlbedo the {@link Texture} used for the albedo of this {@code Shape}
+	 * @param textureNormal the {@code Texture} used for Normal Mapping of this {@code Shape}
+	 * @throws NullPointerException thrown if, and only if, either {@code emission}, {@code material}, {@code textureAlbedo} or {@code textureNormal} are {@code null}
+	 */
 	protected Shape(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal) {
 		this.emission = Objects.requireNonNull(emission, "emission == null");
 		this.perlinNoiseAmount = perlinNoiseAmount;
@@ -73,57 +62,70 @@ public abstract class Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, this {@code Shape} instance is emissive, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, this {@code Shape} instance is emissive, {@code false} otherwise
+	 */
 	public final boolean isEmissive() {
 		return !this.emission.isBlack();
 	}
 	
-//	TODO: Add Javadocs.
-	public abstract byte[] toByteArray();
-	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@link Color} denoting the emissivity of this {@code Shape} instance.
+	 * 
+	 * @return the {@code Color} denoting the emissivity of this {@code Shape} instance
+	 */
 	public final Color getEmission() {
 		return this.emission;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Perlin Noise amount associated with this {@code Shape} instance.
+	 * <p>
+	 * The Perlin Noise amount is used for Perlin Noise Normal Mapping.
+	 * 
+	 * @return the Perlin Noise amount associated with this {@code Shape} instance
+	 */
 	public final float getPerlinNoiseAmount() {
 		return this.perlinNoiseAmount;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Perlin Noise scale associated with this {@code Shape} instance.
+	 * <p>
+	 * The Perlin Noise scale is used for Perlin Noise Normal Mapping.
+	 * 
+	 * @return the Perlin Noise scale associated with this {@code Shape} instance
+	 */
 	public final float getPerlinNoiseScale() {
 		return this.perlinNoiseScale;
 	}
 	
-//	TODO: Add Javadocs.
-	public abstract float[] toFloatArray();
-	
-//	TODO: Add Javadocs.
-	public final int getOffset() {
-		return this.offset;
-	}
-	
-//	TODO: Add Javadocs.
-	public abstract int size();
-	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@link Material} associated with this {@code Shape} instance.
+	 * 
+	 * @return the {@code Material} associated with this {@code Shape} instance
+	 */
 	public final Material getMaterial() {
 		return this.material;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@link Texture} associated with this {@code Shape} instance for its albedo.
+	 * 
+	 * @return the {@code Texture} associated with this {@code Shape} instance for its albedo
+	 */
 	public final Texture getTextureAlbedo() {
 		return this.textureAlbedo;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@link Texture} associated with this {@code Shape} instance for Normal Mapping.
+	 * 
+	 * @return the {@code Texture} associated with this {@code Shape} instance for Normal Mapping
+	 */
 	public final Texture getTextureNormal() {
 		return this.textureNormal;
-	}
-	
-//	TODO: Add Javadocs.
-	public final void setOffset(final int offset) {
-		this.offset = offset;
 	}
 }

@@ -18,22 +18,38 @@
  */
 package org.dayflower.pathtracer.color;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs!
+/**
+ * A {@code ConstantSpectralCurve} is an implementation of {@link SpectralCurve} that returns a constant value.
+ * <p>
+ * This class is immutable and therefore suitable for concurrent use without external synchronization.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class ConstantSpectralCurve extends SpectralCurve {
 	private final float amplitude;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Constructs a new {@code ConstantSpectralCurve} instance.
+	 * 
+	 * @param amplitude the constant value to use
+	 */
 	public ConstantSpectralCurve(final float amplitude) {
 		this.amplitude = amplitude;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a sample based on the wavelength {@code lambda} in nanometers.
+	 * <p>
+	 * This implementation returns a constant value.
+	 * 
+	 * @param lambda the wavelength in nanometers
+	 * @return a sample based on the wavelength {@code lambda} in nanometers
+	 */
 	@Override
 	public float sample(final float lambda) {
 		return this.amplitude;

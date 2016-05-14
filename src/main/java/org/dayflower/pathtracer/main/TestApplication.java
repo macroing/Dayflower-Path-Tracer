@@ -57,7 +57,7 @@ public final class TestApplication extends AbstractApplication {
 	private final Label labelRenderPass = new Label("Render pass: 0");
 	private final Label labelRenderTime = new Label("Render time: 00:00:00");
 	private final Label labelRenderType = new Label("Render type: Path Tracer");
-	private final Scene scene = Scenes.newCarScene();
+	private final Scene scene = Scenes.newGirlScene();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -140,6 +140,10 @@ public final class TestApplication extends AbstractApplication {
 		print("- I: Decrease focal distance");
 		print("- O: Increase field of view for X");
 		print("- P: Decrease field of view for X");
+		print("- K: Toggle walk-lock");
+		print("- L: Toggle mouse recentering and cursor visibility");
+		print("- M: Increase maximum ray depth");
+		print("- N: Decrease maximum ray depth");
 		print("- UP ARROW: Decrease pitch");
 		print("- LEFT ARROW: Increase yaw");
 		print("- DOWN ARROW: Increase pitch");
@@ -225,14 +229,14 @@ public final class TestApplication extends AbstractApplication {
 				Platform.exit();
 			}
 			
-			if(isKeyClicked(KeyCode.F)) {
+			if(isKeyPressed(KeyCode.F, true)) {
 				setCanvasWidthScale(Math.min(getCanvasWidthScale() + 1, 8));
 				setCanvasHeightScale(Math.min(getCanvasHeightScale() + 1, 8));
 				setCanvasWidth(1024 / getCanvasWidthScale());
 				setCanvasHeight(768 / getCanvasHeightScale());
 			}
 			
-			if(isKeyClicked(KeyCode.G)) {
+			if(isKeyPressed(KeyCode.G, true)) {
 				setCanvasWidthScale(Math.max(getCanvasWidthScale() - 1, 1));
 				setCanvasHeightScale(Math.max(getCanvasHeightScale() - 1, 1));
 				setCanvasWidth(1024 / getCanvasWidthScale());
@@ -243,17 +247,25 @@ public final class TestApplication extends AbstractApplication {
 				camera.changeFocalDistance(-0.1F);
 			}
 			
-			if(isKeyClicked(KeyCode.K)) {
+			if(isKeyPressed(KeyCode.K, true)) {
 				camera.setWalkLockEnabled(!camera.isWalkLockEnabled());
 			}
 			
-			if(isKeyClicked(KeyCode.L)) {
+			if(isKeyPressed(KeyCode.L, true)) {
 				setCursorHidden(!isCursorHidden());
 				setRecenteringMouse(!isRecenteringMouse());
 			}
 			
 			if(isKeyPressed(KeyCode.LEFT)) {
 				camera.changeYaw(0.02F);
+			}
+			
+			if(isKeyPressed(KeyCode.M, true)) {
+				rendererKernel.setDepthMaximum(rendererKernel.getDepthMaximum() + 1);
+			}
+			
+			if(isKeyPressed(KeyCode.N, true)) {
+				rendererKernel.setDepthMaximum(Math.max(rendererKernel.getDepthMaximum() - 1, 1));
 			}
 			
 			if(isKeyPressed(KeyCode.O)) {

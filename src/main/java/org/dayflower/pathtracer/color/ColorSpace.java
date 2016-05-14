@@ -18,16 +18,17 @@
  */
 package org.dayflower.pathtracer.color;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs!
+/**
+ * The {@code ColorSpace} class represents a color space.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public abstract class ColorSpace {
-//	TODO: Add Javadocs!
+	/**
+	 * Constructs a new {@code ColorSpace} instance.
+	 */
 	protected ColorSpace() {
 		
 	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	
 }

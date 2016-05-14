@@ -32,10 +32,161 @@ import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.LeafNode;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.TreeNode;
+import org.dayflower.pathtracer.scene.shape.Plane;
+import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Triangle;
+import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
+import org.dayflower.pathtracer.scene.texture.ImageTexture;
+import org.dayflower.pathtracer.scene.texture.SolidTexture;
 
 //TODO: Add Javadocs.
 public final class CompiledScene {
+//	TODO: Add Javadocs.
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0 = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1 = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_DEGREES = 8;
+	
+//	TODO: Add Javadocs.
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U = 9;
+	
+//	TODO: Add Javadocs.
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_V = 10;
+	
+//	TODO: Add Javadocs.
+	public static final int CHECKERBOARD_TEXTURE_SIZE = 11;
+	
+//	TODO: Add Javadocs.
+	public static final int CHECKERBOARD_TEXTURE_TYPE = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_DATA = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_DEGREES = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_HEIGHT = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_U = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_V = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_WIDTH = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int IMAGE_TEXTURE_TYPE = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int PLANE_RELATIVE_OFFSET_A = 10;
+	
+//	TODO: Add Javadocs.
+	public static final int PLANE_RELATIVE_OFFSET_B = 13;
+	
+//	TODO: Add Javadocs.
+	public static final int PLANE_RELATIVE_OFFSET_C = 16;
+	
+//	TODO: Add Javadocs.
+	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL = 19;
+	
+//	TODO: Add Javadocs.
+	public static final int PLANE_SIZE = 22;
+	
+//	TODO: Add Javadocs.
+	public static final int PLANE_TYPE = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int SHAPE_RELATIVE_OFFSET_EMISSION = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SHAPE_RELATIVE_OFFSET_MATERIAL = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int SHAPE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT = 8;
+	
+//	TODO: Add Javadocs.
+	public static final int SHAPE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE = 9;
+	
+//	TODO: Add Javadocs.
+	public static final int SHAPE_RELATIVE_OFFSET_SIZE = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int SHAPE_RELATIVE_OFFSET_TYPE = 0;
+	
+//	TODO: Add Javadocs.
+	public static final int SOLID_TEXTURE_RELATIVE_OFFSET_COLOR = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SOLID_TEXTURE_SIZE = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int SOLID_TEXTURE_TYPE = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SPHERE_RELATIVE_OFFSET_POSITION = 11;
+	
+//	TODO: Add Javadocs.
+	public static final int SPHERE_RELATIVE_OFFSET_RADIUS = 10;
+	
+//	TODO: Add Javadocs.
+	public static final int SPHERE_SIZE = 14;
+	
+//	TODO: Add Javadocs.
+	public static final int SPHERE_TYPE = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int TEXTURE_RELATIVE_OFFSET_SIZE = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int TEXTURE_RELATIVE_OFFSET_TYPE = 0;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A = 10;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B = 13;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C = 16;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A = 19;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B = 22;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C = 25;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A = 28;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B = 30;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C = 32;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_SIZE = 34;
+	
+//	TODO: Add Javadocs.
+	public static final int TRIANGLE_TYPE = 2;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final float[] boundingVolumeHierarchy;
 	private final float[] camera;
 	private final float[] shapes;
@@ -103,7 +254,7 @@ public final class CompiledScene {
 			} else if(type == 2) {
 				for(int i = 0; i < (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]); i++) {
 					final int index = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
-					final int size = (int)(shapes0[index + Shape.RELATIVE_OFFSET_SIZE]);
+					final int size = (int)(shapes0[index + SHAPE_RELATIVE_OFFSET_SIZE]);
 					
 					System.arraycopy(shapes0, index, shapes1, shapes1Offset, size);
 					
@@ -117,12 +268,12 @@ public final class CompiledScene {
 		}
 		
 		for(int i = 0, j = 0, k = 0; i < shapes0.length; i += j) {
-			final int type = (int)(shapes0[i + Shape.RELATIVE_OFFSET_TYPE]);
-			final int size = (int)(shapes0[i + Shape.RELATIVE_OFFSET_SIZE]);
+			final int type = (int)(shapes0[i + SHAPE_RELATIVE_OFFSET_TYPE]);
+			final int size = (int)(shapes0[i + SHAPE_RELATIVE_OFFSET_SIZE]);
 			
 			j = size;
 			
-			if(type != Triangle.TYPE) {
+			if(type != TRIANGLE_TYPE) {
 				System.arraycopy(shapes0, i, shapes1, shapes1Offset, size);
 				
 				this.shapeOffsets[k] = shapes1Offset;
@@ -205,7 +356,7 @@ public final class CompiledScene {
 				boundingVolumeHierarchyArray[j + 8] = leafNode.getTriangles().size();
 				
 				for(int k = 0; k < leafNode.getTriangles().size(); k++) {
-					boundingVolumeHierarchyArray[j + 9 + k] = leafNode.getTriangles().get(k).getOffset();
+					boundingVolumeHierarchyArray[j + 9 + k] = doGetOffset(leafNode.getTriangles().get(k), shapes);
 				}
 				
 				j += 9.0F + leafNode.getTriangles().size();
@@ -216,7 +367,6 @@ public final class CompiledScene {
 				
 				int next = -1;
 				int leftIndex = -1;
-//				int rightIndex = -1;
 				
 				for(int k = i + 1; k < nodes.size(); k++) {
 					final Node node0 = nodes.get(k);
@@ -234,8 +384,6 @@ public final class CompiledScene {
 					if(node0.getDepth() == depth + 1) {
 						if(l == 0) {
 							leftIndex = offsets[k];
-						} else if(l == 1) {
-//							rightIndex = offsets[k];
 						}
 						
 						l++;
@@ -261,9 +409,10 @@ public final class CompiledScene {
 	
 	private static float[] doCompileShapes(final Scene scene) {
 		final List<Float> floats = new ArrayList<>();
+		final List<Texture> textures = scene.getTextures();
 		
 		for(final Shape shape : scene.getShapes()) {
-			final float[] floatArray = shape.toFloatArray();
+			final float[] floatArray = doToFloatArray(shape, textures);
 			
 			for(final float value : floatArray) {
 				floats.add(Float.valueOf(value));
@@ -283,7 +432,7 @@ public final class CompiledScene {
 		final List<Float> floats = new ArrayList<>();
 		
 		for(final Texture texture : scene.getTextures()) {
-			final float[] floatArray = texture.toFloatArray();
+			final float[] floatArray = doToFloatArray(texture);
 			
 			for(final float value : floatArray) {
 				floats.add(Float.valueOf(value));
@@ -297,6 +446,191 @@ public final class CompiledScene {
 		}
 		
 		return floatArray;
+	}
+	
+	private static float[] doToFloatArray(final Shape shape, final List<Texture> textures) {
+		if(shape instanceof Plane) {
+			return doToFloatArrayPlane(Plane.class.cast(shape), textures);
+		} else if(shape instanceof Sphere) {
+			return doToFloatArraySphere(Sphere.class.cast(shape), textures);
+		} else if(shape instanceof Triangle) {
+			return doToFloatArrayTriangle(Triangle.class.cast(shape), textures);
+		} else {
+			throw new IllegalArgumentException(String.format("The Shape provided is not supported: %s", shape));
+		}
+	}
+	
+	private static float[] doToFloatArray(final Texture texture) {
+		if(texture instanceof CheckerboardTexture) {
+			return doToFloatArrayCheckerboardTexture(CheckerboardTexture.class.cast(texture));
+		} else if(texture instanceof ImageTexture) {
+			return doToFloatArrayImageTexture(ImageTexture.class.cast(texture));
+		} else if(texture instanceof SolidTexture) {
+			return doToFloatArraySolidTexture(SolidTexture.class.cast(texture));
+		} else {
+			throw new IllegalArgumentException(String.format("The Texture provided is not supported: %s", texture));
+		}
+	}
+	
+	private static float[] doToFloatArrayCheckerboardTexture(final CheckerboardTexture checkerboardTexture) {
+		return new float[] {
+			CHECKERBOARD_TEXTURE_TYPE,
+			CHECKERBOARD_TEXTURE_SIZE,
+			checkerboardTexture.getColor0().r,
+			checkerboardTexture.getColor0().g,
+			checkerboardTexture.getColor0().b,
+			checkerboardTexture.getColor1().r,
+			checkerboardTexture.getColor1().g,
+			checkerboardTexture.getColor1().b,
+			checkerboardTexture.getDegrees(),
+			checkerboardTexture.getScaleU(),
+			checkerboardTexture.getScaleV()
+		};
+	}
+	
+	private static float[] doToFloatArrayImageTexture(final ImageTexture imageTexture) {
+		final int size = 7 + imageTexture.getData().length;
+		
+		final float[] floatArray = new float[size];
+		
+		floatArray[0] = IMAGE_TEXTURE_TYPE;
+		floatArray[1] = size;
+		floatArray[2] = imageTexture.getDegrees();
+		floatArray[3] = imageTexture.getWidth();
+		floatArray[4] = imageTexture.getHeight();
+		floatArray[5] = imageTexture.getScaleU();
+		floatArray[6] = imageTexture.getScaleV();
+		
+		final float[] data = imageTexture.getData();
+		
+		for(int i = 0; i < data.length; i++) {
+			floatArray[i + 7] = data[i];
+		}
+		
+		return floatArray;
+	}
+	
+	private static float[] doToFloatArrayPlane(final Plane plane, final List<Texture> textures) {
+		return new float[] {
+			PLANE_TYPE,
+			PLANE_SIZE,
+			plane.getEmission().r,
+			plane.getEmission().g,
+			plane.getEmission().b,
+			plane.getMaterial().ordinal(),
+			doGetOffset(plane.getTextureAlbedo(), textures),
+			doGetOffset(plane.getTextureNormal(), textures),
+			plane.getPerlinNoiseAmount(),
+			plane.getPerlinNoiseScale(),
+			plane.getA().x,
+			plane.getA().y,
+			plane.getA().z,
+			plane.getB().x,
+			plane.getB().y,
+			plane.getB().z,
+			plane.getC().x,
+			plane.getC().y,
+			plane.getC().z,
+			plane.getSurfaceNormal().x,
+			plane.getSurfaceNormal().y,
+			plane.getSurfaceNormal().z
+		};
+	}
+	
+	private static float[] doToFloatArraySolidTexture(final SolidTexture solidTexture) {
+		return new float[] {
+			SOLID_TEXTURE_TYPE,
+			SOLID_TEXTURE_SIZE,
+			solidTexture.getColor().r,
+			solidTexture.getColor().g,
+			solidTexture.getColor().b
+		};
+	}
+	
+	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Texture> textures) {
+		return new float[] {
+			SPHERE_TYPE,
+			SPHERE_SIZE,
+			sphere.getEmission().r,
+			sphere.getEmission().g,
+			sphere.getEmission().b,
+			sphere.getMaterial().ordinal(),
+			doGetOffset(sphere.getTextureAlbedo(), textures),
+			doGetOffset(sphere.getTextureNormal(), textures),
+			sphere.getPerlinNoiseAmount(),
+			sphere.getPerlinNoiseScale(),
+			sphere.getRadius(),
+			sphere.getPosition().x,
+			sphere.getPosition().y,
+			sphere.getPosition().z
+		};
+	}
+	
+	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Texture> textures) {
+		return new float[] {
+			TRIANGLE_TYPE,
+			TRIANGLE_SIZE,
+			triangle.getEmission().r,
+			triangle.getEmission().g,
+			triangle.getEmission().b,
+			triangle.getMaterial().ordinal(),
+			doGetOffset(triangle.getTextureAlbedo(), textures),
+			doGetOffset(triangle.getTextureNormal(), textures),
+			triangle.getPerlinNoiseAmount(),
+			triangle.getPerlinNoiseScale(),
+			triangle.getA().position.x,
+			triangle.getA().position.y,
+			triangle.getA().position.z,
+			triangle.getB().position.x,
+			triangle.getB().position.y,
+			triangle.getB().position.z,
+			triangle.getC().position.x,
+			triangle.getC().position.y,
+			triangle.getC().position.z,
+			triangle.getA().normal.x,
+			triangle.getA().normal.y,
+			triangle.getA().normal.z,
+			triangle.getB().normal.x,
+			triangle.getB().normal.y,
+			triangle.getB().normal.z,
+			triangle.getC().normal.x,
+			triangle.getC().normal.y,
+			triangle.getC().normal.z,
+			triangle.getA().textureCoordinates.x,
+			triangle.getA().textureCoordinates.y,
+			triangle.getB().textureCoordinates.x,
+			triangle.getB().textureCoordinates.y,
+			triangle.getC().textureCoordinates.x,
+			triangle.getC().textureCoordinates.y
+		};
+	}
+	
+	private static int doGetOffset(final Shape shape, final List<Shape> shapes) {
+		for(int i = 0, j = 0; i < shapes.size(); i++) {
+			final Shape shape0 = shapes.get(i);
+			
+			if(shape.equals(shape0)) {
+				return j;
+			}
+			
+			j += doSize(shape0);
+		}
+		
+		throw new IllegalArgumentException(String.format("No such Shape found: %s", shape));
+	}
+	
+	private static int doGetOffset(final Texture texture, final List<Texture> textures) {
+		for(int i = 0, j = 0; i < textures.size(); i++) {
+			final Texture texture0 = textures.get(i);
+			
+			if(texture.equals(texture0)) {
+				return j;
+			}
+			
+			j += doSize(texture0);
+		}
+		
+		throw new IllegalArgumentException(String.format("No such Texture found: %s", texture));
 	}
 	
 	private static int doSize(final Node node) {
@@ -322,6 +656,30 @@ public final class CompiledScene {
 		return size;
 	}
 	
+	private static int doSize(final Shape shape) {
+		if(shape instanceof Plane) {
+			return PLANE_SIZE;
+		} else if(shape instanceof Sphere) {
+			return SPHERE_SIZE;
+		} else if(shape instanceof Triangle) {
+			return TRIANGLE_SIZE;
+		} else {
+			throw new IllegalArgumentException(String.format("The Shape provided is not supported: %s", shape));
+		}
+	}
+	
+	private static int doSize(final Texture texture) {
+		if(texture instanceof CheckerboardTexture) {
+			return CHECKERBOARD_TEXTURE_SIZE;
+		} else if(texture instanceof ImageTexture) {
+			return 7 + ImageTexture.class.cast(texture).getData().length;
+		} else if(texture instanceof SolidTexture) {
+			return SOLID_TEXTURE_SIZE;
+		} else {
+			throw new IllegalArgumentException(String.format("The Texture provided is not supported: %s", texture));
+		}
+	}
+	
 	private static int[] doCompileShapeOffsets(final Scene scene) {
 		final List<Shape> shapes = scene.getShapes();
 		
@@ -339,7 +697,7 @@ public final class CompiledScene {
 		
 		for(final Shape shape : shapes) {
 			if(!(shape instanceof Triangle)) {
-				shapeOffsets[index++] = shape.getOffset();
+				shapeOffsets[index++] = doGetOffset(shape, shapes);
 			}
 		}
 		

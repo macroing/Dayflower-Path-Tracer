@@ -18,9 +18,14 @@
  */
 package org.dayflower.pathtracer.color;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs!
+/**
+ * A {@code ChromaticSpectralCurve} is an implementation of {@link SpectralCurve} that contains chromaticity pairs.
+ * <p>
+ * This class is immutable and therefore suitable for concurrent use without external synchronization.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class ChromaticSpectralCurve extends SpectralCurve {
 	private static final Color S0_XYZ;
 	private static final Color S1_XYZ;
@@ -47,7 +52,12 @@ public final class ChromaticSpectralCurve extends SpectralCurve {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Constructs a new {@code ChromaticSpectralCurve} instance given the chromaticity pair of {@code x} and {@code y}.
+	 * 
+	 * @param x the X of the chromaticity pair
+	 * @param y the Y of the chromaticity pair
+	 */
 	public ChromaticSpectralCurve(final float x, final float y) {
 		this.a = (-1.3515F - 1.7703F * x + 5.9114F * y) / (0.0241F + 0.2562F * x - 0.7341F * y);
 		this.b = (0.03F - 31.4424F * x + 30.0717F * y) / (0.0241F + 0.2562F * x - 0.7341F * y);
@@ -55,7 +65,12 @@ public final class ChromaticSpectralCurve extends SpectralCurve {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a sample based on the wavelength {@code lambda} in nanometers.
+	 * 
+	 * @param lambda the wavelength in nanometers
+	 * @return a sample based on the wavelength {@code lambda} in nanometers
+	 */
 	@Override
 	public float sample(float lambda) {
 		return K_S0_SPECTRAL_CURVE.sample(lambda) + this.a * K_S1_SPECTRAL_CURVE.sample(lambda) + this.b * K_S2_SPECTRAL_CURVE.sample(lambda);
@@ -63,7 +78,13 @@ public final class ChromaticSpectralCurve extends SpectralCurve {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a CIE XYZ {@link Color} given {@code x} and {@code y}.
+	 * 
+	 * @param x the X of the chromaticity pair
+	 * @param y the Y of the chromaticity pair
+	 * @return a CIE XYZ {@code Color} given {@code x} and {@code y}
+	 */
 	public static Color getXYZ(final float x, final float y) {
 		float a = (-1.3515F - 1.7703F * x + 5.9114F * y) / (0.0241F + 0.2562F * x - 0.7341F * y);
 		float b = (0.03F - 31.4424F * x + 30.0717F * y) / (0.0241F + 0.2562F * x - 0.7341F * y);
@@ -74,17 +95,29 @@ public final class ChromaticSpectralCurve extends SpectralCurve {
 		return new Color(x0, y0, z0);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code float} array with the RGB-values of S0XYZ.
+	 * 
+	 * @return a {@code float} array with the RGB-values of S0XYZ
+	 */
 	public static float[] getS0XYZ() {
 		return new float[] {S0_XYZ.r, S0_XYZ.g, S0_XYZ.b};
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code float} array with the RGB-values of S1XYZ.
+	 * 
+	 * @return a {@code float} array with the RGB-values of S1XYZ
+	 */
 	public static float[] getS1XYZ() {
 		return new float[] {S1_XYZ.r, S1_XYZ.g, S1_XYZ.b};
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code float} array with the RGB-values of S2XYZ.
+	 * 
+	 * @return a {@code float} array with the RGB-values of S2XYZ
+	 */
 	public static float[] getS2XYZ() {
 		return new float[] {S2_XYZ.r, S2_XYZ.g, S2_XYZ.b};
 	}

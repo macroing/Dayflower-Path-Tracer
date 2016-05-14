@@ -128,6 +128,25 @@ public abstract class AbstractKernel extends Kernel {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Returns a {@code float} value based on four {@code byte}s.
+	 * 
+	 * @param b0 the first {@code byte}
+	 * @param b1 the second {@code byte}
+	 * @param b2 the third {@code byte}
+	 * @param b3 the fourth {@code byte}
+	 * @return a {@code float} value based on four {@code byte}s
+	 */
+	public final float bytesToFloat(final byte b0, final byte b1, final byte b2, final byte b3) {
+		final int bits = ((b0 & 0xFF) << 0) | ((b1 & 0xFF) << 8) | ((b2 & 0xFF) << 16) | ((b3 & 0xFF) << 24);
+		
+		final int s = (bits >> 31) == 0 ? 1 : -1;
+		final int e = (bits >> 23) & 0xFF;
+		final int m = e == 0 ? (bits & 0x7FFFFF) << 1 : (bits & 0x7FFFFF) | 0x800000;
+		
+		return s * m * pow(2.0F, e - 150.0F);
+	}
+	
+	/**
 	 * Returns the cosine of the angle {@code degrees}.
 	 * <p>
 	 * The angle {@code degrees} must be in degrees.

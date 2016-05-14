@@ -18,54 +18,76 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-//TODO: Add Javadocs.
+/**
+ * A {@code Scene} contains various {@link Shape}s and {@link Texture}s.
+ * <p>
+ * This class is mutable and therefore not suitable for concurrent use without external synchronization.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Scene {
 	private final List<Shape> shapes = new ArrayList<>();
 	private final List<Texture> textures = new ArrayList<>();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new empty {@code Scene} instance.
+	 */
 	public Scene() {
 		
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@code List} with all currently added {@link Shape}s.
+	 * <p>
+	 * Modifying the returned {@code List} will not affect this {@code Scene} instance.
+	 * 
+	 * @return a {@code List} with all currently added {@code Shape}s
+	 */
 	public List<Shape> getShapes() {
-		return this.shapes;
+		return new ArrayList<>(this.shapes);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@code List} with all currently added {@link Texture}s.
+	 * <p>
+	 * Modifying the returned {@code List} will not affect this {@code Scene} instance.
+	 * 
+	 * @return a {@code List} with all currently added {@code Texture}s
+	 */
 	public List<Texture> getTextures() {
-		return this.textures;
+		return new ArrayList<>(this.textures);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Adds {@code shape} to this {@code Scene} instance.
+	 * <p>
+	 * If {@code shape} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param shape the {@link Shape} to add
+	 * @throws NullPointerException thrown if, and only if, {@code shape} is {@code null}
+	 */
 	public void addShape(final Shape shape) {
 		this.shapes.add(Objects.requireNonNull(shape, "shape == null"));
-		
-		for(int i = 0, j = 0; i < this.shapes.size() - 1; i++) {
-			j += this.shapes.get(i).size();
-			
-			shape.setOffset(j);
-		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Adds {@code texture} to this {@code Scene} instance.
+	 * <p>
+	 * If {@code texture} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param texture the {@link Texture} to add
+	 * @throws NullPointerException thrown if, and only if, {@code texture} is {@code null}
+	 */
 	public void addTexture(final Texture texture) {
 		this.textures.add(Objects.requireNonNull(texture, "texture == null"));
-		
-		for(int i = 0, j = 0; i < this.textures.size() - 1; i++) {
-			j += this.textures.get(i).size();
-			
-			texture.setOffset(j);
-		}
 	}
 }

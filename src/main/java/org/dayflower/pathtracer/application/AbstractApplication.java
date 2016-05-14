@@ -104,8 +104,8 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	private final AtomicInteger mouseMovedX = new AtomicInteger();
 	private final AtomicInteger mouseMovedY = new AtomicInteger();
 	private final AtomicLong mouseMovementTime = new AtomicLong();
-	private final boolean[] isKeyClicked = new boolean[KeyCode.values().length];
 	private final boolean[] isKeyPressed = new boolean[KeyCode.values().length];
+	private final boolean[] isKeyPressedOnce = new boolean[KeyCode.values().length];
 	private final CopyOnWriteArrayList<Consumer<String>> printConsumers = new CopyOnWriteArrayList<>();
 	private final FPSCounter fPSCounter = new FPSCounter();
 	private final Lock lock = new ReentrantLock();
@@ -142,21 +142,26 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	
 //	TODO: Add Javadocs.
 	protected final boolean isKeyPressed(final KeyCode keyCode) {
-		return this.isKeyPressed[keyCode.ordinal()];
+		return isKeyPressed(keyCode, false);
 	}
 	
 //	TODO: Add Javadocs.
-	protected final boolean isKeyClicked(final KeyCode keyCode) {
-		final boolean isKeyPressed = isKeyPressed(keyCode);
-		final boolean isKeyClicked = this.isKeyClicked[keyCode.ordinal()];
+	protected final boolean isKeyPressed(final KeyCode keyCode, final boolean isKeyPressedOnce) {
+		final boolean isKeyPressed = this.isKeyPressed[keyCode.ordinal()];
 		
-		if(isKeyPressed && !isKeyClicked) {
-			this.isKeyClicked[keyCode.ordinal()] = true;
+		if(isKeyPressedOnce) {
+			final boolean isKeyPressedOnce0 = this.isKeyPressedOnce[keyCode.ordinal()];
 			
-			return true;
+			if(isKeyPressed && !isKeyPressedOnce0) {
+				this.isKeyPressedOnce[keyCode.ordinal()] = true;
+				
+				return true;
+			}
+			
+			return false;
 		}
 		
-		return false;
+		return isKeyPressed;
 	}
 	
 //	TODO: Add Javadocs.
@@ -303,7 +308,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 			}
 			
 			this.isKeyPressed[e.getCode().ordinal()] = false;
-			this.isKeyClicked[e.getCode().ordinal()] = false;
+			this.isKeyPressedOnce[e.getCode().ordinal()] = false;
 		});
 		canvas.setOnMouseMoved(e -> {
 			final int mouseMovedDeltaX = this.mouseMovedDeltaX.get();

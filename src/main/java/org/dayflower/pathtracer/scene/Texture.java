@@ -18,42 +18,12 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs.
-public abstract class Texture {
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SIZE = 1;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_TYPE = 0;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private int offset;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-//	TODO: Add Javadocs.
-	protected Texture() {
-		
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-//	TODO: Add Javadocs.
-	public abstract float[] toFloatArray();
-	
-//	TODO: Add Javadocs.
-	public final int getOffset() {
-		return this.offset;
-	}
-	
-//	TODO: Add Javadocs.
-	public abstract int size();
-	
-//	TODO: Add Javadocs.
-	public final void setOffset(final int offset) {
-		this.offset = offset;
-	}
+/**
+ * A {@code Texture} is a model of a texture.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
+public interface Texture {
+//	This is a marker interface.
 }

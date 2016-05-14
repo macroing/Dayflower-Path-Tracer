@@ -29,20 +29,6 @@ import org.dayflower.pathtracer.scene.Texture;
 
 //TODO: Add Javadocs.
 public final class Sphere extends Shape {
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_POSITION = 11;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_RADIUS = 10;
-	
-//	TODO: Add Javadocs.
-	public static final int SIZE = 14;
-	
-//	TODO: Add Javadocs.
-	public static final int TYPE = 1;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
 	private final float radius;
 	private final Point3 position;
 	
@@ -76,57 +62,8 @@ public final class Sphere extends Shape {
 	}
 	
 //	TODO: Add Javadocs.
-	@Override
-	public byte[] toByteArray() {
-		return new byte[] {
-			(byte)(TYPE),
-			(byte)(SIZE),
-//			TODO: getEmission().r
-//			TODO: getEmission().g
-//			TODO: getEmission().b
-			(byte)(getMaterial().ordinal()),
-//			TODO: getTextureAlbedo().getOffset()
-//			TODO: getTextureNormal().getOffset()
-//			TODO: getPerlinNoiseAmount()
-//			TODO: getPerlinNoiseScale()
-//			TODO: getRadius()
-//			TODO: getPosition().x
-//			TODO: getPosition().y
-//			TODO: getPosition().z
-		};
-	}
-	
-//	TODO: Add Javadocs.
 	public float getRadius() {
 		return this.radius;
-	}
-	
-//	TODO: Add Javadocs.
-	@Override
-	public float[] toFloatArray() {
-		return new float[] {
-			TYPE,
-			SIZE,
-			getEmission().r,
-			getEmission().g,
-			getEmission().b,
-			getMaterial().ordinal(),
-			getTextureAlbedo().getOffset(),
-			getTextureNormal().getOffset(),
-			getPerlinNoiseAmount(),
-			getPerlinNoiseScale(),
-			getRadius(),
-			getPosition().x,
-			getPosition().y,
-			getPosition().z
-		};
-	}
-	
-	
-//	TODO: Add Javadocs.
-	@Override
-	public int size() {
-		return SIZE;
 	}
 	
 //	TODO: Add Javadocs.

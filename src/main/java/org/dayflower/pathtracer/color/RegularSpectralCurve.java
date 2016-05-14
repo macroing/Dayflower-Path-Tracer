@@ -18,9 +18,14 @@
  */
 package org.dayflower.pathtracer.color;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs!
+/**
+ * A {@code RegularSpectralCurve} is an implementation of {@link SpectralCurve} that contains regular spectral data.
+ * <p>
+ * This class is immutable and therefore suitable for concurrent use without external synchronization.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class RegularSpectralCurve extends SpectralCurve {
 	private final float delta;
 	private final float deltaReciprocal;
@@ -30,7 +35,18 @@ public final class RegularSpectralCurve extends SpectralCurve {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Constructs a new {@code RegularSpectralCurve} instance.
+	 * <p>
+	 * If {@code spectrum} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * The array {@code spectrum} will be cloned.
+	 * 
+	 * @param lambdaMin the minimum wavelength in nanometers
+	 * @param lambdaMax the maximum wavelength in nanometers
+	 * @param spectrum an array with spectral data
+	 * @throws NullPointerException thrown if, and only if, {@code spectrum} is {@code null}
+	 */
 	public RegularSpectralCurve(final float lambdaMin, final float lambdaMax, final float[] spectrum) {
 		this.lambdaMin = lambdaMin;
 		this.lambdaMax = lambdaMax;
@@ -41,7 +57,12 @@ public final class RegularSpectralCurve extends SpectralCurve {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a sample based on the wavelength {@code lambda} in nanometers.
+	 * 
+	 * @param lambda the wavelength in nanometers
+	 * @return a sample based on the wavelength {@code lambda} in nanometers
+	 */
 	@Override
 	public float sample(final float lambda) {
 		if(lambda < this.lambdaMin || lambda > this.lambdaMax) {

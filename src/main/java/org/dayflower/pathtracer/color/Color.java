@@ -18,14 +18,14 @@
  */
 package org.dayflower.pathtracer.color;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
+import java.util.Objects;
 
 import org.dayflower.pathtracer.math.Math2;
 
 /**
  * The {@code Color} class is used to encapsulate colors in the default {@code sRGB} color space.
  * <p>
- * This class is thread-safe and therefore suitable for concurrent use without external synchronization.
+ * This class is immutable and therefore suitable for concurrent use without external synchronization.
  * 
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
@@ -187,6 +187,33 @@ public final class Color {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Compares {@code object} to this {@code Color} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Color}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Color} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Color}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Color)) {
+			return false;
+		} else if(!Objects.equals(Float.valueOf(this.r), Float.valueOf(Color.class.cast(object).r))) {
+			return false;
+		} else if(!Objects.equals(Float.valueOf(this.g), Float.valueOf(Color.class.cast(object).g))) {
+			return false;
+		} else if(!Objects.equals(Float.valueOf(this.b), Float.valueOf(Color.class.cast(object).b))) {
+			return false;
+		} else if(!Objects.equals(Float.valueOf(this.a), Float.valueOf(Color.class.cast(object).a))) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
 	 * Returns {@code true} if, and only if, this {@code Color} denotes the color black, {@code false} otherwise.
 	 * 
 	 * @return {@code true} if, and only if, this {@code Color} denotes the color black, {@code false} otherwise
@@ -210,127 +237,359 @@ public final class Color {
 		return new Color(this.r + color.r, this.g + color.g, this.b + color.b, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Adds {@code s} to the R-, G- and B-component values of this {@code Color} instance.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the addition.
+	 * 
+	 * @param s the value to add
+	 * @return a new {@code Color} instance with the result of the addition
+	 */
 	public Color add(final float s) {
 		return new Color(this.r + s, this.g + s, this.b + s, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Adds {@code r}, {@code g} and {@code b} to the R-, G- and B-component values of this {@code Color} instance, respectively.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the addition.
+	 * 
+	 * @param r the value to add to the R component
+	 * @param g the value to add to the G component
+	 * @param b the value to add to the B component
+	 * @return a new {@code Color} instance with the result of the addition
+	 */
 	public Color add(final float r, final float g, final float b) {
 		return new Color(this.r + r, this.g + g, this.b + b, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Adds {@code r}, {@code g}, {@code b} and {@code a} to the R-, G-, B- and A-component values of this {@code Color} instance, respectively.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the addition.
+	 * 
+	 * @param r the value to add to the R component
+	 * @param g the value to add to the G component
+	 * @param b the value to add to the B component
+	 * @param a the value to add to the A component
+	 * @return a new {@code Color} instance with the result of the addition
+	 */
 	public Color add(final float r, final float g, final float b, final float a) {
 		return new Color(this.r + r, this.g + g, this.b + b, this.a + a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Applies Gamma Correction to this {@code Color} instance.
+	 * <p>
+	 * Returns a new {@code Color} instance with Gamma Correction applied.
+	 * <p>
+	 * Calling this method is equivalent to {@code color.applyGammaCorrection(Color.DEFAULT_GAMMA)}.
+	 * 
+	 * @return a new {@code Color} instance with Gamma Correction applied
+	 */
 	public Color applyGammaCorrection() {
 		return applyGammaCorrection(DEFAULT_GAMMA);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Applies Gamma Correction to this {@code Color} instance.
+	 * <p>
+	 * Returns a new {@code Color} instance with Gamma Correction applied.
+	 * 
+	 * @param gamma the gamma value to use
+	 * @return a new {@code Color} instance with Gamma Correction applied
+	 */
 	public Color applyGammaCorrection(final float gamma) {
 		return pow(1.0F / gamma);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Applies Tone Mapping to this {@code Color} instance.
+	 * <p>
+	 * Returns a new {@code Color} instance with Tone Mapping applied.
+	 * <p>
+	 * Calling this method is equivalent to {@code color.applyToneMapping(ToneMapper.linear())}.
+	 * 
+	 * @return a new {@code Color} instance with Tone Mapping applied
+	 */
 	public Color applyToneMapping() {
-		return applyToneMapping(color -> color.max() > 1.0F ? color.divide(color.max()) : color);
+		return applyToneMapping(ToneMapper.linear());
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Applies Tone Mapping to this {@code Color} instance.
+	 * <p>
+	 * Returns a new {@code Color} instance with Tone Mapping applied.
+	 * <p>
+	 * If {@code toneMapper} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param toneMapper the {@link ToneMapper} to use
+	 * @return a new {@code Color} instance with Tone Mapping applied
+	 * @throws NullPointerException thrown if, and only if, {@code toneMapper} is {@code null}
+	 */
 	public Color applyToneMapping(final ToneMapper toneMapper) {
 		return toneMapper.applyToneMapping(this);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Divides this {@code Color} instance with {@code color}.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the division.
+	 * <p>
+	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color the {@code Color} to divide this {@code Color} instance with
+	 * @return a new {@code Color} instance with the result of the division
+	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
+	 */
 	public Color divide(final Color color) {
 		return new Color(this.r / color.r, this.g / color.g, this.b / color.b, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Divides the R-, G- and B-component values of this {@code Color} instance with {@code s}.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the division.
+	 * 
+	 * @param s the value to divide with
+	 * @return a new {@code Color} instance with the result of the division
+	 */
 	public Color divide(final float s) {
 		return new Color(this.r / s, this.g / s, this.b / s, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Divides the R-, G- and B-component values of this {@code Color} instance with {@code r}, {@code g} and {@code b}, respectively.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the division.
+	 * 
+	 * @param r the value to divide the R component with
+	 * @param g the value to divide the G component with
+	 * @param b the value to divide the B component with
+	 * @return a new {@code Color} instance with the result of the division
+	 */
 	public Color divide(final float r, final float g, final float b) {
 		return new Color(this.r / r, this.g / g, this.b / b, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Divides the R-, G-, B- and A-component values of this {@code Color} instance with {@code r}, {@code g}, {@code b} and {@code a}, respectively.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the division.
+	 * 
+	 * @param r the value to divide the R component with
+	 * @param g the value to divide the G component with
+	 * @param b the value to divide the B component with
+	 * @param a the value to divide the A component with
+	 * @return a new {@code Color} instance with the result of the division
+	 */
 	public Color divide(final float r, final float g, final float b, final float a) {
 		return new Color(this.r / r, this.g / g, this.b / b, this.a / a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Color} instance with Euler's number {@code e} raised to the power of each RGB-component value.
+	 * 
+	 * @return a new {@code Color} instance with Euler's number {@code e} raised to the power of each RGB-component value
+	 */
 	public Color exp() {
 		return new Color(Math2.exp(this.r), Math2.exp(this.g), Math2.exp(this.b), this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Makes this {@code Color} instance display compatible.
+	 * <p>
+	 * Returns a new {@code Color} instance.
+	 * <p>
+	 * Calling this method is equivalent to {@code color.makeDisplayCompatible(Color.DEFAULT_GAMMA)}.
+	 * 
+	 * @return a new {@code Color} instance
+	 */
 	public Color makeDisplayCompatible() {
 		return makeDisplayCompatible(DEFAULT_GAMMA);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Makes this {@code Color} instance display compatible.
+	 * <p>
+	 * Returns a new {@code Color} instance.
+	 * <p>
+	 * Calling this method is equivalent to {@code color.makeDisplayCompatible(gamma, ToneMapper.linear())}.
+	 * 
+	 * @param gamma the gamma value to use
+	 * @return a new {@code Color} instance
+	 */
 	public Color makeDisplayCompatible(final float gamma) {
-		return makeDisplayCompatible(gamma, color -> color.max() > 1.0F ? color.divide(color.max()) : color);
+		return makeDisplayCompatible(gamma, ToneMapper.linear());
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Makes this {@code Color} instance display compatible.
+	 * <p>
+	 * Returns a new {@code Color} instance.
+	 * <p>
+	 * Calling this method is equivalent to the following:
+	 * <pre>
+	 * {@code
+	 * color.applyToneMapping(toneMapper).applyGammaCorrection(gamma).saturate(0.0F, 1.0F).multiply(255.0F)
+	 * }
+	 * </pre>
+	 * If {@code toneMapper} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param gamma the gamma value to use
+	 * @param toneMapper the {@link ToneMapper} to use
+	 * @return a new {@code Color} instance
+	 * @throws NullPointerException thrown if, and only if, {@code toneMapper} is {@code null}
+	 */
 	public Color makeDisplayCompatible(final float gamma, final ToneMapper toneMapper) {
 		return applyToneMapping(toneMapper).applyGammaCorrection(gamma).saturate(0.0F, 1.0F).multiply(255.0F);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Makes this {@code Color} instance display compatible.
+	 * <p>
+	 * Returns a new {@code Color} instance.
+	 * <p>
+	 * Calling this method is equivalent to the following:
+	 * <pre>
+	 * {@code
+	 * color.applyToneMapping(toneMapper).saturate(0.0F, 1.0F).multiply(255.0F)
+	 * }
+	 * </pre>
+	 * If {@code toneMapper} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * Note that this method should preferably only be used if {@code toneMapper} takes care of Gamma Correction.
+	 * 
+	 * @param toneMapper the {@link ToneMapper} to use
+	 * @return a new {@code Color} instance
+	 * @throws NullPointerException thrown if, and only if, {@code toneMapper} is {@code null}
+	 */
+	public Color makeDisplayCompatible(final ToneMapper toneMapper) {
+		return applyToneMapping(toneMapper).saturate(0.0F, 1.0F).multiply(255.0F);
+	}
+	
+	/**
+	 * Multiplies this {@code Color} instance with {@code color}.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the multiplication.
+	 * <p>
+	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color the {@code Color} to multiply this {@code Color} instance with
+	 * @return a new {@code Color} instance with the result of the multiplication
+	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
+	 */
 	public Color multiply(final Color color) {
 		return new Color(this.r * color.r, this.g * color.g, this.b * color.b, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Multiplies the R-, G- and B-component values of this {@code Color} instance with {@code s}.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the multiplication.
+	 * 
+	 * @param s the value to multiply with
+	 * @return a new {@code Color} instance with the result of the multiplication
+	 */
 	public Color multiply(final float s) {
 		return new Color(this.r * s, this.g * s, this.b * s, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Multiplies the R-, G- and B-component values of this {@code Color} instance with {@code r}, {@code g} and {@code b}, respectively.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the multiplication.
+	 * 
+	 * @param r the value to multiply with the R component
+	 * @param g the value to multiply with the G component
+	 * @param b the value to multiply with the B component
+	 * @return a new {@code Color} instance with the result of the multiplication
+	 */
 	public Color multiply(final float r, final float g, final float b) {
 		return new Color(this.r * r, this.g * g, this.b * b, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Multiplies the R-, G-, B- and A-component values of this {@code Color} instance with {@code r}, {@code g}, {@code b} and {@code a}, respectively.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the multiplication.
+	 * 
+	 * @param r the value to multiply with the R component
+	 * @param g the value to multiply with the G component
+	 * @param b the value to multiply with the B component
+	 * @param a the value to multiply with the A component
+	 * @return a new {@code Color} instance with the result of the multiplication
+	 */
 	public Color multiply(final float r, final float g, final float b, final float a) {
 		return new Color(this.r * r, this.g * g, this.b * b, this.a * a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Color} instance with each RGB-component value negated.
+	 * 
+	 * @return a new {@code Color} instance with each RGB-component value negated
+	 */
 	public Color negate() {
 		return new Color(-this.r, -this.g, -this.b);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Color} instance with the R-, G- and B-component values of this {@code Color} instance raised to the power of the R-, G- and B-component values of {@code color}, respectively.
+	 * <p>
+	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color a {@code Color} instance with R-, G- and B-component values that are used as exponents
+	 * @return a new {@code Color} instance with the R-, G- and B-component values of this {@code Color} instance raised to the power of the R-, G- and B-component values of {@code color}, respectively
+	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
+	 */
 	public Color pow(final Color color) {
 		return new Color(Math2.pow(this.r, color.r), Math2.pow(this.g, color.g), Math2.pow(this.b, color.b), this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Color} instance with the R-, G- and B-component values of this {@code Color} instance raised to the power of {@code exponent}.
+	 * 
+	 * @param exponent the exponent to use
+	 * @return a new {@code Color} instance with the R-, G- and B-component values of this {@code Color} instance raised to the power of {@code exponent}
+	 */
 	public Color pow(final float exponent) {
 		return new Color(Math2.pow(this.r, exponent), Math2.pow(this.g, exponent), Math2.pow(this.b, exponent), this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Color} instance with the R-, G- and B-component values of this {@code Color} instance raised to the power of {@code r}, {@code g} and {@code b}, respectively.
+	 * 
+	 * @param r the exponent of the R-component value
+	 * @param g the exponent of the G-component value
+	 * @param b the exponent of the B-component value
+	 * @return a new {@code Color} instance with the R-, G- and B-component values of this {@code Color} instance raised to the power of {@code r}, {@code g} and {@code b}, respectively
+	 */
 	public Color pow(final float r, final float g, final float b) {
 		return new Color(Math2.pow(this.r, r), Math2.pow(this.g, g), Math2.pow(this.b, b), this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Color} instance with the R-, G-, B- and A-component values of this {@code Color} instance raised to the power of {@code r}, {@code g}, {@code b} and {@code a}, respectively.
+	 * 
+	 * @param r the exponent of the R-component value
+	 * @param g the exponent of the G-component value
+	 * @param b the exponent of the B-component value
+	 * @param a the exponent of the A-component value
+	 * @return a new {@code Color} instance with the R-, G-, B- and A-component values of this {@code Color} instance raised to the power of {@code r}, {@code g}, {@code b} and {@code a}, respectively
+	 */
 	public Color pow(final float r, final float g, final float b, final float a) {
 		return new Color(Math2.pow(this.r, r), Math2.pow(this.g, g), Math2.pow(this.b, b), Math2.pow(this.a, a));
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Saturates this {@code Color} instance, such that each component value will lie in the range {@code [min, max]}.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the saturation.
+	 * 
+	 * @param min the minimum value
+	 * @param max the maximum value
+	 * @return a new {@code Color} instance with the result of the saturation
+	 */
 	public Color saturate(final float min, final float max) {
 		final float r = Math.max(Math.min(this.r, max), min);
 		final float g = Math.max(Math.min(this.g, max), min);
@@ -340,106 +599,219 @@ public final class Color {
 		return new Color(r, g, b, a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Color} instance with the square root performed on each RGB-component value.
+	 * 
+	 * @return a new {@code Color} instance with the square root performed on each RGB-component value
+	 */
 	public Color sqrt() {
 		return new Color(Math2.sqrt(this.r), Math2.sqrt(this.g), Math2.sqrt(this.b), this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Subtracts this {@code Color} instance with {@code color}.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the subtraction.
+	 * <p>
+	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color the {@code Color} to subtract from this {@code Color} instance
+	 * @return a new {@code Color} instance with the result of the subtraction
+	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
+	 */
 	public Color subtract(final Color color) {
 		return new Color(this.r - color.r, this.g - color.g, this.b - color.b, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Subtracts {@code s} from the R-, G- and B-component values of this {@code Color} instance.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the subtraction.
+	 * 
+	 * @param s the value to subtract
+	 * @return a new {@code Color} instance with the result of the subtraction
+	 */
 	public Color subtract(final float s) {
 		return new Color(this.r - s, this.g - s, this.b - s, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Subtracts the R-, G- and B-component values of this {@code Color} instance with {@code r}, {@code g} and {@code b}, respectively.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the subtraction.
+	 * 
+	 * @param r the value to subtract from the R component
+	 * @param g the value to subtract from the G component
+	 * @param b the value to subtract from the B component
+	 * @return a new {@code Color} instance with the result of the subtraction
+	 */
 	public Color subtract(final float r, final float g, final float b) {
 		return new Color(this.r - r, this.g - g, this.b - b, this.a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Subtracts the R-, G-, B- and A-component values of this {@code Color} instance with {@code r}, {@code g}, {@code b} and {@code a}, respectively.
+	 * <p>
+	 * Returns a new {@code Color} instance with the result of the subtraction.
+	 * 
+	 * @param r the value to subtract from the R component
+	 * @param g the value to subtract from the G component
+	 * @param b the value to subtract from the B component
+	 * @param a the value to subtract from the A component
+	 * @return a new {@code Color} instance with the result of the subtraction
+	 */
 	public Color subtract(final float r, final float g, final float b, final float a) {
 		return new Color(this.r - r, this.g - g, this.b - b, this.a - a);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the average value of the RGB-component values of this {@code Color} instance.
+	 * 
+	 * @return the average value of the RGB-component values of this {@code Color} instance
+	 */
 	public float average() {
 		return (this.r + this.g + this.b) / 3.0F;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the value of the A component.
+	 * 
+	 * @return the value of the A component
+	 */
 	public float getA() {
 		return this.a;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the value of the B component.
+	 * 
+	 * @return the value of the B component
+	 */
 	public float getB() {
 		return this.b;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the value of the G component.
+	 * 
+	 * @return the value of the G component
+	 */
 	public float getG() {
 		return this.g;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the value of the R component.
+	 * 
+	 * @return the value of the R component
+	 */
 	public float getR() {
 		return this.r;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the luminance of this {@code Color} instance.
+	 * 
+	 * @return the luminance of this {@code Color} instance
+	 */
 	public float luminance() {
-//		return 0.212671F * this.r + 0.715160F * this.g + 0.072169F * this.b;
 		return 0.2989F * this.r + 0.5866F * this.g + 0.1145F * this.b;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the maximum RGB-component value of this {@code Color} instance.
+	 * 
+	 * @return the maximum RGB-component value of this {@code Color} instance
+	 */
 	public float max() {
 		return Math.max(this.r, Math.max(this.g, this.b));
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the minimum RGB-component value of this {@code Color} instance.
+	 * 
+	 * @return the minimum RGB-component value of this {@code Color} instance
+	 */
 	public float min() {
 		return Math.min(this.r, Math.min(this.r, this.b));
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a hash code for this {@code Color} instance.
+	 * 
+	 * @return a hash code for this {@code Color} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(Float.valueOf(this.r), Float.valueOf(this.g), Float.valueOf(this.b), Float.valueOf(this.a));
+	}
+	
+	/**
+	 * Returns an {@code int} representation of the ARGB-component values of this {@code Color} instance.
+	 * 
+	 * @return an {@code int} representation of the ARGB-component values of this {@code Color} instance
+	 */
 	public int toARGB() {
-		return (((int)(this.a) & 0xFF) << 24) | (((int)(this.r) & 0xFF) << 16) | (((int)(this.g) & 0xFF) << 8) | ((int)(this.b) & 0xFF);
+		return (((int)(this.a + 0.5F) & 0xFF) << 24) | (((int)(this.r + 0.5F) & 0xFF) << 16) | (((int)(this.g + 0.5F) & 0xFF) << 8) | ((int)(this.b + 0.5F) & 0xFF);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns an {@code int} representation of the RGB-component values of this {@code Color} instance.
+	 * 
+	 * @return an {@code int} representation of the RGB-component values of this {@code Color} instance
+	 */
 	public int toRGB() {
-		return (((int)(this.r) & 0xFF) << 16) | (((int)(this.g) & 0xFF) << 8) | ((int)(this.b) & 0xFF);
+		return (((int)(this.r + 0.5F) & 0xFF) << 16) | (((int)(this.g + 0.5F) & 0xFF) << 8) | ((int)(this.b + 0.5F) & 0xFF);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code String} representation of this {@code Color} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code Color} instance
+	 */
 	@Override
 	public String toString() {
-		return String.format("Color: [R=%s, G=%s, B=%s, A=%s]", Float.toString(this.r), Float.toString(this.g), Float.toString(this.b), Float.toString(this.a));
+		return String.format("Color: [R=%s], [G=%s], [B=%s], [A=%s]", Float.toString(this.r), Float.toString(this.g), Float.toString(this.b), Float.toString(this.a));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the A component value of {@code aRGB}.
+	 * 
+	 * @param aRGB an {@code int} with the ARGB-component values
+	 * @return the A component value of {@code aRGB}
+	 */
 	public static int toA(final int aRGB) {
 		return (aRGB >> 24) & 0xFF;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the B component value of {@code rGB}.
+	 * 
+	 * @param rGB an {@code int} with the RGB-component values
+	 * @return the B component value of {@code rGB}
+	 */
 	public static int toB(final int rGB) {
 		return rGB & 0xFF;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the G component value of {@code rGB}.
+	 * 
+	 * @param rGB an {@code int} with the RGB-component values
+	 * @return the G component value of {@code rGB}
+	 */
 	public static int toG(final int rGB) {
 		return (rGB >> 8) & 0xFF;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the R component value of {@code rGB}.
+	 * 
+	 * @param rGB an {@code int} with the RGB-component values
+	 * @return the R component value of {@code rGB}
+	 */
 	public static int toR(final int rGB) {
 		return (rGB >> 16) & 0xFF;
 	}

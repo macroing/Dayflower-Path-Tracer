@@ -18,61 +18,51 @@
  */
 package org.dayflower.pathtracer.scene.texture;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.Texture;
 
-//TODO: Add Javadocs.
-public final class SolidTexture extends Texture {
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_COLOR = 2;
-	
-//	TODO: Add Javadocs.
-	public static final int SIZE = 5;
-	
-//	TODO: Add Javadocs.
-	public static final int TYPE = 2;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+/**
+ * A {@code SolidTexture} is a {@link Texture} implementation that models a texture with a solid color.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
+public final class SolidTexture implements Texture {
 	private final Color color;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code SolidTexture} instance.
+	 * <p>
+	 * Calling this constructor is equivalent to calling {@code new SolidTexture(Color.GREEN)}.
+	 */
 	public SolidTexture() {
 		this(Color.GREEN);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code SolidTexture} instance given a {@link Color} as its color.
+	 * <p>
+	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color a {@code Color}
+	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
+	 */
 	public SolidTexture(final Color color) {
 		this.color = Objects.requireNonNull(color, "color == null");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@link Color} assigned to this {@code SolidTexture} instance.
+	 * 
+	 * @return the {@code Color} assigned to this {@code SolidTexture} instance
+	 */
 	public Color getColor() {
 		return this.color;
-	}
-	
-//	TODO: Add Javadocs.
-	@Override
-	public float[] toFloatArray() {
-		return new float[] {
-			TYPE,
-			SIZE,
-			getColor().r,
-			getColor().g,
-			getColor().b
-		};
-	}
-	
-//	TODO: Add Javadocs.
-	@Override
-	public int size() {
-		return SIZE;
 	}
 }

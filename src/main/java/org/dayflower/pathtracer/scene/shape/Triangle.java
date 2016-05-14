@@ -34,244 +34,53 @@ import org.dayflower.pathtracer.scene.Vector3;
 //TODO: Add Javadocs.
 public final class Triangle extends Shape {
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_POINT_A = 10;
+	public final Vertex a;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_POINT_B = 13;
+	public final Vertex b;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_POINT_C = 16;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_A = 19;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_B = 22;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_C = 25;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_UV_A = 28;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_UV_B = 30;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_UV_C = 32;
-	
-//	TODO: Add Javadocs.
-	public static final int SIZE = 48;
-	
-//	TODO: Add Javadocs.
-	public static final int TYPE = 2;
+	public final Vertex c;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
-	public final Point2 uVA;
-	
-//	TODO: Add Javadocs.
-	public final Point2 uVB;
-	
-//	TODO: Add Javadocs.
-	public final Point2 uVC;
-	
-//	TODO: Add Javadocs.
-	public final Point3 pointA;
-	
-//	TODO: Add Javadocs.
-	public final Point3 pointB;
-	
-//	TODO: Add Javadocs.
-	public final Point3 pointC;
-	
-//	TODO: Add Javadocs.
-	public final Vector3 surfaceNormalA;
-	
-//	TODO: Add Javadocs.
-	public final Vector3 surfaceNormalB;
-	
-//	TODO: Add Javadocs.
-	public final Vector3 surfaceNormalC;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-//	TODO: Add Javadocs.
-	public Triangle(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal, final Point3 pointA, final Point3 pointB, final Point3 pointC, final Vector3 surfaceNormalA, final Vector3 surfaceNormalB, final Vector3 surfaceNormalC, final Point2 uVA, final Point2 uVB, final Point2 uVC) {
+	public Triangle(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal, final Vertex a, final Vertex b, final Vertex c) {
 		super(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal);
 		
-		this.pointA = Objects.requireNonNull(pointA, "pointA == null");
-		this.pointB = Objects.requireNonNull(pointB, "pointB == null");
-		this.pointC = Objects.requireNonNull(pointC, "pointC == null");
-		this.surfaceNormalA = Objects.requireNonNull(surfaceNormalA, "surfaceNormalA == null");
-		this.surfaceNormalB = Objects.requireNonNull(surfaceNormalB, "surfaceNormalB == null");
-		this.surfaceNormalC = Objects.requireNonNull(surfaceNormalC, "surfaceNormalC == null");
-		this.uVA = Objects.requireNonNull(uVA, "uVA == null");
-		this.uVB = Objects.requireNonNull(uVB, "uVB == null");
-		this.uVC = Objects.requireNonNull(uVC, "uVC == null");
+		this.a = Objects.requireNonNull(a, "a == null");
+		this.b = Objects.requireNonNull(b, "b == null");
+		this.c = Objects.requireNonNull(c, "c == null");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-//	TODO: Add Javadocs.
-	@Override
-	public byte[] toByteArray() {
-		return new byte[] {
-			(byte)(TYPE),
-			(byte)(SIZE),
-//			TODO: getEmission().r
-//			TODO: getEmission().g
-//			TODO: getEmission().b
-			(byte)(getMaterial().ordinal()),
-//			TODO: getTextureAlbedo().getOffset()
-//			TODO: getTextureNormal().getOffset()
-//			TODO: getPerlinNoiseAmount()
-//			TODO: getPerlinNoiseScale()
-//			TODO: getPointA().x
-//			TODO: getPointA().y
-//			TODO: getPointA().z
-//			TODO: getPointB().x
-//			TODO: getPointB().y
-//			TODO: getPointB().z
-//			TODO: getPointC().x
-//			TODO: getPointC().y
-//			TODO: getPointC().z
-//			TODO: getSurfaceNormalA().x
-//			TODO: getSurfaceNormalA().y
-//			TODO: getSurfaceNormalA().z
-//			TODO: getSurfaceNormalB().x
-//			TODO: getSurfaceNormalB().y
-//			TODO: getSurfaceNormalB().z
-//			TODO: getSurfaceNormalC().x
-//			TODO: getSurfaceNormalC().y
-//			TODO: getSurfaceNormalC().z
-//			TODO: getUVA().x
-//			TODO: getUVA().y
-//			TODO: getUVB().x
-//			TODO: getUVB().y
-//			TODO: getUVC().x
-//			TODO: getUVC().y
-		};
-	}
-	
-//	TODO: Add Javadocs.
-	@Override
-	public float[] toFloatArray() {
-		return new float[] {
-			TYPE,
-			SIZE,
-			getEmission().r,
-			getEmission().g,
-			getEmission().b,
-			getMaterial().ordinal(),
-			getTextureAlbedo().getOffset(),
-			getTextureNormal().getOffset(),
-			getPerlinNoiseAmount(),
-			getPerlinNoiseScale(),
-			getPointA().x,
-			getPointA().y,
-			getPointA().z,
-			getPointB().x,
-			getPointB().y,
-			getPointB().z,
-			getPointC().x,
-			getPointC().y,
-			getPointC().z,
-			getSurfaceNormalA().x,
-			getSurfaceNormalA().y,
-			getSurfaceNormalA().z,
-			getSurfaceNormalB().x,
-			getSurfaceNormalB().y,
-			getSurfaceNormalB().z,
-			getSurfaceNormalC().x,
-			getSurfaceNormalC().y,
-			getSurfaceNormalC().z,
-			getUVA().x,
-			getUVA().y,
-			getUVB().x,
-			getUVB().y,
-			getUVC().x,
-			getUVC().y,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F,
-			0.0F
-		};
-	}
-	
-//	TODO: Add Javadocs.
-	@Override
-	public int size() {
-		return SIZE;
-	}
-	
-//	TODO: Add Javadocs.
-	public Point2 getUVA() {
-		return this.uVA;
-	}
-	
-//	TODO: Add Javadocs.
-	public Point2 getUVB() {
-		return this.uVB;
-	}
-	
-//	TODO: Add Javadocs.
-	public Point2 getUVC() {
-		return this.uVC;
-	}
-	
-//	TODO: Add Javadocs.
-	public Point3 getPointA() {
-		return this.pointA;
-	}
-	
-//	TODO: Add Javadocs.
-	public Point3 getPointB() {
-		return this.pointB;
-	}
-	
-//	TODO: Add Javadocs.
-	public Point3 getPointC() {
-		return this.pointC;
-	}
 	
 //	TODO: Add Javadocs.
 	@Override
 	public String toString() {
-		return String.format("Triangle: A=%s, B=%s, C=%s", getPointA(), getPointB(), getPointC());
+		return String.format("Triangle: A=%s, B=%s, C=%s", getA(), getB(), getC());
 	}
 	
 //	TODO: Add Javadocs.
 	public Triangle rotate(final Vector3 v, final Vector3 w) {
 		final Matrix44 m = Matrix44.rotation(v, w);
 		
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), this.pointA.transform(m), this.pointB.transform(m), this.pointC.transform(m), this.surfaceNormalA, this.surfaceNormalB, this.surfaceNormalC, this.uVA, this.uVB, this.uVC);
+		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), getA().transform(m), getB().transform(m), getC().transform(m));
 	}
 	
 //	TODO: Add Javadocs.
 	public Triangle scale(final float s) {
-		final float a0X = this.pointA.x;
-		final float a0Y = this.pointA.y;
-		final float a0Z = this.pointA.z;
+		final float a0X = this.a.position.x;
+		final float a0Y = this.a.position.y;
+		final float a0Z = this.a.position.z;
 		
-		final float b0X = this.pointB.x;
-		final float b0Y = this.pointB.y;
-		final float b0Z = this.pointB.z;
+		final float b0X = this.b.position.x;
+		final float b0Y = this.b.position.y;
+		final float b0Z = this.b.position.z;
 		
-		final float c0X = this.pointC.x;
-		final float c0Y = this.pointC.y;
-		final float c0Z = this.pointC.z;
+		final float c0X = this.c.position.x;
+		final float c0Y = this.c.position.y;
+		final float c0Z = this.c.position.z;
 		
 		final float centerX = (a0X + b0X + c0X) / 3.0F;
 		final float centerY = (a0Y + b0Y + c0Y) / 3.0F;
@@ -289,7 +98,7 @@ public final class Triangle extends Shape {
 		final float c1Y = centerY + (c0Y - centerY) * s;
 		final float c1Z = centerZ + (c0Z - centerZ) * s;
 		
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), new Point3(a1X, a1Y, a1Z), new Point3(b1X, b1Y, b1Z), new Point3(c1X, c1Y, c1Z), this.surfaceNormalA, this.surfaceNormalB, this.surfaceNormalC, this.uVA, this.uVB, this.uVC);
+		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), this.a.setPosition(new Point3(a1X, a1Y, a1Z)), this.b.setPosition(new Point3(b1X, b1Y, b1Z)), this.c.setPosition(new Point3(c1X, c1Y, c1Z)));
 	}
 	
 //	TODO: Add Javadocs.
@@ -299,32 +108,32 @@ public final class Triangle extends Shape {
 	
 //	TODO: Add Javadocs.
 	public Triangle translateX(final float x) {
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), this.pointA.translateX(x), this.pointB.translateX(x), this.pointC.translateX(x), this.surfaceNormalA, this.surfaceNormalB, this.surfaceNormalC, this.uVA, this.uVB, this.uVC);
+		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), getA().translateX(x), getB().translateX(x), getC().translateX(x));
 	}
 	
 //	TODO: Add Javadocs.
 	public Triangle translateY(final float y) {
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), this.pointA.translateY(y), this.pointB.translateY(y), this.pointC.translateY(y), this.surfaceNormalA, this.surfaceNormalB, this.surfaceNormalC, this.uVA, this.uVB, this.uVC);
+		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), getA().translateY(y), getB().translateY(y), getC().translateY(y));
 	}
 	
 //	TODO: Add Javadocs.
 	public Triangle translateZ(final float z) {
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), this.pointA.translateZ(z), this.pointB.translateZ(z), this.pointC.translateZ(z), this.surfaceNormalA, this.surfaceNormalB, this.surfaceNormalC, this.uVA, this.uVB, this.uVC);
+		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), getA().translateZ(z), getB().translateZ(z), getC().translateZ(z));
 	}
 	
 //	TODO: Add Javadocs.
-	public Vector3 getSurfaceNormalA() {
-		return this.surfaceNormalA;
+	public Vertex getA() {
+		return this.a;
 	}
 	
 //	TODO: Add Javadocs.
-	public Vector3 getSurfaceNormalB() {
-		return this.surfaceNormalB;
+	public Vertex getB() {
+		return this.b;
 	}
 	
 //	TODO: Add Javadocs.
-	public Vector3 getSurfaceNormalC() {
-		return this.surfaceNormalC;
+	public Vertex getC() {
+		return this.c;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -334,9 +143,9 @@ public final class Triangle extends Shape {
 		Point3 maximum = Point3.minimum();
 		
 		for(final Triangle triangle : triangles) {
-			final Point3 a = triangle.pointA;
-			final Point3 b = triangle.pointB;
-			final Point3 c = triangle.pointC;
+			final Point3 a = triangle.a.position;
+			final Point3 b = triangle.b.position;
+			final Point3 c = triangle.c.position;
 			
 			maximum = Point3.maximum(maximum, Point3.maximum(a, b, c));
 		}
@@ -349,13 +158,87 @@ public final class Triangle extends Shape {
 		Point3 minimum = Point3.maximum();
 		
 		for(final Triangle triangle : triangles) {
-			final Point3 a = triangle.pointA;
-			final Point3 b = triangle.pointB;
-			final Point3 c = triangle.pointC;
+			final Point3 a = triangle.a.position;
+			final Point3 b = triangle.b.position;
+			final Point3 c = triangle.c.position;
 			
 			minimum = Point3.minimum(minimum, Point3.minimum(a, b, c));
 		}
 		
 		return minimum;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public static final class Vertex {
+//		TODO: Add Javadocs.
+		public final Point2 textureCoordinates;
+		
+//		TODO: Add Javadocs.
+		public final Point3 position;
+		
+//		TODO: Add Javadocs.
+		public final String material;
+		
+//		TODO: Add Javadocs.
+		public final Vector3 normal;
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+//		TODO: Add Javadocs.
+		public Vertex(final Point2 textureCoordinates, final Point3 position, final String material, final Vector3 normal) {
+			this.textureCoordinates = Objects.requireNonNull(textureCoordinates, "textureCoordinates == null");
+			this.position = Objects.requireNonNull(position, "position == null");
+			this.material = Objects.requireNonNull(material, "material == null");
+			this.normal = Objects.requireNonNull(normal, "normal == null");
+		}
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+//		TODO: Add Javadocs.
+		public Point2 getTextureCoordinates() {
+			return this.textureCoordinates;
+		}
+		
+//		TODO: Add Javadocs.
+		public Point3 getPosition() {
+			return this.position;
+		}
+		
+//		TODO: Add Javadocs.
+		public String getMaterial() {
+			return this.material;
+		}
+		
+//		TODO: Add Javadocs.
+		public Vector3 getNormal() {
+			return this.normal;
+		}
+		
+//		TODO: Add Javadocs.
+		public Vertex setPosition(final Point3 position) {
+			return new Vertex(this.textureCoordinates, position, this.material, this.normal);
+		}
+		
+//		TODO: Add Javadocs.
+		public Vertex transform(final Matrix44 m) {
+			return new Vertex(this.textureCoordinates, this.position.transform(m), this.material, this.normal);
+		}
+		
+//		TODO: Add Javadocs.
+		public Vertex translateX(final float x) {
+			return new Vertex(this.textureCoordinates, this.position.translateX(x), this.material, this.normal);
+		}
+		
+//		TODO: Add Javadocs.
+		public Vertex translateY(final float y) {
+			return new Vertex(this.textureCoordinates, this.position.translateY(y), this.material, this.normal);
+		}
+		
+//		TODO: Add Javadocs.
+		public Vertex translateZ(final float z) {
+			return new Vertex(this.textureCoordinates, this.position.translateZ(z), this.material, this.normal);
+		}
 	}
 }

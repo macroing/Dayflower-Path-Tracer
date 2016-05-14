@@ -18,37 +18,18 @@
  */
 package org.dayflower.pathtracer.scene.texture;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.Texture;
 
-//TODO: Add Javadocs.
-public final class CheckerboardTexture extends Texture {
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_COLOR_0 = 2;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_COLOR_1 = 5;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_DEGREES = 8;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SCALE_U = 9;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SCALE_V = 10;
-	
-//	TODO: Add Javadocs.
-	public static final int SIZE = 11;
-	
-//	TODO: Add Javadocs.
-	public static final int TYPE = 1;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+/**
+ * A {@code CheckerboardTexture} is a {@link Texture} implementation that models a texture with a checkerboard pattern.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
+public final class CheckerboardTexture implements Texture {
 	private final Color color0;
 	private final Color color1;
 	private final float degrees;
@@ -57,27 +38,73 @@ public final class CheckerboardTexture extends Texture {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code CheckerboardTexture} instance.
+	 * <p>
+	 * Calling this constructor is equivalent to calling {@code new CheckerboardTexture(Color.GRAY)}.
+	 */
 	public CheckerboardTexture() {
 		this(Color.GRAY);
 	}
 	
-//	TODO: Add Javadocs.
-	public CheckerboardTexture(final Color color0) {
-		this(color0, 5.0F, 5.0F);
+	/**
+	 * Constructs a new {@code CheckerboardTexture} instance with a given {@link Color}.
+	 * <p>
+	 * Calling this constructor is equivalent to calling {@code new CheckerboardTexture(color, 5.0F, 5.0F)}.
+	 * <p>
+	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color a {@code Color}
+	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
+	 */
+	public CheckerboardTexture(final Color color) {
+		this(color, 5.0F, 5.0F);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code CheckerboardTexture} instance with two different {@link Color}s.
+	 * <p>
+	 * Calling this constructor is equivalent to calling {@code new CheckerboardTexture(color0, color1, 5.0F, 5.0F)}.
+	 * <p>
+	 * If either {@code color0} or {@code color1} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color0 a {@code Color}
+	 * @param color1 a {@code Color}
+	 * @throws NullPointerException thrown if, and only if, either {@code color0} or {@code color1} are {@code null}
+	 */
 	public CheckerboardTexture(final Color color0, final Color color1) {
 		this(color0, color1, 5.0F, 5.0F, 0.0F);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code CheckerboardTexture} instance with two different {@link Color}s and scale factors in the U- and V-directions.
+	 * <p>
+	 * Calling this constructor is equivalent to calling {@code new CheckerboardTexture(color0, color1, scaleU, scaleV, 0.0F)}.
+	 * <p>
+	 * If either {@code color0} or {@code color1} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color0 a {@code Color}
+	 * @param color1 a {@code Color}
+	 * @param scaleU the scale factor in the U-direction
+	 * @param scaleV the scale factor in the V-direction
+	 * @throws NullPointerException thrown if, and only if, either {@code color0} or {@code color1} are {@code null}
+	 */
 	public CheckerboardTexture(final Color color0, final Color color1, final float scaleU, final float scaleV) {
 		this(color0, color1, scaleU, scaleV, 0.0F);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code CheckerboardTexture} instance with two different {@link Color}s, scale factors in the U- and V-directions and the angle in degrees to rotate it.
+	 * <p>
+	 * If either {@code color0} or {@code color1} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color0 a {@code Color}
+	 * @param color1 a {@code Color}
+	 * @param scaleU the scale factor in the U-direction
+	 * @param scaleV the scale factor in the V-direction
+	 * @param degrees the angle in degrees to rotate it
+	 * @throws NullPointerException thrown if, and only if, either {@code color0} or {@code color1} are {@code null}
+	 */
 	public CheckerboardTexture(final Color color0, final Color color1, final float scaleU, final float scaleV, final float degrees) {
 		this.color0 = Objects.requireNonNull(color0, "color0 == null");
 		this.color1 = Objects.requireNonNull(color1, "color1 == null");
@@ -86,64 +113,83 @@ public final class CheckerboardTexture extends Texture {
 		this.degrees = degrees;
 	}
 	
-//	TODO: Add Javadocs.
-	public CheckerboardTexture(final Color color0, final float scaleU, final float scaleV) {
-		this(color0, scaleU, scaleV, 0.0F);
+	/**
+	 * Constructs a new {@code CheckerboardTexture} instance with a given {@link Color} and scale factors in the U- and V-directions.
+	 * <p>
+	 * Calling this constructor is equivalent to calling {@code new CheckerboardTexture(color, scaleU, scaleV, 0.0F)}.
+	 * <p>
+	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color a {@code Color}
+	 * @param scaleU the scale factor in the U-direction
+	 * @param scaleV the scale factor in the V-direction
+	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
+	 */
+	public CheckerboardTexture(final Color color, final float scaleU, final float scaleV) {
+		this(color, scaleU, scaleV, 0.0F);
 	}
 	
-//	TODO: Add Javadocs.
-	public CheckerboardTexture(final Color color0, final float scaleU, final float scaleV, final float degrees) {
-		this(color0, color0, scaleU, scaleV, degrees);
+	/**
+	 * Constructs a new {@code CheckerboardTexture} instance with a given {@link Color}, scale factors in the U- and V-directions and the angle in degrees to rotate it.
+	 * <p>
+	 * Calling this constructor is equivalent to calling {@code new CheckerboardTexture(color, color, scaleU, scaleV, degrees)}.
+	 * <p>
+	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param color a {@code Color}
+	 * @param scaleU the scale factor in the U-direction
+	 * @param scaleV the scale factor in the V-direction
+	 * @param degrees the angle in degrees to rotate it
+	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
+	 */
+	public CheckerboardTexture(final Color color, final float scaleU, final float scaleV, final float degrees) {
+		this(color, color, scaleU, scaleV, degrees);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns one of the two {@link Color}s assigned to this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return one of the two {@code Color}s assigned to this {@code CheckerboardTexture} instance
+	 */
 	public Color getColor0() {
 		return this.color0;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns one of the two {@link Color}s assigned to this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return one of the two {@code Color}s assigned to this {@code CheckerboardTexture} instance
+	 */
 	public Color getColor1() {
 		return this.color1;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the angle in degrees that this {@code CheckerboardTexture} instance should be rotated.
+	 * 
+	 * @return the angle in degrees that this {@code CheckerboardTexture} instance should be rotated
+	 */
 	public float getDegrees() {
 		return this.degrees;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the scale factor in the U-direction assigned to this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return the scale factor in the U-direction assigned to this {@code CheckerboardTexture} instance
+	 */
 	public float getScaleU() {
 		return this.scaleU;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the scale factor in the V-direction assigned to this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return the scale factor in the V-direction assigned to this {@code CheckerboardTexture} instance
+	 */
 	public float getScaleV() {
 		return this.scaleV;
-	}
-	
-//	TODO: Add Javadocs.
-	@Override
-	public float[] toFloatArray() {
-		return new float[] {
-			TYPE,
-			SIZE,
-			getColor0().r,
-			getColor0().g,
-			getColor0().b,
-			getColor1().r,
-			getColor1().g,
-			getColor1().b,
-			getDegrees(),
-			getScaleU(),
-			getScaleV()
-		};
-	}
-	
-//	TODO: Add Javadocs.
-	@Override
-	public int size() {
-		return SIZE;
 	}
 }

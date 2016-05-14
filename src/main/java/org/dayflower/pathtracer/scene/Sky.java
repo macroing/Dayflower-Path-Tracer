@@ -23,6 +23,7 @@ import static org.dayflower.pathtracer.math.Math2.acos;
 import static org.dayflower.pathtracer.math.Math2.cos;
 import static org.dayflower.pathtracer.math.Math2.exp;
 import static org.dayflower.pathtracer.math.Math2.max;
+import static org.dayflower.pathtracer.math.Math2.pow;
 import static org.dayflower.pathtracer.math.Math2.saturate;
 import static org.dayflower.pathtracer.math.Math2.sin;
 import static org.dayflower.pathtracer.math.Math2.tan;
@@ -31,21 +32,24 @@ import java.lang.reflect.Field;//TODO: Add Javadocs.
 
 import org.dayflower.pathtracer.color.ChromaticSpectralCurve;
 import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.color.IrregularSpectralCurve;
 import org.dayflower.pathtracer.color.RGBColorSpace;
+import org.dayflower.pathtracer.color.RegularSpectralCurve;
+import org.dayflower.pathtracer.color.SpectralCurve;
 
 //TODO: Add Javadocs!
 public final class Sky {
-//	private static final float[] K_G_AMPLITUDES = {0.0F, 3.0F, 0.210F, 0.0F};
-//	private static final float[] K_G_WAVELENGTHS = {759.0F, 760.0F, 770.0F, 771.0F};
-//	private static final float[] K_O_AMPLITUDES = {10.0F, 4.8F, 2.7F, 1.35F, 0.8F, 0.380F, 0.160F, 0.075F, 0.04F, 0.019F, 0.007F, 0.0F, 0.003F, 0.003F, 0.004F, 0.006F, 0.008F, 0.009F, 0.012F, 0.014F, 0.017F, 0.021F, 0.025F, 0.03F, 0.035F, 0.04F, 0.045F, 0.048F, 0.057F, 0.063F, 0.07F, 0.075F, 0.08F, 0.085F, 0.095F, 0.103F, 0.110F, 0.12F, 0.122F, 0.12F, 0.118F, 0.115F, 0.12F, 0.125F, 0.130F, 0.12F, 0.105F, 0.09F, 0.079F, 0.067F, 0.057F, 0.048F, 0.036F, 0.028F, 0.023F, 0.018F, 0.014F, 0.011F, 0.010F, 0.009F, 0.007F, 0.004F, 0.0F, 0.0F};
-//	private static final float[] K_O_WAVELENGTHS = {300.0F, 305.0F, 310.0F, 315.0F, 320.0F, 325.0F, 330.0F, 335.0F, 340.0F, 345.0F, 350.0F, 355.0F, 445.0F, 450.0F, 455.0F, 460.0F, 465.0F, 470.0F, 475.0F, 480.0F, 485.0F, 490.0F, 495.0F, 500.0F, 505.0F, 510.0F, 515.0F, 520.0F, 525.0F, 530.0F, 535.0F, 540.0F, 545.0F, 550.0F, 555.0F, 560.0F, 565.0F, 570.0F, 575.0F, 580.0F, 585.0F, 590.0F, 595.0F, 600.0F, 605.0F, 610.0F, 620.0F, 630.0F, 640.0F, 650.0F, 660.0F, 670.0F, 680.0F, 690.0F, 700.0F, 710.0F, 720.0F, 730.0F, 740.0F, 750.0F, 760.0F, 770.0F, 780.0F, 790.0F};
-//	private static final float[] K_WA_AMPLITUDES = {0.0F, 0.160e-1F, 0.240e-1F, 0.125e-1F, 0.100e+1F, 0.870F, 0.610e-1F, 0.100e-2F, 0.100e-4F, 0.100e-4F, 0.600e-3F, 0.175e-1F, 0.360e-1F};
-//	private static final float[] K_WA_WAVELENGTHS = {689.0F, 690.0F, 700.0F, 710.0F, 720.0F, 730.0F, 740.0F, 750.0F, 760.0F, 770.0F, 780.0F, 790.0F, 800.0F};
-//	private static final float[] SOL_AMPLITUDES = {165.5F, 162.3F, 211.2F, 258.8F, 258.2F, 242.3F, 267.6F, 296.6F, 305.4F, 300.6F, 306.6F, 288.3F, 287.1F, 278.2F, 271.0F, 272.3F, 263.6F, 255.0F, 250.6F, 253.1F, 253.5F, 251.3F, 246.3F, 241.7F, 236.8F, 232.1F, 228.2F, 223.4F, 219.7F, 215.3F, 211.0F, 207.3F, 202.4F, 198.7F, 194.3F, 190.7F, 186.3F, 182.6F};
-//	private static final SpectralCurve K_G_SPECTRAL_CURVE = new IrregularSpectralCurve(K_G_AMPLITUDES, K_G_WAVELENGTHS);
-//	private static final SpectralCurve K_O_SPECTRAL_CURVE = new IrregularSpectralCurve(K_O_AMPLITUDES, K_O_WAVELENGTHS);
-//	private static final SpectralCurve K_WA_SPECTRAL_CURVE = new IrregularSpectralCurve(K_WA_AMPLITUDES, K_WA_WAVELENGTHS);
-//	private static final SpectralCurve SOL_SPECTRAL_CURVE = new RegularSpectralCurve(380.0F, 750.0F, SOL_AMPLITUDES);
+	private static final float[] K_G_AMPLITUDES = {0.0F, 3.0F, 0.210F, 0.0F};
+	private static final float[] K_G_WAVELENGTHS = {759.0F, 760.0F, 770.0F, 771.0F};
+	private static final float[] K_O_AMPLITUDES = {10.0F, 4.8F, 2.7F, 1.35F, 0.8F, 0.380F, 0.160F, 0.075F, 0.04F, 0.019F, 0.007F, 0.0F, 0.003F, 0.003F, 0.004F, 0.006F, 0.008F, 0.009F, 0.012F, 0.014F, 0.017F, 0.021F, 0.025F, 0.03F, 0.035F, 0.04F, 0.045F, 0.048F, 0.057F, 0.063F, 0.07F, 0.075F, 0.08F, 0.085F, 0.095F, 0.103F, 0.110F, 0.12F, 0.122F, 0.12F, 0.118F, 0.115F, 0.12F, 0.125F, 0.130F, 0.12F, 0.105F, 0.09F, 0.079F, 0.067F, 0.057F, 0.048F, 0.036F, 0.028F, 0.023F, 0.018F, 0.014F, 0.011F, 0.010F, 0.009F, 0.007F, 0.004F, 0.0F, 0.0F};
+	private static final float[] K_O_WAVELENGTHS = {300.0F, 305.0F, 310.0F, 315.0F, 320.0F, 325.0F, 330.0F, 335.0F, 340.0F, 345.0F, 350.0F, 355.0F, 445.0F, 450.0F, 455.0F, 460.0F, 465.0F, 470.0F, 475.0F, 480.0F, 485.0F, 490.0F, 495.0F, 500.0F, 505.0F, 510.0F, 515.0F, 520.0F, 525.0F, 530.0F, 535.0F, 540.0F, 545.0F, 550.0F, 555.0F, 560.0F, 565.0F, 570.0F, 575.0F, 580.0F, 585.0F, 590.0F, 595.0F, 600.0F, 605.0F, 610.0F, 620.0F, 630.0F, 640.0F, 650.0F, 660.0F, 670.0F, 680.0F, 690.0F, 700.0F, 710.0F, 720.0F, 730.0F, 740.0F, 750.0F, 760.0F, 770.0F, 780.0F, 790.0F};
+	private static final float[] K_WA_AMPLITUDES = {0.0F, 0.160e-1F, 0.240e-1F, 0.125e-1F, 0.100e+1F, 0.870F, 0.610e-1F, 0.100e-2F, 0.100e-4F, 0.100e-4F, 0.600e-3F, 0.175e-1F, 0.360e-1F};
+	private static final float[] K_WA_WAVELENGTHS = {689.0F, 690.0F, 700.0F, 710.0F, 720.0F, 730.0F, 740.0F, 750.0F, 760.0F, 770.0F, 780.0F, 790.0F, 800.0F};
+	private static final float[] SOL_AMPLITUDES = {165.5F, 162.3F, 211.2F, 258.8F, 258.2F, 242.3F, 267.6F, 296.6F, 305.4F, 300.6F, 306.6F, 288.3F, 287.1F, 278.2F, 271.0F, 272.3F, 263.6F, 255.0F, 250.6F, 253.1F, 253.5F, 251.3F, 246.3F, 241.7F, 236.8F, 232.1F, 228.2F, 223.4F, 219.7F, 215.3F, 211.0F, 207.3F, 202.4F, 198.7F, 194.3F, 190.7F, 186.3F, 182.6F};
+	private static final SpectralCurve K_G_SPECTRAL_CURVE = new IrregularSpectralCurve(K_G_AMPLITUDES, K_G_WAVELENGTHS);
+	private static final SpectralCurve K_O_SPECTRAL_CURVE = new IrregularSpectralCurve(K_O_AMPLITUDES, K_O_WAVELENGTHS);
+	private static final SpectralCurve K_WA_SPECTRAL_CURVE = new IrregularSpectralCurve(K_WA_AMPLITUDES, K_WA_WAVELENGTHS);
+	private static final SpectralCurve SOL_SPECTRAL_CURVE = new RegularSpectralCurve(380.0F, 750.0F, SOL_AMPLITUDES);
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -229,7 +233,7 @@ public final class Sky {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	/*
+	@SuppressWarnings("unused")
 	private static SpectralCurve doCalculateAttenuatedSunlight(final float theta, final float turbidity) {
 		final float[] spectrum = new float[91];
 		
@@ -252,5 +256,4 @@ public final class Sky {
 		
 		return new RegularSpectralCurve(350.0F, 800.0F, spectrum);
 	}
-	*/
 }

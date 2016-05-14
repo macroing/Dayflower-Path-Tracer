@@ -30,38 +30,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
 import org.dayflower.pathtracer.scene.Texture;
 
-//TODO: Add Javadocs.
-public final class ImageTexture extends Texture {
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_DATA = 7;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_DEGREES = 2;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_HEIGHT = 4;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SCALE_U = 5;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SCALE_V = 6;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_WIDTH = 3;
-	
-//	TODO: Add Javadocs.
-	public static final int TYPE = 3;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
+/**
+ * An {@code ImageTexture} is a {@link Texture} implementation that models a texture based on an image.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
+public final class ImageTexture implements Texture {
 	private final float degrees;
 	private final float height;
 	private final float scaleU;
@@ -82,75 +63,122 @@ public final class ImageTexture extends Texture {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the angle in degrees that this {@code ImageTexture} instance should be rotated.
+	 * 
+	 * @return the angle in degrees that this {@code ImageTexture} instance should be rotated
+	 */
 	public float getDegrees() {
 		return this.degrees;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the height of this {@code ImageTexture} instance.
+	 * 
+	 * @return the height of this {@code ImageTexture} instance
+	 */
 	public float getHeight() {
 		return this.height;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the scale factor in the U-direction assigned to this {@code ImageTexture} instance.
+	 * 
+	 * @return the scale factor in the U-direction assigned to this {@code ImageTexture} instance
+	 */
 	public float getScaleU() {
 		return this.scaleU;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the scale factor in the V-direction assigned to this {@code ImageTexture} instance.
+	 * 
+	 * @return the scale factor in the V-direction assigned to this {@code ImageTexture} instance
+	 */
 	public float getScaleV() {
 		return this.scaleV;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the width of this {@code ImageTexture} instance.
+	 * 
+	 * @return the width of this {@code ImageTexture} instance
+	 */
 	public float getWidth() {
 		return this.width;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the data of the image as a {@code float} array.
+	 * <p>
+	 * Modifying the array will not affect this {@code ImageTexture} instance.
+	 * 
+	 * @return the data of the image as a {@code float} array
+	 */
 	public float[] getData() {
 		return this.data.clone();
 	}
 	
-//	TODO: Add Javadocs.
-	@Override
-	public float[] toFloatArray() {
-		final float[] floatArray = new float[size()];
-		
-		floatArray[0] = TYPE;
-		floatArray[1] = size();
-		floatArray[2] = getDegrees();
-		floatArray[3] = getWidth();
-		floatArray[4] = getHeight();
-		floatArray[5] = getScaleU();
-		floatArray[6] = getScaleV();
-		
-		for(int i = 0; i < this.data.length; i++) {
-			floatArray[i + 7] = this.data[i];
-		}
-		
-		return floatArray;
-	}
-	
-//	TODO: Add Javadocs.
-	@Override
-	public int size() {
-		return 7 + this.data.length;
-	}
-	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Loads an {@code ImageTexture} from a file.
+	 * <p>
+	 * Returns an {@code ImageTexture} instance.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code ImageTexture.load(file, 0.0F)}.
+	 * <p>
+	 * If {@code file} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O-error occurs when loading the image, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param file a {@code File} denoting a file to load from
+	 * @return an {@code ImageTexture} instance
+	 * @throws NullPointerException thrown if, and only if, {@code file} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O-error occurs when loading the image
+	 */
 	public static ImageTexture load(final File file) {
 		return load(file, 0.0F);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Loads an {@code ImageTexture} from a file given an angle in degrees to rotate it.
+	 * <p>
+	 * Returns an {@code ImageTexture} instance.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code ImageTexture.load(file, degrees, 1.0F, 1.0F)}.
+	 * <p>
+	 * If {@code file} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O-error occurs when loading the image, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param file a {@code File} denoting a file to load from
+	 * @param degrees an angle in degrees to rotate the {@code ImageTexture}
+	 * @return an {@code ImageTexture} instance
+	 * @throws NullPointerException thrown if, and only if, {@code file} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O-error occurs when loading the image
+	 */
 	public static ImageTexture load(final File file, final float degrees) {
 		return load(file, degrees, 1.0F, 1.0F);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Loads an {@code ImageTexture} from a file given an angle in degrees to rotate it and the scale factors in the U- and V-directions.
+	 * <p>
+	 * Returns an {@code ImageTexture} instance.
+	 * <p>
+	 * If {@code file} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O-error occurs when loading the image, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param file a {@code File} denoting a file to load from
+	 * @param degrees an angle in degrees to rotate the {@code ImageTexture}
+	 * @param scaleU the scale factor in the U-direction
+	 * @param scaleV the scale factor in the V-direction
+	 * @return an {@code ImageTexture} instance
+	 * @throws NullPointerException thrown if, and only if, {@code file} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O-error occurs when loading the image
+	 */
 	public static ImageTexture load(final File file, final float degrees, final float scaleU, final float scaleV) {
 		final BufferedImage bufferedImage = doCreateBufferedImageFrom(Objects.requireNonNull(file, "file == null"));
 		

@@ -18,16 +18,31 @@
  */
 package org.dayflower.pathtracer.color;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs!
+/**
+ * An {@code IrregularSpectralCurve} is an implementation of {@link SpectralCurve} that contains irregular spectral data.
+ * <p>
+ * This class is immutable and therefore suitable for concurrent use without external synchronization.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class IrregularSpectralCurve extends SpectralCurve {
 	private final float[] amplitudes;
 	private final float[] wavelengths;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Constructs a new {@code IrregularSpectralCurve} instance.
+	 * <p>
+	 * If either {@code amplitudes} or {@code wavelengths} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * Both arrays {@code amplitudes} and {@code wavelengths} will be cloned.
+	 * 
+	 * @param amplitudes an array with amplitudes
+	 * @param wavelengths an array with wavelengths in nanometers
+	 * @throws NullPointerException thrown if, and only if, either {@code amplitudes} or {@code wavelengths} are {@code null}
+	 */
 	public IrregularSpectralCurve(final float[] amplitudes, final float[] wavelengths) {
 		this.amplitudes = amplitudes.clone();
 		this.wavelengths = wavelengths.clone();
@@ -35,7 +50,12 @@ public final class IrregularSpectralCurve extends SpectralCurve {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a sample based on the wavelength {@code lambda} in nanometers.
+	 * 
+	 * @param lambda the wavelength in nanometers
+	 * @return a sample based on the wavelength {@code lambda} in nanometers
+	 */
 	@Override
 	public float sample(final float lambda) {
 		if(this.wavelengths.length == 0) {

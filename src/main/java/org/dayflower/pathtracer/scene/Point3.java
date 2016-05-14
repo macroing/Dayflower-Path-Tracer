@@ -24,35 +24,96 @@ import static org.dayflower.pathtracer.math.Math2.sin;
 import static org.dayflower.pathtracer.math.Math2.sqrt;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
+import java.util.Objects;
 
 import org.dayflower.pathtracer.math.Math2;
 
-//TODO: Add Javadocs!
+/**
+ * A {@code Point3} denotes a point in 3D with coordinates of X, Y and Z.
+ * <p>
+ * This class is immutable and therefore suitable for concurrent use without external synchronization.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Point3 {
-//	TODO: Add Javadocs!
+	/**
+	 * The X-coordinate.
+	 */
 	public final float x;
 	
-//	TODO: Add Javadocs!
+	/**
+	 * The Y-coordinate.
+	 */
 	public final float y;
 	
-//	TODO: Add Javadocs!
+	/**
+	 * The Z-coordinate.
+	 */
 	public final float z;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Constructs a new {@code Point3} instance.
+	 * <p>
+	 * Calling this constructor is equivalent to {@code new Point3(0.0F, 0.0F, 0.0F)}.
+	 */
 	public Point3() {
 		this(0.0F, 0.0F, 0.0F);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Constructs a new {@code Point3} based on {@code x}, {@code y} and {@code z}.
+	 * 
+	 * @param x the X-coordinate
+	 * @param y the Y-coordinate
+	 * @param z the Z-coordinate
+	 */
 	public Point3(final float x, final float y, final float z) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 	}
 	
+	/**
+	 * Constructs a new {@code Point3} based on the X-, Y- and Z-coordinates provided by {@code v}.
+	 * <p>
+	 * If {@code v} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param v a {@link Vector3}
+	 * @throws NullPointerException thrown if, and only if, {@code v} is {@code null}
+	 */
+	public Point3(final Vector3 v) {
+		this(v.x, v.y, v.z);
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Compares {@code object} to this {@code Point3} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Point3}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Point3} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Point3}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Point3)) {
+			return false;
+		} else if(!Objects.equals(Float.valueOf(this.x), Float.valueOf(Point3.class.cast(object).x))) {
+			return false;
+		} else if(!Objects.equals(Float.valueOf(this.y), Float.valueOf(Point3.class.cast(object).y))) {
+			return false;
+		} else if(!Objects.equals(Float.valueOf(this.z), Float.valueOf(Point3.class.cast(object).z))) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 	
 //	TODO: Add Javadocs!
 	public boolean isWithinSphereRadius(final Point3 p, final float radius) {
@@ -75,6 +136,16 @@ public final class Point3 {
 		final float deltaZ = this.z - p.z;
 		
 		return deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;
+	}
+	
+	/**
+	 * Returns a hash code for this {@code Point3} instance.
+	 * 
+	 * @return a hash code for this {@code Point3} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(Float.valueOf(this.x), Float.valueOf(this.y), Float.valueOf(this.z));
 	}
 	
 //	TODO: Add Javadocs!
@@ -116,7 +187,11 @@ public final class Point3 {
 		return new Point3(this.x, this.y, this.z + z);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@code String} representation of this {@code Point3} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code Point3} instance
+	 */
 	@Override
 	public String toString() {
 		return String.format("Point3: [X=%s], [Y=%s], [Z=%s]", Float.toString(this.x), Float.toString(this.y), Float.toString(this.z));
