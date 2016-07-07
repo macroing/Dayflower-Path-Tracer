@@ -58,11 +58,42 @@ public final class SolidTexture implements Texture {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Compares {@code object} to this {@code SolidTexture} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code SolidTexture}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code SolidTexture} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code SolidTexture}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof SolidTexture)) {
+			return false;
+		} else if(!Objects.equals(this.color, SolidTexture.class.cast(object).color)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
 	 * Returns the {@link Color} assigned to this {@code SolidTexture} instance.
 	 * 
 	 * @return the {@code Color} assigned to this {@code SolidTexture} instance
 	 */
 	public Color getColor() {
 		return this.color;
+	}
+	
+	/**
+	 * Returns a hash code for this {@code SolidTexture} instance.
+	 * 
+	 * @return a hash code for this {@code SolidTexture} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.color);
 	}
 }

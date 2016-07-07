@@ -18,10 +18,23 @@
  */
 package org.dayflower.pathtracer.camera;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
-//TODO: Add Javadocs.
+/**
+ * A {@code CameraPredicate} is used for collision detection.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public interface CameraPredicate {
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@code boolean} array with length {@code 3} for each X-, Y- and Z-axis that tells the {@link Camera} whether it can move in a given direction or not.
+	 * 
+	 * @param oldX the old X-coordinate
+	 * @param oldY the old Y-coordinate
+	 * @param oldZ the old Z-coordinate
+	 * @param newX the new X-coordinate
+	 * @param newY the new Y-coordinate
+	 * @param newZ the new Z-coordinate
+	 * @return a {@code boolean} array with length {@code 3} for each X-, Y- and Z-axis that tells the {@code Camera} whether it can move in a given direction or not
+	 */
 	boolean[] test(final float oldX, final float oldY, final float oldZ, final float newX, final float newY, final float newZ);
 }

@@ -33,14 +33,20 @@ import java.util.Objects;
 public final class Scene {
 	private final List<Shape> shapes = new ArrayList<>();
 	private final List<Texture> textures = new ArrayList<>();
+	private final String name;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
 	 * Constructs a new empty {@code Scene} instance.
+	 * <p>
+	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param name the name of this {@code Scene}
+	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
 	 */
-	public Scene() {
-		
+	public Scene(final String name) {
+		this.name = Objects.requireNonNull(name, "name == null");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +71,15 @@ public final class Scene {
 	 */
 	public List<Texture> getTextures() {
 		return new ArrayList<>(this.textures);
+	}
+	
+	/**
+	 * Returns the name of this {@code Scene} instance.
+	 * 
+	 * @return the name of this {@code Scene} instance
+	 */
+	public String getName() {
+		return this.name;
 	}
 	
 	/**

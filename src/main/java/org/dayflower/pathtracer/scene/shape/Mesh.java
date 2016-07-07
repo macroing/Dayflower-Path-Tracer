@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -39,7 +38,14 @@ import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
 
-//TODO: Add Javadocs!
+/**
+ * A {@code Mesh} represents a triangle mesh.
+ * <p>
+ * This class is immutable and therefore suitable for concurrent use without external synchronization.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Mesh {
 	private final List<Triangle> triangles;
 	
@@ -51,19 +57,54 @@ public final class Mesh {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code List} with all {@link Triangle}s added to this {@code Mesh} instance.
+	 * 
+	 * @return a {@code List} with all {@code Triangle}s added to this {@code Mesh} instance
+	 */
 	public List<Triangle> getTriangles() {
 		return new ArrayList<>(this.triangles);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Loads a {@code Mesh} from an OBJ model.
+	 * <p>
+	 * Returns a new {@code Mesh} instance.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code Mesh.loadFromOBJModel(meshConfigurator, file, 1.0F)}.
+	 * <p>
+	 * If either {@code meshConfigurator} or {@code file} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O-error occurs while loading, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param meshConfigurator a {@link MeshConfigurator}
+	 * @param file the file to load from
+	 * @return a new {@code Mesh} instance
+	 * @throws NullPointerException thrown if, and only if, either {@code meshConfigurator} or {@code file} are {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O-error occurs while loading
+	 */
 	public static Mesh loadFromOBJModel(final MeshConfigurator meshConfigurator, final File file) {
 		return loadFromOBJModel(meshConfigurator, file, 1.0F);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Loads a {@code Mesh} from an OBJ model.
+	 * <p>
+	 * Returns a new {@code Mesh} instance.
+	 * <p>
+	 * If either {@code meshConfigurator} or {@code file} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O-error occurs while loading, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param meshConfigurator a {@link MeshConfigurator}
+	 * @param file the file to load from
+	 * @param scale a scale factor that will be applied to the loaded {@code Mesh}
+	 * @return a new {@code Mesh} instance
+	 * @throws NullPointerException thrown if, and only if, either {@code meshConfigurator} or {@code file} are {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O-error occurs while loading
+	 */
 	public static Mesh loadFromOBJModel(final MeshConfigurator meshConfigurator, final File file, final float scale) {
 		try {
 			Objects.requireNonNull(meshConfigurator, "meshConfigurator == null");
@@ -111,36 +152,104 @@ public final class Mesh {
 		}
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Loads a {@code Mesh} from an OBJ model.
+	 * <p>
+	 * Returns a new {@code Mesh} instance.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code Mesh.loadFromOBJModel(meshConfigurator, fileName, 1.0F)}.
+	 * <p>
+	 * If either {@code meshConfigurator} or {@code fileName} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O-error occurs while loading, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param meshConfigurator a {@link MeshConfigurator}
+	 * @param fileName the name of the file to load from
+	 * @return a new {@code Mesh} instance
+	 * @throws NullPointerException thrown if, and only if, either {@code meshConfigurator} or {@code fileName} are {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O-error occurs while loading
+	 */
 	public static Mesh loadFromOBJModel(final MeshConfigurator meshConfigurator, final String fileName) {
 		return loadFromOBJModel(meshConfigurator, fileName, 1.0F);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Loads a {@code Mesh} from an OBJ model.
+	 * <p>
+	 * Returns a new {@code Mesh} instance.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code Mesh.loadFromOBJModel(meshConfigurator, new File(fileName), 1.0F)}.
+	 * <p>
+	 * If either {@code meshConfigurator} or {@code fileName} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O-error occurs while loading, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param meshConfigurator a {@link MeshConfigurator}
+	 * @param fileName the name of the file to load from
+	 * @param scale a scale factor that will be applied to the loaded {@code Mesh}
+	 * @return a new {@code Mesh} instance
+	 * @throws NullPointerException thrown if, and only if, either {@code meshConfigurator} or {@code fileName} are {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O-error occurs while loading
+	 */
 	public static Mesh loadFromOBJModel(final MeshConfigurator meshConfigurator, final String fileName, final float scale) {
 		return loadFromOBJModel(meshConfigurator, new File(Objects.requireNonNull(fileName, "fileName == null")), scale);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * A {@code MeshConfigurator} is used to configure a {@link Mesh} and its {@link Triangle}s.
+	 * 
+	 * @since 1.0.0
+	 * @author J&#246;rgen Lundgren
+	 */
 	public static interface MeshConfigurator {
-//		TODO: Add Javadocs!
+		/**
+		 * Returns the emission given a material name.
+		 * 
+		 * @param materialName the material name
+		 * @return the emission given a material name
+		 */
 		Color getEmission(final String materialName);
 		
-//		TODO: Add Javadocs!
+		/**
+		 * Returns the Perlin Noise amount given a material name.
+		 * 
+		 * @param materialName the material name
+		 * @return the Perlin Noise amount given a material name
+		 */
 		float getPerlinNoiseAmount(final String materialName);
 		
-//		TODO: Add Javadocs!
+		/**
+		 * Returns the Perlin Noise scale given a material name.
+		 * 
+		 * @param materialName the material name
+		 * @return the Perlin Noise scale given a material name
+		 */
 		float getPerlinNoiseScale(final String materialName);
 		
-//		TODO: Add Javadocs!
+		/**
+		 * Returns the {@link Material} given a material name.
+		 * 
+		 * @param materialName the material name
+		 * @return the {@code Material} given a material name
+		 */
 		Material getMaterial(final String materialName);
 		
-//		TODO: Add Javadocs!
+		/**
+		 * Returns the Albedo {@link Texture} given a material name.
+		 * 
+		 * @param materialName the material name
+		 * @return the Albedo {@code Texture} given a material name
+		 */
 		Texture getTextureAlbedo(final String materialName);
 		
-//		TODO: Add Javadocs!
+		/**
+		 * Returns the Normal Map {@link Texture} given a material name.
+		 * 
+		 * @param materialName the material name
+		 * @return the Normal Map {@code Texture} given a material name
+		 */
 		Texture getTextureNormal(final String materialName);
 	}
 	

@@ -80,9 +80,9 @@ public final class Point2 {
 			return true;
 		} else if(!(object instanceof Point2)) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.x), Float.valueOf(Point2.class.cast(object).x))) {
+		} else if(Float.compare(this.x, Point2.class.cast(object).x) != 0) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.y), Float.valueOf(Point2.class.cast(object).y))) {
+		} else if(Float.compare(this.y, Point2.class.cast(object).y) != 0) {
 			return false;
 		} else {
 			return true;

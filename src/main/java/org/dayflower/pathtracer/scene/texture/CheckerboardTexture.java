@@ -149,6 +149,35 @@ public final class CheckerboardTexture implements Texture {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Compares {@code object} to this {@code CheckerboardTexture} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code CheckerboardTexture}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code CheckerboardTexture} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code CheckerboardTexture}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof CheckerboardTexture)) {
+			return false;
+		} else if(!Objects.equals(this.color0, CheckerboardTexture.class.cast(object).color0)) {
+			return false;
+		} else if(!Objects.equals(this.color1, CheckerboardTexture.class.cast(object).color1)) {
+			return false;
+		} else if(Float.compare(this.degrees, CheckerboardTexture.class.cast(object).degrees) != 0) {
+			return false;
+		} else if(Float.compare(this.scaleU, CheckerboardTexture.class.cast(object).scaleU) != 0) {
+			return false;
+		} else if(Float.compare(this.scaleV, CheckerboardTexture.class.cast(object).scaleV) != 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
 	 * Returns one of the two {@link Color}s assigned to this {@code CheckerboardTexture} instance.
 	 * 
 	 * @return one of the two {@code Color}s assigned to this {@code CheckerboardTexture} instance
@@ -191,5 +220,15 @@ public final class CheckerboardTexture implements Texture {
 	 */
 	public float getScaleV() {
 		return this.scaleV;
+	}
+	
+	/**
+	 * Returns a hash code for this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return a hash code for this {@code CheckerboardTexture} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.color0, this.color1, Float.valueOf(this.degrees), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV));
 	}
 }

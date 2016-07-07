@@ -18,7 +18,9 @@
  */
 package org.dayflower.pathtracer.main;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
+import static org.dayflower.pathtracer.math.Math2.max;
+import static org.dayflower.pathtracer.math.Math2.min;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -40,28 +42,42 @@ import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.util.FPSCounter;
 
-//TODO: Add Javadocs.
+/**
+ * An implementation of {@link AbstractApplication} that performs Path Tracing or Ray Casting.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class TestApplication extends AbstractApplication {
+	private static final float[][] FILTER_BLUR = new float[][] {new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F}, new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F}, new float[] {1.0F, 1.0F, 1.0F, 1.0F, 1.0F}, new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F}, new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F}};
+	private static final float[][] FILTER_DETECT_EDGES = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 8.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
+	private static final float[][] FILTER_EMBOSS = new float[][] {new float[] {-1.0F, -1.0F, 0.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {0.0F, 1.0F, 1.0F}};
+	private static final float[][] FILTER_GRADIENT_HORIZONTAL = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {0.0F, 0.0F, 0.0F}, new float[] {1.0F, 1.0F, 1.0F}};
+	private static final float[][] FILTER_GRADIENT_VERTICAL = new float[][] {new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}};
+	private static final float[][] FILTER_SHARPEN = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 9.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
 	private static final String ENGINE_NAME = "Dayflower Engine";
-	private static final String ENGINE_VERSION = "v.0.0.11";
+	private static final String ENGINE_VERSION = "v.0.0.13";
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private final RendererKernel rendererKernel;
 	private final Camera camera = new Camera();
 	private final Label labelApertureRadius = new Label("Aperture radius: N/A");
-	private final Label labelFieldOfView = new Label("Field of view: N/A - N/A");
+	private final Label labelFieldOfView = new Label("FOV: N/A - N/A");
 	private final Label labelFocalDistance = new Label("Focal distance: N/A");
 	private final Label labelFPS = new Label("FPS: 0");
-	private final Label labelRenderMode = new Label("Render mode: GPU");
-	private final Label labelRenderPass = new Label("Render pass: 0");
-	private final Label labelRenderTime = new Label("Render time: 00:00:00");
-	private final Label labelRenderType = new Label("Render type: Path Tracer");
+	private final Label labelRenderMode = new Label("Mode: GPU");
+	private final Label labelRenderPass = new Label("Pass: 0");
+	private final Label labelRenderTime = new Label("Time: 00:00:00");
+	private final Label labelRenderType = new Label("Type: Path Tracer");
+	private final Label labelSPS = new Label("SPS: 00000000");
+	private final RendererKernel rendererKernel;
 	private final Scene scene = Scenes.newGirlScene();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code TestApplication} instance.
+	 */
 	public TestApplication() {
 		super(String.format("%s %s", ENGINE_NAME, ENGINE_VERSION));
 		
@@ -70,7 +86,11 @@ public final class TestApplication extends AbstractApplication {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called when pixels can be configured at start.
+	 * 
+	 * @param pixels a {@code byte} array with pixel data
+	 */
 	@Override
 	protected void doConfigurePixels(final byte[] pixels) {
 		this.rendererKernel.compile(pixels, getCanvasWidth(), getCanvasHeight());
@@ -90,7 +110,11 @@ public final class TestApplication extends AbstractApplication {
 		camera.update();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called when UI-configuration can be performed at start.
+	 * 
+	 * @param hBox a {@code HBox} to add UI-controls to
+	 */
 	@Override
 	protected void doConfigureUI(final HBox hBox) {
 		final
@@ -121,7 +145,11 @@ public final class TestApplication extends AbstractApplication {
 		Region region6 = new Region();
 		region6.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
 		
-		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelRenderTime, region2, this.labelRenderMode, region3, this.labelRenderType, region4, this.labelApertureRadius, region5, this.labelFocalDistance, region6, this.labelFieldOfView);
+		final
+		Region region7 = new Region();
+		region7.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		
+		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime, region3, this.labelRenderMode, region4, this.labelRenderType, region5, this.labelApertureRadius, region6, this.labelFocalDistance, region7, this.labelFieldOfView);
 		
 		printf("Engine Name: %s", ENGINE_NAME);
 		printf("Engine Version: %s", ENGINE_VERSION);
@@ -140,6 +168,7 @@ public final class TestApplication extends AbstractApplication {
 		print("- I: Decrease focal distance");
 		print("- O: Increase field of view for X");
 		print("- P: Decrease field of view for X");
+		print("- H: Path Tracing or Ray Casting");
 		print("- K: Toggle walk-lock");
 		print("- L: Toggle mouse recentering and cursor visibility");
 		print("- M: Increase maximum ray depth");
@@ -172,14 +201,24 @@ public final class TestApplication extends AbstractApplication {
 		setRecenteringMouse(true);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called when the mouse is dragged.
+	 * 
+	 * @param x the new X-coordinate
+	 * @param y the new Y-coordinate
+	 */
 	@Override
 	protected void onMouseDragged(final float x, final float y) {
 		this.camera.changeYaw(x * 0.005F);
 		this.camera.changePitch(-(y * 0.005F));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called when the mouse is moved.
+	 * 
+	 * @param x the new X-coordinate
+	 * @param y the new Y-coordinate
+	 */
 	@Override
 	protected void onMouseMoved(final float x, final float y) {
 		if(isRecenteringMouse()) {
@@ -188,7 +227,9 @@ public final class TestApplication extends AbstractApplication {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called each frame.
+	 */
 	@Override
 	public void run() {
 		final AtomicInteger renderPass = new AtomicInteger();
@@ -226,7 +267,11 @@ public final class TestApplication extends AbstractApplication {
 			}
 			
 			if(isKeyPressed(KeyCode.ESCAPE)) {
+				rendererKernel.dispose();
+				
 				Platform.exit();
+				
+				break;
 			}
 			
 			if(isKeyPressed(KeyCode.F, true)) {
@@ -241,6 +286,10 @@ public final class TestApplication extends AbstractApplication {
 				setCanvasHeightScale(Math.max(getCanvasHeightScale() - 1, 1));
 				setCanvasWidth(1024 / getCanvasWidthScale());
 				setCanvasHeight(768 / getCanvasHeightScale());
+			}
+			
+			if(isKeyPressed(KeyCode.H, true)) {
+				rendererKernel.setPathTracing(!rendererKernel.isPathTracing());
 			}
 			
 			if(isKeyPressed(KeyCode.I)) {
@@ -328,6 +377,8 @@ public final class TestApplication extends AbstractApplication {
 			
 			try {
 				rendererKernel.get(rendererKernel.getPixels());
+				
+//				doFilterEmboss(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
 			} finally {
 				lock.unlock();
 			}
@@ -340,11 +391,13 @@ public final class TestApplication extends AbstractApplication {
 				final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 				
 				this.labelApertureRadius.setText(String.format("Aperture radius: %.2f", Float.valueOf(camera.getApertureRadius())));
-				this.labelFieldOfView.setText(String.format("Field of view: %.2f - %.2f", Float.valueOf(camera.getFieldOfViewX()), Float.valueOf(camera.getFieldOfViewY())));
+				this.labelFieldOfView.setText(String.format("FOV: %.2f - %.2f", Float.valueOf(camera.getFieldOfViewX()), Float.valueOf(camera.getFieldOfViewY())));
 				this.labelFocalDistance.setText(String.format("Focal distance: %.2f", Float.valueOf(camera.getFocalDistance())));
 				this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPSCounter.getFPS())));
-				this.labelRenderPass.setText(String.format("Render pass: %s", Integer.toString(renderPass0)));
-				this.labelRenderTime.setText(String.format("Render time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
+				this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass0)));
+				this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
+				this.labelRenderType.setText(String.format("Type: %s", rendererKernel.isPathTracing() ? "Path Tracer" : "Ray Caster"));
+				this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(fPSCounter.getFPS() * getCanvasWidth() * getCanvasHeight())));
 			});
 			
 			try {
@@ -357,7 +410,11 @@ public final class TestApplication extends AbstractApplication {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Starts this program.
+	 * 
+	 * @param args the arguments to this program
+	 */
 	public static void main(final String[] args) {
 		launch(args);
 	}
@@ -386,5 +443,78 @@ public final class TestApplication extends AbstractApplication {
 		}
 		
 		return test;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static void doFilter(final byte[] pixels, final int width, final int height, final int filterWidth, final int filterHeight, final float[][] filter, final float factor, final float bias) {
+		final byte[] result = new byte[pixels.length];
+		
+		for(int y = 0; y < height; y++) {
+			for(int x = 0; x < width; x++) {
+				float r0 = 0.0F;
+				float g0 = 0.0F;
+				float b0 = 0.0F;
+				
+				for(int filterY = 0; filterY < filterHeight; filterY++) {
+					for(int filterX = 0; filterX < filterWidth; filterX++) {
+						final int imageX = (x - filterWidth / 2 + filterX + width) % width;
+						final int imageY = (y - filterHeight / 2 + filterY + height) % height;
+						
+						final int index = (imageY * width + imageX) * 4;
+						
+						r0 += (pixels[index + 0] & 0xFF) * filter[filterY][filterX];
+						g0 += (pixels[index + 1] & 0xFF) * filter[filterY][filterX];
+						b0 += (pixels[index + 2] & 0xFF) * filter[filterY][filterX];
+					}
+				}
+				
+				final int index = (y * width + x) * 4;
+				
+				final int r1 = min(max((int)(factor * r0 + bias), 0), 255);
+				final int g1 = min(max((int)(factor * g0 + bias), 0), 255);
+				final int b1 = min(max((int)(factor * b0 + bias), 0), 255);
+				
+				result[index + 0] = (byte)(r1);
+				result[index + 1] = (byte)(g1);
+				result[index + 2] = (byte)(b1);
+			}
+		}
+		
+		for(int i = 0; i < pixels.length; i += 4) {
+			pixels[i + 0] = result[i + 0];
+			pixels[i + 1] = result[i + 1];
+			pixels[i + 2] = result[i + 2];
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	private static void doFilterBlur(final byte[] pixels, final int width, final int height) {
+		doFilter(pixels, width, height, 5, 5, FILTER_BLUR, 1.0F / 13.0F, 0.0F);
+	}
+	
+	@SuppressWarnings("unused")
+	private static void doFilterDetectEdges(final byte[] pixels, final int width, final int height) {
+		doFilter(pixels, width, height, 3, 3, FILTER_DETECT_EDGES, 1.0F, 0.0F);
+	}
+	
+	@SuppressWarnings("unused")
+	private static void doFilterEmboss(final byte[] pixels, final int width, final int height) {
+		doFilter(pixels, width, height, 3, 3, FILTER_EMBOSS, 1.0F, 128.0F);
+	}
+	
+	@SuppressWarnings("unused")
+	private static void doFilterGradientHorizontal(final byte[] pixels, final int width, final int height) {
+		doFilter(pixels, width, height, 3, 3, FILTER_GRADIENT_HORIZONTAL, 1.0F, 0.0F);
+	}
+	
+	@SuppressWarnings("unused")
+	private static void doFilterGradientVertical(final byte[] pixels, final int width, final int height) {
+		doFilter(pixels, width, height, 3, 3, FILTER_GRADIENT_VERTICAL, 1.0F, 0.0F);
+	}
+	
+	@SuppressWarnings("unused")
+	private static void doFilterSharpen(final byte[] pixels, final int width, final int height) {
+		doFilter(pixels, width, height, 3, 3, FILTER_SHARPEN, 1.0F, 0.0F);
 	}
 }

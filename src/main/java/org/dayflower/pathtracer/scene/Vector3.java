@@ -27,6 +27,7 @@ import static org.dayflower.pathtracer.math.Math2.sin;
 import static org.dayflower.pathtracer.math.Math2.sqrt;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
+import java.util.Objects;
 
 //TODO: Add Javadocs!
 public final class Vector3 {
@@ -61,6 +62,24 @@ public final class Vector3 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs!
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Vector3)) {
+			return false;
+		} else if(Float.compare(this.x, Vector3.class.cast(object).x) != 0) {
+			return false;
+		} else if(Float.compare(this.y, Vector3.class.cast(object).y) != 0) {
+			return false;
+		} else if(Float.compare(this.z, Vector3.class.cast(object).z) != 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+//	TODO: Add Javadocs!
 	public float dotProduct(final Vector3 v) {
 		return this.x * v.x + this.y * v.y + this.z * v.z;
 	}
@@ -87,6 +106,12 @@ public final class Vector3 {
 		final float z = this.z < -1.0F ? -1.0F : this.z > 1.0F ? 1.0F : this.z;
 		
 		return acos(z);
+	}
+	
+//	TODO: Add Javadocs!
+	@Override
+	public int hashCode() {
+		return Objects.hash(Float.valueOf(this.x), Float.valueOf(this.y), Float.valueOf(this.z));
 	}
 	
 //	TODO: Add Javadocs!

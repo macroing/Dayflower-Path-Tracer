@@ -200,13 +200,13 @@ public final class Color {
 			return true;
 		} else if(!(object instanceof Color)) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.r), Float.valueOf(Color.class.cast(object).r))) {
+		} else if(!Math2.equals(this.r, Color.class.cast(object).r)) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.g), Float.valueOf(Color.class.cast(object).g))) {
+		} else if(!Math2.equals(this.g, Color.class.cast(object).g)) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.b), Float.valueOf(Color.class.cast(object).b))) {
+		} else if(!Math2.equals(this.b, Color.class.cast(object).b)) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.a), Float.valueOf(Color.class.cast(object).a))) {
+		} else if(!Math2.equals(this.a, Color.class.cast(object).a)) {
 			return false;
 		} else {
 			return true;

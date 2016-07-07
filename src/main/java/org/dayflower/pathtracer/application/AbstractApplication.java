@@ -20,7 +20,6 @@ package org.dayflower.pathtracer.application;
 
 import java.awt.AWTException;
 import java.awt.Robot;
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -65,18 +64,31 @@ import javafx.stage.Stage;
 
 import org.dayflower.pathtracer.util.FPSCounter;
 
-//TODO: Add Javadocs.
+/**
+ * An extension of {@code Application} that adds a bunch of functionality such as scaling and cursor visibility.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public abstract class AbstractApplication extends Application implements Runnable {
-//	TODO: Add Javadocs.
+	/**
+	 * The default height scale.
+	 */
 	public static final int CANVAS_HEIGHT_SCALE = 2;
 	
-//	TODO: Add Javadocs.
-	public static final int CANVAS_WIDTH_SCALE = 2;
-	
-//	TODO: Add Javadocs.
+	/**
+	 * The default height.
+	 */
 	public static final int CANVAS_HEIGHT = 768 / CANVAS_HEIGHT_SCALE;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The default width scale.
+	 */
+	public static final int CANVAS_WIDTH_SCALE = 2;
+	
+	/**
+	 * The default width.
+	 */
 	public static final int CANVAS_WIDTH = 1024 / CANVAS_WIDTH_SCALE;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,39 +125,89 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code AbstractApplication} with no title.
+	 * <p>
+	 * Calling this constructor is equivalent to calling {@code AbstractApplication("")}.
+	 */
 	protected AbstractApplication() {
 		this("");
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code AbstractApplication} with a title of {@code title}.
+	 * <p>
+	 * If {@code title} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param title the title to use
+	 * @throws NullPointerException thrown if, and only if, {@code title} is {@code null}
+	 */
 	protected AbstractApplication(final String title) {
 		this.title = Objects.requireNonNull(title, "title == null");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Adds a print {@code Consumer} to this {@code AbstractApplication}, if absent.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code printConsumer} was added, {@code false} otherwise.
+	 * <p>
+	 * If {@code printConsumer} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param printConsumer the print {@code Consumer} to add
+	 * @return {@code true} if, and only if, {@code printConsumer} was added, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code printConsumer} is {@code null}
+	 */
 	protected final boolean addPrintConsumer(final Consumer<String> printConsumer) {
 		return this.printConsumers.addIfAbsent(Objects.requireNonNull(printConsumer, "printConsumer == null"));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, the cursor is hidden, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the cursor is hidden, {@code false} otherwise
+	 */
 	protected final boolean isCursorHidden() {
 		return this.isCursorHidden.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, the mouse is being dragged, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the mouse is being dragged, {@code false} otherwise
+	 */
 	protected final boolean isDraggingMouse() {
 		return this.isDraggingMouse.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code isKeyPressed(keyCode, false)}.
+	 * <p>
+	 * If {@code keyCode} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param keyCode a {@code KeyCode}
+	 * @return {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code keyCode} is {@code null}
+	 */
 	protected final boolean isKeyPressed(final KeyCode keyCode) {
 		return isKeyPressed(keyCode, false);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise.
+	 * <p>
+	 * If {@code isKeyPressedOnce} is {@code true}, only the first call to this method will return {@code true} per press-release cycle given a specific key.
+	 * <p>
+	 * If {@code keyCode} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param keyCode a {@code KeyCode}
+	 * @param isKeyPressedOnce {@code true} if, and only if, a key press should occur at most one time per press-release cycle, {@code false} otherwise
+	 * @return {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code keyCode} is {@code null}
+	 */
 	protected final boolean isKeyPressed(final KeyCode keyCode, final boolean isKeyPressedOnce) {
 		final boolean isKeyPressed = this.isKeyPressed[keyCode.ordinal()];
 		
@@ -164,115 +226,224 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		return isKeyPressed;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, the mouse is being moved, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the mouse is being moved, {@code false} otherwise
+	 */
 	protected final boolean isMovingMouse() {
 		return System.currentTimeMillis() - this.mouseMovementTime.get() <= MOUSE_MOVEMENT_TIMEOUT;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, at least one key is being pressed, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, at least one key is being pressed, {@code false} otherwise
+	 */
 	protected final boolean isPressingKey() {
 		return this.keysPressed.get() > 0;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, mouse re-centering is being performed, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, mouse re-centering is being performed, {@code false} otherwise
+	 */
 	protected final boolean isRecenteringMouse() {
 		return this.isRecenteringMouse.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Removes a print {@code Consumer} from this {@code AbstractApplication}, if present.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code printConsumer} was removed, {@code false} otherwise.
+	 * <p>
+	 * If {@code printConsumer} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param printConsumer the print {@code Consumer} to remove
+	 * @return {@code true} if, and only if, {@code printConsumer} was removed, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code printConsumer} is {@code null}
+	 */
 	protected final boolean removePrintConsumer(final Consumer<String> printConsumer) {
 		return this.printConsumers.remove(Objects.requireNonNull(printConsumer, "printConsumer == null"));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@link FPSCounter} associated with this {@code AbstractApplication}.
+	 * 
+	 * @return the {@code FPSCounter} associated with this {@code AbstractApplication}
+	 */
 	protected final FPSCounter getFPSCounter() {
 		return this.fPSCounter;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the height.
+	 * 
+	 * @return the height
+	 */
 	protected final int getCanvasHeight() {
 		return this.canvasHeight.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the height scale.
+	 * 
+	 * @return the height scale
+	 */
 	protected final int getCanvasHeightScale() {
 		return this.canvasHeightScale.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the width.
+	 * 
+	 * @return the width
+	 */
 	protected final int getCanvasWidth() {
 		return this.canvasWidth.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the width scale.
+	 * 
+	 * @return the width scale
+	 */
 	protected final int getCanvasWidthScale() {
 		return this.canvasWidthScale.get();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@code Lock} associated with this {@code AbstractApplication}.
+	 * 
+	 * @return the {@code Lock} associated with this {@code AbstractApplication}
+	 */
 	protected final Lock getLock() {
 		return this.lock;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called when pixels can be configured at start.
+	 * 
+	 * @param pixels a {@code byte} array with pixel data
+	 */
 	protected abstract void doConfigurePixels(final byte[] pixels);
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called when UI-configuration can be performed at start.
+	 * 
+	 * @param hBox a {@code HBox} to add UI-controls to
+	 */
 	protected abstract void doConfigureUI(final HBox hBox);
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called when the mouse is dragged.
+	 * 
+	 * @param x the new X-coordinate
+	 * @param y the new Y-coordinate
+	 */
 	protected abstract void onMouseDragged(final float x, final float y);
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called when the mouse is moved.
+	 * 
+	 * @param x the new X-coordinate
+	 * @param y the new Y-coordinate
+	 */
 	protected abstract void onMouseMoved(final float x, final float y);
 	
-//	TODO: Add Javadocs.
+	/**
+	 * This method "prints" {@code string} as a message to all currently added print {@code Consumer}s.
+	 * <p>
+	 * If {@code message} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param string the message to print
+	 * @throws NullPointerException thrown if, and only if, {@code string} is {@code null}
+	 */
 	protected final void print(final String string) {
 		this.printConsumers.forEach(printConsumer -> printConsumer.accept(Objects.requireNonNull(string, "string == null")));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * This method "prints" a message constructed via {@code String.format(format, objects)} to all currently added print {@code Consumer}s.
+	 * <p>
+	 * Calling this method is practically equivalent to {@code print(String.format(format, objects))}, assuming neither {@code format} nor {@code objects} are {@code null}.
+	 * <p>
+	 * If either {@code format} or {@code objects} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param format a format {@code String}
+	 * @param objects an array of {@code Object}s to format
+	 * @throws NullPointerException thrown if, and only if, either {@code format} or {@code objects} are {@code null}
+	 */
 	protected final void printf(final String format, final Object... objects) {
 		print(String.format(Objects.requireNonNull(format, "format == null"), Objects.requireNonNull(objects, "objects == null")));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets a new height.
+	 * 
+	 * @param canvasHeight a new height
+	 */
 	protected final void setCanvasHeight(final int canvasHeight) {
 		this.canvasHeight.set(canvasHeight);
 		this.hasUpdatedResolution.set(true);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets a new height scale.
+	 * 
+	 * @param canvasHeightScale a new height scale
+	 */
 	protected final void setCanvasHeightScale(final int canvasHeightScale) {
 		this.canvasHeightScale.set(canvasHeightScale);
 		this.hasUpdatedResolution.set(true);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets a new width.
+	 * 
+	 * @param canvasWidth a new width
+	 */
 	protected final void setCanvasWidth(final int canvasWidth) {
 		this.canvasWidth.set(canvasWidth);
 		this.hasUpdatedResolution.set(true);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets a new width scale.
+	 * 
+	 * @param canvasWidthScale a new width scale
+	 */
 	protected final void setCanvasWidthScale(final int canvasWidthScale) {
 		this.canvasWidthScale.set(canvasWidthScale);
 		this.hasUpdatedResolution.set(true);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets whether the cursor should be hidden or shown.
+	 * 
+	 * @param isCursorHidden {@code true} if, and only if, the cursor should be hidden, {@code false} otherwise
+	 */
 	protected final void setCursorHidden(final boolean isCursorHidden) {
 		if(this.isCursorHidden.compareAndSet(!isCursorHidden, isCursorHidden)) {
 			this.hasUpdatedCursor.set(true);
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the mouse re-centering.
+	 * 
+	 * @param isRecenteringMouse {@code true} if, and only if, mouse re-centering should be performed, {@code false} otherwise
+	 */
 	protected final void setRecenteringMouse(final boolean isRecenteringMouse) {
 		this.isRecenteringMouse.set(isRecenteringMouse);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Starts this {@code AbstractApplication} instance.
+	 * 
+	 * @param stage a {@code Stage}
+	 */
 	@Override
 	public final void start(final Stage stage) {
 		final Robot robot = doCreateRobot();

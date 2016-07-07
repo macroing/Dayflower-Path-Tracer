@@ -42,22 +42,85 @@ public final class Camera {
 	public static final int ABSOLUTE_OFFSET_OF_EYE = 1;
 	
 //	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_EYE_X = ABSOLUTE_OFFSET_OF_EYE + 0;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_EYE_Y = ABSOLUTE_OFFSET_OF_EYE + 1;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_EYE_Z = ABSOLUTE_OFFSET_OF_EYE + 2;
+	
+//	TODO: Add Javadocs.
 	public static final int ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X = ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW + 0;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y = ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW + 1;
 	
 //	TODO: Add Javadocs.
 	public static final int ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE = 6;
 	
 //	TODO: Add Javadocs.
-	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W = 7;
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U = 7;
 	
 //	TODO: Add Javadocs.
-	public static final int ABSOLUTE_OFFSET_OF_RESOLUTION = 10;
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U + 0;
 	
 //	TODO: Add Javadocs.
-	public static final int ABSOLUTE_OFFSET_OF_UP = 12;
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U + 1;
 	
 //	TODO: Add Javadocs.
-	public static final int SIZE = 1 + 3 + 2 + 1 + 3 + 2 + 3;
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U + 2;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V = 10;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V + 0;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V + 1;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V + 2;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W = 13;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 0;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 1;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 2;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_RESOLUTION = 16;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_RESOLUTION_X = ABSOLUTE_OFFSET_OF_RESOLUTION + 0;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_RESOLUTION_Y = ABSOLUTE_OFFSET_OF_RESOLUTION + 1;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_UP = 18;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_UP_X = ABSOLUTE_OFFSET_OF_UP + 0;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_UP_Y = ABSOLUTE_OFFSET_OF_UP + 1;
+	
+//	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_UP_Z = ABSOLUTE_OFFSET_OF_UP + 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 1 + 3 + 2 + 1 + 3 + 3 + 3 + 2 + 3;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -75,7 +138,7 @@ public final class Camera {
 	private float walkDirectionY;
 	private float walkDirectionZ;
 	private float yaw;
-	private final float[] array = new float[SIZE];
+	private final float[] array;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -86,6 +149,8 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public Camera(final CameraPredicate cameraPredicate) {
+		this.array = new float[SIZE];
+		
 		setApertureRadius(0.4F);
 		setCameraPredicate(cameraPredicate);
 		setCenter(55.0F, 42.0F, 155.6F);
@@ -98,6 +163,18 @@ public final class Camera {
 		setYaw(0.0F);
 		
 		update();
+	}
+	
+//	TODO: Add Javadocs.
+	public Camera(final float[] array) {
+		this(array, (oldX, oldY, oldZ, newX, newY, newZ) -> new boolean[] {true, true, true});
+	}
+	
+//	TODO: Add Javadocs.
+	public Camera(final float[] array, final CameraPredicate cameraPredicate) {
+		this.array = array;
+		
+		setCameraPredicate(cameraPredicate);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,27 +211,27 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public float getEyeX() {
-		return this.array[ABSOLUTE_OFFSET_OF_EYE + 0];
+		return this.array[ABSOLUTE_OFFSET_OF_EYE_X];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getEyeY() {
-		return this.array[ABSOLUTE_OFFSET_OF_EYE + 1];
+		return this.array[ABSOLUTE_OFFSET_OF_EYE_Y];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getEyeZ() {
-		return this.array[ABSOLUTE_OFFSET_OF_EYE + 2];
+		return this.array[ABSOLUTE_OFFSET_OF_EYE_Z];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getFieldOfViewX() {
-		return this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW + 0];
+		return this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getFieldOfViewY() {
-		return this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW + 1];
+		return this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y];
 	}
 	
 //	TODO: Add Javadocs.
@@ -163,18 +240,48 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
+	public float getOrthoNormalBasisUX() {
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X];
+	}
+	
+//	TODO: Add Javadocs.
+	public float getOrthoNormalBasisUY() {
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y];
+	}
+	
+//	TODO: Add Javadocs.
+	public float getOrthoNormalBasisUZ() {
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z];
+	}
+	
+//	TODO: Add Javadocs.
+	public float getOrthoNormalBasisVX() {
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X];
+	}
+	
+//	TODO: Add Javadocs.
+	public float getOrthoNormalBasisVY() {
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y];
+	}
+	
+//	TODO: Add Javadocs.
+	public float getOrthoNormalBasisVZ() {
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z];
+	}
+	
+//	TODO: Add Javadocs.
 	public float getOrthoNormalBasisWX() {
-		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 0];
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getOrthoNormalBasisWY() {
-		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 1];
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getOrthoNormalBasisWZ() {
-		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 2];
+		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z];
 	}
 	
 //	TODO: Add Javadocs.
@@ -189,27 +296,27 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public float getResolutionX() {
-		return this.array[ABSOLUTE_OFFSET_OF_RESOLUTION + 0];
+		return this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_X];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getResolutionY() {
-		return this.array[ABSOLUTE_OFFSET_OF_RESOLUTION + 1];
+		return this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_Y];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getUpX() {
-		return this.array[ABSOLUTE_OFFSET_OF_UP + 0];
+		return this.array[ABSOLUTE_OFFSET_OF_UP_X];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getUpY() {
-		return this.array[ABSOLUTE_OFFSET_OF_UP + 1];
+		return this.array[ABSOLUTE_OFFSET_OF_UP_Y];
 	}
 	
 //	TODO: Add Javadocs.
 	public float getUpZ() {
-		return this.array[ABSOLUTE_OFFSET_OF_UP + 2];
+		return this.array[ABSOLUTE_OFFSET_OF_UP_Z];
 	}
 	
 //	TODO: Add Javadocs.
@@ -250,6 +357,52 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public float[] getArray() {
 		return this.array;
+	}
+	
+//	TODO: Add Javadocs.
+	public void calculateOrthoNormalBasisU() {
+		final float upX = getUpX();
+		final float upY = getUpY();
+		final float upZ = getUpZ();
+		
+		final float wX = getOrthoNormalBasisWX();
+		final float wY = getOrthoNormalBasisWY();
+		final float wZ = getOrthoNormalBasisWZ();
+		
+		final float u0X = wY * upZ - wZ * upY;
+		final float u0Y = wZ * upX - wX * upZ;
+		final float u0Z = wX * upY - wY * upX;
+		final float u0LengthReciprocal = 1.0F / sqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
+		final float u1X = u0X * u0LengthReciprocal;
+		final float u1Y = u0Y * u0LengthReciprocal;
+		final float u1Z = u0Z * u0LengthReciprocal;
+		
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X] = u1X;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y] = u1Y;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z] = u1Z;
+	}
+	
+//	TODO: Add Javadocs.
+	public void calculateOrthoNormalBasisV() {
+		final float uX = getOrthoNormalBasisUX();
+		final float uY = getOrthoNormalBasisUY();
+		final float uZ = getOrthoNormalBasisUZ();
+		
+		final float wX = getOrthoNormalBasisWX();
+		final float wY = getOrthoNormalBasisWY();
+		final float wZ = getOrthoNormalBasisWZ();
+		
+		final float v0X = uY * wZ - uZ * wY;
+		final float v0Y = uZ * wX - uX * wZ;
+		final float v0Z = uX * wY - uY * wX;
+		final float v0LengthReciprocal = 1.0F / sqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
+		final float v1X = v0X * v0LengthReciprocal;
+		final float v1Y = v0Y * v0LengthReciprocal;
+		final float v1Z = v0Z * v0LengthReciprocal;
+		
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X] = v1X;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y] = v1Y;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z] = v1Z;
 	}
 	
 //	TODO: Add Javadocs.
@@ -337,15 +490,15 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public void setEye(final float eyeX, final float eyeY, final float eyeZ) {
-		this.array[ABSOLUTE_OFFSET_OF_EYE + 0] = eyeX;
-		this.array[ABSOLUTE_OFFSET_OF_EYE + 1] = eyeY;
-		this.array[ABSOLUTE_OFFSET_OF_EYE + 2] = eyeZ;
+		this.array[ABSOLUTE_OFFSET_OF_EYE_X] = eyeX;
+		this.array[ABSOLUTE_OFFSET_OF_EYE_Y] = eyeY;
+		this.array[ABSOLUTE_OFFSET_OF_EYE_Z] = eyeZ;
 	}
 	
 //	TODO: Add Javadocs.
 	public void setFieldOfViewX(final float fieldOfViewX) {
-		this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW + 0] = fieldOfViewX;
-		this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW + 1] = toDegrees(atan(tan(toRadians(fieldOfViewX) * 0.5F) * (getResolutionX() / getResolutionY())) * 2.0F);
+		this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X] = fieldOfViewX;
+		this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y] = toDegrees(atan(tan(toRadians(fieldOfViewX) * 0.5F) * (getResolutionX() / getResolutionY())) * 2.0F);
 	}
 	
 //	TODO: Add Javadocs.
@@ -355,9 +508,11 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public void setOrthoNormalBasisW(final float orthoNormalBasisWX, final float orthoNormalBasisWY, final float orthoNormalBasisWZ) {
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 0] = orthoNormalBasisWX;
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 1] = orthoNormalBasisWY;
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 2] = orthoNormalBasisWZ;
+		final float orthoNormalBasisWLengthReciprocal = 1.0F / sqrt(orthoNormalBasisWX * orthoNormalBasisWX + orthoNormalBasisWY * orthoNormalBasisWY + orthoNormalBasisWZ * orthoNormalBasisWZ);
+		
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X] = orthoNormalBasisWX * orthoNormalBasisWLengthReciprocal;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y] = orthoNormalBasisWY * orthoNormalBasisWLengthReciprocal;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z] = orthoNormalBasisWZ * orthoNormalBasisWLengthReciprocal;
 	}
 	
 //	TODO: Add Javadocs.
@@ -372,17 +527,19 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public void setResolution(final float resolutionX, final float resolutionY) {
-		this.array[ABSOLUTE_OFFSET_OF_RESOLUTION + 0] = resolutionX;
-		this.array[ABSOLUTE_OFFSET_OF_RESOLUTION + 1] = resolutionY;
+		this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_X] = resolutionX;
+		this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_Y] = resolutionY;
 		
 		setFieldOfViewX(getFieldOfViewX());
 	}
 	
 //	TODO: Add Javadocs.
 	public void setUp(final float upX, final float upY, final float upZ) {
-		this.array[ABSOLUTE_OFFSET_OF_UP + 0] = upX;
-		this.array[ABSOLUTE_OFFSET_OF_UP + 1] = upY;
-		this.array[ABSOLUTE_OFFSET_OF_UP + 2] = upZ;
+		final float upLengthReciprocal = 1.0F / sqrt(upX * upX + upY * upY + upZ * upZ);
+		
+		this.array[ABSOLUTE_OFFSET_OF_UP_X] = upX * upLengthReciprocal;
+		this.array[ABSOLUTE_OFFSET_OF_UP_Y] = upY * upLengthReciprocal;
+		this.array[ABSOLUTE_OFFSET_OF_UP_Z] = upZ * upLengthReciprocal;
 	}
 	
 //	TODO: Add Javadocs.
@@ -460,5 +617,8 @@ public final class Camera {
 		setUp(0.0F, 1.0F, 0.0F);
 		setViewDirection(direction1X, direction1Y, direction1Z);
 		setWalkDirection(direction1X, getWalkDirectionY(), direction1Z);
+		
+		calculateOrthoNormalBasisU();
+		calculateOrthoNormalBasisV();
 	}
 }

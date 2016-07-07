@@ -30,6 +30,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.Arrays;
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
@@ -62,6 +63,37 @@ public final class ImageTexture implements Texture {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Compares {@code object} to this {@code ImageTexture} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code ImageTexture}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code ImageTexture} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code ImageTexture}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof ImageTexture)) {
+			return false;
+		} else if(Float.compare(this.degrees, ImageTexture.class.cast(object).degrees) != 0) {
+			return false;
+		} else if(Float.compare(this.height, ImageTexture.class.cast(object).height) != 0) {
+			return false;
+		} else if(Float.compare(this.scaleU, ImageTexture.class.cast(object).scaleU) != 0) {
+			return false;
+		} else if(Float.compare(this.scaleV, ImageTexture.class.cast(object).scaleV) != 0) {
+			return false;
+		} else if(Float.compare(this.width, ImageTexture.class.cast(object).width) != 0) {
+			return false;
+		} else if(!Arrays.equals(this.data, ImageTexture.class.cast(object).data)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 	
 	/**
 	 * Returns the angle in degrees that this {@code ImageTexture} instance should be rotated.
@@ -117,6 +149,16 @@ public final class ImageTexture implements Texture {
 	 */
 	public float[] getData() {
 		return this.data.clone();
+	}
+	
+	/**
+	 * Returns a hash code for this {@code ImageTexture} instance.
+	 * 
+	 * @return a hash code for this {@code ImageTexture} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(Float.valueOf(this.degrees), Float.valueOf(this.height), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV), Float.valueOf(this.width), Integer.valueOf(Arrays.hashCode(this.data)));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -37,6 +37,18 @@ import org.dayflower.pathtracer.math.Math2;
  */
 public final class Point3 {
 	/**
+	 * The maximum {@code Point3}.
+	 */
+	public static final Point3 MAXIMUM = maximum();
+	
+	/**
+	 * The minimum {@code Point3}.
+	 */
+	public static final Point3 MINIMUM = minimum();
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
 	 * The X-coordinate.
 	 */
 	public final float x;
@@ -103,11 +115,11 @@ public final class Point3 {
 			return true;
 		} else if(!(object instanceof Point3)) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.x), Float.valueOf(Point3.class.cast(object).x))) {
+		} else if(Float.compare(this.x, Point3.class.cast(object).x) != 0) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.y), Float.valueOf(Point3.class.cast(object).y))) {
+		} else if(Float.compare(this.y, Point3.class.cast(object).y) != 0) {
 			return false;
-		} else if(!Objects.equals(Float.valueOf(this.z), Float.valueOf(Point3.class.cast(object).z))) {
+		} else if(Float.compare(this.z, Point3.class.cast(object).z) != 0) {
 			return false;
 		} else {
 			return true;

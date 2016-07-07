@@ -63,6 +63,8 @@ public final class BoundingVolumeHierarchy {
 //	TODO: Add Javadocs.
 	public static final class LeafNode extends Node {
 		private final List<Triangle> triangles = new ArrayList<>();
+		private Point3 maximum;
+		private Point3 minimum;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
@@ -81,19 +83,27 @@ public final class BoundingVolumeHierarchy {
 		
 //		TODO: Add Javadocs.
 		public List<Triangle> getTriangles() {
-			return new ArrayList<>(this.triangles);
+			return this.triangles;
 		}
 		
 //		TODO: Add Javadocs.
 		@Override
 		public Point3 getMaximum() {
-			return Triangle.maximum(this.triangles);
+			if(this.maximum == null) {
+				this.maximum = Triangle.maximum(this.triangles);
+			}
+			
+			return this.maximum;
 		}
 		
 //		TODO: Add Javadocs.
 		@Override
 		public Point3 getMinimum() {
-			return Triangle.minimum(this.triangles);
+			if(this.minimum == null) {
+				this.minimum = Triangle.minimum(this.triangles);
+			}
+			
+			return this.minimum;
 		}
 		
 //		TODO: Add Javadocs.
@@ -163,6 +173,8 @@ public final class BoundingVolumeHierarchy {
 	public static final class TreeNode extends Node {
 		private Node left;
 		private Node right;
+		private Point3 maximum;
+		private Point3 minimum;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
@@ -192,13 +204,21 @@ public final class BoundingVolumeHierarchy {
 //		TODO: Add Javadocs.
 		@Override
 		public Point3 getMaximum() {
-			return Point3.maximum(this.left != null ? this.left.getMaximum() : new Point3(), this.right != null ? this.right.getMaximum() : new Point3());
+			if(this.maximum == null) {
+				this.maximum = Point3.maximum(this.left != null ? this.left.getMaximum() : new Point3(), this.right != null ? this.right.getMaximum() : new Point3());
+			}
+			
+			return this.maximum;
 		}
 		
 //		TODO: Add Javadocs.
 		@Override
 		public Point3 getMinimum() {
-			return Point3.minimum(this.left != null ? this.left.getMinimum() : new Point3(), this.right != null ? this.right.getMinimum() : new Point3());
+			if(this.minimum == null) {
+				this.minimum = Point3.minimum(this.left != null ? this.left.getMinimum() : new Point3(), this.right != null ? this.right.getMinimum() : new Point3());
+			}
+			
+			return this.minimum;
 		}
 		
 //		TODO: Add Javadocs.
@@ -288,11 +308,11 @@ public final class BoundingVolumeHierarchy {
 			final float step = (stop - start) / (1024.0F / (depth + 1.0F));
 			
 			for(float split = start + step; split < stop - step; split += step) {
-				Point3 maximumLeft = Point3.minimum();
-				Point3 minimumLeft = Point3.maximum();
+				Point3 maximumLeft = Point3.MINIMUM;
+				Point3 minimumLeft = Point3.MAXIMUM;
 				
-				Point3 maximumRight = Point3.minimum();
-				Point3 minimumRight = Point3.maximum();
+				Point3 maximumRight = Point3.MINIMUM;
+				Point3 minimumRight = Point3.MAXIMUM;
 				
 				int countLeft = 0;
 				int countRight = 0;
@@ -376,7 +396,7 @@ public final class BoundingVolumeHierarchy {
 	}
 	
 	private static Point3 doMaximum(final List<LeafNode> leafNodes) {
-		Point3 maximum = Point3.minimum();
+		Point3 maximum = Point3.MINIMUM;
 		
 		for(final LeafNode leafNode : leafNodes) {
 			maximum = Point3.maximum(maximum, leafNode.getMaximum());
@@ -386,7 +406,7 @@ public final class BoundingVolumeHierarchy {
 	}
 	
 	private static Point3 doMinimum(final List<LeafNode> leafNodes) {
-		Point3 minimum = Point3.maximum();
+		Point3 minimum = Point3.MAXIMUM;
 		
 		for(final LeafNode leafNode : leafNodes) {
 			minimum = Point3.minimum(minimum, leafNode.getMinimum());

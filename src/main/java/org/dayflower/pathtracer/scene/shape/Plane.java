@@ -18,7 +18,6 @@
  */
 package org.dayflower.pathtracer.scene.shape;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
@@ -28,23 +27,51 @@ import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.Vector3;
 
-//TODO: Add Javadocs.
+/**
+ * A {@link Shape} implementation that implements a plane.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Plane extends Shape {
-//	TODO: Add Javadocs.
+	/**
+	 * A {@link Point3} denoting the point A.
+	 */
 	public final Point3 a;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * A {@link Point3} denoting the point B.
+	 */
 	public final Point3 b;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * A {@link Point3} denoting the point C.
+	 */
 	public final Point3 c;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The surface normal.
+	 */
 	public final Vector3 surfaceNormal;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Plane} instance.
+	 * <p>
+	 * If either {@code emission}, {@code material}, {@code textureAlbedo}, {@code textureNormal}, {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param emission a {@link Color} denoting the emissivity of this {@code Plane}
+	 * @param perlinNoiseAmount the Perlin Noise amount associated with this {@code Plane}, used for Perlin Noise Normal Mapping
+	 * @param perlinNoiseScale the Perlin Noise scale associated with this {@code Plane}, used for Perlin Noise Normal Mapping
+	 * @param material the {@link Material} used for this {@code Plane}
+	 * @param textureAlbedo the {@link Texture} used for the albedo of this {@code Plane}
+	 * @param textureNormal the {@code Texture} used for Normal Mapping of this {@code Plane}
+	 * @param a a {@link Point3} denoting the point A
+	 * @param b a {@code Point3} denoting the point A
+	 * @param c a {@code Point3} denoting the point A
+	 * @throws NullPointerException thrown if, and only if, either {@code emission}, {@code material}, {@code textureAlbedo}, {@code textureNormal}, {@code a}, {@code b} or {@code c} are {@code null}
+	 */
 	public Plane(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal, final Point3 a, final Point3 b, final Point3 c) {
 		super(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal);
 		
@@ -56,22 +83,38 @@ public final class Plane extends Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the point A.
+	 * 
+	 * @return the point A
+	 */
 	public Point3 getA() {
 		return this.a;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the point B.
+	 * 
+	 * @return the point B
+	 */
 	public Point3 getB() {
 		return this.b;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the point C.
+	 * 
+	 * @return the point C
+	 */
 	public Point3 getC() {
 		return this.c;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the surface normal.
+	 * 
+	 * @return the surface normal
+	 */
 	public Vector3 getSurfaceNormal() {
 		return this.surfaceNormal;
 	}
