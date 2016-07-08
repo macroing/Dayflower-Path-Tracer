@@ -34,6 +34,7 @@ import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Point2;
 import org.dayflower.pathtracer.scene.Point3;
+import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
@@ -58,12 +59,53 @@ public final class Mesh {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Compares {@code object} to this {@code Mesh} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Mesh}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Mesh} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Mesh}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Mesh)) {
+			return false;
+		} else if(!Objects.equals(this.triangles, Mesh.class.cast(object).triangles)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
+	 * Returns a hash code for this {@code Mesh} instance.
+	 * 
+	 * @return a hash code for this {@code Mesh} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.triangles);
+	}
+	
+	/**
 	 * Returns a {@code List} with all {@link Triangle}s added to this {@code Mesh} instance.
 	 * 
 	 * @return a {@code List} with all {@code Triangle}s added to this {@code Mesh} instance
 	 */
 	public List<Triangle> getTriangles() {
 		return new ArrayList<>(this.triangles);
+	}
+	
+	/**
+	 * Returns a {@code String} representation of this {@code Mesh} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code Mesh} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("Mesh: [Triangles=%s]", this.triangles);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -137,11 +179,13 @@ public final class Mesh {
 				final Texture textureAlbedo = meshConfigurator.getTextureAlbedo(materialName);
 				final Texture textureNormal = meshConfigurator.getTextureNormal(materialName);
 				
+				final Surface surface = new Surface(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal);
+				
 				final Vertex a = new Vertex(textureCoordinates.get(indexA), positions.get(indexA), materials.get(indexA), normals.get(indexA));
 				final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), materials.get(indexB), normals.get(indexB));
 				final Vertex c = new Vertex(textureCoordinates.get(indexC), positions.get(indexC), materials.get(indexC), normals.get(indexC));
 				
-				final Triangle triangle = new Triangle(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal, a, b, c);
+				final Triangle triangle = new Triangle(surface, a, b, c);
 				
 				triangles.add(triangle);
 			}

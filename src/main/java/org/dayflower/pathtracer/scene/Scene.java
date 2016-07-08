@@ -32,7 +32,6 @@ import java.util.Objects;
  */
 public final class Scene {
 	private final List<Shape> shapes = new ArrayList<>();
-	private final List<Texture> textures = new ArrayList<>();
 	private final String name;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,17 +62,6 @@ public final class Scene {
 	}
 	
 	/**
-	 * Returns a {@code List} with all currently added {@link Texture}s.
-	 * <p>
-	 * Modifying the returned {@code List} will not affect this {@code Scene} instance.
-	 * 
-	 * @return a {@code List} with all currently added {@code Texture}s
-	 */
-	public List<Texture> getTextures() {
-		return new ArrayList<>(this.textures);
-	}
-	
-	/**
 	 * Returns the name of this {@code Scene} instance.
 	 * 
 	 * @return the name of this {@code Scene} instance
@@ -92,17 +80,5 @@ public final class Scene {
 	 */
 	public void addShape(final Shape shape) {
 		this.shapes.add(Objects.requireNonNull(shape, "shape == null"));
-	}
-	
-	/**
-	 * Adds {@code texture} to this {@code Scene} instance.
-	 * <p>
-	 * If {@code texture} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param texture the {@link Texture} to add
-	 * @throws NullPointerException thrown if, and only if, {@code texture} is {@code null}
-	 */
-	public void addTexture(final Texture texture) {
-		this.textures.add(Objects.requireNonNull(texture, "texture == null"));
 	}
 }

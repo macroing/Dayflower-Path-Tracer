@@ -29,14 +29,20 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.dayflower.pathtracer.camera.Camera;
+import org.dayflower.pathtracer.scene.Point2;
+import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
+import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
+import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.LeafNode;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;
@@ -117,7 +123,7 @@ public final class CompiledScene {
 	public static final int IMAGE_TEXTURE_TYPE = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_A = 10;
+	public static final int PLANE_RELATIVE_OFFSET_A = 2;
 	
 //	TODO: Add Javadocs.
 	public static final int PLANE_RELATIVE_OFFSET_A_X = PLANE_RELATIVE_OFFSET_A + 0;
@@ -129,7 +135,7 @@ public final class CompiledScene {
 	public static final int PLANE_RELATIVE_OFFSET_A_Z = PLANE_RELATIVE_OFFSET_A + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_B = 13;
+	public static final int PLANE_RELATIVE_OFFSET_B = 5;
 	
 //	TODO: Add Javadocs.
 	public static final int PLANE_RELATIVE_OFFSET_B_X = PLANE_RELATIVE_OFFSET_B + 0;
@@ -141,7 +147,7 @@ public final class CompiledScene {
 	public static final int PLANE_RELATIVE_OFFSET_B_Z = PLANE_RELATIVE_OFFSET_B + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_C = 16;
+	public static final int PLANE_RELATIVE_OFFSET_C = 8;
 	
 //	TODO: Add Javadocs.
 	public static final int PLANE_RELATIVE_OFFSET_C_X = PLANE_RELATIVE_OFFSET_C + 0;
@@ -153,7 +159,7 @@ public final class CompiledScene {
 	public static final int PLANE_RELATIVE_OFFSET_C_Z = PLANE_RELATIVE_OFFSET_C + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL = 19;
+	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL = 11;
 	
 //	TODO: Add Javadocs.
 	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_X = PLANE_RELATIVE_OFFSET_SURFACE_NORMAL + 0;
@@ -165,40 +171,13 @@ public final class CompiledScene {
 	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_Z = PLANE_RELATIVE_OFFSET_SURFACE_NORMAL + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_SIZE = 22;
+	public static final int PLANE_SIZE = 14;
 	
 //	TODO: Add Javadocs.
 	public static final int PLANE_TYPE = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_EMISSION = 2;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_EMISSION_B = SHAPE_RELATIVE_OFFSET_EMISSION + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_EMISSION_G = SHAPE_RELATIVE_OFFSET_EMISSION + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_EMISSION_R = SHAPE_RELATIVE_OFFSET_EMISSION + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_MATERIAL = 5;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT = 8;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE = 9;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_SIZE = 1;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO = 6;
-	
-//	TODO: Add Javadocs.
-	public static final int SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL = 7;
+	public static final int SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET = 1;
 	
 //	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_TYPE = 0;
@@ -222,7 +201,7 @@ public final class CompiledScene {
 	public static final int SOLID_TEXTURE_TYPE = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int SPHERE_RELATIVE_OFFSET_POSITION = 11;
+	public static final int SPHERE_RELATIVE_OFFSET_POSITION = 3;
 	
 //	TODO: Add Javadocs.
 	public static final int SPHERE_RELATIVE_OFFSET_POSITION_X = SPHERE_RELATIVE_OFFSET_POSITION + 0;
@@ -234,13 +213,43 @@ public final class CompiledScene {
 	public static final int SPHERE_RELATIVE_OFFSET_POSITION_Z = SPHERE_RELATIVE_OFFSET_POSITION + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int SPHERE_RELATIVE_OFFSET_RADIUS = 10;
+	public static final int SPHERE_RELATIVE_OFFSET_RADIUS = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int SPHERE_SIZE = 14;
+	public static final int SPHERE_SIZE = 6;
 	
 //	TODO: Add Javadocs.
 	public static final int SPHERE_TYPE = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_EMISSION = 0;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_EMISSION_B = SURFACE_RELATIVE_OFFSET_EMISSION + 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_EMISSION_G = SURFACE_RELATIVE_OFFSET_EMISSION + 1;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_EMISSION_R = SURFACE_RELATIVE_OFFSET_EMISSION + 0;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_MATERIAL = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_SIZE = 8;
 	
 //	TODO: Add Javadocs.
 	public static final int TEXTURE_RELATIVE_OFFSET_SIZE = 1;
@@ -249,7 +258,7 @@ public final class CompiledScene {
 	public static final int TEXTURE_RELATIVE_OFFSET_TYPE = 0;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A = 10;
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A = 2;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A_X = TRIANGLE_RELATIVE_OFFSET_POINT_A + 0;
@@ -261,7 +270,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A_Z = TRIANGLE_RELATIVE_OFFSET_POINT_A + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B = 13;
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B = 5;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B_X = TRIANGLE_RELATIVE_OFFSET_POINT_B + 0;
@@ -273,7 +282,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B_Z = TRIANGLE_RELATIVE_OFFSET_POINT_B + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C = 16;
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C = 8;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C_X = TRIANGLE_RELATIVE_OFFSET_POINT_C + 0;
@@ -285,7 +294,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C_Z = TRIANGLE_RELATIVE_OFFSET_POINT_C + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A = 19;
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A = 11;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A_X = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A + 0;
@@ -297,7 +306,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A_Z = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B = 22;
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B = 14;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B_X = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B + 0;
@@ -309,7 +318,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B_Z = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C = 25;
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C = 17;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_X = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C + 0;
@@ -321,7 +330,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_Z = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A = 28;
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A = 20;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A_X = TRIANGLE_RELATIVE_OFFSET_UV_A + 0;
@@ -330,10 +339,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A_Y = TRIANGLE_RELATIVE_OFFSET_UV_A + 1;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A_Z = TRIANGLE_RELATIVE_OFFSET_UV_A + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B = 30;
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B = 22;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B_X = TRIANGLE_RELATIVE_OFFSET_UV_B + 0;
@@ -342,10 +348,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B_Y = TRIANGLE_RELATIVE_OFFSET_UV_B + 1;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B_Z = TRIANGLE_RELATIVE_OFFSET_UV_B + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C = 32;
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C = 24;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C_X = TRIANGLE_RELATIVE_OFFSET_UV_C + 0;
@@ -354,10 +357,7 @@ public final class CompiledScene {
 	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C_Y = TRIANGLE_RELATIVE_OFFSET_UV_C + 1;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C_Z = TRIANGLE_RELATIVE_OFFSET_UV_C + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_SIZE = 34;
+	public static final int TRIANGLE_SIZE = 26;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_TYPE = 2;
@@ -367,16 +367,18 @@ public final class CompiledScene {
 	private final float[] boundingVolumeHierarchy;
 	private final float[] camera;
 	private final float[] shapes;
+	private final float[] surfaces;
 	private final float[] textures;
 	private final int[] shapeOffsets;
 	private final String name;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private CompiledScene(final float[] boundingVolumeHierarchy, final float[] camera, final float[] shapes, final float[] textures, final int[] shapeOffsets, final String name) {
+	private CompiledScene(final float[] boundingVolumeHierarchy, final float[] camera, final float[] shapes, final float[] surfaces, final float[] textures, final int[] shapeOffsets, final String name) {
 		this.boundingVolumeHierarchy = Objects.requireNonNull(boundingVolumeHierarchy, "boundingVolumeHierarchy == null");
 		this.camera = Objects.requireNonNull(camera, "camera == null");
 		this.shapes = Objects.requireNonNull(shapes, "shapes == null");
+		this.surfaces = Objects.requireNonNull(surfaces, "surfaces == null");
 		this.textures = Objects.requireNonNull(textures, "textures == null");
 		this.shapeOffsets = Objects.requireNonNull(shapeOffsets, "shapeOffsets == null");
 		this.name = Objects.requireNonNull(name, "name == null");
@@ -397,6 +399,11 @@ public final class CompiledScene {
 //	TODO: Add Javadocs.
 	public float[] getShapes() {
 		return this.shapes;
+	}
+	
+//	TODO: Add Javadocs.
+	public float[] getSurfaces() {
+		return this.surfaces;
 	}
 	
 //	TODO: Add Javadocs.
@@ -434,6 +441,7 @@ public final class CompiledScene {
 			final int boundingVolumeHierarchyLength = this.boundingVolumeHierarchy.length;
 			final int cameraLength = this.camera.length;
 			final int shapesLength = this.shapes.length;
+			final int surfacesLength = this.surfaces.length;
 			final int texturesLength = this.textures.length;
 			final int shapeOffsetsLength = this.shapeOffsets.length;
 			
@@ -453,6 +461,12 @@ public final class CompiledScene {
 			dataOutputStream.writeInt(shapesLength);
 			
 			for(final float value : this.shapes) {
+				dataOutputStream.writeFloat(value);
+			}
+			
+			dataOutputStream.writeInt(surfacesLength);
+			
+			for(final float value : this.surfaces) {
 				dataOutputStream.writeFloat(value);
 			}
 			
@@ -481,16 +495,20 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static CompiledScene compile(final Camera camera, final Scene scene, final String name) {
+		final List<Surface> surfaces0 = doFindSurfaces(scene);
+		final List<Texture> textures0 = doFindTextures(scene);
+		
 		final float[] boundingVolumeHierarchy = doCompileBoundingVolumeHierarchy(scene);
 		final float[] camera0 = camera.getArray();
-		final float[] shapes0 = doCompileShapes(scene);
-		final float[] textures = doCompileTextures(scene);
+		final float[] shapes = doCompileShapes(surfaces0, scene);
+		final float[] surfaces = doCompileSurfaces(surfaces0, textures0);
+		final float[] textures = doCompileTextures(textures0);
 		
 		final int[] shapeOffsets = doCompileShapeOffsets(scene);
 		
-		doReorderShapes(boundingVolumeHierarchy, shapes0, shapeOffsets);
+		doReorderShapes(boundingVolumeHierarchy, shapes, shapeOffsets);
 		
-		return new CompiledScene(boundingVolumeHierarchy, camera0, shapes0, textures, shapeOffsets, name);
+		return new CompiledScene(boundingVolumeHierarchy, camera0, shapes, surfaces, textures, shapeOffsets, name);
 	}
 	
 //	TODO: Add Javadocs.
@@ -531,6 +549,14 @@ public final class CompiledScene {
 				shapes[i] = dataInputStream.readFloat();
 			}
 			
+			final int surfacesLength = dataInputStream.readInt();
+			
+			final float[] surfaces = new float[surfacesLength];
+			
+			for(int i = 0; i < surfacesLength; i++) {
+				surfaces[i] = dataInputStream.readFloat();
+			}
+			
 			final int texturesLength = dataInputStream.readInt();
 			
 			final float[] textures = new float[texturesLength];
@@ -547,7 +573,7 @@ public final class CompiledScene {
 				shapeOffsets[i] = dataInputStream.readInt();
 			}
 			
-			return new CompiledScene(boundingVolumeHierarchy, camera, shapes, textures, shapeOffsets, name);
+			return new CompiledScene(boundingVolumeHierarchy, camera, shapes, surfaces, textures, shapeOffsets, name);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -675,12 +701,11 @@ public final class CompiledScene {
 		return boundingVolumeHierarchyArray;
 	}
 	
-	private static float[] doCompileShapes(final Scene scene) {
+	private static float[] doCompileShapes(final List<Surface> surfaces, final Scene scene) {
 		final List<Float> floats = new ArrayList<>();
-		final List<Texture> textures = scene.getTextures();
 		
 		for(final Shape shape : scene.getShapes()) {
-			final float[] floatArray = doToFloatArray(shape, textures);
+			final float[] floatArray = doToFloatArray(shape, surfaces);
 			
 			for(final float value : floatArray) {
 				floats.add(Float.valueOf(value));
@@ -696,10 +721,30 @@ public final class CompiledScene {
 		return floatArray;
 	}
 	
-	private static float[] doCompileTextures(final Scene scene) {
+	private static float[] doCompileSurfaces(final List<Surface> surfaces, final List<Texture> textures) {
 		final List<Float> floats = new ArrayList<>();
 		
-		for(final Texture texture : scene.getTextures()) {
+		for(final Surface surface : surfaces) {
+			final float[] floatArray = doToFloatArray(surface, textures);
+			
+			for(final float value : floatArray) {
+				floats.add(Float.valueOf(value));
+			}
+		}
+		
+		final float[] floatArray = new float[floats.size()];
+		
+		for(int i = 0; i < floats.size(); i++) {
+			floatArray[i] = floats.get(i).floatValue();
+		}
+		
+		return floatArray;
+	}
+	
+	private static float[] doCompileTextures(final List<Texture> textures) {
+		final List<Float> floats = new ArrayList<>();
+		
+		for(final Texture texture : textures) {
 			final float[] floatArray = doToFloatArray(texture);
 			
 			for(final float value : floatArray) {
@@ -716,16 +761,29 @@ public final class CompiledScene {
 		return floatArray;
 	}
 	
-	private static float[] doToFloatArray(final Shape shape, final List<Texture> textures) {
+	private static float[] doToFloatArray(final Shape shape, final List<Surface> surfaces) {
 		if(shape instanceof Plane) {
-			return doToFloatArrayPlane(Plane.class.cast(shape), textures);
+			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces);
 		} else if(shape instanceof Sphere) {
-			return doToFloatArraySphere(Sphere.class.cast(shape), textures);
+			return doToFloatArraySphere(Sphere.class.cast(shape), surfaces);
 		} else if(shape instanceof Triangle) {
-			return doToFloatArrayTriangle(Triangle.class.cast(shape), textures);
+			return doToFloatArrayTriangle(Triangle.class.cast(shape), surfaces);
 		} else {
 			throw new IllegalArgumentException(String.format("The Shape provided is not supported: %s", shape));
 		}
+	}
+	
+	private static float[] doToFloatArray(final Surface surface, final List<Texture> textures) {
+		return new float[] {
+			surface.getEmission().r,
+			surface.getEmission().g,
+			surface.getEmission().b,
+			surface.getMaterial().ordinal(),
+			doGetOffset(surface.getTextureAlbedo(), textures),
+			doGetOffset(surface.getTextureNormal(), textures),
+			surface.getPerlinNoiseAmount(),
+			surface.getPerlinNoiseScale()
+		};
 	}
 	
 	private static float[] doToFloatArray(final Texture texture) {
@@ -778,18 +836,10 @@ public final class CompiledScene {
 		return floatArray;
 	}
 	
-	private static float[] doToFloatArrayPlane(final Plane plane, final List<Texture> textures) {
+	private static float[] doToFloatArrayPlane(final Plane plane, final List<Surface> surfaces) {
 		return new float[] {
 			PLANE_TYPE,
-			PLANE_SIZE,
-			plane.getEmission().r,
-			plane.getEmission().g,
-			plane.getEmission().b,
-			plane.getMaterial().ordinal(),
-			doGetOffset(plane.getTextureAlbedo(), textures),
-			doGetOffset(plane.getTextureNormal(), textures),
-			plane.getPerlinNoiseAmount(),
-			plane.getPerlinNoiseScale(),
+			doGetOffset(plane.getSurface(), surfaces),
 			plane.getA().x,
 			plane.getA().y,
 			plane.getA().z,
@@ -815,18 +865,10 @@ public final class CompiledScene {
 		};
 	}
 	
-	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Texture> textures) {
+	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Surface> surfaces) {
 		return new float[] {
 			SPHERE_TYPE,
-			SPHERE_SIZE,
-			sphere.getEmission().r,
-			sphere.getEmission().g,
-			sphere.getEmission().b,
-			sphere.getMaterial().ordinal(),
-			doGetOffset(sphere.getTextureAlbedo(), textures),
-			doGetOffset(sphere.getTextureNormal(), textures),
-			sphere.getPerlinNoiseAmount(),
-			sphere.getPerlinNoiseScale(),
+			doGetOffset(sphere.getSurface(), surfaces),
 			sphere.getRadius(),
 			sphere.getPosition().x,
 			sphere.getPosition().y,
@@ -834,18 +876,10 @@ public final class CompiledScene {
 		};
 	}
 	
-	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Texture> textures) {
+	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces) {
 		return new float[] {
 			TRIANGLE_TYPE,
-			TRIANGLE_SIZE,
-			triangle.getEmission().r,
-			triangle.getEmission().g,
-			triangle.getEmission().b,
-			triangle.getMaterial().ordinal(),
-			doGetOffset(triangle.getTextureAlbedo(), textures),
-			doGetOffset(triangle.getTextureNormal(), textures),
-			triangle.getPerlinNoiseAmount(),
-			triangle.getPerlinNoiseScale(),
+			doGetOffset(triangle.getSurface(), surfaces),
 			triangle.getA().position.x,
 			triangle.getA().position.y,
 			triangle.getA().position.z,
@@ -887,6 +921,20 @@ public final class CompiledScene {
 		throw new IllegalArgumentException(String.format("No such Shape found: %s", shape));
 	}
 	
+	private static int doGetOffset(final Surface surface, final List<Surface> surfaces) {
+		for(int i = 0, j = 0; i < surfaces.size(); i++) {
+			final Surface surface0 = surfaces.get(i);
+			
+			if(surface.equals(surface0)) {
+				return j;
+			}
+			
+			j += SURFACE_SIZE;
+		}
+		
+		throw new IllegalArgumentException(String.format("No such Surface found: %s", surface));
+	}
+	
 	private static int doGetOffset(final Texture texture, final List<Texture> textures) {
 		for(int i = 0, j = 0; i < textures.size(); i++) {
 			final Texture texture0 = textures.get(i);
@@ -899,6 +947,19 @@ public final class CompiledScene {
 		}
 		
 		throw new IllegalArgumentException(String.format("No such Texture found: %s", texture));
+	}
+	
+	private static int doSize(final int type) {
+		switch(type) {
+			case PLANE_TYPE:
+				return PLANE_SIZE;
+			case SPHERE_TYPE:
+				return SPHERE_SIZE;
+			case TRIANGLE_TYPE:
+				return TRIANGLE_SIZE;
+			default:
+				throw new IllegalArgumentException(String.format("No such Shape found: %s", Integer.toString(type)));
+		}
 	}
 	
 	private static int doSize(final Node node) {
@@ -1003,6 +1064,34 @@ public final class CompiledScene {
 		return nodes;
 	}
 	
+	private static List<Surface> doFindSurfaces(final Scene scene) {
+		final Set<Surface> surfaces = new LinkedHashSet<>();
+		
+		for(final Shape shape : scene.getShapes()) {
+			final Surface surface = shape.getSurface();
+			
+			surfaces.add(surface);
+		}
+		
+		return new ArrayList<>(surfaces);
+	}
+	
+	private static List<Texture> doFindTextures(final Scene scene) {
+		final Set<Texture> textures = new LinkedHashSet<>();
+		
+		for(final Shape shape : scene.getShapes()) {
+			final Surface surface = shape.getSurface();
+			
+			final Texture textureAlbedo = surface.getTextureAlbedo();
+			final Texture textureNormal = surface.getTextureNormal();
+			
+			textures.add(textureAlbedo);
+			textures.add(textureNormal);
+		}
+		
+		return new ArrayList<>(textures);
+	}
+	
 	private static void doReorderShapes(final float[] boundingVolumeHierarchy, final float[] shapes, final int[] shapeOffsets) {
 		final float[] shapes0 = shapes;
 		final float[] shapes1 = new float[shapes0.length];
@@ -1018,7 +1107,8 @@ public final class CompiledScene {
 			} else if(type == BVH_NODE_TYPE_LEAF) {
 				for(int i = 0; i < (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]); i++) {
 					final int index = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
-					final int size = (int)(shapes0[index + SHAPE_RELATIVE_OFFSET_SIZE]);
+					final int type0 = (int)(shapes0[index + SHAPE_RELATIVE_OFFSET_TYPE]);
+					final int size = doSize(type0);
 					
 					System.arraycopy(shapes0, index, shapes1, shapes1Offset, size);
 					
@@ -1033,7 +1123,7 @@ public final class CompiledScene {
 		
 		for(int i = 0, j = 0, k = 0; i < shapes0.length; i += j) {
 			final int type = (int)(shapes0[i + SHAPE_RELATIVE_OFFSET_TYPE]);
-			final int size = (int)(shapes0[i + SHAPE_RELATIVE_OFFSET_SIZE]);
+			final int size = doSize(type);
 			
 			j = size;
 			

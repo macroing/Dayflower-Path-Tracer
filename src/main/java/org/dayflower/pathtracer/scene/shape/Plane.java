@@ -20,11 +20,9 @@ package org.dayflower.pathtracer.scene.shape;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Shape;
-import org.dayflower.pathtracer.scene.Texture;
+import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Vector3;
 
 /**
@@ -59,21 +57,16 @@ public final class Plane extends Shape {
 	/**
 	 * Constructs a new {@code Plane} instance.
 	 * <p>
-	 * If either {@code emission}, {@code material}, {@code textureAlbedo}, {@code textureNormal}, {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param emission a {@link Color} denoting the emissivity of this {@code Plane}
-	 * @param perlinNoiseAmount the Perlin Noise amount associated with this {@code Plane}, used for Perlin Noise Normal Mapping
-	 * @param perlinNoiseScale the Perlin Noise scale associated with this {@code Plane}, used for Perlin Noise Normal Mapping
-	 * @param material the {@link Material} used for this {@code Plane}
-	 * @param textureAlbedo the {@link Texture} used for the albedo of this {@code Plane}
-	 * @param textureNormal the {@code Texture} used for Normal Mapping of this {@code Plane}
+	 * @param surface a {@link Surface} denoting the surface of this {@code Plane}
 	 * @param a a {@link Point3} denoting the point A
 	 * @param b a {@code Point3} denoting the point A
 	 * @param c a {@code Point3} denoting the point A
-	 * @throws NullPointerException thrown if, and only if, either {@code emission}, {@code material}, {@code textureAlbedo}, {@code textureNormal}, {@code a}, {@code b} or {@code c} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}
 	 */
-	public Plane(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal, final Point3 a, final Point3 b, final Point3 c) {
-		super(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal);
+	public Plane(final Surface surface, final Point3 a, final Point3 b, final Point3 c) {
+		super(surface);
 		
 		this.a = Objects.requireNonNull(a, "a == null");
 		this.b = Objects.requireNonNull(b, "b == null");
@@ -82,6 +75,45 @@ public final class Plane extends Shape {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Compares {@code object} to this {@code Plane} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Plane}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Plane} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Plane}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Plane)) {
+			return false;
+		} else if(!Objects.equals(getSurface(), Plane.class.cast(object).getSurface())) {
+			return false;
+		} else if(!Objects.equals(this.a, Plane.class.cast(object).a)) {
+			return false;
+		} else if(!Objects.equals(this.b, Plane.class.cast(object).b)) {
+			return false;
+		} else if(!Objects.equals(this.c, Plane.class.cast(object).c)) {
+			return false;
+		} else if(!Objects.equals(this.surfaceNormal, Plane.class.cast(object).surfaceNormal)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
+	 * Returns a hash code for this {@code Plane} instance.
+	 * 
+	 * @return a hash code for this {@code Plane} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(getSurface(), this.a, this.b, this.c, this.surfaceNormal);
+	}
 	
 	/**
 	 * Returns the point A.
@@ -108,6 +140,16 @@ public final class Plane extends Shape {
 	 */
 	public Point3 getC() {
 		return this.c;
+	}
+	
+	/**
+	 * Returns a {@code String} representation of this {@code Plane} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code Plane} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("Plane: [A=%s], [B=%s], [C=%s], [SurfaceNormal=%s]", this.a, this.b, this.c, this.surfaceNormal);
 	}
 	
 	/**

@@ -20,11 +20,9 @@ package org.dayflower.pathtracer.scene.shape;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Shape;
-import org.dayflower.pathtracer.scene.Texture;
+import org.dayflower.pathtracer.scene.Surface;
 
 /**
  * A {@link Shape} implementation that implements a sphere.
@@ -41,26 +39,46 @@ public final class Sphere extends Shape {
 	/**
 	 * Constructs a new {@code Sphere} instance.
 	 * <p>
-	 * If either {@code emission}, {@code material}, {@code textureAlbedo}, {@code textureNormal} or {@code position} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If either {@code surface} or {@code position} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param emission a {@link Color} denoting the emissivity of this {@code Sphere}
-	 * @param perlinNoiseAmount the Perlin Noise amount associated with this {@code Sphere}, used for Perlin Noise Normal Mapping
-	 * @param perlinNoiseScale the Perlin Noise scale associated with this {@code Sphere}, used for Perlin Noise Normal Mapping
-	 * @param material the {@link Material} used for this {@code Sphere}
-	 * @param textureAlbedo the {@link Texture} used for the albedo of this {@code Sphere}
-	 * @param textureNormal the {@code Texture} used for Normal Mapping of this {@code Sphere}
+	 * @param surface a {@link Surface} denoting the surface of this {@code Sphere}
 	 * @param radius the radius of this {@code Sphere}
 	 * @param position the position of this {@code Sphere}
-	 * @throws NullPointerException thrown if, and only if, either {@code emission}, {@code material}, {@code textureAlbedo}, {@code textureNormal} or {@code position} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, either {@code surface} or {@code position} are {@code null}
 	 */
-	public Sphere(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal, final float radius, final Point3 position) {
-		super(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal);
+	public Sphere(final Surface surface, final float radius, final Point3 position) {
+		super(surface);
 		
 		this.radius = radius;
 		this.position = Objects.requireNonNull(position, "position == null");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Compares {@code object} to this {@code Sphere} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Sphere}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Sphere} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Sphere}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Sphere)) {
+			return false;
+		} else if(!Objects.equals(getSurface(), Sphere.class.cast(object).getSurface())) {
+			return false;
+		} else if(Float.compare(this.radius, Sphere.class.cast(object).radius) != 0) {
+			return false;
+		} else if(!Objects.equals(this.position, Sphere.class.cast(object).position)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 	
 	/**
 	 * Returns {@code true} if, and only if, the point denoted by {@code x}, {@code y} and {@code z} is within radius to this {@code Sphere} instance, {@code false} otherwise.
@@ -108,11 +126,31 @@ public final class Sphere extends Shape {
 	}
 	
 	/**
+	 * Returns a hash code for this {@code Sphere} instance.
+	 * 
+	 * @return a hash code for this {@code Sphere} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(getSurface(), Float.valueOf(this.radius), this.position);
+	}
+	
+	/**
 	 * Returns the center position of this {@code Sphere}.
 	 * 
 	 * @return the center position of this {@code Sphere}
 	 */
 	public Point3 getPosition() {
 		return this.position;
+	}
+	
+	/**
+	 * Returns a {@code String} representation of this {@code Sphere} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code Sphere} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("Sphere: [Radius=%s], [Position=%s]", Float.toString(this.radius), this.position);
 	}
 }

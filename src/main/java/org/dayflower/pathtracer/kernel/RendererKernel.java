@@ -98,6 +98,8 @@ public final class RendererKernel extends AbstractKernel {
 	private float[] rays;
 	@Constant
 	private final float[] shapes;
+	@Constant
+	private final float[] surfaces;
 	private final float[] temporaryColors;
 	@Constant
 	private final float[] textures;
@@ -150,6 +152,7 @@ public final class RendererKernel extends AbstractKernel {
 		this.boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
 		this.cameraArray = compiledScene.getCamera();
 		this.shapes = compiledScene.getShapes();
+		this.surfaces = compiledScene.getSurfaces();
 		this.textures = compiledScene.getTextures();
 		this.accumulatedPixelColors = new float[width * height * 3];
 		this.currentPixelColors = new float[width * height * 3];
@@ -283,6 +286,7 @@ public final class RendererKernel extends AbstractKernel {
 		put(this.perezY);
 		put(this.rays);
 		put(this.shapes);
+		put(this.surfaces);
 		put(this.temporaryColors);
 		put(this.textures);
 		put(this.permutations0);
@@ -1246,7 +1250,8 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private void doCalculateTextureColor(final int intersectionsOffset, final int pixelIndex, final int relativeOffsetTextures, final int shapesOffset) {
-		final int texturesOffset = (int)(this.shapes[shapesOffset + relativeOffsetTextures]);
+		final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+		final int texturesOffset = (int)(this.surfaces[surfacesOffset + relativeOffsetTextures]);
 		final int textureType = (int)(this.textures[texturesOffset]);
 		
 		if(textureType == CompiledScene.CHECKERBOARD_TEXTURE_TYPE) {
@@ -1606,6 +1611,9 @@ public final class RendererKernel extends AbstractKernel {
 				return;
 			}
 			
+//			Retrieve the offset to the surfaces array for the given shape:
+			final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+			
 //			Update the offset of the shape to skip to the current offset:
 			shapesOffsetToSkip = shapesOffset;
 			
@@ -1624,7 +1632,7 @@ public final class RendererKernel extends AbstractKernel {
 			final float surfaceNormalZ = intersections[offsetIntersectionSurfaceNormal + 2];
 			
 //			Calculate the albedo texture color for the intersected shape:
-			doCalculateTextureColor(intersectionsOffset, pixelIndex, CompiledScene.SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
+			doCalculateTextureColor(intersectionsOffset, pixelIndex, CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
 			
 //			Get the color of the shape from the albedo texture color that was looked up:
 			float albedoColorR = this.temporaryColors[pixelIndex0];
@@ -1632,12 +1640,12 @@ public final class RendererKernel extends AbstractKernel {
 			float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
 			
 //			Retrieve the offset of the emission:
-			final int offsetEmission = shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_EMISSION;
+			final int offsetEmission = surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_EMISSION;
 			
 //			Retrieve the emission from the intersected shape:
-			final float emissionR = this.shapes[offsetEmission];
-			final float emissionG = this.shapes[offsetEmission + 1];
-			final float emissionB = this.shapes[offsetEmission + 2];
+			final float emissionR = this.surfaces[offsetEmission];
+			final float emissionG = this.surfaces[offsetEmission + 1];
+			final float emissionB = this.surfaces[offsetEmission + 2];
 			
 //			Add the current radiance multiplied by the emission of the intersected shape to the current pixel color:
 			pixelColorR += radianceMultiplierR * emissionR;
@@ -1695,7 +1703,7 @@ public final class RendererKernel extends AbstractKernel {
 			}
 			
 //			Retrieve the material type of the intersected shape:
-			final int material = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_MATERIAL]);
+			final int material = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL]);
 			
 //			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
 			final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
@@ -2236,7 +2244,8 @@ public final class RendererKernel extends AbstractKernel {
 	
 	private void doPerformNormalMapping(final int intersectionsOffset, final int pixelIndex, final int shapesOffset) {
 //		Retrieve the offset in the textures array and the type of the texture:
-		final int texturesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL]);
+		final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+		final int texturesOffset = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL]);
 		final int textureType = (int)(this.textures[texturesOffset]);
 		
 		if(textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
@@ -2310,11 +2319,14 @@ public final class RendererKernel extends AbstractKernel {
 //		Retrieve the intersections array:
 		final float[] intersections = this.intersections;
 		
+//		Retrieve the offset to the surfaces array:
+		final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+		
 //		Retrieve the Perlin noise amount from the current shape:
-		final float amount = this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT];
+		final float amount = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT];
 		
 //		Retrieve the Perlin noise scale from the current shape:
-		final float scale = this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE];
+		final float scale = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE];
 		
 //		Check that the Perlin noise amount and Perlin noise scale are greater than 0.0:
 		if(amount > 0.0F && scale > 0.0F) {
@@ -2418,7 +2430,7 @@ public final class RendererKernel extends AbstractKernel {
 		}
 		
 //		Calculate the albedo texture color for the intersected shape:
-		doCalculateTextureColor(intersectionsOffset, pixelIndex, CompiledScene.SHAPE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
+		doCalculateTextureColor(intersectionsOffset, pixelIndex, CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
 		
 //		Get the color of the shape from the albedo texture color that was looked up:
 		float albedoColorR = this.temporaryColors[pixelIndex0];

@@ -96,4 +96,14 @@ public final class SolidTexture implements Texture {
 	public int hashCode() {
 		return Objects.hash(this.color);
 	}
+	
+	/**
+	 * Returns a {@code String} representation of this {@code SolidTexture} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code SolidTexture} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("SolidTexture: [Color=%s]", this.color);
+	}
 }

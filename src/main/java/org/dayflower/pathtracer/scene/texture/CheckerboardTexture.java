@@ -231,4 +231,14 @@ public final class CheckerboardTexture implements Texture {
 	public int hashCode() {
 		return Objects.hash(this.color0, this.color1, Float.valueOf(this.degrees), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV));
 	}
+	
+	/**
+	 * Returns a {@code String} representation of this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code CheckerboardTexture} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("CheckerboardTexture: [Color0=%s], [Color1=%s], [Degrees=%s], [ScaleU=%s], [ScaleV=%s]", this.color0, this.color1, Float.toString(this.degrees), Float.toString(this.scaleU), Float.toString(this.scaleV));
+	}
 }

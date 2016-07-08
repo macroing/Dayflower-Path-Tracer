@@ -161,6 +161,16 @@ public final class ImageTexture implements Texture {
 		return Objects.hash(Float.valueOf(this.degrees), Float.valueOf(this.height), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV), Float.valueOf(this.width), Integer.valueOf(Arrays.hashCode(this.data)));
 	}
 	
+	/**
+	 * Returns a {@code String} representation of this {@code ImageTexture} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code ImageTexture} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("ImageTexture: [Degrees=%s], [Width=%s], [Height=%s], [ScaleU=%s], [ScaleV=%s]", Float.toString(this.degrees), Float.toString(this.width), Float.toString(this.height), Float.toString(this.scaleU), Float.toString(this.scaleV));
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**

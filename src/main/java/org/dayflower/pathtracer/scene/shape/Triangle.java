@@ -21,13 +21,11 @@ package org.dayflower.pathtracer.scene.shape;
 import java.util.List;
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Matrix44;
 import org.dayflower.pathtracer.scene.Point2;
 import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Shape;
-import org.dayflower.pathtracer.scene.Texture;
+import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Vector3;
 
 /**
@@ -57,21 +55,16 @@ public final class Triangle extends Shape {
 	/**
 	 * Constructs a new {@code Triangle} instance.
 	 * <p>
-	 * If either {@code emission}, {@code material}, {@code textureAlbedo}, {@code textureNormal}, {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param emission a {@link Color} denoting the emissivity of this {@code Triangle}
-	 * @param perlinNoiseAmount the Perlin Noise amount associated with this {@code Triangle}, used for Perlin Noise Normal Mapping
-	 * @param perlinNoiseScale the Perlin Noise scale associated with this {@code Triangle}, used for Perlin Noise Normal Mapping
-	 * @param material the {@link Material} used for this {@code Triangle}
-	 * @param textureAlbedo the {@link Texture} used for the albedo of this {@code Triangle}
-	 * @param textureNormal the {@code Texture} used for Normal Mapping of this {@code Triangle}
+	 * @param surface a {@link Surface} denoting the surface of this {@code Triangle}
 	 * @param a a {@link Vertex} denoted by A
 	 * @param b a {@code Vertex} denoted by B
 	 * @param c a {@code Vertex} denoted by C
-	 * @throws NullPointerException thrown if, and only if, either {@code emission}, {@code material}, {@code textureAlbedo}, {@code textureNormal}, {@code a}, {@code b} or {@code c} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}
 	 */
-	public Triangle(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal, final Vertex a, final Vertex b, final Vertex c) {
-		super(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal);
+	public Triangle(final Surface surface, final Vertex a, final Vertex b, final Vertex c) {
+		super(surface);
 		
 		this.a = Objects.requireNonNull(a, "a == null");
 		this.b = Objects.requireNonNull(b, "b == null");
@@ -81,13 +74,50 @@ public final class Triangle extends Shape {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Compares {@code object} to this {@code Triangle} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Triangle}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Triangle} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Triangle}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Triangle)) {
+			return false;
+		} else if(!Objects.equals(getSurface(), Triangle.class.cast(object).getSurface())) {
+			return false;
+		} else if(!Objects.equals(this.a, Triangle.class.cast(object).a)) {
+			return false;
+		} else if(!Objects.equals(this.b, Triangle.class.cast(object).b)) {
+			return false;
+		} else if(!Objects.equals(this.c, Triangle.class.cast(object).c)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
+	 * Returns a hash code for this {@code Triangle} instance.
+	 * 
+	 * @return a hash code for this {@code Triangle} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(getSurface(), this.a, this.b, this.c);
+	}
+	
+	/**
 	 * Returns a {@code String} representation of this {@code Triangle} instance.
 	 * 
 	 * @return a {@code String} representation of this {@code Triangle} instance
 	 */
 	@Override
 	public String toString() {
-		return String.format("Triangle: A=%s, B=%s, C=%s", getA(), getB(), getC());
+		return String.format("Triangle: [A=%s], [B=%s], [C=%s]", this.a, this.b, this.c);
 	}
 	
 	/**
@@ -105,7 +135,7 @@ public final class Triangle extends Shape {
 	public Triangle rotate(final Vector3 v, final Vector3 w) {
 		final Matrix44 m = Matrix44.rotation(v, w);
 		
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), getA().transform(m), getB().transform(m), getC().transform(m));
+		return new Triangle(getSurface(), getA().transform(m), getB().transform(m), getC().transform(m));
 	}
 	
 	/**
@@ -145,7 +175,7 @@ public final class Triangle extends Shape {
 		final float c1Y = centerY + (c0Y - centerY) * s;
 		final float c1Z = centerZ + (c0Z - centerZ) * s;
 		
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), this.a.setPosition(new Point3(a1X, a1Y, a1Z)), this.b.setPosition(new Point3(b1X, b1Y, b1Z)), this.c.setPosition(new Point3(c1X, c1Y, c1Z)));
+		return new Triangle(getSurface(), this.a.setPosition(new Point3(a1X, a1Y, a1Z)), this.b.setPosition(new Point3(b1X, b1Y, b1Z)), this.c.setPosition(new Point3(c1X, c1Y, c1Z)));
 	}
 	
 	/**
@@ -171,7 +201,7 @@ public final class Triangle extends Shape {
 	 * @return a new translated version of this {@code Triangle} instance
 	 */
 	public Triangle translateX(final float x) {
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), getA().translateX(x), getB().translateX(x), getC().translateX(x));
+		return new Triangle(getSurface(), getA().translateX(x), getB().translateX(x), getC().translateX(x));
 	}
 	
 	/**
@@ -183,7 +213,7 @@ public final class Triangle extends Shape {
 	 * @return a new translated version of this {@code Triangle} instance
 	 */
 	public Triangle translateY(final float y) {
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), getA().translateY(y), getB().translateY(y), getC().translateY(y));
+		return new Triangle(getSurface(), getA().translateY(y), getB().translateY(y), getC().translateY(y));
 	}
 	
 	/**
@@ -195,7 +225,7 @@ public final class Triangle extends Shape {
 	 * @return a new translated version of this {@code Triangle} instance
 	 */
 	public Triangle translateZ(final float z) {
-		return new Triangle(getEmission(), getPerlinNoiseAmount(), getPerlinNoiseScale(), getMaterial(), getTextureAlbedo(), getTextureNormal(), getA().translateZ(z), getB().translateZ(z), getC().translateZ(z));
+		return new Triangle(getSurface(), getA().translateZ(z), getB().translateZ(z), getC().translateZ(z));
 	}
 	
 	/**
@@ -295,7 +325,7 @@ public final class Triangle extends Shape {
 		/**
 		 * The material name of this {@code Vertex} instance.
 		 */
-		public final String material;
+		public final String materialName;
 		
 		/**
 		 * The normal of this {@code Vertex} instance.
@@ -307,22 +337,59 @@ public final class Triangle extends Shape {
 		/**
 		 * Constructs a new {@code Vertex} instance.
 		 * <p>
-		 * If either {@code textureCoordinates}, {@code position}, {@code material} or {@code normal} are {@code null}, a {@code NullPointerException} will be thrown.
+		 * If either {@code textureCoordinates}, {@code position}, {@code materialName} or {@code normal} are {@code null}, a {@code NullPointerException} will be thrown.
 		 * 
 		 * @param textureCoordinates the texture coordinates of this {@code Vertex}
 		 * @param position the position of this {@code Vertex}
-		 * @param material the material name of this {@code Vertex}
+		 * @param materialName the material name of this {@code Vertex}
 		 * @param normal the normal of this {@code Vertex}
-		 * @throws NullPointerException thrown if, and only if, either {@code textureCoordinates}, {@code position}, {@code material} or {@code normal} are {@code null}
+		 * @throws NullPointerException thrown if, and only if, either {@code textureCoordinates}, {@code position}, {@code materialName} or {@code normal} are {@code null}
 		 */
-		public Vertex(final Point2 textureCoordinates, final Point3 position, final String material, final Vector3 normal) {
+		public Vertex(final Point2 textureCoordinates, final Point3 position, final String materialName, final Vector3 normal) {
 			this.textureCoordinates = Objects.requireNonNull(textureCoordinates, "textureCoordinates == null");
 			this.position = Objects.requireNonNull(position, "position == null");
-			this.material = Objects.requireNonNull(material, "material == null");
+			this.materialName = Objects.requireNonNull(materialName, "materialName == null");
 			this.normal = Objects.requireNonNull(normal, "normal == null");
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		/**
+		 * Compares {@code object} to this {@code Vertex} instance for equality.
+		 * <p>
+		 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Vertex}, and their respective values are equal, {@code false} otherwise.
+		 * 
+		 * @param object the {@code Object} to compare to this {@code Vertex} instance for equality
+		 * @return {@code true} if, and only if, {@code object} is an instance of {@code Vertex}, and their respective values are equal, {@code false} otherwise
+		 */
+		@Override
+		public boolean equals(final Object object) {
+			if(object == this) {
+				return true;
+			} else if(!(object instanceof Vertex)) {
+				return false;
+			} else if(!Objects.equals(this.textureCoordinates, Vertex.class.cast(object).textureCoordinates)) {
+				return false;
+			} else if(!Objects.equals(this.position, Vertex.class.cast(object).position)) {
+				return false;
+			} else if(!Objects.equals(this.materialName, Vertex.class.cast(object).materialName)) {
+				return false;
+			} else if(!Objects.equals(this.normal, Vertex.class.cast(object).normal)) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+		/**
+		 * Returns a hash code for this {@code Vertex} instance.
+		 * 
+		 * @return a hash code for this {@code Vertex} instance
+		 */
+		@Override
+		public int hashCode() {
+			return Objects.hash(this.textureCoordinates, this.position, this.materialName, this.normal);
+		}
 		
 		/**
 		 * Returns the texture coordinates of this {@code Vertex} instance.
@@ -347,8 +414,18 @@ public final class Triangle extends Shape {
 		 * 
 		 * @return the material name of this {@code Vertex} instance
 		 */
-		public String getMaterial() {
-			return this.material;
+		public String getMaterialName() {
+			return this.materialName;
+		}
+		
+		/**
+		 * Returns a {@code String} representation of this {@code Vertex} instance.
+		 * 
+		 * @return a {@code String} representation of this {@code Vertex} instance
+		 */
+		@Override
+		public String toString() {
+			return String.format("Vertex: [TextureCoordinates=%s], [Position=%s], [MaterialName=%s], [Normal=%s]", this.textureCoordinates, this.position, this.materialName, this.normal);
 		}
 		
 		/**
@@ -372,7 +449,7 @@ public final class Triangle extends Shape {
 		 * @throws NullPointerException thrown if, and only if, {@code position} is {@code null}
 		 */
 		public Vertex setPosition(final Point3 position) {
-			return new Vertex(this.textureCoordinates, position, this.material, this.normal);
+			return new Vertex(this.textureCoordinates, position, this.materialName, this.normal);
 		}
 		
 		/**
@@ -387,7 +464,7 @@ public final class Triangle extends Shape {
 		 * @throws NullPointerException thrown if, and only if, {@code m} is {@code null}
 		 */
 		public Vertex transform(final Matrix44 m) {
-			return new Vertex(this.textureCoordinates, this.position.transform(m), this.material, this.normal);
+			return new Vertex(this.textureCoordinates, this.position.transform(m), this.materialName, this.normal);
 		}
 		
 		/**
@@ -399,7 +476,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateX(final float x) {
-			return new Vertex(this.textureCoordinates, this.position.translateX(x), this.material, this.normal);
+			return new Vertex(this.textureCoordinates, this.position.translateX(x), this.materialName, this.normal);
 		}
 		
 		/**
@@ -411,7 +488,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateY(final float y) {
-			return new Vertex(this.textureCoordinates, this.position.translateY(y), this.material, this.normal);
+			return new Vertex(this.textureCoordinates, this.position.translateY(y), this.materialName, this.normal);
 		}
 		
 		/**
@@ -423,7 +500,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateZ(final float z) {
-			return new Vertex(this.textureCoordinates, this.position.translateZ(z), this.material, this.normal);
+			return new Vertex(this.textureCoordinates, this.position.translateZ(z), this.materialName, this.normal);
 		}
 	}
 }
