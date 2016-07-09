@@ -29,8 +29,10 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -123,55 +125,19 @@ public final class CompiledScene {
 	public static final int IMAGE_TEXTURE_TYPE = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_A = 2;
+	public static final int PLANE_RELATIVE_OFFSET_A_POINT3S_OFFSET = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_A_X = PLANE_RELATIVE_OFFSET_A + 0;
+	public static final int PLANE_RELATIVE_OFFSET_B_POINT3S_OFFSET = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_A_Y = PLANE_RELATIVE_OFFSET_A + 1;
+	public static final int PLANE_RELATIVE_OFFSET_C_POINT3S_OFFSET = 4;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_A_Z = PLANE_RELATIVE_OFFSET_A + 2;
+	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET = 5;
 	
 //	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_B = 5;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_B_X = PLANE_RELATIVE_OFFSET_B + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_B_Y = PLANE_RELATIVE_OFFSET_B + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_B_Z = PLANE_RELATIVE_OFFSET_B + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_C = 8;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_C_X = PLANE_RELATIVE_OFFSET_C + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_C_Y = PLANE_RELATIVE_OFFSET_C + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_C_Z = PLANE_RELATIVE_OFFSET_C + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL = 11;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_X = PLANE_RELATIVE_OFFSET_SURFACE_NORMAL + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_Y = PLANE_RELATIVE_OFFSET_SURFACE_NORMAL + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_Z = PLANE_RELATIVE_OFFSET_SURFACE_NORMAL + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int PLANE_SIZE = 14;
+	public static final int PLANE_SIZE = 6;
 	
 //	TODO: Add Javadocs.
 	public static final int PLANE_TYPE = 3;
@@ -201,22 +167,13 @@ public final class CompiledScene {
 	public static final int SOLID_TEXTURE_TYPE = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int SPHERE_RELATIVE_OFFSET_POSITION = 3;
-	
-//	TODO: Add Javadocs.
-	public static final int SPHERE_RELATIVE_OFFSET_POSITION_X = SPHERE_RELATIVE_OFFSET_POSITION + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int SPHERE_RELATIVE_OFFSET_POSITION_Y = SPHERE_RELATIVE_OFFSET_POSITION + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int SPHERE_RELATIVE_OFFSET_POSITION_Z = SPHERE_RELATIVE_OFFSET_POSITION + 2;
+	public static final int SPHERE_RELATIVE_OFFSET_POSITION_POINT3S_OFFSET = 3;
 	
 //	TODO: Add Javadocs.
 	public static final int SPHERE_RELATIVE_OFFSET_RADIUS = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int SPHERE_SIZE = 6;
+	public static final int SPHERE_SIZE = 4;
 	
 //	TODO: Add Javadocs.
 	public static final int SPHERE_TYPE = 1;
@@ -258,106 +215,34 @@ public final class CompiledScene {
 	public static final int TEXTURE_RELATIVE_OFFSET_TYPE = 0;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A = 2;
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A_X = TRIANGLE_RELATIVE_OFFSET_POINT_A + 0;
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A_Y = TRIANGLE_RELATIVE_OFFSET_POINT_A + 1;
+	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET = 4;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_A_Z = TRIANGLE_RELATIVE_OFFSET_POINT_A + 2;
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A_VECTOR3S_OFFSET = 5;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B = 5;
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B_VECTOR3S_OFFSET = 6;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B_X = TRIANGLE_RELATIVE_OFFSET_POINT_B + 0;
+	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_VECTOR3S_OFFSET = 7;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B_Y = TRIANGLE_RELATIVE_OFFSET_POINT_B + 1;
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A_POINT2S_OFFSET = 8;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_B_Z = TRIANGLE_RELATIVE_OFFSET_POINT_B + 2;
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B_POINT2S_OFFSET = 9;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C = 8;
+	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C_POINT2S_OFFSET = 10;
 	
 //	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C_X = TRIANGLE_RELATIVE_OFFSET_POINT_C + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C_Y = TRIANGLE_RELATIVE_OFFSET_POINT_C + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_POINT_C_Z = TRIANGLE_RELATIVE_OFFSET_POINT_C + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A = 11;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A_X = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A_Y = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A_Z = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B = 14;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B_X = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B_Y = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B_Z = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C = 17;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_X = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_Y = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_Z = TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A = 20;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A_X = TRIANGLE_RELATIVE_OFFSET_UV_A + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_A_Y = TRIANGLE_RELATIVE_OFFSET_UV_A + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B = 22;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B_X = TRIANGLE_RELATIVE_OFFSET_UV_B + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_B_Y = TRIANGLE_RELATIVE_OFFSET_UV_B + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C = 24;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C_X = TRIANGLE_RELATIVE_OFFSET_UV_C + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_RELATIVE_OFFSET_UV_C_Y = TRIANGLE_RELATIVE_OFFSET_UV_C + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int TRIANGLE_SIZE = 26;
+	public static final int TRIANGLE_SIZE = 11;
 	
 //	TODO: Add Javadocs.
 	public static final int TRIANGLE_TYPE = 2;
@@ -366,20 +251,26 @@ public final class CompiledScene {
 	
 	private final float[] boundingVolumeHierarchy;
 	private final float[] camera;
+	private final float[] point2s;
+	private final float[] point3s;
 	private final float[] shapes;
 	private final float[] surfaces;
 	private final float[] textures;
+	private final float[] vector3s;
 	private final int[] shapeOffsets;
 	private final String name;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private CompiledScene(final float[] boundingVolumeHierarchy, final float[] camera, final float[] shapes, final float[] surfaces, final float[] textures, final int[] shapeOffsets, final String name) {
+	private CompiledScene(final float[] boundingVolumeHierarchy, final float[] camera, final float[] point2s, final float[] point3s, final float[] shapes, final float[] surfaces, final float[] textures, final float[] vector3s, final int[] shapeOffsets, final String name) {
 		this.boundingVolumeHierarchy = Objects.requireNonNull(boundingVolumeHierarchy, "boundingVolumeHierarchy == null");
 		this.camera = Objects.requireNonNull(camera, "camera == null");
+		this.point2s = Objects.requireNonNull(point2s, "point2s == null");
+		this.point3s = Objects.requireNonNull(point3s, "point3s == null");
 		this.shapes = Objects.requireNonNull(shapes, "shapes == null");
 		this.surfaces = Objects.requireNonNull(surfaces, "surfaces == null");
 		this.textures = Objects.requireNonNull(textures, "textures == null");
+		this.vector3s = Objects.requireNonNull(vector3s, "vector3s == null");
 		this.shapeOffsets = Objects.requireNonNull(shapeOffsets, "shapeOffsets == null");
 		this.name = Objects.requireNonNull(name, "name == null");
 	}
@@ -397,6 +288,16 @@ public final class CompiledScene {
 	}
 	
 //	TODO: Add Javadocs.
+	public float[] getPoint2s() {
+		return this.point2s;
+	}
+	
+//	TODO: Add Javadocs.
+	public float[] getPoint3s() {
+		return this.point3s;
+	}
+	
+//	TODO: Add Javadocs.
 	public float[] getShapes() {
 		return this.shapes;
 	}
@@ -409,6 +310,11 @@ public final class CompiledScene {
 //	TODO: Add Javadocs.
 	public float[] getTextures() {
 		return this.textures;
+	}
+	
+//	TODO: Add Javadocs.
+	public float[] getVector3s() {
+		return this.vector3s;
 	}
 	
 //	TODO: Add Javadocs.
@@ -440,9 +346,12 @@ public final class CompiledScene {
 		try {
 			final int boundingVolumeHierarchyLength = this.boundingVolumeHierarchy.length;
 			final int cameraLength = this.camera.length;
+			final int point2sLength = this.point2s.length;
+			final int point3sLength = this.point3s.length;
 			final int shapesLength = this.shapes.length;
 			final int surfacesLength = this.surfaces.length;
 			final int texturesLength = this.textures.length;
+			final int vector3sLength = this.vector3s.length;
 			final int shapeOffsetsLength = this.shapeOffsets.length;
 			
 			dataOutputStream.writeUTF(this.name);
@@ -455,6 +364,18 @@ public final class CompiledScene {
 			dataOutputStream.writeInt(cameraLength);
 			
 			for(final float value : this.camera) {
+				dataOutputStream.writeFloat(value);
+			}
+			
+			dataOutputStream.writeInt(point2sLength);
+			
+			for(final float value : this.point2s) {
+				dataOutputStream.writeFloat(value);
+			}
+			
+			dataOutputStream.writeInt(point3sLength);
+			
+			for(final float value : this.point3s) {
 				dataOutputStream.writeFloat(value);
 			}
 			
@@ -473,6 +394,12 @@ public final class CompiledScene {
 			dataOutputStream.writeInt(texturesLength);
 			
 			for(final float value : this.textures) {
+				dataOutputStream.writeFloat(value);
+			}
+			
+			dataOutputStream.writeInt(vector3sLength);
+			
+			for(final float value : this.vector3s) {
 				dataOutputStream.writeFloat(value);
 			}
 			
@@ -495,33 +422,43 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static CompiledScene compile(final Camera camera, final Scene scene, final String name) {
+		final List<Point2> point2s0 = doFindPoint2s(scene);
+		final List<Point3> point3s0 = doFindPoint3s(scene);
 		final List<Surface> surfaces0 = doFindSurfaces(scene);
 		final List<Texture> textures0 = doFindTextures(scene);
+		final List<Vector3> vector3s0 = doFindVector3s(scene);
+		
+		final Map<Point2, Integer> point2s1 = doCreatePoint2Mapping(point2s0);
+		final Map<Point3, Integer> point3s1 = doCreatePoint3Mapping(point3s0);
+		final Map<Vector3, Integer> vector3s1 = doCreateVector3Mapping(vector3s0);
 		
 		final float[] boundingVolumeHierarchy = doCompileBoundingVolumeHierarchy(scene);
 		final float[] camera0 = camera.getArray();
-		final float[] shapes = doCompileShapes(surfaces0, scene);
+		final float[] point2s = doCompilePoint2s(point2s0);
+		final float[] point3s = doCompilePoint3s(point3s0);
+		final float[] shapes = doCompileShapes(surfaces0, point2s1, point3s1, vector3s1, scene);
 		final float[] surfaces = doCompileSurfaces(surfaces0, textures0);
 		final float[] textures = doCompileTextures(textures0);
+		final float[] vector3s = doCompileVector3s(vector3s0);
 		
 		final int[] shapeOffsets = doCompileShapeOffsets(scene);
 		
 		doReorderShapes(boundingVolumeHierarchy, shapes, shapeOffsets);
 		
-		return new CompiledScene(boundingVolumeHierarchy, camera0, shapes, surfaces, textures, shapeOffsets, name);
+		return new CompiledScene(boundingVolumeHierarchy, camera0, point2s, point3s, shapes, surfaces, textures, vector3s, shapeOffsets, name);
 	}
 	
 //	TODO: Add Javadocs.
-	public static CompiledScene read(final File file) {
+	public static CompiledScene read(final Camera camera, final File file) {
 		try(final DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(Objects.requireNonNull(file, "file == null"))))) {
-			return read(dataInputStream);
+			return read(camera, dataInputStream);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}
 	}
 	
 //	TODO: Add Javadocs.
-	public static CompiledScene read(final DataInputStream dataInputStream) {
+	public static CompiledScene read(final Camera camera, final DataInputStream dataInputStream) {
 		try {
 			final String name = dataInputStream.readUTF();
 			
@@ -535,10 +472,26 @@ public final class CompiledScene {
 			
 			final int cameraLength = dataInputStream.readInt();
 			
-			final float[] camera = new float[cameraLength];
+			final float[] cameraArray = camera.getArray();
 			
 			for(int i = 0; i < cameraLength; i++) {
-				camera[i] = dataInputStream.readFloat();
+				cameraArray[i] = dataInputStream.readFloat();
+			}
+			
+			final int point2sLength = dataInputStream.readInt();
+			
+			final float[] point2s = new float[point2sLength];
+			
+			for(int i = 0; i < point2sLength; i++) {
+				point2s[i] = dataInputStream.readFloat();
+			}
+			
+			final int point3sLength = dataInputStream.readInt();
+			
+			final float[] point3s = new float[point3sLength];
+			
+			for(int i = 0; i < point3sLength; i++) {
+				point3s[i] = dataInputStream.readFloat();
 			}
 			
 			final int shapesLength = dataInputStream.readInt();
@@ -565,6 +518,14 @@ public final class CompiledScene {
 				textures[i] = dataInputStream.readFloat();
 			}
 			
+			final int vector3sLength = dataInputStream.readInt();
+			
+			final float[] vector3s = new float[vector3sLength];
+			
+			for(int i = 0; i < vector3sLength; i++) {
+				vector3s[i] = dataInputStream.readFloat();
+			}
+			
 			final int shapeOffsetsLength = dataInputStream.readInt();
 			
 			final int[] shapeOffsets = new int[shapeOffsetsLength];
@@ -573,7 +534,7 @@ public final class CompiledScene {
 				shapeOffsets[i] = dataInputStream.readInt();
 			}
 			
-			return new CompiledScene(boundingVolumeHierarchy, camera, shapes, surfaces, textures, shapeOffsets, name);
+			return new CompiledScene(boundingVolumeHierarchy, cameraArray, point2s, point3s, shapes, surfaces, textures, vector3s, shapeOffsets, name);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -701,11 +662,38 @@ public final class CompiledScene {
 		return boundingVolumeHierarchyArray;
 	}
 	
-	private static float[] doCompileShapes(final List<Surface> surfaces, final Scene scene) {
+	private static float[] doCompilePoint2s(final List<Point2> point2s) {
+		final float[] point2s0 = new float[point2s.size() * 2];
+		
+		for(int i = 0, j = 0; i < point2s.size(); i++, j += 2) {
+			final Point2 point2 = point2s.get(i);
+			
+			point2s0[j + 0] = point2.x;
+			point2s0[j + 1] = point2.y;
+		}
+		
+		return point2s0;
+	}
+	
+	private static float[] doCompilePoint3s(final List<Point3> point3s) {
+		final float[] point3s0 = new float[point3s.size() * 3];
+		
+		for(int i = 0, j = 0; i < point3s.size(); i++, j += 3) {
+			final Point3 point3 = point3s.get(i);
+			
+			point3s0[j + 0] = point3.x;
+			point3s0[j + 1] = point3.y;
+			point3s0[j + 2] = point3.z;
+		}
+		
+		return point3s0;
+	}
+	
+	private static float[] doCompileShapes(final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s, final Scene scene) {
 		final List<Float> floats = new ArrayList<>();
 		
 		for(final Shape shape : scene.getShapes()) {
-			final float[] floatArray = doToFloatArray(shape, surfaces);
+			final float[] floatArray = doToFloatArray(shape, surfaces, point2s, point3s, vector3s);
 			
 			for(final float value : floatArray) {
 				floats.add(Float.valueOf(value));
@@ -761,13 +749,27 @@ public final class CompiledScene {
 		return floatArray;
 	}
 	
-	private static float[] doToFloatArray(final Shape shape, final List<Surface> surfaces) {
+	private static float[] doCompileVector3s(final List<Vector3> vector3s) {
+		final float[] vector3s0 = new float[vector3s.size() * 3];
+		
+		for(int i = 0, j = 0; i < vector3s.size(); i++, j += 3) {
+			final Vector3 vector3 = vector3s.get(i);
+			
+			vector3s0[j + 0] = vector3.x;
+			vector3s0[j + 1] = vector3.y;
+			vector3s0[j + 2] = vector3.z;
+		}
+		
+		return vector3s0;
+	}
+	
+	private static float[] doToFloatArray(final Shape shape, final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s) {
 		if(shape instanceof Plane) {
-			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces);
+			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces, point3s, vector3s);
 		} else if(shape instanceof Sphere) {
-			return doToFloatArraySphere(Sphere.class.cast(shape), surfaces);
+			return doToFloatArraySphere(Sphere.class.cast(shape), surfaces, point3s);
 		} else if(shape instanceof Triangle) {
-			return doToFloatArrayTriangle(Triangle.class.cast(shape), surfaces);
+			return doToFloatArrayTriangle(Triangle.class.cast(shape), surfaces, point2s, point3s, vector3s);
 		} else {
 			throw new IllegalArgumentException(String.format("The Shape provided is not supported: %s", shape));
 		}
@@ -836,22 +838,14 @@ public final class CompiledScene {
 		return floatArray;
 	}
 	
-	private static float[] doToFloatArrayPlane(final Plane plane, final List<Surface> surfaces) {
+	private static float[] doToFloatArrayPlane(final Plane plane, final List<Surface> surfaces, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s) {
 		return new float[] {
 			PLANE_TYPE,
 			doGetOffset(plane.getSurface(), surfaces),
-			plane.getA().x,
-			plane.getA().y,
-			plane.getA().z,
-			plane.getB().x,
-			plane.getB().y,
-			plane.getB().z,
-			plane.getC().x,
-			plane.getC().y,
-			plane.getC().z,
-			plane.getSurfaceNormal().x,
-			plane.getSurfaceNormal().y,
-			plane.getSurfaceNormal().z
+			point3s.get(plane.getA()).intValue(),
+			point3s.get(plane.getB()).intValue(),
+			point3s.get(plane.getC()).intValue(),
+			vector3s.get(plane.getSurfaceNormal()).intValue()
 		};
 	}
 	
@@ -865,45 +859,28 @@ public final class CompiledScene {
 		};
 	}
 	
-	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Surface> surfaces) {
+	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Surface> surfaces, final Map<Point3, Integer> point3s) {
 		return new float[] {
 			SPHERE_TYPE,
 			doGetOffset(sphere.getSurface(), surfaces),
 			sphere.getRadius(),
-			sphere.getPosition().x,
-			sphere.getPosition().y,
-			sphere.getPosition().z
+			point3s.get(sphere.getPosition()).intValue()
 		};
 	}
 	
-	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces) {
+	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s) {
 		return new float[] {
 			TRIANGLE_TYPE,
 			doGetOffset(triangle.getSurface(), surfaces),
-			triangle.getA().position.x,
-			triangle.getA().position.y,
-			triangle.getA().position.z,
-			triangle.getB().position.x,
-			triangle.getB().position.y,
-			triangle.getB().position.z,
-			triangle.getC().position.x,
-			triangle.getC().position.y,
-			triangle.getC().position.z,
-			triangle.getA().normal.x,
-			triangle.getA().normal.y,
-			triangle.getA().normal.z,
-			triangle.getB().normal.x,
-			triangle.getB().normal.y,
-			triangle.getB().normal.z,
-			triangle.getC().normal.x,
-			triangle.getC().normal.y,
-			triangle.getC().normal.z,
-			triangle.getA().textureCoordinates.x,
-			triangle.getA().textureCoordinates.y,
-			triangle.getB().textureCoordinates.x,
-			triangle.getB().textureCoordinates.y,
-			triangle.getC().textureCoordinates.x,
-			triangle.getC().textureCoordinates.y
+			point3s.get(triangle.getA().position).intValue(),
+			point3s.get(triangle.getB().position).intValue(),
+			point3s.get(triangle.getC().position).intValue(),
+			vector3s.get(triangle.getA().normal).intValue(),
+			vector3s.get(triangle.getB().normal).intValue(),
+			vector3s.get(triangle.getC().normal).intValue(),
+			point2s.get(triangle.getA().textureCoordinates).intValue(),
+			point2s.get(triangle.getB().textureCoordinates).intValue(),
+			point2s.get(triangle.getC().textureCoordinates).intValue()
 		};
 	}
 	
@@ -1064,6 +1041,62 @@ public final class CompiledScene {
 		return nodes;
 	}
 	
+	private static List<Point2> doFindPoint2s(final Scene scene) {
+		final Set<Point2> point2s = new LinkedHashSet<>();
+		
+		for(final Shape shape : scene.getShapes()) {
+			if(shape instanceof Triangle) {
+				final Triangle triangle = Triangle.class.cast(shape);
+				
+				final Point2 a = triangle.getA().getTextureCoordinates();
+				final Point2 b = triangle.getB().getTextureCoordinates();
+				final Point2 c = triangle.getC().getTextureCoordinates();
+				
+				point2s.add(a);
+				point2s.add(b);
+				point2s.add(c);
+			}
+		}
+		
+		return new ArrayList<>(point2s);
+	}
+	
+	private static List<Point3> doFindPoint3s(final Scene scene) {
+		final Set<Point3> point3s = new LinkedHashSet<>();
+		
+		for(final Shape shape : scene.getShapes()) {
+			if(shape instanceof Plane) {
+				final Plane plane = Plane.class.cast(shape);
+				
+				final Point3 a = plane.getA();
+				final Point3 b = plane.getB();
+				final Point3 c = plane.getC();
+				
+				point3s.add(a);
+				point3s.add(b);
+				point3s.add(c);
+			} else if(shape instanceof Sphere) {
+				final Sphere sphere = Sphere.class.cast(shape);
+				
+				final Point3 position = sphere.getPosition();
+				
+				point3s.add(position);
+			} else if(shape instanceof Triangle) {
+				final Triangle triangle = Triangle.class.cast(shape);
+				
+				final Point3 a = triangle.getA().getPosition();
+				final Point3 b = triangle.getB().getPosition();
+				final Point3 c = triangle.getC().getPosition();
+				
+				point3s.add(a);
+				point3s.add(b);
+				point3s.add(c);
+			}
+		}
+		
+		return new ArrayList<>(point3s);
+	}
+	
 	private static List<Surface> doFindSurfaces(final Scene scene) {
 		final Set<Surface> surfaces = new LinkedHashSet<>();
 		
@@ -1090,6 +1123,68 @@ public final class CompiledScene {
 		}
 		
 		return new ArrayList<>(textures);
+	}
+	
+	private static List<Vector3> doFindVector3s(final Scene scene) {
+		final Set<Vector3> vector3s = new LinkedHashSet<>();
+		
+		for(final Shape shape : scene.getShapes()) {
+			if(shape instanceof Plane) {
+				final Plane plane = Plane.class.cast(shape);
+				
+				final Vector3 surfaceNormal = plane.getSurfaceNormal();
+				
+				vector3s.add(surfaceNormal);
+			} else if(shape instanceof Triangle) {
+				final Triangle triangle = Triangle.class.cast(shape);
+				
+				final Vector3 a = triangle.getA().getNormal();
+				final Vector3 b = triangle.getB().getNormal();
+				final Vector3 c = triangle.getC().getNormal();
+				
+				vector3s.add(a);
+				vector3s.add(b);
+				vector3s.add(c);
+			}
+		}
+		
+		return new ArrayList<>(vector3s);
+	}
+	
+	private static Map<Point2, Integer> doCreatePoint2Mapping(final List<Point2> point2s) {
+		final Map<Point2, Integer> point2Mapping = new HashMap<>();
+		
+		for(int i = 0, j = 0; i < point2s.size(); i++, j += 2) {
+			final Point2 point2 = point2s.get(i);
+			
+			point2Mapping.put(point2, Integer.valueOf(j));
+		}
+		
+		return point2Mapping;
+	}
+	
+	private static Map<Point3, Integer> doCreatePoint3Mapping(final List<Point3> point3s) {
+		final Map<Point3, Integer> point3Mapping = new HashMap<>();
+		
+		for(int i = 0, j = 0; i < point3s.size(); i++, j += 3) {
+			final Point3 point3 = point3s.get(i);
+			
+			point3Mapping.put(point3, Integer.valueOf(j));
+		}
+		
+		return point3Mapping;
+	}
+	
+	private static Map<Vector3, Integer> doCreateVector3Mapping(final List<Vector3> vector3s) {
+		final Map<Vector3, Integer> vector3Mapping = new HashMap<>();
+		
+		for(int i = 0, j = 0; i < vector3s.size(); i++, j += 3) {
+			final Vector3 vector3 = vector3s.get(i);
+			
+			vector3Mapping.put(vector3, Integer.valueOf(j));
+		}
+		
+		return vector3Mapping;
 	}
 	
 	private static void doReorderShapes(final float[] boundingVolumeHierarchy, final float[] shapes, final int[] shapeOffsets) {

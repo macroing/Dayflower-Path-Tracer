@@ -56,7 +56,7 @@ public final class TestApplication extends AbstractApplication {
 	private static final float[][] FILTER_GRADIENT_VERTICAL = new float[][] {new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}};
 	private static final float[][] FILTER_SHARPEN = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 9.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
 	private static final String ENGINE_NAME = "Dayflower Engine";
-	private static final String ENGINE_VERSION = "v.0.0.13";
+	private static final String ENGINE_VERSION = "v.0.0.14";
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -81,7 +81,7 @@ public final class TestApplication extends AbstractApplication {
 	public TestApplication() {
 		super(String.format("%s %s", ENGINE_NAME, ENGINE_VERSION));
 		
-		this.rendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.scene);
+		this.rendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, String.format("resources/%s.scene", this.scene.getName()));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

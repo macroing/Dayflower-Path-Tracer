@@ -352,6 +352,43 @@ final class Scenes {
 	public static Scene newHouseScene() {
 		final Texture textureAlbedo = new SolidTexture(Color.WHITE);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
+		final Texture texture0 = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture texture1 = new CheckerboardTexture(Color.GRAY, Color.WHITE);
+		final Texture texture2 = new SolidTexture(Color.GRAY);
+		final Texture texture3 = new SolidTexture(Color.RED);
+		final Texture texture4 = new SolidTexture(Color.GREEN);
+		final Texture texture5 = new SolidTexture(Color.BLUE);
+		final Texture texture6 = new SolidTexture(Color.GRAY);
+		final Texture texture7 = new SolidTexture(Color.ORANGE);
+		final Texture texture8 = new SolidTexture(Color.ORANGE);
+		final Texture texture9 = new SolidTexture(Color.ORANGE);
+		final Texture texture10 = new SolidTexture(Color.GRAY);
+		
+		final Map<String, Material> materials = new HashMap<>();
+		
+		materials.put("floor_texture", Material.LAMBERTIAN_DIFFUSE);
+		materials.put("wire_115115115", Material.PHONG_METAL);
+		materials.put("texture_1", Material.LAMBERTIAN_DIFFUSE);
+		materials.put("texture_2", Material.LAMBERTIAN_DIFFUSE);
+		materials.put("03___Default", Material.LAMBERTIAN_DIFFUSE);
+		materials.put("crome", Material.LAMBERTIAN_DIFFUSE);
+		materials.put("table_wood_texture", Material.PHONG_METAL);
+		materials.put("sopha_wood_texture", Material.PHONG_METAL);
+		materials.put("20___Default", Material.LAMBERTIAN_DIFFUSE);
+		materials.put("double_sopha_wood_right_texture", Material.PHONG_METAL);
+		
+		final Map<String, Texture> textureAlbedos = new HashMap<>();
+		
+		textureAlbedos.put("floor_texture", texture1);
+		textureAlbedos.put("wire_115115115", texture2);
+		textureAlbedos.put("texture_1", texture3);
+		textureAlbedos.put("texture_2", texture4);
+		textureAlbedos.put("03___Default", texture5);
+		textureAlbedos.put("crome", texture6);
+		textureAlbedos.put("table_wood_texture", texture7);
+		textureAlbedos.put("sopha_wood_texture", texture8);
+		textureAlbedos.put("20___Default", texture9);
+		textureAlbedos.put("double_sopha_wood_right_texture", texture10);
 		
 		final MeshConfigurator meshConfigurator = new MeshConfigurator() {
 			@Override
@@ -371,12 +408,12 @@ final class Scenes {
 			
 			@Override
 			public Material getMaterial(final String materialName) {
-				return Material.LAMBERTIAN_DIFFUSE;
+				return materials.getOrDefault(materialName, Material.LAMBERTIAN_DIFFUSE);
 			}
 			
 			@Override
 			public Texture getTextureAlbedo(final String materialName) {
-				return textureAlbedo;
+				return textureAlbedos.getOrDefault(materialName, textureAlbedo);
 			}
 			
 			@Override
@@ -385,11 +422,13 @@ final class Scenes {
 			}
 		};
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(meshConfigurator, "resources/trail.obj", 1.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(meshConfigurator, "resources/house interior.obj", 1.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
-		final Scene scene = new Scene("House_Scene");
+		final
+		Scene scene = new Scene("House_Scene");
+		scene.addShape(new Plane(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture0, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));

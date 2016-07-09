@@ -18,6 +18,7 @@
  */
 package org.dayflower.pathtracer.kernel;
 
+import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -89,12 +90,20 @@ public final class RendererKernel extends AbstractKernel {
 	private final float[] accumulatedPixelColors;
 	@Constant
 	private final float[] boundingVolumeHierarchy;
+	@Constant
 	private final float[] cameraArray;
 	private final float[] currentPixelColors;
 	private final float[] intersections;
+	@Constant
 	private final float[] perezRelativeLuminance;
+	@Constant
 	private final float[] perezX;
+	@Constant
 	private final float[] perezY;
+	@Constant
+	private final float[] point2s;
+	@Constant
+	private final float[] point3s;
 	private float[] rays;
 	@Constant
 	private final float[] shapes;
@@ -103,6 +112,8 @@ public final class RendererKernel extends AbstractKernel {
 	private final float[] temporaryColors;
 	@Constant
 	private final float[] textures;
+	@Constant
+	private final float[] vector3s;
 	private int depthMaximum = 1;
 	private int depthRussianRoulette = 5;
 	private final int height;
@@ -113,6 +124,7 @@ public final class RendererKernel extends AbstractKernel {
 	private final int[] permutations0 = {151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180};
 	@Constant
 	private final int[] permutations1 = new int[512];
+	@Constant
 	private final int[] shapeOffsets;
 	private final long[] subSamples;
 	
@@ -151,9 +163,76 @@ public final class RendererKernel extends AbstractKernel {
 		this.camera = camera;
 		this.boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
 		this.cameraArray = compiledScene.getCamera();
+		this.point2s = compiledScene.getPoint2s();
+		this.point3s = compiledScene.getPoint3s();
 		this.shapes = compiledScene.getShapes();
 		this.surfaces = compiledScene.getSurfaces();
 		this.textures = compiledScene.getTextures();
+		this.vector3s = compiledScene.getVector3s();
+		this.accumulatedPixelColors = new float[width * height * 3];
+		this.currentPixelColors = new float[width * height * 3];
+		this.intersections = new float[width * height * SIZE_INTERSECTION];
+		this.rays = new float[width * height * SIZE_RAY];
+		this.temporaryColors = new float[width * height * 3];
+		this.shapeOffsets = compiledScene.getShapeOffsets();
+		this.shapeOffsetsLength = this.shapeOffsets.length;
+		this.subSamples = new long[width * height];
+		this.sunDirectionX = sky.getSunDirection().x;
+		this.sunDirectionY = sky.getSunDirection().y;
+		this.sunDirectionZ = sky.getSunDirection().z;
+		this.theta = sky.getTheta();
+		this.zenithRelativeLuminance = sky.getZenithRelativeLuminance();
+		this.zenithX = sky.getZenithX();
+		this.zenithY = sky.getZenithY();
+		this.perezRelativeLuminance = sky.getPerezRelativeLuminance();
+		this.perezX = sky.getPerezX();
+		this.perezY = sky.getPerezY();
+		
+		for(int i = 0; i < this.permutations0.length; i++) {
+			this.permutations1[i] = this.permutations0[i];
+			this.permutations1[i + this.permutations0.length] = this.permutations0[i];
+		}
+	}
+	
+	/**
+	 * Constructs a new {@code RendererKernel} instance.
+	 * <p>
+	 * If either {@code camera} or {@code filename} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param isResettingFully {@code true} if full resetting should be performed, {@code false} otherwise
+	 * @param width the width to use
+	 * @param height the height to use
+	 * @param camera the {@link Camera} to use
+	 * @param filename the filename of the file to read from
+	 * @throws NullPointerException thrown if, and only if, either {@code camera} or {@code filename} are {@code null}
+	 */
+	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final String filename) {
+		final CompiledScene compiledScene = CompiledScene.read(camera, new File(Objects.requireNonNull(filename, "filename == null")));
+		
+		final Sky sky = new Sky();
+		
+		this.orthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
+		this.orthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
+		this.orthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
+		this.orthoNormalBasisVX = sky.getOrthoNormalBasis().v.x;
+		this.orthoNormalBasisVY = sky.getOrthoNormalBasis().v.y;
+		this.orthoNormalBasisVZ = sky.getOrthoNormalBasis().v.z;
+		this.orthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
+		this.orthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
+		this.orthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
+		
+		this.isResettingFully = isResettingFully;
+		this.width = width;
+		this.height = height;
+		this.camera = camera;
+		this.boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
+		this.cameraArray = compiledScene.getCamera();
+		this.point2s = compiledScene.getPoint2s();
+		this.point3s = compiledScene.getPoint3s();
+		this.shapes = compiledScene.getShapes();
+		this.surfaces = compiledScene.getSurfaces();
+		this.textures = compiledScene.getTextures();
+		this.vector3s = compiledScene.getVector3s();
 		this.accumulatedPixelColors = new float[width * height * 3];
 		this.currentPixelColors = new float[width * height * 3];
 		this.intersections = new float[width * height * SIZE_INTERSECTION];
@@ -279,6 +358,8 @@ public final class RendererKernel extends AbstractKernel {
 		put(this.accumulatedPixelColors);
 		put(this.boundingVolumeHierarchy);
 		put(this.cameraArray);
+		put(this.point2s);
+		put(this.point3s);
 		put(this.currentPixelColors);
 		put(this.intersections);
 		put(this.perezRelativeLuminance);
@@ -289,6 +370,7 @@ public final class RendererKernel extends AbstractKernel {
 		put(this.surfaces);
 		put(this.temporaryColors);
 		put(this.textures);
+		put(this.vector3s);
 		put(this.permutations0);
 		put(this.permutations1);
 		put(this.shapeOffsets);
@@ -331,36 +413,6 @@ public final class RendererKernel extends AbstractKernel {
 		put(this.subSamples);
 		
 		return this;
-	}
-	
-	/**
-	 * Moves a random shape not part of the Bounding Volume Hierarchy.
-	 */
-	public void moveRandomShape() {
-		get(this.shapes);
-		
-		final int offset = this.shapeOffsets[ThreadLocalRandom.current().nextInt(this.shapeOffsetsLength)];
-		final int type = (int)(this.shapes[offset]);
-		
-		if(type == CompiledScene.SPHERE_TYPE) {
-			final float x0 = this.shapes[offset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_X];
-			final float z0 = this.shapes[offset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_Z];
-			
-			final boolean isUpdatingX = ThreadLocalRandom.current().nextBoolean();
-			final boolean isUpdatingZ = ThreadLocalRandom.current().nextBoolean();
-			final boolean isIncrementingX = isUpdatingX && ThreadLocalRandom.current().nextBoolean();
-			final boolean isDecrementingX = isUpdatingX && !isIncrementingX;
-			final boolean isIncrementingZ = isUpdatingZ && ThreadLocalRandom.current().nextBoolean();
-			final boolean isDecrementingZ = isUpdatingZ && !isIncrementingZ;
-			
-			final float x1 = isIncrementingX ? x0 + 1.0F : isDecrementingX ? x0 - 1.0F : x0;
-			final float z1 = isIncrementingZ ? z0 + 1.0F : isDecrementingZ ? z0 - 1.0F : z0;
-			
-			this.shapes[offset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_X] = x1;
-			this.shapes[offset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_Z] = z1;
-			
-			put(this.shapes);
-		}
 	}
 	
 	/**
@@ -439,12 +491,12 @@ public final class RendererKernel extends AbstractKernel {
 	
 	private float doIntersectPlane(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
 //		Calculate the offset to the surface normal of the plane:
-		final int offsetSurfaceNormal = shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_SURFACE_NORMAL;
+		final int offsetSurfaceNormal = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET]);
 		
 //		Retrieve the surface normal of the plane:
-		final float surfaceNormalX = this.shapes[offsetSurfaceNormal];
-		final float surfaceNormalY = this.shapes[offsetSurfaceNormal + 1];
-		final float surfaceNormalZ = this.shapes[offsetSurfaceNormal + 2];
+		final float surfaceNormalX = this.vector3s[offsetSurfaceNormal];
+		final float surfaceNormalY = this.vector3s[offsetSurfaceNormal + 1];
+		final float surfaceNormalZ = this.vector3s[offsetSurfaceNormal + 2];
 		
 //		Calculate the dot product between the surface normal and the ray direction:
 		final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
@@ -452,12 +504,12 @@ public final class RendererKernel extends AbstractKernel {
 //		Check that the dot product is not 0.0:
 		if(dotProduct < 0.0F || dotProduct > 0.0F) {
 //			Calculate the offset to the point denoted as A of the plane:
-			final int offsetA = shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_A;
+			final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_A_POINT3S_OFFSET]);
 			
 //			Retrieve the X-, Y- and Z-coordinates of the point A:
-			final float aX = this.shapes[offsetA];
-			final float aY = this.shapes[offsetA + 1];
-			final float aZ = this.shapes[offsetA + 2];
+			final float aX = this.point3s[offsetA];
+			final float aY = this.point3s[offsetA + 1];
+			final float aZ = this.point3s[offsetA + 2];
 			
 //			Calculate the distance:
 			final float distance = ((aX - originX) * surfaceNormalX + (aY - originY) * surfaceNormalY + (aZ - originZ) * surfaceNormalZ) / dotProduct;
@@ -474,12 +526,12 @@ public final class RendererKernel extends AbstractKernel {
 	
 	private float doIntersectSphere(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
 //		Calculate the offset to the center position of the sphere:
-		final int offsetPosition = shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION;
+		final int offsetPosition = (int)(this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_POINT3S_OFFSET]);
 		
 //		Retrieve the center position of the sphere:
-		final float positionX = this.shapes[offsetPosition];
-		final float positionY = this.shapes[offsetPosition + 1];
-		final float positionZ = this.shapes[offsetPosition + 2];
+		final float positionX = this.point3s[offsetPosition];
+		final float positionY = this.point3s[offsetPosition + 1];
+		final float positionZ = this.point3s[offsetPosition + 2];
 		
 //		Retrieve the radius of the sphere:
 		final float radius = this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_RADIUS];
@@ -523,24 +575,24 @@ public final class RendererKernel extends AbstractKernel {
 	
 	private float doIntersectTriangle(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
 //		Calculate the offsets to the points A, B and C of the triangle:
-		final int offsetA = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_A;
-		final int offsetB = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_B;
-		final int offsetC = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C;
+		final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
+		final int offsetB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
+		final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
 		
 //		Retrieve point A of the triangle:
-		final float aX = this.shapes[offsetA];
-		final float aY = this.shapes[offsetA + 1];
-		final float aZ = this.shapes[offsetA + 2];
+		final float aX = this.point3s[offsetA];
+		final float aY = this.point3s[offsetA + 1];
+		final float aZ = this.point3s[offsetA + 2];
 		
 //		Retrieve point B of the triangle:
-		final float bX = this.shapes[offsetB];
-		final float bY = this.shapes[offsetB + 1];
-		final float bZ = this.shapes[offsetB + 2];
+		final float bX = this.point3s[offsetB];
+		final float bY = this.point3s[offsetB + 1];
+		final float bZ = this.point3s[offsetB + 2];
 		
 //		Retrieve point C of the triangle:
-		final float cX = this.shapes[offsetC];
-		final float cY = this.shapes[offsetC + 1];
-		final float cZ = this.shapes[offsetC + 2];
+		final float cX = this.point3s[offsetC];
+		final float cY = this.point3s[offsetC + 1];
+		final float cZ = this.point3s[offsetC + 2];
 		
 //		Calculate the first edge between the points A and B:
 		final float edge0X = bX - aX;
@@ -978,30 +1030,30 @@ public final class RendererKernel extends AbstractKernel {
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
 //		TODO: Write explanation!
-		final int offsetA = shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_A;
-		final int offsetB = shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_B;
-		final int offsetC = shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_C;
-		final int offsetSurfaceNormal = shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_SURFACE_NORMAL;
+		final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_A_POINT3S_OFFSET]);
+		final int offsetB = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_B_POINT3S_OFFSET]);
+		final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_C_POINT3S_OFFSET]);
+		final int offsetSurfaceNormal = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET]);
 		
 //		Retrieve the point A of the plane:
-		final float a0X = this.shapes[offsetA];
-		final float a0Y = this.shapes[offsetA + 1];
-		final float a0Z = this.shapes[offsetA + 2];
+		final float a0X = this.point3s[offsetA];
+		final float a0Y = this.point3s[offsetA + 1];
+		final float a0Z = this.point3s[offsetA + 2];
 		
 //		Retrieve the point B of the plane:
-		final float b0X = this.shapes[offsetB];
-		final float b0Y = this.shapes[offsetB + 1];
-		final float b0Z = this.shapes[offsetB + 2];
+		final float b0X = this.point3s[offsetB];
+		final float b0Y = this.point3s[offsetB + 1];
+		final float b0Z = this.point3s[offsetB + 2];
 		
 //		Retrieve the point C of the plane:
-		final float c0X = this.shapes[offsetC];
-		final float c0Y = this.shapes[offsetC + 1];
-		final float c0Z = this.shapes[offsetC + 2];
+		final float c0X = this.point3s[offsetC];
+		final float c0Y = this.point3s[offsetC + 1];
+		final float c0Z = this.point3s[offsetC + 2];
 		
 //		Retrieve the surface normal:
-		final float surfaceNormalX = this.shapes[offsetSurfaceNormal];
-		final float surfaceNormalY = this.shapes[offsetSurfaceNormal + 1];
-		final float surfaceNormalZ = this.shapes[offsetSurfaceNormal + 2];
+		final float surfaceNormalX = this.vector3s[offsetSurfaceNormal];
+		final float surfaceNormalY = this.vector3s[offsetSurfaceNormal + 1];
+		final float surfaceNormalZ = this.vector3s[offsetSurfaceNormal + 2];
 		
 //		TODO: Write explanation!
 		final float absSurfaceNormalX = abs(surfaceNormalX);
@@ -1071,12 +1123,12 @@ public final class RendererKernel extends AbstractKernel {
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
 //		Retrieve the offset of the position:
-		final int offsetPosition = shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION;
+		final int offsetPosition = (int)(this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_POINT3S_OFFSET]);
 		
 //		Retrieve the X-, Y- and Z-components of the position:
-		final float x = this.shapes[offsetPosition];
-		final float y = this.shapes[offsetPosition + 1];
-		final float z = this.shapes[offsetPosition + 2];
+		final float x = this.point3s[offsetPosition];
+		final float y = this.point3s[offsetPosition + 1];
+		final float z = this.point3s[offsetPosition + 2];
 		
 //		Calculate the surface normal:
 		final float surfaceNormal0X = surfaceIntersectionPointX - x;
@@ -1123,26 +1175,26 @@ public final class RendererKernel extends AbstractKernel {
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
 //		Retrieve the offsets for the positions, UV-coordinates and surface normals:
-		final int offsetA = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_A;
-		final int offsetB = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_B;
-		final int offsetC = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C;
-		final int offsetUVA = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_A;
-		final int offsetUVB = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_B;
-		final int offsetUVC = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_C;
-		final int offsetSurfaceNormalA = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A;
-		final int offsetSurfaceNormalB = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B;
-		final int offsetSurfaceNormalC = shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C;
+		final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
+		final int offsetB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
+		final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
+		final int offsetUVA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_A_POINT2S_OFFSET]);
+		final int offsetUVB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_B_POINT2S_OFFSET]);
+		final int offsetUVC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_C_POINT2S_OFFSET]);
+		final int offsetSurfaceNormalA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A_VECTOR3S_OFFSET]);
+		final int offsetSurfaceNormalB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B_VECTOR3S_OFFSET]);
+		final int offsetSurfaceNormalC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_VECTOR3S_OFFSET]);
 		
 //		Calculate the Barycentric-coordinates:
-		final float aX = this.shapes[offsetA];
-		final float aY = this.shapes[offsetA + 1];
-		final float aZ = this.shapes[offsetA + 2];
-		final float bX = this.shapes[offsetB];
-		final float bY = this.shapes[offsetB + 1];
-		final float bZ = this.shapes[offsetB + 2];
-		final float cX = this.shapes[offsetC];
-		final float cY = this.shapes[offsetC + 1];
-		final float cZ = this.shapes[offsetC + 2];
+		final float aX = this.point3s[offsetA];
+		final float aY = this.point3s[offsetA + 1];
+		final float aZ = this.point3s[offsetA + 2];
+		final float bX = this.point3s[offsetB];
+		final float bY = this.point3s[offsetB + 1];
+		final float bZ = this.point3s[offsetB + 2];
+		final float cX = this.point3s[offsetC];
+		final float cY = this.point3s[offsetC + 1];
+		final float cZ = this.point3s[offsetC + 2];
 		final float edge0X = bX - aX;
 		final float edge0Y = bY - aY;
 		final float edge0Z = bZ - aZ;
@@ -1165,19 +1217,19 @@ public final class RendererKernel extends AbstractKernel {
 		final float w = 1.0F - u0 - v0;
 		
 //		Calculate the UV-coordinates for Flat Shading:
-//-		final float aU = this.shapes[offsetUVA];
-//-		final float aV = this.shapes[offsetUVA + 1];
-//-		final float bU = this.shapes[offsetUVB];
-//-		final float bV = this.shapes[offsetUVB + 1];
-//-		final float cU = this.shapes[offsetUVC];
-//-		final float cV = this.shapes[offsetUVC + 1];
+//-		final float aU = this.point2s[offsetUVA];
+//-		final float aV = this.point2s[offsetUVA + 1];
+//-		final float bU = this.point2s[offsetUVB];
+//-		final float bV = this.point2s[offsetUVB + 1];
+//-		final float cU = this.point2s[offsetUVC];
+//-		final float cV = this.point2s[offsetUVC + 1];
 //-		final float u1 = w * aU + u0 * bU + v0 * cU;
 //-		final float v1 = w * aV + u0 * bV + v0 * cV;
 		
 //		Calculate the surface normal for Flat Shading:
-//-		final float surfaceNormalAX = this.shapes[offsetSurfaceNormalA];
-//-		final float surfaceNormalAY = this.shapes[offsetSurfaceNormalA + 1];
-//-		final float surfaceNormalAZ = this.shapes[offsetSurfaceNormalA + 2];
+//-		final float surfaceNormalAX = this.vector3s[offsetSurfaceNormalA];
+//-		final float surfaceNormalAY = this.vector3s[offsetSurfaceNormalA + 1];
+//-		final float surfaceNormalAZ = this.vector3s[offsetSurfaceNormalA + 2];
 //-		final float surfaceNormal0X = edge0Y * edge1Z - edge0Z * edge1Y;
 //-		final float surfaceNormal0Y = edge0Z * edge1X - edge0X * edge1Z;
 //-		final float surfaceNormal0Z = edge0X * edge1Y - edge0Y * edge1X;
@@ -1191,25 +1243,25 @@ public final class RendererKernel extends AbstractKernel {
 //-		final float surfaceNormal2Z = dotProduct < 0.0F ? -surfaceNormal1Z : surfaceNormal1Z;
 		
 //		Calculate the UV-coordinates for Gouraud Shading:
-		final float aU = this.shapes[offsetUVA];
-		final float aV = this.shapes[offsetUVA + 1];
-		final float bU = this.shapes[offsetUVB];
-		final float bV = this.shapes[offsetUVB + 1];
-		final float cU = this.shapes[offsetUVC];
-		final float cV = this.shapes[offsetUVC + 1];
+		final float aU = this.point2s[offsetUVA];
+		final float aV = this.point2s[offsetUVA + 1];
+		final float bU = this.point2s[offsetUVB];
+		final float bV = this.point2s[offsetUVB + 1];
+		final float cU = this.point2s[offsetUVC];
+		final float cV = this.point2s[offsetUVC + 1];
 		final float u2 = aU * w + bU * u0 + cU * v0;
 		final float v2 = aV * w + bV * u0 + cV * v0;
 		
 //		Calculate the surface normal for Gouraud Shading:
-		final float surfaceNormalAX = this.shapes[offsetSurfaceNormalA];
-		final float surfaceNormalAY = this.shapes[offsetSurfaceNormalA + 1];
-		final float surfaceNormalAZ = this.shapes[offsetSurfaceNormalA + 2];
-		final float surfaceNormalBX = this.shapes[offsetSurfaceNormalB];
-		final float surfaceNormalBY = this.shapes[offsetSurfaceNormalB + 1];
-		final float surfaceNormalBZ = this.shapes[offsetSurfaceNormalB + 2];
-		final float surfaceNormalCX = this.shapes[offsetSurfaceNormalC];
-		final float surfaceNormalCY = this.shapes[offsetSurfaceNormalC + 1];
-		final float surfaceNormalCZ = this.shapes[offsetSurfaceNormalC + 2];
+		final float surfaceNormalAX = this.vector3s[offsetSurfaceNormalA];
+		final float surfaceNormalAY = this.vector3s[offsetSurfaceNormalA + 1];
+		final float surfaceNormalAZ = this.vector3s[offsetSurfaceNormalA + 2];
+		final float surfaceNormalBX = this.vector3s[offsetSurfaceNormalB];
+		final float surfaceNormalBY = this.vector3s[offsetSurfaceNormalB + 1];
+		final float surfaceNormalBZ = this.vector3s[offsetSurfaceNormalB + 2];
+		final float surfaceNormalCX = this.vector3s[offsetSurfaceNormalC];
+		final float surfaceNormalCY = this.vector3s[offsetSurfaceNormalC + 1];
+		final float surfaceNormalCZ = this.vector3s[offsetSurfaceNormalC + 2];
 		final float surfaceNormal3X = surfaceNormalAX * w + surfaceNormalBX * u0 + surfaceNormalCX * v0;
 		final float surfaceNormal3Y = surfaceNormalAY * w + surfaceNormalBY * u0 + surfaceNormalCY * v0;
 		final float surfaceNormal3Z = surfaceNormalAZ * w + surfaceNormalBZ * u0 + surfaceNormalCZ * v0;
@@ -1376,8 +1428,8 @@ public final class RendererKernel extends AbstractKernel {
 		final float y1 = abs(y0);
 		
 //		TODO: Write explanation!
-		final float x2 = IEEEremainder(x1, width);
-		final float y2 = IEEEremainder(y1, height);
+		final float x2 = remainder(x1, width);
+		final float y2 = remainder(y1, height);
 		
 //		TODO: Write explanation!
 		final int index = (int)(y2 * width + x2);
