@@ -21,9 +21,10 @@ package org.dayflower.pathtracer.kernel;
 import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.dayflower.pathtracer.camera.Camera;
+import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.math.Math2;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 
@@ -71,6 +72,7 @@ public final class RendererKernel extends AbstractKernel {
 	private final boolean isResettingFully;
 	private byte[] pixels;
 	private final Camera camera;
+	private final CompiledScene compiledScene;
 	private final float orthoNormalBasisUX;
 	private final float orthoNormalBasisUY;
 	private final float orthoNormalBasisUZ;
@@ -116,6 +118,8 @@ public final class RendererKernel extends AbstractKernel {
 	private final float[] vector3s;
 	private int depthMaximum = 1;
 	private int depthRussianRoulette = 5;
+	private int effectGrayScale;
+	private int effectSepiaTone;
 	private final int height;
 	private int renderer = RENDERER_PATH_TRACER;
 	private int shapeOffsetsLength;
@@ -143,7 +147,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @throws NullPointerException thrown if, and only if, either {@code camera} or {@code scene} are {@code null}
 	 */
 	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final Scene scene) {
-		final CompiledScene compiledScene = CompiledScene.compile(camera, scene);
+		this.compiledScene = CompiledScene.compile(camera, scene);
 		
 		final Sky sky = new Sky();
 		
@@ -161,20 +165,20 @@ public final class RendererKernel extends AbstractKernel {
 		this.width = width;
 		this.height = height;
 		this.camera = camera;
-		this.boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
-		this.cameraArray = compiledScene.getCamera();
-		this.point2s = compiledScene.getPoint2s();
-		this.point3s = compiledScene.getPoint3s();
-		this.shapes = compiledScene.getShapes();
-		this.surfaces = compiledScene.getSurfaces();
-		this.textures = compiledScene.getTextures();
-		this.vector3s = compiledScene.getVector3s();
+		this.boundingVolumeHierarchy = this.compiledScene.getBoundingVolumeHierarchy();
+		this.cameraArray = this.compiledScene.getCamera();
+		this.point2s = this.compiledScene.getPoint2s();
+		this.point3s = this.compiledScene.getPoint3s();
+		this.shapes = this.compiledScene.getShapes();
+		this.surfaces = this.compiledScene.getSurfaces();
+		this.textures = this.compiledScene.getTextures();
+		this.vector3s = this.compiledScene.getVector3s();
 		this.accumulatedPixelColors = new float[width * height * 3];
 		this.currentPixelColors = new float[width * height * 3];
 		this.intersections = new float[width * height * SIZE_INTERSECTION];
 		this.rays = new float[width * height * SIZE_RAY];
 		this.temporaryColors = new float[width * height * 3];
-		this.shapeOffsets = compiledScene.getShapeOffsets();
+		this.shapeOffsets = this.compiledScene.getShapeOffsets();
 		this.shapeOffsetsLength = this.shapeOffsets.length;
 		this.subSamples = new long[width * height];
 		this.sunDirectionX = sky.getSunDirection().x;
@@ -207,7 +211,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @throws NullPointerException thrown if, and only if, either {@code camera} or {@code filename} are {@code null}
 	 */
 	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final String filename) {
-		final CompiledScene compiledScene = CompiledScene.read(camera, new File(Objects.requireNonNull(filename, "filename == null")));
+		this.compiledScene = CompiledScene.read(camera, new File(Objects.requireNonNull(filename, "filename == null")));
 		
 		final Sky sky = new Sky();
 		
@@ -225,20 +229,20 @@ public final class RendererKernel extends AbstractKernel {
 		this.width = width;
 		this.height = height;
 		this.camera = camera;
-		this.boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
-		this.cameraArray = compiledScene.getCamera();
-		this.point2s = compiledScene.getPoint2s();
-		this.point3s = compiledScene.getPoint3s();
-		this.shapes = compiledScene.getShapes();
-		this.surfaces = compiledScene.getSurfaces();
-		this.textures = compiledScene.getTextures();
-		this.vector3s = compiledScene.getVector3s();
+		this.boundingVolumeHierarchy = this.compiledScene.getBoundingVolumeHierarchy();
+		this.cameraArray = this.compiledScene.getCamera();
+		this.point2s = this.compiledScene.getPoint2s();
+		this.point3s = this.compiledScene.getPoint3s();
+		this.shapes = this.compiledScene.getShapes();
+		this.surfaces = this.compiledScene.getSurfaces();
+		this.textures = this.compiledScene.getTextures();
+		this.vector3s = this.compiledScene.getVector3s();
 		this.accumulatedPixelColors = new float[width * height * 3];
 		this.currentPixelColors = new float[width * height * 3];
 		this.intersections = new float[width * height * SIZE_INTERSECTION];
 		this.rays = new float[width * height * SIZE_RAY];
 		this.temporaryColors = new float[width * height * 3];
-		this.shapeOffsets = compiledScene.getShapeOffsets();
+		this.shapeOffsets = this.compiledScene.getShapeOffsets();
 		this.shapeOffsetsLength = this.shapeOffsets.length;
 		this.subSamples = new long[width * height];
 		this.sunDirectionX = sky.getSunDirection().x;
@@ -259,6 +263,16 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public boolean isEffectGrayScale() {
+		return this.effectGrayScale == 1;
+	}
+	
+//	TODO: Add Javadocs.
+	public boolean isEffectSepiaTone() {
+		return this.effectSepiaTone == 1;
+	}
 	
 	/**
 	 * Returns {@code true} if, and only if, Path Tracing is enabled, {@code false} otherwise.
@@ -285,6 +299,11 @@ public final class RendererKernel extends AbstractKernel {
 	 */
 	public byte[] getPixels() {
 		return this.pixels;
+	}
+	
+//	TODO: Add Javadocs.
+	public CompiledScene getCompiledScene() {
+		return this.compiledScene;
 	}
 	
 	/**
@@ -415,6 +434,87 @@ public final class RendererKernel extends AbstractKernel {
 		return this;
 	}
 	
+//	TODO: Add Javadocs.
+	public void drawLine(final int x0, final int y0, final int x1, final int y1, final Color color) {
+		final int width = x1 - x0;
+		final int height = y1 - y0;
+		
+		int delta0X = width < 0 ? -1 : width > 0 ? 1 : 0;
+		int delta0Y = height < 0 ? -1 : height > 0 ? 1 : 0;
+		int delta1X = width < 0 ? -1 : width > 0 ? 1 : 0;
+		int delta1Y = 0;
+		
+		int longest = Math2.abs(width);
+		int shortest = Math2.abs(height);
+		
+		if(longest <= shortest) {
+			longest = Math2.abs(height);
+			shortest = Math2.abs(width);
+			
+			delta1X = 0;
+			delta1Y = height < 0 ? -1 : height > 0 ? 1 : 0;
+		}
+		
+		int numerator = longest >> 1;
+		
+		int x = x0;
+		int y = y0;
+		
+		for(int i = 0; i <= longest; i++) {
+			doFill(x, y, color);
+			
+			numerator += shortest;
+			
+			if(numerator >= longest) {
+				numerator -= longest;
+				
+				x += delta0X;
+				y += delta0Y;
+			} else {
+				x += delta1X;
+				y += delta1Y;
+			}
+		}
+	}
+	
+//	TODO: Add Javadocs.
+	public void drawRectangle(final int x, final int y, final int width, final int height, final Color color) {
+		for(int i = y; i < y + height; i++) {
+			for(int j = x; j < x + width; j++) {
+				if(i == y || i + 1 == y + height || j == x || j + 1 == x + width) {
+					doFill(j, i, color);
+				}
+			}
+		}
+	}
+	
+//	TODO: Add Javadocs.
+	public void drawTriangle(final int x0, final int y0, final int x1, final int y1, final int x2, final int y2, final Color color) {
+		drawLine(x0, y0, x1, y1, color);
+		drawLine(x1, y1, x2, y2, color);
+		drawLine(x2, y2, x0, y0, color);
+	}
+	
+//	TODO: Add Javadocs.
+	public void fillCircle(final int x, final int y, final int radius, final Color color) {
+		for(int i = -radius; i <= radius; i++) {
+			for(int j = -radius; j <= radius; j++) {
+				if(j * j + i * i <= radius * radius) {
+					doFill(x + j, y + i, color);
+				}
+			}
+		}
+	}
+	
+//	TODO: Add Javadocs.
+	public void fillRectangle(final int x, final int y, final int width, final int height, final Color color) {
+		for(int i = y; i < y + height; i++) {
+			for(int j = x; j < x + width; j++) {
+				doFill(j, i, color);
+			}
+		}
+	}
+	
 	/**
 	 * Performs the Path Tracing.
 	 */
@@ -422,15 +522,37 @@ public final class RendererKernel extends AbstractKernel {
 	public void run() {
 		final int pixelIndex = getGlobalId();
 		
-		doCreatePrimaryRay(pixelIndex);
-		
-		if(this.renderer == RENDERER_PATH_TRACER) {
-			doPathTracing(pixelIndex);
+		if(doCreatePrimaryRay(pixelIndex)) {
+			if(this.renderer == RENDERER_PATH_TRACER) {
+				doPathTracing(pixelIndex);
+			} else {
+				doRayCasting(pixelIndex);
+			}
 		} else {
-			doRayCasting(pixelIndex);
+			final int pixelIndex0 = pixelIndex * 3;
+			
+			this.accumulatedPixelColors[pixelIndex0] = 0.0F;
+			this.accumulatedPixelColors[pixelIndex0 + 1] = 0.0F;
+			this.accumulatedPixelColors[pixelIndex0 + 2] = 0.0F;
+			
+			this.currentPixelColors[pixelIndex0] = 0.0F;
+			this.currentPixelColors[pixelIndex0 + 1] = 0.0F;
+			this.currentPixelColors[pixelIndex0 + 2] = 0.0F;
+			
+			this.subSamples[pixelIndex] = 1L;
 		}
 		
 		doCalculateColor(pixelIndex);
+	}
+	
+//	TODO: Add Javadocs.
+	public void setEffectGrayScale(final boolean isEffectGrayScale) {
+		this.effectGrayScale = isEffectGrayScale ? 1 : 0;
+	}
+	
+//	TODO: Add Javadocs.
+	public void setEffectSepiaTone(final boolean isEffectSepiaTone) {
+		this.effectSepiaTone = isEffectSepiaTone ? 1 : 0;
 	}
 	
 	/**
@@ -474,6 +596,146 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private boolean doCreatePrimaryRay(final int pixelIndex) {
+//		Calculate the X- and Y-coordinates on the screen:
+		final int y = pixelIndex / this.width;
+		final int x = pixelIndex - y * this.width;
+		
+//		Retrieve the current X-, Y- and Z-coordinates of the camera lens (eye) in the scene:
+		final float eyeX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_EYE_X];
+		final float eyeY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_EYE_Y];
+		final float eyeZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_EYE_Z];
+		
+//		Retrieve the current U-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
+		final float uX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X];
+		final float uY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y];
+		final float uZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z];
+		
+//		Retrieve the current V-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
+		final float vX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X];
+		final float vY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y];
+		final float vZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z];
+		
+//		Retrieve the current W-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
+		final float wX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X];
+		final float wY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y];
+		final float wZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z];
+		
+//		Calculate the Field of View:
+		final float fieldOfViewX0 = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X];
+		final float fieldOfViewX1 = tan(fieldOfViewX0 * PI_DIVIDED_BY_360);
+		final float fieldOfViewY0 = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y];
+		final float fieldOfViewY1 = tan(-fieldOfViewY0 * PI_DIVIDED_BY_360);
+		
+//		Calculate the horizontal direction:
+		final float horizontalX = uX * fieldOfViewX1;
+		final float horizontalY = uY * fieldOfViewX1;
+		final float horizontalZ = uZ * fieldOfViewX1;
+		
+//		Calculate the vertical direction:
+		final float verticalX = vX * fieldOfViewY1;
+		final float verticalY = vY * fieldOfViewY1;
+		final float verticalZ = vZ * fieldOfViewY1;
+		
+//		Calculate the pixel jitter:
+		final float jitterX = nextFloat() - 0.5F;
+		final float jitterY = nextFloat() - 0.5F;
+		
+//		Calculate the pixel sample point:
+		final float sx = (jitterX + x) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_X] - 1.0F);
+		final float sy = (jitterY + y) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_Y] - 1.0F);
+		final float sx0 = 2.0F * sx - 1.0F;
+		final float sy0 = 2.0F * sy - 1.0F;
+		
+//		Initialize w to 1.0F:
+		float w = 1.0F;
+		
+//		Retrieve whether or not this camera uses a Fisheye camera lens:
+		final boolean isFisheyeCameraLens = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_CAMERA_LENS] == Camera.CAMERA_LENS_FISHEYE;
+		
+		if(isFisheyeCameraLens) {
+//			Calculate the dot product that will be used in determining if the current pixel is outside the camera lens:
+			final float dotProduct = sx0 * sx0 + sy0 * sy0;
+			
+			if(dotProduct > 1.0F) {
+				return false;
+			}
+			
+//			Update the w variable:
+			w = sqrt(1.0F - dotProduct);
+		}
+		
+//		Calculate the middle point:
+		final float middleX = eyeX + wX * w;
+		final float middleY = eyeY + wY * w;
+		final float middleZ = eyeZ + wZ * w;
+		
+//		Calculate the point on the plane one unit away from the eye:
+		final float pointOnPlaneOneUnitAwayFromEyeX = middleX + (horizontalX * sx0) + (verticalX * sy0);
+		final float pointOnPlaneOneUnitAwayFromEyeY = middleY + (horizontalY * sx0) + (verticalY * sy0);
+		final float pointOnPlaneOneUnitAwayFromEyeZ = middleZ + (horizontalZ * sx0) + (verticalZ * sy0);
+		
+//		Retrieve the focal distance:
+		final float focalDistance = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE];
+		
+//		Calculate the point on the image plane:
+		final float pointOnImagePlaneX = eyeX + (pointOnPlaneOneUnitAwayFromEyeX - eyeX) * focalDistance;
+		final float pointOnImagePlaneY = eyeY + (pointOnPlaneOneUnitAwayFromEyeY - eyeY) * focalDistance;
+		final float pointOnImagePlaneZ = eyeZ + (pointOnPlaneOneUnitAwayFromEyeZ - eyeZ) * focalDistance;
+		
+//		Retrieve the aperture radius:
+		final float apertureRadius = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_APERTURE_RADIUS];
+		
+//		Initialize the X-, Y- and Z-coordinates of the aperture point:
+		float aperturePointX = eyeX;
+		float aperturePointY = eyeY;
+		float aperturePointZ = eyeZ;
+		
+//		Check if Depth of Field (DoF) is enabled:
+		if(apertureRadius > 0.00001F) {
+//			Calculate two random values:
+			final float random1 = nextFloat();
+			final float random2 = nextFloat();
+			
+//			Calculate the angle:
+			final float angle = PI_MULTIPLIED_BY_TWO * random1;
+			
+//			Calculate the distance:
+			final float distance = apertureRadius * sqrt(random2);
+			
+//			Calculate the aperture:
+			final float apertureX = cos(angle) * distance;
+			final float apertureY = sin(angle) * distance;
+			
+//			Update the aperture point:
+			aperturePointX = eyeX + uX * apertureX + vX * apertureY;
+			aperturePointY = eyeY + uY * apertureX + vY * apertureY;
+			aperturePointZ = eyeZ + uZ * apertureX + vZ * apertureY;
+		}
+		
+//		Calculate the aperture to image plane:
+		final float apertureToImagePlane0X = pointOnImagePlaneX - aperturePointX;
+		final float apertureToImagePlane0Y = pointOnImagePlaneY - aperturePointY;
+		final float apertureToImagePlane0Z = pointOnImagePlaneZ - aperturePointZ;
+		final float apertureToImagePlane0LengthReciprocal = rsqrt(apertureToImagePlane0X * apertureToImagePlane0X + apertureToImagePlane0Y * apertureToImagePlane0Y + apertureToImagePlane0Z * apertureToImagePlane0Z);
+		final float apertureToImagePlane1X = apertureToImagePlane0X * apertureToImagePlane0LengthReciprocal;
+		final float apertureToImagePlane1Y = apertureToImagePlane0Y * apertureToImagePlane0LengthReciprocal;
+		final float apertureToImagePlane1Z = apertureToImagePlane0Z * apertureToImagePlane0LengthReciprocal;
+		
+//		Calculate the offset in the rays array:
+		final int raysOffset = pixelIndex * SIZE_RAY;
+		
+//		Update the rays array with information:
+		this.rays[raysOffset + 0] = aperturePointX;
+		this.rays[raysOffset + 1] = aperturePointY;
+		this.rays[raysOffset + 2] = aperturePointZ;
+		this.rays[raysOffset + 3] = apertureToImagePlane1X;
+		this.rays[raysOffset + 4] = apertureToImagePlane1Y;
+		this.rays[raysOffset + 5] = apertureToImagePlane1Z;
+		
+		return true;
+	}
 	
 	private float doIntersect(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
 //		Retrieve the type of the shape:
@@ -816,9 +1078,6 @@ public final class RendererKernel extends AbstractKernel {
 		r = (rMaximum * (6.2F * rMaximum + 0.5F)) / (rMaximum * (6.2F * rMaximum + 1.7F) + 0.06F);
 		g = (gMaximum * (6.2F * gMaximum + 0.5F)) / (gMaximum * (6.2F * gMaximum + 1.7F) + 0.06F);
 		b = (bMaximum * (6.2F * bMaximum + 0.5F)) / (bMaximum * (6.2F * bMaximum + 1.7F) + 0.06F);
-//-		r = (rMaximum * mad(6.2F, rMaximum, 0.5F)) / (mad(rMaximum, (mad(6.2F, rMaximum, 1.7F)), 0.06F));
-//-		g = (gMaximum * mad(6.2F, gMaximum, 0.5F)) / (mad(gMaximum, (mad(6.2F, gMaximum, 1.7F)), 0.06F));
-//-		b = (bMaximum * mad(6.2F, bMaximum, 0.5F)) / (mad(bMaximum, (mad(6.2F, bMaximum, 1.7F)), 0.06F));
 		
 //		====================================================================================================
 		
@@ -846,19 +1105,23 @@ public final class RendererKernel extends AbstractKernel {
 		
 //		====================================================================================================
 		
-//		Perform a Grayscale effect based on Luminosity:
-//-		r = r * 0.21F + g * 0.72F + b * 0.07F;
-//-		g = r;
-//-		b = r;
+		if(this.effectGrayScale == 1) {
+//			Perform a Grayscale effect based on Luminosity:
+			r = r * 0.21F + g * 0.72F + b * 0.07F;
+			g = r;
+			b = r;
+		}
 		
-//		Perform a Sepia effect:
-//-		final float r1 = r * 0.393F + g * 0.769F + b * 0.189F;
-//-		final float g1 = r * 0.349F + g * 0.686F + b * 0.168F;
-//-		final float b1 = r * 0.272F + g * 0.534F + b * 0.131F;
-		
-//-		r = r1;
-//-		g = g1;
-//-		b = b1;
+		if(this.effectSepiaTone == 1) {
+//			Perform a Sepia effect:
+			final float r1 = r * 0.393F + g * 0.769F + b * 0.189F;
+			final float g1 = r * 0.349F + g * 0.686F + b * 0.168F;
+			final float b1 = r * 0.272F + g * 0.534F + b * 0.131F;
+			
+			r = r1;
+			g = g1;
+			b = b1;
+		}
 		
 //		Clamp the 'normalized' accumulated pixel color components to the range [0.0, 1.0]:
 		r = min(max(r, 0.0F), 1.0F);
@@ -1010,16 +1273,12 @@ public final class RendererKernel extends AbstractKernel {
 	private void doCalculateSurfaceProperties(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int intersectionsOffset, final int shapesOffset) {
 		final int type = (int)(this.shapes[shapesOffset]);
 		
-		if(type == CompiledScene.PLANE_TYPE) {
-			doCalculateSurfacePropertiesForPlane(distance, originX, originY, originZ, directionX, directionY, directionZ, intersectionsOffset, shapesOffset);
-		}
-		
-		if(type == CompiledScene.SPHERE_TYPE) {
-			doCalculateSurfacePropertiesForSphere(distance, originX, originY, originZ, directionX, directionY, directionZ, intersectionsOffset, shapesOffset);
-		}
-		
 		if(type == CompiledScene.TRIANGLE_TYPE) {
 			doCalculateSurfacePropertiesForTriangle(distance, originX, originY, originZ, directionX, directionY, directionZ, intersectionsOffset, shapesOffset);
+		} else if(type == CompiledScene.PLANE_TYPE) {
+			doCalculateSurfacePropertiesForPlane(distance, originX, originY, originZ, directionX, directionY, directionZ, intersectionsOffset, shapesOffset);
+		} else if(type == CompiledScene.SPHERE_TYPE) {
+			doCalculateSurfacePropertiesForSphere(distance, originX, originY, originZ, directionX, directionY, directionZ, intersectionsOffset, shapesOffset);
 		}
 	}
 	
@@ -1308,13 +1567,9 @@ public final class RendererKernel extends AbstractKernel {
 		
 		if(textureType == CompiledScene.CHECKERBOARD_TEXTURE_TYPE) {
 			doCalculateTextureColorForCheckerboardTexture(intersectionsOffset, pixelIndex, shapesOffset, texturesOffset);
-		}
-		
-		if(textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
+		} else if(textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
 			doCalculateTextureColorForImageTexture(intersectionsOffset, pixelIndex, shapesOffset, texturesOffset);
-		}
-		
-		if(textureType == CompiledScene.SOLID_TEXTURE_TYPE) {
+		} else if(textureType == CompiledScene.SOLID_TEXTURE_TYPE) {
 			doCalculateTextureColorForSolidTexture(intersectionsOffset, pixelIndex, shapesOffset, texturesOffset);
 		}
 	}
@@ -1341,18 +1596,12 @@ public final class RendererKernel extends AbstractKernel {
 		final float color1B = this.textures[offsetColor1 + 2];
 		
 //		TODO: Write explanation!
-		final float degrees = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_DEGREES];
-		
-//		TODO: Write explanation!
 		final float sU = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U];
 		final float sV = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_V];
 		
 //		TODO: Write explanation!
-		final float angle0 = toRadians(degrees);
-		
-//		TODO: Write explanation!
-		final float cosAngle = cos(angle0);
-		final float sinAngle = sin(angle0);
+		final float cosAngle = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_COS];
+		final float sinAngle = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN];
 		
 //		TODO: Write explanation!
 		final float textureU = modulo((u * cosAngle - v * sinAngle) * sU);
@@ -1402,9 +1651,6 @@ public final class RendererKernel extends AbstractKernel {
 		final float v = this.intersections[offsetUVCoordinates + 1];
 		
 //		TODO: Write explanation!
-		final float degrees = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DEGREES];
-		
-//		TODO: Write explanation!
 		final float width = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_WIDTH];
 		final float height = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_HEIGHT];
 		
@@ -1413,11 +1659,8 @@ public final class RendererKernel extends AbstractKernel {
 		final float scaleV = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_V];
 		
 //		TODO: Write explanation!
-		final float angle0 = toRadians(degrees);
-		
-//		TODO: Write explanation!
-		final float cosAngle = cos(angle0);
-		final float sinAngle = sin(angle0);
+		final float cosAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_COS];
+		final float sinAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN];
 		
 //		TODO: Write explanation!
 		final float x0 = (int)((u * cosAngle - v * sinAngle) * (width * scaleU));
@@ -1468,124 +1711,22 @@ public final class RendererKernel extends AbstractKernel {
 		this.temporaryColors[pixelIndex0 + 2] = b;
 	}
 	
-	private void doCreatePrimaryRay(final int pixelIndex) {
-//		Calculate the X- and Y-coordinates on the screen:
-		final int y = pixelIndex / this.width;
-		final int x = pixelIndex - y * this.width;
+	private void doFill(final int x, final int y, final Color color) {
+//		Calculate the pixel index:
+		final int index = (y * this.width + x) * SIZE_PIXEL;
 		
-//		Retrieve the current X-, Y- and Z-coordinates of the camera lens (eye) in the scene:
-		final float eyeX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_EYE_X];
-		final float eyeY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_EYE_Y];
-		final float eyeZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_EYE_Z];
+//		Retrieve the RGB-component values:
+		final int r = (int)(color.getR() * 255.0F);
+		final int g = (int)(color.getG() * 255.0F);
+		final int b = (int)(color.getB() * 255.0F);
 		
-//		Retrieve the current U-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
-		final float uX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X];
-		final float uY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y];
-		final float uZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z];
-		
-//		Retrieve the current V-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
-		final float vX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X];
-		final float vY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y];
-		final float vZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z];
-		
-//		Retrieve the current W-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
-		final float wX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X];
-		final float wY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y];
-		final float wZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z];
-		
-//		Calculate the middle point:
-		final float middleX = eyeX + wX;
-		final float middleY = eyeY + wY;
-		final float middleZ = eyeZ + wZ;
-		
-//		Calculate the Field of View:
-		final float fieldOfViewX0 = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X];
-		final float fieldOfViewX1 = tan(fieldOfViewX0 * PI_DIVIDED_BY_360);
-		final float fieldOfViewY0 = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y];
-		final float fieldOfViewY1 = tan(-fieldOfViewY0 * PI_DIVIDED_BY_360);
-		
-//		Calculate the horizontal direction:
-		final float horizontalX = uX * fieldOfViewX1;
-		final float horizontalY = uY * fieldOfViewX1;
-		final float horizontalZ = uZ * fieldOfViewX1;
-		
-//		Calculate the vertical direction:
-		final float verticalX = vX * fieldOfViewY1;
-		final float verticalY = vY * fieldOfViewY1;
-		final float verticalZ = vZ * fieldOfViewY1;
-		
-//		Calculate the pixel jitter:
-		final float jitterX = nextFloat() - 0.5F;
-		final float jitterY = nextFloat() - 0.5F;
-		
-//		Calculate the pixel sample point:
-		final float sx = (jitterX + x) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_X] - 1.0F);
-		final float sy = (jitterY + y) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_Y] - 1.0F);
-		final float sx0 = 2.0F * sx - 1.0F;
-		final float sy0 = 2.0F * sy - 1.0F;
-		
-//		Calculate the point on the plane one unit away from the eye:
-		final float pointOnPlaneOneUnitAwayFromEyeX = middleX + (horizontalX * sx0) + (verticalX * sy0);
-		final float pointOnPlaneOneUnitAwayFromEyeY = middleY + (horizontalY * sx0) + (verticalY * sy0);
-		final float pointOnPlaneOneUnitAwayFromEyeZ = middleZ + (horizontalZ * sx0) + (verticalZ * sy0);
-		
-//		Retrieve the focal distance:
-		final float focalDistance = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE];
-		
-//		Calculate the point on the image plane:
-		final float pointOnImagePlaneX = eyeX + (pointOnPlaneOneUnitAwayFromEyeX - eyeX) * focalDistance;
-		final float pointOnImagePlaneY = eyeY + (pointOnPlaneOneUnitAwayFromEyeY - eyeY) * focalDistance;
-		final float pointOnImagePlaneZ = eyeZ + (pointOnPlaneOneUnitAwayFromEyeZ - eyeZ) * focalDistance;
-		
-//		Retrieve the aperture radius:
-		final float apertureRadius = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_APERTURE_RADIUS];
-		
-//		Initialize the X-, Y- and Z-coordinates of the aperture point:
-		float aperturePointX = eyeX;
-		float aperturePointY = eyeY;
-		float aperturePointZ = eyeZ;
-		
-//		Check if Depth of Field (DoF) is enabled:
-		if(apertureRadius > 0.00001F) {
-//			Calculate two random values:
-			final float random1 = nextFloat();
-			final float random2 = nextFloat();
-			
-//			Calculate the angle:
-			final float angle = PI_MULTIPLIED_BY_TWO * random1;
-			
-//			Calculate the distance:
-			final float distance = apertureRadius * sqrt(random2);
-			
-//			Calculate the aperture:
-			final float apertureX = cos(angle) * distance;
-			final float apertureY = sin(angle) * distance;
-			
-//			Update the aperture point:
-			aperturePointX = eyeX + uX * apertureX + vX * apertureY;
-			aperturePointY = eyeY + uY * apertureX + vY * apertureY;
-			aperturePointZ = eyeZ + uZ * apertureX + vZ * apertureY;
+		if(index >= 0 && index + SIZE_PIXEL - 1 < this.pixels.length) {
+//			Update the pixel:
+			this.pixels[index + 0] = (byte)(b);
+			this.pixels[index + 1] = (byte)(g);
+			this.pixels[index + 2] = (byte)(r);
+			this.pixels[index + 3] = (byte)(255);
 		}
-		
-//		Calculate the aperture to image plane:
-		final float apertureToImagePlane0X = pointOnImagePlaneX - aperturePointX;
-		final float apertureToImagePlane0Y = pointOnImagePlaneY - aperturePointY;
-		final float apertureToImagePlane0Z = pointOnImagePlaneZ - aperturePointZ;
-		final float apertureToImagePlane0LengthReciprocal = rsqrt(apertureToImagePlane0X * apertureToImagePlane0X + apertureToImagePlane0Y * apertureToImagePlane0Y + apertureToImagePlane0Z * apertureToImagePlane0Z);
-		final float apertureToImagePlane1X = apertureToImagePlane0X * apertureToImagePlane0LengthReciprocal;
-		final float apertureToImagePlane1Y = apertureToImagePlane0Y * apertureToImagePlane0LengthReciprocal;
-		final float apertureToImagePlane1Z = apertureToImagePlane0Z * apertureToImagePlane0LengthReciprocal;
-		
-//		Calculate the offset in the rays array:
-		final int raysOffset = pixelIndex * SIZE_RAY;
-		
-//		Update the rays array with information:
-		this.rays[raysOffset + 0] = aperturePointX;
-		this.rays[raysOffset + 1] = aperturePointY;
-		this.rays[raysOffset + 2] = aperturePointZ;
-		this.rays[raysOffset + 3] = apertureToImagePlane1X;
-		this.rays[raysOffset + 4] = apertureToImagePlane1Y;
-		this.rays[raysOffset + 5] = apertureToImagePlane1Z;
 	}
 	
 	private void doPathTracing(final int pixelIndex) {

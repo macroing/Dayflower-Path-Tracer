@@ -32,6 +32,7 @@ import java.lang.reflect.Field;//TODO: Add Javadocs.
 
 import org.dayflower.pathtracer.color.ChromaticSpectralCurve;
 import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.color.ConstantSpectralCurve;
 import org.dayflower.pathtracer.color.IrregularSpectralCurve;
 import org.dayflower.pathtracer.color.RGBColorSpace;
 import org.dayflower.pathtracer.color.RegularSpectralCurve;
@@ -53,8 +54,10 @@ public final class Sky {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	private final Color color;
-//	private final float jacobian;
+	@SuppressWarnings("unused")
+	private final Color color;
+	@SuppressWarnings("unused")
+	private final float jacobian;
 	private final float theta;
 	private final float turbidity = 2.0F;
 	private final float zenithRelativeLuminance;
@@ -65,9 +68,10 @@ public final class Sky {
 	private final float[] perezX = new float[5];
 	private final float[] perezY = new float[5];
 	private final float[][] imageHistogram;
-//	private final int samples = 4;
+	@SuppressWarnings("unused")
+	private final int samples = 4;
 	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y());
-//	private final SpectralCurve radiance;
+	private final SpectralCurve radiance;
 	private final Vector3 sunDirection;
 	private final Vector3 sunDirectionWorld = new Vector3(1.0F, 1.0F, 1.0F).normalize();//Vector3.direction(new Point3(), new Point3(1000.0F, 3000.0F, 1000.0F)).normalize();
 	
@@ -78,13 +82,13 @@ public final class Sky {
 		this.sunDirection = this.sunDirectionWorld.untransform(this.orthoNormalBasis).normalize();
 		this.theta = acos(saturate(this.sunDirection.z, -1.0F, 1.0F));
 		
-//		if(this.sunDirection.z > 0.0F) {
-//			this.radiance = doCalculateAttenuatedSunlight(this.theta, this.turbidity);
-//			this.color = RGBColorSpace.SRGB.convertXYZToRGB(this.radiance.toXYZ().multiply(1e-4F));
-//		} else {
-//			this.radiance = new ConstantSpectralCurve(0.0F);
-//			this.color = Color.BLACK;
-//		}
+		if(this.sunDirection.z > 0.0F) {
+			this.radiance = doCalculateAttenuatedSunlight(this.theta, this.turbidity);
+			this.color = RGBColorSpace.SRGB.convertXYZToRGB(this.radiance.toXYZ().multiply(1e-4F));
+		} else {
+			this.radiance = new ConstantSpectralCurve(0.0F);
+			this.color = Color.BLACK;
+		}
 		
 		final float theta = this.theta;
 		final float theta2 = theta * theta;
@@ -150,7 +154,7 @@ public final class Sky {
 			this.colHistogram[x] /= this.colHistogram[w - 1];
 		}
 		
-//		this.jacobian = (2.0F * PI * PI) / (w * h);
+		this.jacobian = (2.0F * PI * PI) / (w * h);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,7 +237,6 @@ public final class Sky {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	@SuppressWarnings("unused")
 	private static SpectralCurve doCalculateAttenuatedSunlight(final float theta, final float turbidity) {
 		final float[] spectrum = new float[91];
 		

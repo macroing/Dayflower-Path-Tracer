@@ -580,6 +580,16 @@ public final class Math2 {
 	}
 	
 	/**
+	 * Returns the absolute version of {@code value}.
+	 * 
+	 * @param value an {@code int} value
+	 * @return the absolute version of {@code value}
+	 */
+	public static int abs(final int value) {
+		return Math.abs(value);
+	}
+	
+	/**
 	 * Returns the greater value of {@code a} and {@code b}.
 	 * 
 	 * @param a a value

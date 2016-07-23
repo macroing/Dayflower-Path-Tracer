@@ -30,12 +30,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Point2;
 import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Surface;
-import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
 
@@ -169,17 +166,7 @@ public final class Mesh {
 				
 				final String materialName = materials.get(indexA);
 				
-				final Color emission = meshConfigurator.getEmission(materialName);
-				
-				final float perlinNoiseAmount = meshConfigurator.getPerlinNoiseAmount(materialName);
-				final float perlinNoiseScale = meshConfigurator.getPerlinNoiseScale(materialName);
-				
-				final Material material = meshConfigurator.getMaterial(materialName);
-				
-				final Texture textureAlbedo = meshConfigurator.getTextureAlbedo(materialName);
-				final Texture textureNormal = meshConfigurator.getTextureNormal(materialName);
-				
-				final Surface surface = new Surface(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal);
+				final Surface surface = meshConfigurator.getSurface(materialName);
 				
 				final Vertex a = new Vertex(textureCoordinates.get(indexA), positions.get(indexA), materials.get(indexA), normals.get(indexA));
 				final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), materials.get(indexB), normals.get(indexB));
@@ -249,12 +236,20 @@ public final class Mesh {
 	 */
 	public static interface MeshConfigurator {
 		/**
+		 * Returns the {@link Surface} given a material name.
+		 * 
+		 * @param materialName the materialName
+		 * @return the {@code Surface} given a material name
+		 */
+		Surface getSurface(final String materialName);
+		
+		/**
 		 * Returns the emission given a material name.
 		 * 
 		 * @param materialName the material name
 		 * @return the emission given a material name
 		 */
-		Color getEmission(final String materialName);
+//		Color getEmission(final String materialName);
 		
 		/**
 		 * Returns the Perlin Noise amount given a material name.
@@ -262,7 +257,7 @@ public final class Mesh {
 		 * @param materialName the material name
 		 * @return the Perlin Noise amount given a material name
 		 */
-		float getPerlinNoiseAmount(final String materialName);
+//		float getPerlinNoiseAmount(final String materialName);
 		
 		/**
 		 * Returns the Perlin Noise scale given a material name.
@@ -270,7 +265,7 @@ public final class Mesh {
 		 * @param materialName the material name
 		 * @return the Perlin Noise scale given a material name
 		 */
-		float getPerlinNoiseScale(final String materialName);
+//		float getPerlinNoiseScale(final String materialName);
 		
 		/**
 		 * Returns the {@link Material} given a material name.
@@ -278,7 +273,7 @@ public final class Mesh {
 		 * @param materialName the material name
 		 * @return the {@code Material} given a material name
 		 */
-		Material getMaterial(final String materialName);
+//		Material getMaterial(final String materialName);
 		
 		/**
 		 * Returns the Albedo {@link Texture} given a material name.
@@ -286,7 +281,7 @@ public final class Mesh {
 		 * @param materialName the material name
 		 * @return the Albedo {@code Texture} given a material name
 		 */
-		Texture getTextureAlbedo(final String materialName);
+//		Texture getTextureAlbedo(final String materialName);
 		
 		/**
 		 * Returns the Normal Map {@link Texture} given a material name.
@@ -294,7 +289,7 @@ public final class Mesh {
 		 * @param materialName the material name
 		 * @return the Normal Map {@code Texture} given a material name
 		 */
-		Texture getTextureNormal(final String materialName);
+//		Texture getTextureNormal(final String materialName);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

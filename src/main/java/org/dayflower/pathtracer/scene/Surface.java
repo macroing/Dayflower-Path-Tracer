@@ -18,6 +18,8 @@
  */
 package org.dayflower.pathtracer.scene;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
@@ -29,35 +31,28 @@ import org.dayflower.pathtracer.color.Color;
  * @author J&#246;rgen Lundgren
  */
 public final class Surface {
+	private static final Map<String, Surface> INSTANCES = new HashMap<>();
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final Color emission;
 	private final float perlinNoiseAmount;
 	private final float perlinNoiseScale;
+	private final int hashCode;
 	private final Material material;
 	private final Texture textureAlbedo;
 	private final Texture textureNormal;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	/**
-	 * Constructs a new {@code Surface} instance.
-	 * <p>
-	 * If either {@code emission}, {@code material}, {@code textureAlbedo} or {@code textureNormal} are {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param emission the emission of this {@code Surface}
-	 * @param perlinNoiseAmount the Perlin Noise amount of this {@code Surface}
-	 * @param perlinNoiseScale the Perlin Noise scale of this {@code Surface}
-	 * @param material the {@link Material} of this {@code Surface}
-	 * @param textureAlbedo the Albedo {@link Texture} of this {@code Surface}
-	 * @param textureNormal the Normal Map {@code Texture} of this {@code Surface}
-	 * @throws NullPointerException thrown if, and only if, either {@code emission}, {@code material}, {@code textureAlbedo} or {@code textureNormal} are {@code null}
-	 */
-	public Surface(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal) {
-		this.emission = Objects.requireNonNull(emission, "emission == null");
+	private Surface(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal) {
+		this.emission = emission;
 		this.perlinNoiseAmount = perlinNoiseAmount;
 		this.perlinNoiseScale = perlinNoiseScale;
-		this.material = Objects.requireNonNull(material, "material == null");
-		this.textureAlbedo = Objects.requireNonNull(textureAlbedo, "textureAlbedo == null");
-		this.textureNormal = Objects.requireNonNull(textureNormal, "textureNormal == null");
+		this.material = material;
+		this.textureAlbedo = textureAlbedo;
+		this.textureNormal = textureNormal;
+		this.hashCode = Objects.hash(this.emission, Float.valueOf(this.perlinNoiseAmount), Float.valueOf(this.perlinNoiseScale), this.material, this.textureAlbedo, this.textureNormal);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,25 +67,7 @@ public final class Surface {
 	 */
 	@Override
 	public boolean equals(final Object object) {
-		if(object == this) {
-			return true;
-		} else if(!(object instanceof Surface)) {
-			return false;
-		} else if(!Objects.equals(this.emission, Surface.class.cast(object).emission)) {
-			return false;
-		} else if(Float.compare(this.perlinNoiseAmount, Surface.class.cast(object).perlinNoiseAmount) != 0) {
-			return false;
-		} else if(Float.compare(this.perlinNoiseScale, Surface.class.cast(object).perlinNoiseScale) != 0) {
-			return false;
-		} else if(!Objects.equals(this.material, Surface.class.cast(object).material)) {
-			return false;
-		} else if(!Objects.equals(this.textureAlbedo, Surface.class.cast(object).textureAlbedo)) {
-			return false;
-		} else if(!Objects.equals(this.textureNormal, Surface.class.cast(object).textureNormal)) {
-			return false;
-		} else {
-			return true;
-		}
+		return object == this;
 	}
 	
 	/**
@@ -136,7 +113,7 @@ public final class Surface {
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.emission, Float.valueOf(this.perlinNoiseAmount), Float.valueOf(this.perlinNoiseScale), this.material, this.textureAlbedo, this.textureNormal);
+		return this.hashCode;
 	}
 	
 	/**
@@ -174,5 +151,36 @@ public final class Surface {
 	 */
 	public Texture getTextureNormal() {
 		return this.textureNormal;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns a {@code Surface} instance.
+	 * <p>
+	 * If either {@code emission}, {@code material}, {@code textureAlbedo} or {@code textureNormal} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param emission the emission of the {@code Surface}
+	 * @param perlinNoiseAmount the Perlin Noise amount of the {@code Surface}
+	 * @param perlinNoiseScale the Perlin Noise scale of the {@code Surface}
+	 * @param material the {@link Material} of the {@code Surface}
+	 * @param textureAlbedo the Albedo {@link Texture} of the {@code Surface}
+	 * @param textureNormal the Normal Map {@code Texture} of the {@code Surface}
+	 * @return a {@code Surface} instance
+	 * @throws NullPointerException thrown if, and only if, either {@code emission}, {@code material}, {@code textureAlbedo} or {@code textureNormal} are {@code null}
+	 */
+	public static Surface getInstance(final Color emission, final float perlinNoiseAmount, final float perlinNoiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal) {
+		final int hashCodeEmission = emission.hashCode();
+		final int hashCodePerlinNoiseAmount = Float.hashCode(perlinNoiseAmount);
+		final int hashCodePerlinNoiseScale = Float.hashCode(perlinNoiseScale);
+		final int hashCodeMaterial = material.hashCode();
+		final int hashCodeTextureAlbedo = textureAlbedo.hashCode();
+		final int hashCodeTextureNormal = textureNormal.hashCode();
+		
+		final String key = "Surface" + hashCodeEmission + hashCodePerlinNoiseAmount + hashCodePerlinNoiseScale + hashCodeMaterial + hashCodeTextureAlbedo + hashCodeTextureNormal;
+		
+		synchronized(INSTANCES) {
+			return INSTANCES.computeIfAbsent(key, key0 -> new Surface(emission, perlinNoiseAmount, perlinNoiseScale, material, textureAlbedo, textureNormal));
+		}
 	}
 }

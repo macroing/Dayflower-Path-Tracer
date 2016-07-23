@@ -152,6 +152,15 @@ public final class ImageTexture implements Texture {
 	}
 	
 	/**
+	 * Returns the length of the data in this {@code ImageTexture} instance.
+	 * 
+	 * @return the length of the data in this {@code ImageTexture} instance
+	 */
+	public int getDataLength() {
+		return this.data.length;
+	}
+	
+	/**
 	 * Returns a hash code for this {@code ImageTexture} instance.
 	 * 
 	 * @return a hash code for this {@code ImageTexture} instance

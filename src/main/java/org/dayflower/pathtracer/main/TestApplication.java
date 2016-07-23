@@ -21,6 +21,7 @@ package org.dayflower.pathtracer.main;
 import static org.dayflower.pathtracer.math.Math2.max;
 import static org.dayflower.pathtracer.math.Math2.min;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -36,9 +37,13 @@ import com.amd.aparapi.Range;
 
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.camera.Camera;
+import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.RendererKernel;
+import org.dayflower.pathtracer.scene.Matrix44;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
+import org.dayflower.pathtracer.scene.Vector4;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.util.FPSCounter;
 
@@ -56,7 +61,7 @@ public final class TestApplication extends AbstractApplication {
 	private static final float[][] FILTER_GRADIENT_VERTICAL = new float[][] {new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}};
 	private static final float[][] FILTER_SHARPEN = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 9.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
 	private static final String ENGINE_NAME = "Dayflower Engine";
-	private static final String ENGINE_VERSION = "v.0.0.14";
+	private static final String ENGINE_VERSION = "v.0.0.16";
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -71,7 +76,7 @@ public final class TestApplication extends AbstractApplication {
 	private final Label labelRenderType = new Label("Type: Path Tracer");
 	private final Label labelSPS = new Label("SPS: 00000000");
 	private final RendererKernel rendererKernel;
-	private final Scene scene = Scenes.newGirlScene();
+	private final Scene scene = Scenes.newHouseScene();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -171,6 +176,7 @@ public final class TestApplication extends AbstractApplication {
 		print("- H: Path Tracing or Ray Casting");
 		print("- K: Toggle walk-lock");
 		print("- L: Toggle mouse recentering and cursor visibility");
+		print("- C: Toggle between camera lenses");
 		print("- M: Increase maximum ray depth");
 		print("- N: Decrease maximum ray depth");
 		print("- UP ARROW: Decrease pitch");
@@ -178,16 +184,24 @@ public final class TestApplication extends AbstractApplication {
 		print("- DOWN ARROW: Increase pitch");
 		print("- RIGHT ARROW: Decrease yaw");
 		print("- MOVE MOUSE: Look around");
+		print("- 1: Toggle Blur effect");
+		print("- 2: Toggle Ddge Detection effect");
+		print("- 3: Toggle Emboss effect");
+		print("- 4: Toggle Horizontal Gradient effect");
+		print("- 5: Toggle Vertical Gradient effect");
+		print("- 6: Toggle Sharpen effect");
+		print("- 7: Toggle Grayscale effect");
+		print("- 8: Toggle Sepia Tone effect");
 		print("");
 		print("Supported Features:");
 		print("- Shape: Plane");
 		print("- Shape: Sphere");
 		print("- Shape: Triangle");
-		print("- Material: Clear Coat");
-		print("- Material: Diffuse");
-		print("- Material: Metal");
-		print("- Material: Refractive");
-		print("- Material: Specular");
+		print("- Material: Clear Coat (Reflection + Diffuse)");
+		print("- Material: Diffuse (Lambertian)");
+		print("- Material: Metal (Phong)");
+		print("- Material: Glass (Reflection + Refraction)");
+		print("- Material: Mirror (Reflection)");
 		print("- Texture: Checkerboard");
 		print("- Texture: Image");
 		print("- Texture: Solid");
@@ -196,6 +210,18 @@ public final class TestApplication extends AbstractApplication {
 		print("- Normal Mapping: Perlin Noise");
 		print("- Cosine-Weighted Hemisphere-Sampling of Sun");
 		print("- Acceleration Structure: Bounding Volume Hierarchy");
+		print("- Camera Lens: Thin");
+		print("- Camera Lens: Fisheye");
+		print("- Effect: Blur");
+		print("- Effect: Detect Edges");
+		print("- Effect: Emboss");
+		print("- Effect: Gradient: Horizontal");
+		print("- Effect: Gradient: Vertical");
+		print("- Effect: Grayscale");
+		print("- Effect: Sepia Tone");
+		print("- Effect: Sharpen");
+		print("- Renderer: Path Tracing");
+		print("- Renderer: Ray Casting");
 		
 		setCursorHidden(true);
 		setRecenteringMouse(true);
@@ -240,9 +266,20 @@ public final class TestApplication extends AbstractApplication {
 		
 		final FPSCounter fPSCounter = getFPSCounter();
 		
+		final Matrix44 perspective = Matrix44.perspective(40.0F, getCanvasWidth() / getCanvasHeight(), 0.1F, 1000.0F);
+		final Matrix44 screenSpaceTransform = Matrix44.screenSpaceTransform(getCanvasWidth() / 2.0F, getCanvasHeight() / 2.0F);
+		final Matrix44 matrix = screenSpaceTransform.multiply(perspective);
+		
 		final RendererKernel rendererKernel = this.rendererKernel;
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> rendererKernel.dispose()));
+		
+		final AtomicBoolean isFilteringBlur = new AtomicBoolean();
+		final AtomicBoolean isFilteringDetectEdges = new AtomicBoolean();
+		final AtomicBoolean isFilteringEmboss = new AtomicBoolean();
+		final AtomicBoolean isFilteringGradientHorizontal = new AtomicBoolean();
+		final AtomicBoolean isFilteringGradientVertical = new AtomicBoolean();
+		final AtomicBoolean isFilteringSharpen = new AtomicBoolean();
 		
 		while(true) {
 			final Range range = Range.create(getCanvasWidth() * getCanvasHeight());
@@ -254,8 +291,80 @@ public final class TestApplication extends AbstractApplication {
 				camera.strafe(-movement);
 			}
 			
+			if(isKeyPressed(KeyCode.B)) {
+//				TODO: Fix this Bounding Volume Hierarchy wireframe rendering!
+				
+				final CompiledScene compiledScene = rendererKernel.getCompiledScene();
+				
+				final float[] boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
+				
+				int boundingVolumeHierarchyOffset = 0;
+				
+				do {
+					final float minimumX = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 2];
+					final float minimumY = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3];
+					final float minimumZ = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 4];
+					
+					final float maximumX = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 5];
+					final float maximumY = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 6];
+					final float maximumZ = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 7];
+					
+					final Vector4 v0 = new Vector4(minimumX, minimumY, minimumZ).transform(matrix);
+					final Vector4 v1 = new Vector4(maximumX, maximumY, maximumZ).transform(matrix);
+					final Vector4 v2 = new Vector4(minimumX, maximumY, maximumZ).transform(matrix);
+					final Vector4 v3 = new Vector4(minimumX, maximumY, minimumZ).transform(matrix);
+					final Vector4 v4 = new Vector4(maximumX, maximumY, minimumZ).transform(matrix);
+					final Vector4 v5 = new Vector4(maximumX, minimumY, maximumZ).transform(matrix);
+					final Vector4 v6 = new Vector4(maximumX, minimumY, minimumZ).transform(matrix);
+					final Vector4 v7 = new Vector4(minimumX, minimumY, maximumZ).transform(matrix);
+					
+					rendererKernel.drawLine((int)(v0.x / v0.w), (int)(v0.y / v0.w), (int)(v3.x / v3.w), (int)(v3.y / v3.w), Color.RED);
+					rendererKernel.drawLine((int)(v3.x / v3.w), (int)(v3.y / v3.w), (int)(v4.x / v4.w), (int)(v4.y / v4.w), Color.RED);
+					rendererKernel.drawLine((int)(v4.x / v4.w), (int)(v4.y / v4.w), (int)(v6.x / v6.w), (int)(v6.y / v6.w), Color.RED);
+					rendererKernel.drawLine((int)(v6.x / v6.w), (int)(v6.y / v6.w), (int)(v0.x / v0.w), (int)(v0.y / v0.w), Color.RED);
+					
+					boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
+				} while(boundingVolumeHierarchyOffset != -1);
+			}
+			
+			if(isKeyPressed(KeyCode.C, true)) {
+				camera.setThinCameraLens(!camera.isThinCameraLens());
+			}
+			
 			if(isKeyPressed(KeyCode.D)) {
 				camera.strafe(movement);
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT1, true)) {
+				isFilteringBlur.set(!isFilteringBlur.get());
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT2, true)) {
+				isFilteringDetectEdges.set(!isFilteringDetectEdges.get());
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT3, true)) {
+				isFilteringEmboss.set(!isFilteringEmboss.get());
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT4, true)) {
+				isFilteringGradientHorizontal.set(!isFilteringGradientHorizontal.get());
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT5, true)) {
+				isFilteringGradientVertical.set(!isFilteringGradientVertical.get());
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT6, true)) {
+				isFilteringSharpen.set(!isFilteringSharpen.get());
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT7, true)) {
+				rendererKernel.setEffectGrayScale(!rendererKernel.isEffectGrayScale());
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT8, true)) {
+				rendererKernel.setEffectSepiaTone(!rendererKernel.isEffectSepiaTone());
 			}
 			
 			if(isKeyPressed(KeyCode.DOWN)) {
@@ -378,7 +487,29 @@ public final class TestApplication extends AbstractApplication {
 			try {
 				rendererKernel.get(rendererKernel.getPixels());
 				
-//				doFilterEmboss(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				if(isFilteringBlur.get()) {
+					doFilterBlur(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				}
+				
+				if(isFilteringDetectEdges.get()) {
+					doFilterDetectEdges(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				}
+				
+				if(isFilteringEmboss.get()) {
+					doFilterEmboss(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				}
+				
+				if(isFilteringGradientHorizontal.get()) {
+					doFilterGradientHorizontal(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				}
+				
+				if(isFilteringGradientVertical.get()) {
+					doFilterGradientVertical(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				}
+				
+				if(isFilteringSharpen.get()) {
+					doFilterSharpen(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				}
 			} finally {
 				lock.unlock();
 			}
@@ -488,32 +619,26 @@ public final class TestApplication extends AbstractApplication {
 		}
 	}
 	
-	@SuppressWarnings("unused")
 	private static void doFilterBlur(final byte[] pixels, final int width, final int height) {
 		doFilter(pixels, width, height, 5, 5, FILTER_BLUR, 1.0F / 13.0F, 0.0F);
 	}
 	
-	@SuppressWarnings("unused")
 	private static void doFilterDetectEdges(final byte[] pixels, final int width, final int height) {
 		doFilter(pixels, width, height, 3, 3, FILTER_DETECT_EDGES, 1.0F, 0.0F);
 	}
 	
-	@SuppressWarnings("unused")
 	private static void doFilterEmboss(final byte[] pixels, final int width, final int height) {
 		doFilter(pixels, width, height, 3, 3, FILTER_EMBOSS, 1.0F, 128.0F);
 	}
 	
-	@SuppressWarnings("unused")
 	private static void doFilterGradientHorizontal(final byte[] pixels, final int width, final int height) {
 		doFilter(pixels, width, height, 3, 3, FILTER_GRADIENT_HORIZONTAL, 1.0F, 0.0F);
 	}
 	
-	@SuppressWarnings("unused")
 	private static void doFilterGradientVertical(final byte[] pixels, final int width, final int height) {
 		doFilter(pixels, width, height, 3, 3, FILTER_GRADIENT_VERTICAL, 1.0F, 0.0F);
 	}
 	
-	@SuppressWarnings("unused")
 	private static void doFilterSharpen(final byte[] pixels, final int width, final int height) {
 		doFilter(pixels, width, height, 3, 3, FILTER_SHARPEN, 1.0F, 0.0F);
 	}

@@ -151,4 +151,14 @@ public final class Vector4 {
 	public Vector4 subtract(final Vector4 vector) {
 		return new Vector4(this.x - vector.x, this.y - vector.y, this.z - vector.z, this.w - vector.w);
 	}
+	
+//	TODO: Add Javadocs.
+	public Vector4 transform(final Matrix44 m) {
+		final float x = m.e11 * this.x + m.e12 * this.y + m.e13 * this.z + m.e14 * this.w;
+		final float y = m.e21 * this.x + m.e22 * this.y + m.e23 * this.z + m.e24 * this.w;
+		final float z = m.e31 * this.x + m.e32 * this.y + m.e33 * this.z + m.e34 * this.w;
+		final float w = m.e41 * this.x + m.e42 * this.y + m.e43 * this.z + m.e44 * this.w;
+		
+		return new Vector4(x, y, z, w);
+	}
 }

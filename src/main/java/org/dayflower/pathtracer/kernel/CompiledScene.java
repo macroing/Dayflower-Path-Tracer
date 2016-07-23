@@ -18,6 +18,10 @@
  */
 package org.dayflower.pathtracer.kernel;
 
+import static org.dayflower.pathtracer.math.Math2.cos;
+import static org.dayflower.pathtracer.math.Math2.sin;
+import static org.dayflower.pathtracer.math.Math2.toRadians;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -57,6 +61,10 @@ import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SolidTexture;
 
 //TODO: Add Javadocs.
+//TODO: Split "float[] shapes" into "float[] shapes" and "int[] triangles".
+//TODO: Remove "type" from "int[] triangles".
+//TODO: Update the RendererKernel with the new changes.
+//TODO: See if "int[] triangles" could be changed into "short[] triangles" instead, or "char[] triangles".
 public final class CompiledScene {
 //	TODO: Add Javadocs.
 	public static final int BVH_NODE_TYPE_LEAF = 2;
@@ -89,37 +97,43 @@ public final class CompiledScene {
 	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1_R = CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1 + 0;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_DEGREES = 8;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_COS = 8;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U = 9;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN = 9;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_V = 10;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U = 10;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_SIZE = 11;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_V = 11;
+	
+//	TODO: Add Javadocs.
+	public static final int CHECKERBOARD_TEXTURE_SIZE = 12;
 	
 //	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_TYPE = 1;
 	
 //	TODO: Add Javadocs.
-	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_DATA = 7;
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_DATA = 8;
 	
 //	TODO: Add Javadocs.
-	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_DEGREES = 2;
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_HEIGHT = 5;
 	
 //	TODO: Add Javadocs.
-	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_HEIGHT = 4;
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_COS = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_U = 5;
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_V = 6;
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_U = 6;
 	
 //	TODO: Add Javadocs.
-	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_WIDTH = 3;
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_V = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_WIDTH = 4;
 	
 //	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_TYPE = 3;
@@ -344,70 +358,17 @@ public final class CompiledScene {
 //	TODO: Add Javadocs.
 	public void write(final DataOutputStream dataOutputStream) {
 		try {
-			final int boundingVolumeHierarchyLength = this.boundingVolumeHierarchy.length;
-			final int cameraLength = this.camera.length;
-			final int point2sLength = this.point2s.length;
-			final int point3sLength = this.point3s.length;
-			final int shapesLength = this.shapes.length;
-			final int surfacesLength = this.surfaces.length;
-			final int texturesLength = this.textures.length;
-			final int vector3sLength = this.vector3s.length;
-			final int shapeOffsetsLength = this.shapeOffsets.length;
-			
 			dataOutputStream.writeUTF(this.name);
-			dataOutputStream.writeInt(boundingVolumeHierarchyLength);
 			
-			for(final float value : this.boundingVolumeHierarchy) {
-				dataOutputStream.writeFloat(value);
-			}
-			
-			dataOutputStream.writeInt(cameraLength);
-			
-			for(final float value : this.camera) {
-				dataOutputStream.writeFloat(value);
-			}
-			
-			dataOutputStream.writeInt(point2sLength);
-			
-			for(final float value : this.point2s) {
-				dataOutputStream.writeFloat(value);
-			}
-			
-			dataOutputStream.writeInt(point3sLength);
-			
-			for(final float value : this.point3s) {
-				dataOutputStream.writeFloat(value);
-			}
-			
-			dataOutputStream.writeInt(shapesLength);
-			
-			for(final float value : this.shapes) {
-				dataOutputStream.writeFloat(value);
-			}
-			
-			dataOutputStream.writeInt(surfacesLength);
-			
-			for(final float value : this.surfaces) {
-				dataOutputStream.writeFloat(value);
-			}
-			
-			dataOutputStream.writeInt(texturesLength);
-			
-			for(final float value : this.textures) {
-				dataOutputStream.writeFloat(value);
-			}
-			
-			dataOutputStream.writeInt(vector3sLength);
-			
-			for(final float value : this.vector3s) {
-				dataOutputStream.writeFloat(value);
-			}
-			
-			dataOutputStream.writeInt(shapeOffsetsLength);
-			
-			for(final int value : this.shapeOffsets) {
-				dataOutputStream.writeInt(value);
-			}
+			doWriteFloatArray(dataOutputStream, this.boundingVolumeHierarchy);
+			doWriteFloatArray(dataOutputStream, this.camera);
+			doWriteFloatArray(dataOutputStream, this.point2s);
+			doWriteFloatArray(dataOutputStream, this.point3s);
+			doWriteFloatArray(dataOutputStream, this.shapes);
+			doWriteFloatArray(dataOutputStream, this.surfaces);
+			doWriteFloatArray(dataOutputStream, this.textures);
+			doWriteFloatArray(dataOutputStream, this.vector3s);
+			doWriteIntArray(dataOutputStream, this.shapeOffsets);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -462,77 +423,15 @@ public final class CompiledScene {
 		try {
 			final String name = dataInputStream.readUTF();
 			
-			final int boundingVolumeHierarchyLength = dataInputStream.readInt();
-			
-			final float[] boundingVolumeHierarchy = new float[boundingVolumeHierarchyLength];
-			
-			for(int i = 0; i < boundingVolumeHierarchyLength; i++) {
-				boundingVolumeHierarchy[i] = dataInputStream.readFloat();
-			}
-			
-			final int cameraLength = dataInputStream.readInt();
-			
-			final float[] cameraArray = camera.getArray();
-			
-			for(int i = 0; i < cameraLength; i++) {
-				cameraArray[i] = dataInputStream.readFloat();
-			}
-			
-			final int point2sLength = dataInputStream.readInt();
-			
-			final float[] point2s = new float[point2sLength];
-			
-			for(int i = 0; i < point2sLength; i++) {
-				point2s[i] = dataInputStream.readFloat();
-			}
-			
-			final int point3sLength = dataInputStream.readInt();
-			
-			final float[] point3s = new float[point3sLength];
-			
-			for(int i = 0; i < point3sLength; i++) {
-				point3s[i] = dataInputStream.readFloat();
-			}
-			
-			final int shapesLength = dataInputStream.readInt();
-			
-			final float[] shapes = new float[shapesLength];
-			
-			for(int i = 0; i < shapesLength; i++) {
-				shapes[i] = dataInputStream.readFloat();
-			}
-			
-			final int surfacesLength = dataInputStream.readInt();
-			
-			final float[] surfaces = new float[surfacesLength];
-			
-			for(int i = 0; i < surfacesLength; i++) {
-				surfaces[i] = dataInputStream.readFloat();
-			}
-			
-			final int texturesLength = dataInputStream.readInt();
-			
-			final float[] textures = new float[texturesLength];
-			
-			for(int i = 0; i < texturesLength; i++) {
-				textures[i] = dataInputStream.readFloat();
-			}
-			
-			final int vector3sLength = dataInputStream.readInt();
-			
-			final float[] vector3s = new float[vector3sLength];
-			
-			for(int i = 0; i < vector3sLength; i++) {
-				vector3s[i] = dataInputStream.readFloat();
-			}
-			
-			final int shapeOffsetsLength = dataInputStream.readInt();
-			
-			final int[] shapeOffsets = new int[shapeOffsetsLength];
-			
-			for(int i = 0; i < shapeOffsetsLength; i++) {
-				shapeOffsets[i] = dataInputStream.readInt();
-			}
+			final float[] boundingVolumeHierarchy = doReadFloatArray(dataInputStream);
+			final float[] cameraArray = doReadFloatArray(dataInputStream, camera.getArray());
+			final float[] point2s = doReadFloatArray(dataInputStream);
+			final float[] point3s = doReadFloatArray(dataInputStream);
+			final float[] shapes = doReadFloatArray(dataInputStream);
+			final float[] surfaces = doReadFloatArray(dataInputStream);
+			final float[] textures = doReadFloatArray(dataInputStream);
+			final float[] vector3s = doReadFloatArray(dataInputStream);
+			final int[] shapeOffsets = doReadIntArray(dataInputStream);
 			
 			return new CompiledScene(boundingVolumeHierarchy, cameraArray, point2s, point3s, shapes, surfaces, textures, vector3s, shapeOffsets, name);
 		} catch(final IOException e) {
@@ -763,6 +662,28 @@ public final class CompiledScene {
 		return vector3s0;
 	}
 	
+	private static float[] doReadFloatArray(final DataInputStream dataInputStream) throws IOException {
+		final int length = dataInputStream.readInt();
+		
+		final float[] array = new float[length];
+		
+		for(int i = 0; i < length; i++) {
+			array[i] = dataInputStream.readFloat();
+		}
+		
+		return array;
+	}
+	
+	private static float[] doReadFloatArray(final DataInputStream dataInputStream, final float[] array) throws IOException {
+		final int length = dataInputStream.readInt();
+		
+		for(int i = 0; i < length; i++) {
+			array[i] = dataInputStream.readFloat();
+		}
+		
+		return array;
+	}
+	
 	private static float[] doToFloatArray(final Shape shape, final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s) {
 		if(shape instanceof Plane) {
 			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces, point3s, vector3s);
@@ -810,29 +731,31 @@ public final class CompiledScene {
 			checkerboardTexture.getColor1().r,
 			checkerboardTexture.getColor1().g,
 			checkerboardTexture.getColor1().b,
-			checkerboardTexture.getDegrees(),
+			cos(toRadians(checkerboardTexture.getDegrees())),
+			sin(toRadians(checkerboardTexture.getDegrees())),
 			checkerboardTexture.getScaleU(),
 			checkerboardTexture.getScaleV()
 		};
 	}
 	
 	private static float[] doToFloatArrayImageTexture(final ImageTexture imageTexture) {
-		final int size = 7 + imageTexture.getData().length;
+		final int size = 8 + imageTexture.getData().length;
 		
 		final float[] floatArray = new float[size];
 		
 		floatArray[0] = IMAGE_TEXTURE_TYPE;
 		floatArray[1] = size;
-		floatArray[2] = imageTexture.getDegrees();
-		floatArray[3] = imageTexture.getWidth();
-		floatArray[4] = imageTexture.getHeight();
-		floatArray[5] = imageTexture.getScaleU();
-		floatArray[6] = imageTexture.getScaleV();
+		floatArray[2] = cos(toRadians(imageTexture.getDegrees()));
+		floatArray[3] = sin(toRadians(imageTexture.getDegrees()));
+		floatArray[4] = imageTexture.getWidth();
+		floatArray[5] = imageTexture.getHeight();
+		floatArray[6] = imageTexture.getScaleU();
+		floatArray[7] = imageTexture.getScaleV();
 		
 		final float[] data = imageTexture.getData();
 		
 		for(int i = 0; i < data.length; i++) {
-			floatArray[i + 7] = data[i];
+			floatArray[i + 8] = data[i];
 		}
 		
 		return floatArray;
@@ -978,7 +901,7 @@ public final class CompiledScene {
 		if(texture instanceof CheckerboardTexture) {
 			return CHECKERBOARD_TEXTURE_SIZE;
 		} else if(texture instanceof ImageTexture) {
-			return 7 + ImageTexture.class.cast(texture).getData().length;
+			return 8 + ImageTexture.class.cast(texture).getData().length;
 		} else if(texture instanceof SolidTexture) {
 			return SOLID_TEXTURE_SIZE;
 		} else {
@@ -1008,6 +931,18 @@ public final class CompiledScene {
 		}
 		
 		return shapeOffsets;
+	}
+	
+	private static int[] doReadIntArray(final DataInputStream dataInputStream) throws IOException {
+		final int length = dataInputStream.readInt();
+		
+		final int[] array = new int[length];
+		
+		for(int i = 0; i < length; i++) {
+			array[i] = dataInputStream.readInt();
+		}
+		
+		return array;
 	}
 	
 	private static List<Node> doToList(final Node node) {
@@ -1234,5 +1169,21 @@ public final class CompiledScene {
 		}
 		
 		System.arraycopy(shapes1, 0, shapes0, 0, shapes1.length);
+	}
+	
+	private static void doWriteFloatArray(final DataOutputStream dataOutputStream, final float[] array) throws IOException {
+		dataOutputStream.writeInt(array.length);
+		
+		for(final float value : array) {
+			dataOutputStream.writeFloat(value);
+		}
+	}
+	
+	private static void doWriteIntArray(final DataOutputStream dataOutputStream, final int[] array) throws IOException {
+		dataOutputStream.writeInt(array.length);
+		
+		for(final int value : array) {
+			dataOutputStream.writeInt(value);
+		}
 	}
 }

@@ -47,13 +47,15 @@ import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SolidTexture;
 
-final class Scenes {
+//TODO: Add Javadocs.
+public final class Scenes {
 	private Scenes() {
 		
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+//	TODO: Add Javadocs.
 	public static Scene newCarScene() {
 		final Texture textureGroundAlbedo = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);
@@ -71,74 +73,42 @@ final class Scenes {
 		final Texture textureCarMisc = new SolidTexture(Color.GRAY);
 		final Texture textureCarMaterial = new SolidTexture(Color.GRAY);
 		
-		final Map<String, Material> materials = new HashMap<>();
-		final Map<String, Texture> textureAlbedos = new HashMap<>();
+		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarAlbedo, textureCarNormalMap);
 		
-		materials.put("wind_glass", Material.GLASS);
-		materials.put("Body_paint", Material.CLEAR_COAT);
-		materials.put("Body_paint0", Material.CLEAR_COAT);
-		materials.put("Body_paint1", Material.CLEAR_COAT);
-		materials.put("Body_paint2", Material.CLEAR_COAT);
-		materials.put("Body_paint3", Material.CLEAR_COAT);
-		materials.put("Badging_Chrome", Material.PHONG_METAL);
-		materials.put("Misc_Chrome", Material.PHONG_METAL);
-		materials.put("Misc_Chrome0", Material.PHONG_METAL);
-		materials.put("Misc_Chrome1", Material.PHONG_METAL);
-		materials.put("Misc_Chrome2", Material.PHONG_METAL);
-		materials.put("Misc_Chrome3", Material.PHONG_METAL);
-		materials.put("Misc_Chrome4", Material.PHONG_METAL);
-		materials.put("Driver", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("DoorLine", Material.PHONG_METAL);
-		materials.put("Tire_Back", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("Tire_Tread", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("Tire_Sidewall", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("Misc", Material.PHONG_METAL);
-		materials.put("Misc0", Material.PHONG_METAL);
-		materials.put("Misc1", Material.PHONG_METAL);
-		materials.put("Misc2", Material.PHONG_METAL);
-		materials.put("Misc3", Material.PHONG_METAL);
-		materials.put("Misc4", Material.PHONG_METAL);
-		materials.put("Material__583", Material.PHONG_METAL);
-		materials.put("Material__586", Material.PHONG_METAL);
-		materials.put("Material__589", Material.PHONG_METAL);
-		materials.put("Material__593", Material.PHONG_METAL);
-		materials.put("Material__594", Material.PHONG_METAL);
-		materials.put("Material__597", Material.PHONG_METAL);
-		materials.put("Material__598", Material.PHONG_METAL);
-		materials.put("Material__600", Material.PHONG_METAL);
+		final Map<String, Surface> surfaces = new HashMap<>();
 		
-		textureAlbedos.put("wind_glass", textureCarWindGlass);
-		textureAlbedos.put("Body_paint", textureCarBodyPaint);
-		textureAlbedos.put("Body_paint0", textureCarBodyPaint);
-		textureAlbedos.put("Body_paint1", textureCarBodyPaint);
-		textureAlbedos.put("Body_paint2", textureCarBodyPaint);
-		textureAlbedos.put("Body_paint3", textureCarBodyPaint);
-		textureAlbedos.put("Badging_Chrome", textureCarChrome);
-		textureAlbedos.put("Misc_Chrome", textureCarChrome);
-		textureAlbedos.put("Misc_Chrome0", textureCarChrome);
-		textureAlbedos.put("Misc_Chrome1", textureCarChrome);
-		textureAlbedos.put("Misc_Chrome2", textureCarChrome);
-		textureAlbedos.put("Misc_Chrome3", textureCarChrome);
-		textureAlbedos.put("Misc_Chrome4", textureCarChrome);
-		textureAlbedos.put("Driver", textureCarDriver);
-		textureAlbedos.put("DoorLine", textureCarDoorLine);
-		textureAlbedos.put("Tire_Back", textureCarTireBack);
-		textureAlbedos.put("Tire_Tread", textureCarTireTread);
-		textureAlbedos.put("Tire_Sidewall", textureCarTireSidewall);
-		textureAlbedos.put("Misc", textureCarMisc);
-		textureAlbedos.put("Misc0", textureCarMisc);
-		textureAlbedos.put("Misc1", textureCarMisc);
-		textureAlbedos.put("Misc2", textureCarMisc);
-		textureAlbedos.put("Misc3", textureCarMisc);
-		textureAlbedos.put("Misc4", textureCarMisc);
-		textureAlbedos.put("Material__583", textureCarMaterial);
-		textureAlbedos.put("Material__586", textureCarMaterial);
-		textureAlbedos.put("Material__589", textureCarMaterial);
-		textureAlbedos.put("Material__593", textureCarMaterial);
-		textureAlbedos.put("Material__594", textureCarMaterial);
-		textureAlbedos.put("Material__597", textureCarMaterial);
-		textureAlbedos.put("Material__598", textureCarMaterial);
-		textureAlbedos.put("Material__600", textureCarMaterial);
+		surfaces.put("wind_glass", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, textureCarWindGlass, textureCarNormalMap));
+		surfaces.put("Body_paint", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureCarBodyPaint, textureCarNormalMap));
+		surfaces.put("Body_paint0", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureCarBodyPaint, textureCarNormalMap));
+		surfaces.put("Body_paint1", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureCarBodyPaint, textureCarNormalMap));
+		surfaces.put("Body_paint2", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureCarBodyPaint, textureCarNormalMap));
+		surfaces.put("Body_paint3", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureCarBodyPaint, textureCarNormalMap));
+		surfaces.put("Badging_Chrome", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarChrome, textureCarNormalMap));
+		surfaces.put("Misc_Chrome", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarChrome, textureCarNormalMap));
+		surfaces.put("Misc_Chrome0", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarChrome, textureCarNormalMap));
+		surfaces.put("Misc_Chrome1", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarChrome, textureCarNormalMap));
+		surfaces.put("Misc_Chrome2", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarChrome, textureCarNormalMap));
+		surfaces.put("Misc_Chrome3", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarChrome, textureCarNormalMap));
+		surfaces.put("Misc_Chrome4", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarChrome, textureCarNormalMap));
+		surfaces.put("Driver", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarDriver, textureCarNormalMap));
+		surfaces.put("DoorLine", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarDoorLine, textureCarNormalMap));
+		surfaces.put("Tire_Back", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarTireBack, textureCarNormalMap));
+		surfaces.put("Tire_Tread", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarTireTread, textureCarNormalMap));
+		surfaces.put("Tire_Sidewall", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarTireSidewall, textureCarNormalMap));
+		surfaces.put("Misc", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMisc, textureCarNormalMap));
+		surfaces.put("Misc0", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMisc, textureCarNormalMap));
+		surfaces.put("Misc1", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMisc, textureCarNormalMap));
+		surfaces.put("Misc2", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMisc, textureCarNormalMap));
+		surfaces.put("Misc3", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMisc, textureCarNormalMap));
+		surfaces.put("Misc4", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMisc, textureCarNormalMap));
+		surfaces.put("Material__583", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
+		surfaces.put("Material__586", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
+		surfaces.put("Material__589", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
+		surfaces.put("Material__593", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
+		surfaces.put("Material__594", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
+		surfaces.put("Material__597", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
+		surfaces.put("Material__598", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
+		surfaces.put("Material__600", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
 		
 		//			wind_glass
 		//			Body_paint
@@ -183,45 +153,13 @@ final class Scenes {
 		//			Material__600
 		//License0
 		
-		final MeshConfigurator meshConfigurator = new MeshConfigurator() {
-			@Override
-			public Color getEmission(final String materialName) {
-				return Color.BLACK;
-			}
-			
-			@Override
-			public float getPerlinNoiseAmount(final String materialName) {
-				return 0.0F;
-			}
-			
-			@Override
-			public float getPerlinNoiseScale(final String materialName) {
-				return 0.0F;
-			}
-			
-			@Override
-			public Material getMaterial(final String materialName) {
-				return materials.getOrDefault(materialName, Material.LAMBERTIAN_DIFFUSE);
-			}
-			
-			@Override
-			public Texture getTextureAlbedo(final String materialName) {
-				return textureAlbedos.getOrDefault(materialName, textureCarAlbedo);
-			}
-			
-			@Override
-			public Texture getTextureNormal(final String materialName) {
-				return textureCarNormalMap;
-			}
-		};
-		
-		final Mesh mesh = Mesh.loadFromOBJModel(meshConfigurator, "resources/SL500.obj", 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/SL500.obj", 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
 		final
 		Scene scene = new Scene("Car_Scene");
-		scene.addShape(new Plane(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
 		
 		final Vector3 v = Vector3.z();
 		final Vector3 w = Vector3.y();
@@ -233,18 +171,7 @@ final class Scenes {
 		return scene;
 	}
 	
-	/*
-	 *  scene.addShape(Sphere.newInstance(1.e5D, SpecularMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.black()), Point.valueOf(1.e5D + 1.0D, 40.8D, 81.6D), SolidTexture.newInstance(1, 1, RGBSpectrum.valueOf(0.75D, 0.25D, 0.25D))));
-		scene.addShape(Sphere.newInstance(1.e5D, DiffuseMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.black()), Point.valueOf(-1.e5D + 99.0D, 40.8D, 81.6D), SolidTexture.newInstance(1, 1, RGBSpectrum.valueOf(0.25D, 0.25D, 0.75D))));
-		scene.addShape(Sphere.newInstance(1.e5D, SpecularMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.black()), Point.valueOf(50.0D, 40.8D, 1.e5D), SolidTexture.newInstance(1, 1, RGBSpectrum.valueOf(0.75D, 0.75D, 0.75D))));
-		scene.addShape(Sphere.newInstance(1.e5D, DiffuseMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.black()), Point.valueOf(50.0D, 40.8D, -1.e5D + 170.0D), SolidTexture.newInstance(1, 1, RGBSpectrum.valueOf(0.5D, 0.5D, 0.5D))));
-		scene.addShape(Sphere.newInstance(1.e5D, DiffuseMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.black()), Point.valueOf(50.0D, 1.e5D, 81.6D), SolidTexture.newInstance(1, 1, RGBSpectrum.valueOf(0.75D, 0.75D, 0.75D))));
-		scene.addShape(Sphere.newInstance(1.e5D, DiffuseMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.black()), Point.valueOf(50.0D, -1.e5D + 81.6D, 81.6D), SolidTexture.newInstance(1, 1, RGBSpectrum.valueOf(0.75D, 0.75D, 0.75D))));
-		scene.addShape(Sphere.newInstance(16.5D, DiffuseMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.black()), Point.valueOf(27.0D, 16.5D, 47.0D), SimpleTexture.newInstance("./resources/texture2.png")));//SolidTexture.newInstance(1, 1, RGBSpectrum.valueOf(0.5D * 0.999D, 1.0D * 0.999D, 0.5D * 0.999D))));
-		scene.addShape(Sphere.newInstance(16.5D, RefractiveMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.black()), Point.valueOf(73.0D, 16.5D, 78.0D), SolidTexture.newInstance(1, 1, RGBSpectrum.valueOf(1.0D * 0.999D, 1.0D * 0.999D, 1.0D * 0.999D))));
-		scene.addShape(Sphere.newInstance(600.0D, DiffuseMaterial.newInstance(Material.REFRACTIVE_INDEX_GLASS, RGBSpectrum.valueOf(12.0D, 12.0D, 12.0D)), Point.valueOf(50.0D, 681.6D - 0.27D, 81.6D), SolidTexture.newInstance(1, 1, RGBSpectrum.black())));
-	 */
-	
+//	TODO: Add Javadocs.
 	public static Scene newCornellBoxScene() {
 		final Texture textureAlbedo0 = new SolidTexture(new Color(0.75F, 0.25F, 0.25F));
 		final Texture textureAlbedo1 = new SolidTexture(new Color(0.25F, 0.25F, 0.75F));
@@ -259,19 +186,20 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Cornell_Box_Scene");
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureAlbedo0, textureNormal), 1.0e4F, new Point3(1.0e4F + 1.0F, 40.8F, 81.6F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo1, textureNormal), 1.0e4F, new Point3(-1.0e4F + 99.0F, 40.8F, 81.6F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureAlbedo2, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, 1.0e4F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo3, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, -1.0e4F + 170.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo4, textureNormal), 1.0e4F, new Point3(50.0F, 1.0e4F, 81.6F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo5, textureNormal), 1.0e4F, new Point3(50.0F, -1.0e4F + 81.6F, 81.6F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo6, textureNormal), 16.5F, new Point3(27.0F, 16.5F, 47.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.GLASS, textureAlbedo7, textureNormal), 16.5F, new Point3(73.0F, 16.5F, 78.0F)));
-		scene.addShape(new Sphere(new Surface(new Color(12.0F, 12.0F, 12.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo8, textureNormal), 600.0F, new Point3(50.0F, 681.6F - 0.27F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureAlbedo0, textureNormal), 1.0e4F, new Point3(1.0e4F + 1.0F, 40.8F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo1, textureNormal), 1.0e4F, new Point3(-1.0e4F + 99.0F, 40.8F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureAlbedo2, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, 1.0e4F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo3, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, -1.0e4F + 170.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo4, textureNormal), 1.0e4F, new Point3(50.0F, 1.0e4F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo5, textureNormal), 1.0e4F, new Point3(50.0F, -1.0e4F + 81.6F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo6, textureNormal), 16.5F, new Point3(27.0F, 16.5F, 47.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, textureAlbedo7, textureNormal), 16.5F, new Point3(73.0F, 16.5F, 78.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(12.0F, 12.0F, 12.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo8, textureNormal), 600.0F, new Point3(50.0F, 681.6F - 0.27F, 81.6F)));
 		
 		return scene;
 	}
 	
+//	TODO: Add Javadocs.
 	public static Scene newGirlScene() {
 		final Texture texture1 = new SolidTexture(new Color(227, 161, 115));
 		final Texture texture2 = new CheckerboardTexture(Color.BLACK, Color.WHITE, 0.05F, 0.05F, 0.0F);//new SolidTexture(new Color(32, 53, 98));
@@ -281,66 +209,28 @@ final class Scenes {
 		final Texture texture6 = new SolidTexture(Color.WHITE);
 		final Texture texture7 = new SolidTexture(Color.RED);
 		
-		final Map<String, Material> materials = new HashMap<>();
+		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture4, texture4);
 		
-		materials.put("01___Default", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("02___Default", Material.PHONG_METAL);
-		materials.put("03___Default", Material.CLEAR_COAT);
-		materials.put("04___Default", Material.CLEAR_COAT);
-		materials.put("05___Default", Material.LAMBERTIAN_DIFFUSE);
+		final Map<String, Surface> surfaces = new HashMap<>();
 		
-		final Map<String, Texture> textureAlbedos = new HashMap<>();
+		surfaces.put("01___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture4));
+		surfaces.put("02___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture2, texture4));
+		surfaces.put("03___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture5, texture4));
+		surfaces.put("04___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture6, texture4));
+		surfaces.put("05___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture4));
 		
-		textureAlbedos.put("01___Default", texture1);
-		textureAlbedos.put("02___Default", texture2);
-		textureAlbedos.put("03___Default", texture5);
-		textureAlbedos.put("04___Default", texture6);
-		textureAlbedos.put("05___Default", texture1);
-		
-		final MeshConfigurator meshConfigurator = new MeshConfigurator() {
-			@Override
-			public Color getEmission(final String materialName) {
-				return Color.BLACK;
-			}
-			
-			@Override
-			public float getPerlinNoiseAmount(final String materialName) {
-				return 0.0F;
-			}
-			
-			@Override
-			public float getPerlinNoiseScale(final String materialName) {
-				return 0.0F;
-			}
-			
-			@Override
-			public Material getMaterial(final String materialName) {
-				return materials.getOrDefault(materialName, Material.LAMBERTIAN_DIFFUSE);
-			}
-			
-			@Override
-			public Texture getTextureAlbedo(final String materialName) {
-				return textureAlbedos.getOrDefault(materialName, texture4);
-			}
-			
-			@Override
-			public Texture getTextureNormal(final String materialName) {
-				return texture4;
-			}
-		};
-		
-		final Mesh mesh = Mesh.loadFromOBJModel(meshConfigurator, "resources/aphroditegirl.obj", 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/aphroditegirl.obj", 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
 		final
 		Scene scene = new Scene("Girl_Scene");
-		scene.addShape(new Plane(new Surface(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture3, texture4), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 80.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 120.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 160.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 200.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture3, texture4), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 80.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 120.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 160.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 200.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
@@ -349,6 +239,7 @@ final class Scenes {
 		return scene;
 	}
 	
+//	TODO: Add Javadocs.
 	public static Scene newHouseScene() {
 		final Texture textureAlbedo = new SolidTexture(Color.WHITE);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
@@ -364,71 +255,29 @@ final class Scenes {
 		final Texture texture9 = new SolidTexture(Color.ORANGE);
 		final Texture texture10 = new SolidTexture(Color.GRAY);
 		
-		final Map<String, Material> materials = new HashMap<>();
+		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal);
 		
-		materials.put("floor_texture", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("wire_115115115", Material.PHONG_METAL);
-		materials.put("texture_1", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("texture_2", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("03___Default", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("crome", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("table_wood_texture", Material.PHONG_METAL);
-		materials.put("sopha_wood_texture", Material.PHONG_METAL);
-		materials.put("20___Default", Material.LAMBERTIAN_DIFFUSE);
-		materials.put("double_sopha_wood_right_texture", Material.PHONG_METAL);
+		final Map<String, Surface> surfaces = new HashMap<>();
 		
-		final Map<String, Texture> textureAlbedos = new HashMap<>();
+		surfaces.put("floor_texture", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture1, textureNormal));
+		surfaces.put("wire_115115115", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture2, textureNormal));
+		surfaces.put("texture_1", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture3, textureNormal));
+		surfaces.put("texture_2", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture4, textureNormal));
+		surfaces.put("03___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture5, textureNormal));
+		surfaces.put("crome", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture6, textureNormal));
+		surfaces.put("table_wood_texture", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture7, textureNormal));
+		surfaces.put("sopha_wood_texture", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture8, textureNormal));
+		surfaces.put("20___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture9, textureNormal));
+		surfaces.put("double_sopha_wood_right_texture", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture10, textureNormal));
 		
-		textureAlbedos.put("floor_texture", texture1);
-		textureAlbedos.put("wire_115115115", texture2);
-		textureAlbedos.put("texture_1", texture3);
-		textureAlbedos.put("texture_2", texture4);
-		textureAlbedos.put("03___Default", texture5);
-		textureAlbedos.put("crome", texture6);
-		textureAlbedos.put("table_wood_texture", texture7);
-		textureAlbedos.put("sopha_wood_texture", texture8);
-		textureAlbedos.put("20___Default", texture9);
-		textureAlbedos.put("double_sopha_wood_right_texture", texture10);
-		
-		final MeshConfigurator meshConfigurator = new MeshConfigurator() {
-			@Override
-			public Color getEmission(final String materialName) {
-				return Color.BLACK;
-			}
-			
-			@Override
-			public float getPerlinNoiseAmount(final String materialName) {
-				return 0.0F;
-			}
-			
-			@Override
-			public float getPerlinNoiseScale(final String materialName) {
-				return 0.0F;
-			}
-			
-			@Override
-			public Material getMaterial(final String materialName) {
-				return materials.getOrDefault(materialName, Material.LAMBERTIAN_DIFFUSE);
-			}
-			
-			@Override
-			public Texture getTextureAlbedo(final String materialName) {
-				return textureAlbedos.getOrDefault(materialName, textureAlbedo);
-			}
-			
-			@Override
-			public Texture getTextureNormal(final String materialName) {
-				return textureNormal;
-			}
-		};
-		
-		final Mesh mesh = Mesh.loadFromOBJModel(meshConfigurator, "resources/house interior.obj", 1.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/house interior.obj", 1.0F);
+//		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/trail.obj", 1.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
 		final
 		Scene scene = new Scene("House_Scene");
-		scene.addShape(new Plane(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture0, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture0, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
@@ -437,6 +286,7 @@ final class Scenes {
 		return scene;
 	}
 	
+//	TODO: Add Javadocs.
 	public static Scene newMaterialShowcaseScene() {
 		final Texture texture0 = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new SolidTexture(Color.RED);//new CheckerboardTexture(Color.RED, Color.ORANGE);
@@ -444,17 +294,18 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Material_Showcase_Scene");
-		scene.addShape(new Plane(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture0, texture2), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
-//		scene.addShape(new Sphere(new Surface(Color.WHITE, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 100000.0F, new Point3(50.0F, -100000.0F + 81.6F, 81.6F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 80.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 120.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 160.0F)));
-		scene.addShape(new Sphere(new Surface(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 200.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture0, texture2), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+//		scene.addShape(new Sphere(Surface.getInstance(Color.WHITE, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 100000.0F, new Point3(50.0F, -100000.0F + 81.6F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 80.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 120.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 160.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 200.0F)));
 		
 		return scene;
 	}
 	
+//	TODO: Add Javadocs.
 	public static Scene newPBSPScene() {
 		try(final DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(new File("resources/q1map.pbsp"))))) {
 			final float[] planes = new float[dataInputStream.readShort() * 4];
@@ -498,13 +349,13 @@ final class Scenes {
 				final Vertex vertexB1 = new Vertex(new Point2(), p2, "", surfaceNormal1);
 				final Vertex vertexC1 = new Vertex(new Point2(), p3, "", surfaceNormal1);
 				
-				triangles.add(new Triangle(new Surface(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal), vertexA0, vertexB0, vertexC0));
-				triangles.add(new Triangle(new Surface(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal), vertexA1, vertexB1, vertexC1));
+				triangles.add(new Triangle(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal), vertexA0, vertexB0, vertexC0));
+				triangles.add(new Triangle(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal), vertexA1, vertexB1, vertexC1));
 			}
 			
 			final
 			Scene scene = new Scene("PBSP_Scene");
-			scene.addShape(new Plane(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+			scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
 			
 			for(final Triangle triangle : triangles) {
 				scene.addShape(triangle);
@@ -516,51 +367,22 @@ final class Scenes {
 		}
 	}
 	
+//	TODO: Add Javadocs.
 	public static Scene newTerrainScene() {
 		final Texture textureAlbedo = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
 		
 		final Material material = Material.LAMBERTIAN_DIFFUSE;
 		
-		final MeshConfigurator meshConfigurator = new MeshConfigurator() {
-			@Override
-			public Color getEmission(final String materialName) {
-				return Color.BLACK;
-			}
-			
-			@Override
-			public float getPerlinNoiseAmount(final String materialName) {
-				return 0.0F;
-			}
-			
-			@Override
-			public float getPerlinNoiseScale(final String materialName) {
-				return 0.0F;
-			}
-			
-			@Override
-			public Material getMaterial(final String materialName) {
-				return material;
-			}
-			
-			@Override
-			public Texture getTextureAlbedo(final String materialName) {
-				return textureAlbedo;
-			}
-			
-			@Override
-			public Texture getTextureNormal(final String materialName) {
-				return textureNormal;
-			}
-		};
+		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal);
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(meshConfigurator, "resources/terrain2.obj", 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, "resources/terrain2.obj", 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
 		final
 		Scene scene = new Scene("Terrain_Scene");
-		scene.addShape(new Plane(new Surface(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));

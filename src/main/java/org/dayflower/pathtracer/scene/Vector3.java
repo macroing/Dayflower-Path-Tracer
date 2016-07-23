@@ -115,6 +115,12 @@ public final class Vector3 {
 	}
 	
 //	TODO: Add Javadocs!
+	@Override
+	public String toString() {
+		return String.format("Vector3: [X=%s], [Y=%s], [Z=%s]", Float.toString(this.x), Float.toString(this.y), Float.toString(this.z));
+	}
+	
+//	TODO: Add Javadocs!
 	public Vector3 add(final Vector3 v) {
 		return new Vector3(this.x + v.x, this.y + v.y, this.z + v.z);
 	}

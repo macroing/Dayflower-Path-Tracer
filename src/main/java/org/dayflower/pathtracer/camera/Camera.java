@@ -39,6 +39,9 @@ public final class Camera {
 	public static final int ABSOLUTE_OFFSET_OF_APERTURE_RADIUS = 0;
 	
 //	TODO: Add Javadocs.
+	public static final int ABSOLUTE_OFFSET_OF_CAMERA_LENS = 21;
+	
+//	TODO: Add Javadocs.
 	public static final int ABSOLUTE_OFFSET_OF_EYE = 1;
 	
 //	TODO: Add Javadocs.
@@ -120,7 +123,13 @@ public final class Camera {
 	public static final int ABSOLUTE_OFFSET_OF_UP_Z = ABSOLUTE_OFFSET_OF_UP + 2;
 	
 //	TODO: Add Javadocs.
-	public static final int SIZE = 1 + 3 + 2 + 1 + 3 + 3 + 3 + 2 + 3;
+	public static final int CAMERA_LENS_FISHEYE = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int CAMERA_LENS_THIN = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 1 + 3 + 2 + 1 + 3 + 3 + 3 + 2 + 3 + 1;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -152,6 +161,7 @@ public final class Camera {
 		this.array = new float[SIZE];
 		
 		setApertureRadius(0.4F);
+		setCameraLens(CAMERA_LENS_THIN);
 		setCameraPredicate(cameraPredicate);
 		setCenter(55.0F, 42.0F, 155.6F);
 		setFieldOfViewX(40.0F);
@@ -178,6 +188,16 @@ public final class Camera {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public boolean isFisheyeCameraLens() {
+		return this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] == CAMERA_LENS_FISHEYE;
+	}
+	
+//	TODO: Add Javadocs.
+	public boolean isThinCameraLens() {
+		return this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] == CAMERA_LENS_THIN;
+	}
 	
 //	TODO: Add Javadocs.
 	public boolean isWalkLockEnabled() {
@@ -467,6 +487,11 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
+	public void setCameraLens(final int cameraLens) {
+		this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] = cameraLens;
+	}
+	
+//	TODO: Add Javadocs.
 	public void setCameraPredicate(final CameraPredicate cameraPredicate) {
 		this.cameraPredicate = Objects.requireNonNull(cameraPredicate, "cameraPredicate == null");
 	}
@@ -502,6 +527,11 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
+	public void setFisheyeCameraLens(final boolean isFisheyeCameraLens) {
+		this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] = isFisheyeCameraLens ? CAMERA_LENS_FISHEYE : CAMERA_LENS_THIN;
+	}
+	
+//	TODO: Add Javadocs.
 	public void setFocalDistance(final float focalDistance) {
 		this.array[ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE] = max(min(focalDistance, 100.0F), 0.2F);
 	}
@@ -531,6 +561,11 @@ public final class Camera {
 		this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_Y] = resolutionY;
 		
 		setFieldOfViewX(getFieldOfViewX());
+	}
+	
+//	TODO: Add Javadocs.
+	public void setThinCameraLens(final boolean isThinCameraLens) {
+		this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] = isThinCameraLens ? CAMERA_LENS_THIN : CAMERA_LENS_FISHEYE;
 	}
 	
 //	TODO: Add Javadocs.
