@@ -90,4 +90,4 @@ Supported Controls
 Dependencies
 ------------
  - [Java 8](http://www.java.com).
- - [Aparapi](https://github.com/aparapi/aparapi).
+ - [Aparapi](https://github.com/macroing/aparapi).
