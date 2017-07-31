@@ -115,3 +115,7 @@ Dependencies
 ------------
  - [Java 8](http://www.java.com).
  - [Aparapi](https://github.com/macroing/aparapi).
+
+Note
+----
+This library hasn't been released yet. So, even though it says it's version 1.0.0 in all Java source code files, it shouldn't be treated as such. When this library reaches version 1.0.0, it will be tagged and available on the "releases" page.
