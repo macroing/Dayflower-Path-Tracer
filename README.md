@@ -4,6 +4,8 @@ Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
 This project is mainly a test project for the real renderer, Dayflower.
 
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Scene-1.png "Dayflower Path Tracer")
+
 Supported Features
 ------------------
 * Acceleration Structure: Bounding Volume Hierarchy (BVH)
