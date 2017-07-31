@@ -58,7 +58,7 @@ import org.dayflower.pathtracer.util.FPSCounter;
  * @author J&#246;rgen Lundgren
  */
 public final class TestApplication extends AbstractApplication {
-	private static final String ENGINE_NAME = "Dayflower Engine";
+	private static final String ENGINE_NAME = "Dayflower - Path Tracer";
 	private static final String ENGINE_VERSION = "v.0.0.20";
 	private static final String SETTING_NAME_BOUNDING_VOLUME_HIERARCHY_WIREFRAME = "BoundingVolumeHierarchy.Wireframe";
 	private static final String SETTING_NAME_FILTER_BLUR = "Filter.Blur";
