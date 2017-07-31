@@ -46,10 +46,10 @@ public final class Dayflower {
 			final String implementationVersion = package_.getImplementationVersion();
 			
 			if(implementationVersion != null) {
-				return ".";
+				return "./resources";
 			}
 		}
 		
-		return "./resources/distribution";
+		return "./resources/distribution/resources";
 	}
 }

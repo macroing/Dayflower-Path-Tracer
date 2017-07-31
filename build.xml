@@ -81,6 +81,9 @@
 		<!--Copy files.-->
 		<copy todir="${project.directory.distribution.current}">
 			<fileset dir="${project.directory.resources.distribution}"/>
+			<fileset dir="." includes="COPYING"/>
+			<fileset dir="." includes="COPYING.LESSER"/>
+			<fileset dir="." includes="README.md"/>
 		</copy>
 		
 		<!--Copy the source code.-->
