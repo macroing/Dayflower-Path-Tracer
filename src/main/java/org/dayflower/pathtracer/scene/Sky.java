@@ -55,36 +55,96 @@ public final class Sky {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	@SuppressWarnings("unused")
-	private final Color color;
+	private Color color;
 	@SuppressWarnings("unused")
-	private final float jacobian;
-	private final float theta;
-	private final float turbidity = 2.0F;
-	private final float zenithRelativeLuminance;
-	private final float zenithX;
-	private final float zenithY;
-	private final float[] colHistogram;
+	private float jacobian;
+	private float theta;
+	private float zenithRelativeLuminance;
+	private float zenithX;
+	private float zenithY;
+	private float[] colHistogram;
 	private final float[] perezRelativeLuminance = new float[5];
 	private final float[] perezX = new float[5];
 	private final float[] perezY = new float[5];
-	private final float[][] imageHistogram;
+	private float[][] imageHistogram;
 	@SuppressWarnings("unused")
 	private final int samples = 4;
 	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y());
-	private final SpectralCurve radiance;
-	private final Vector3 sunDirection;
-	private final Vector3 sunDirectionWorld = new Vector3(1.0F, 1.0F, 1.0F).normalize();//Vector3.direction(new Point3(), new Point3(1000.0F, 3000.0F, 1000.0F)).normalize();
+	private SpectralCurve radiance;
+	private Vector3 sunDirection;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
 	public Sky() {
-		this.sunDirection = this.sunDirectionWorld.untransform(this.orthoNormalBasis).normalize();
+		set();
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public float getTheta() {
+		return this.theta;
+	}
+	
+//	TODO: Add Javadocs.
+	public float getZenithRelativeLuminance() {
+		return this.zenithRelativeLuminance;
+	}
+	
+//	TODO: Add Javadocs.
+	public float getZenithX() {
+		return this.zenithX;
+	}
+	
+//	TODO: Add Javadocs.
+	public float getZenithY() {
+		return this.zenithY;
+	}
+	
+//	TODO: Add Javadocs.
+	public float[] getPerezRelativeLuminance() {
+		return this.perezRelativeLuminance.clone();
+	}
+	
+//	TODO: Add Javadocs.
+	public float[] getPerezX() {
+		return this.perezX.clone();
+	}
+	
+//	TODO: Add Javadocs.
+	public float[] getPerezY() {
+		return this.perezY.clone();
+	}
+	
+//	TODO: Add Javadocs.
+	public OrthoNormalBasis getOrthoNormalBasis() {
+		return this.orthoNormalBasis;
+	}
+	
+//	TODO: Add Javadocs.
+	public Vector3 getSunDirection() {
+		return this.sunDirection;
+	}
+	
+//	TODO: Add Javadocs.
+	public void set() {
+		set(new Vector3(1.0F, 1.0F, -1.0F).normalize());
+	}
+	
+//	TODO: Add Javadocs.
+	public void set(final Vector3 sunDirectionWorld) {
+		set(sunDirectionWorld, 2.0F);
+	}
+	
+//	TODO: Add Javadocs.
+	public void set(final Vector3 sunDirectionWorld, final float turbidity) {
+		this.sunDirection = sunDirectionWorld.untransform(this.orthoNormalBasis).normalize();
 		this.theta = acos(saturate(this.sunDirection.z, -1.0F, 1.0F));
 		
 		if(this.sunDirection.z > 0.0F) {
-			this.radiance = doCalculateAttenuatedSunlight(this.theta, this.turbidity);
-			this.color = RGBColorSpace.SRGB.convertXYZToRGB(this.radiance.toXYZ().multiply(1e-4F));
+			this.radiance = doCalculateAttenuatedSunlight(this.theta, turbidity);
+			this.color = RGBColorSpace.SRGB.convertXYZToRGB(this.radiance.toXYZ().multiply(1.0e-4F)).constrain();
 		} else {
 			this.radiance = new ConstantSpectralCurve(0.0F);
 			this.color = Color.BLACK;
@@ -93,7 +153,6 @@ public final class Sky {
 		final float theta = this.theta;
 		final float theta2 = theta * theta;
 		final float theta3 = theta * theta * theta;
-		final float turbidity = this.turbidity;
 		final float turbidity2 = turbidity * turbidity;
 		final float chi = (4.0F / 9.0F - turbidity / 120.0F) * (PI - 2.0F * this.theta);
 		
@@ -155,53 +214,6 @@ public final class Sky {
 		}
 		
 		this.jacobian = (2.0F * PI * PI) / (w * h);
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-//	TODO: Add Javadocs.
-	public float getTheta() {
-		return this.theta;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getZenithRelativeLuminance() {
-		return this.zenithRelativeLuminance;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getZenithX() {
-		return this.zenithX;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getZenithY() {
-		return this.zenithY;
-	}
-	
-//	TODO: Add Javadocs.
-	public float[] getPerezRelativeLuminance() {
-		return this.perezRelativeLuminance.clone();
-	}
-	
-//	TODO: Add Javadocs.
-	public float[] getPerezX() {
-		return this.perezX.clone();
-	}
-	
-//	TODO: Add Javadocs.
-	public float[] getPerezY() {
-		return this.perezY.clone();
-	}
-	
-//	TODO: Add Javadocs.
-	public OrthoNormalBasis getOrthoNormalBasis() {
-		return this.orthoNormalBasis;
-	}
-	
-//	TODO: Add Javadocs.
-	public Vector3 getSunDirection() {
-		return this.sunDirection;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

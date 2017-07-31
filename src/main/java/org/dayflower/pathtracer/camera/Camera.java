@@ -628,13 +628,13 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public void update() {
-		final boolean isWalkLockEnabled = isWalkLockEnabled();
+//		final boolean isWalkLockEnabled = isWalkLockEnabled();
 		
 		final float centerX = getCenterX();
 		final float centerY = getCenterY();
 		final float centerZ = getCenterZ();
 		
-		final float radius = getRadius();
+//		final float radius = getRadius();
 		
 		final float pitch = getPitch();
 		final float yaw = getYaw();
@@ -647,7 +647,8 @@ public final class Camera {
 		final float direction1Y = -direction0Y;
 		final float direction1Z = -direction0Z;
 		
-		setEye(centerX + direction1X * radius, centerY + (isWalkLockEnabled ? 0.0F : direction1Y * radius), centerZ + direction1Z * radius);
+//		setEye(centerX + direction1X * radius, centerY + (isWalkLockEnabled ? 0.0F : direction1Y * radius), centerZ + direction1Z * radius);
+		setEye(centerX, centerY, centerZ);
 		setOrthoNormalBasisW(direction1X, direction1Y, direction1Z);
 		setUp(0.0F, 1.0F, 0.0F);
 		setViewDirection(direction1X, direction1Y, direction1Z);

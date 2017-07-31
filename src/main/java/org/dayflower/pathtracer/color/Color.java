@@ -332,6 +332,23 @@ public final class Color {
 	}
 	
 	/**
+	 * Constrains this {@code Color} instance to be representable.
+	 * <p>
+	 * Returns a constrained version of this {@code Color} instance.
+	 * 
+	 * @return a constrained version of this {@code Color} instance
+	 */
+	public Color constrain() {
+		final float w = -Math2.min(0.0F, min());
+		
+		if(w > 0.0F) {
+			return new Color(this.r + w, this.g + w, this.b + w);
+		}
+		
+		return this;
+	}
+	
+	/**
 	 * Divides this {@code Color} instance with {@code color}.
 	 * <p>
 	 * Returns a new {@code Color} instance with the result of the division.

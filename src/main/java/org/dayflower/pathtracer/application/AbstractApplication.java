@@ -21,6 +21,8 @@ package org.dayflower.pathtracer.application;
 import java.awt.AWTException;
 import java.awt.Robot;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,6 +59,7 @@ import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -74,7 +77,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	/**
 	 * The default height scale.
 	 */
-	public static final int CANVAS_HEIGHT_SCALE = 2;
+	public static final int CANVAS_HEIGHT_SCALE = 1;
 	
 	/**
 	 * The default height.
@@ -84,7 +87,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	/**
 	 * The default width scale.
 	 */
-	public static final int CANVAS_WIDTH_SCALE = 2;
+	public static final int CANVAS_WIDTH_SCALE = 1;
 	
 	/**
 	 * The default width.
@@ -118,9 +121,12 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	private final AtomicLong mouseMovementTime = new AtomicLong();
 	private final boolean[] isKeyPressed = new boolean[KeyCode.values().length];
 	private final boolean[] isKeyPressedOnce = new boolean[KeyCode.values().length];
+	private Canvas canvas;
 	private final CopyOnWriteArrayList<Consumer<String>> printConsumers = new CopyOnWriteArrayList<>();
 	private final FPSCounter fPSCounter = new FPSCounter();
 	private final Lock lock = new ReentrantLock();
+	private final Map<String, Boolean> settings = new HashMap<>();
+	private Robot robot;
 	private final String title;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,6 +167,40 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 */
 	protected final boolean addPrintConsumer(final Consumer<String> printConsumer) {
 		return this.printConsumers.addIfAbsent(Objects.requireNonNull(printConsumer, "printConsumer == null"));
+	}
+	
+	/**
+	 * Disables the setting with a name of {@code name}.
+	 * <p>
+	 * Returns the state of the setting, which should be {@code false} at all times.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code set(name, false)}.
+	 * <p>
+	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param name the name of the setting
+	 * @return the state of the setting, which should be {@code false} at all times
+	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
+	 */
+	protected final boolean disableSetting(final String name) {
+		return setSetting(name, false);
+	}
+	
+	/**
+	 * Enables the setting with a name of {@code name}.
+	 * <p>
+	 * Returns the state of the setting, which should be {@code true} at all times.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code set(name, true)}.
+	 * <p>
+	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param name the name of the setting
+	 * @return the state of the setting, which should be {@code true} at all times
+	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
+	 */
+	protected final boolean enableSetting(final String name) {
+		return setSetting(name, true);
 	}
 	
 	/**
@@ -254,6 +294,32 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 	/**
+	 * Returns {@code true} if, and only if, the setting with a name of {@code name} is disabled, {@code false} otherwise.
+	 * <p>
+	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param name the name of the setting
+	 * @return {@code true} if, and only if, the setting with a name of {@code name} is disabled, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
+	 */
+	protected final boolean isSettingDisabled(final String name) {
+		return !isSettingEnabled(name);
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, the setting with a name of {@code name} is enabled, {@code false} otherwise.
+	 * <p>
+	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param name the name of the setting
+	 * @return {@code true} if, and only if, the setting with a name of {@code name} is enabled, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
+	 */
+	protected final boolean isSettingEnabled(final String name) {
+		return this.settings.computeIfAbsent(Objects.requireNonNull(name, "name == null"), key -> Boolean.FALSE).booleanValue();
+	}
+	
+	/**
 	 * Removes a print {@code Consumer} from this {@code AbstractApplication}, if present.
 	 * <p>
 	 * Returns {@code true} if, and only if, {@code printConsumer} was removed, {@code false} otherwise.
@@ -266,6 +332,36 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 */
 	protected final boolean removePrintConsumer(final Consumer<String> printConsumer) {
 		return this.printConsumers.remove(Objects.requireNonNull(printConsumer, "printConsumer == null"));
+	}
+	
+	/**
+	 * Sets the setting with a name of {@code name} to the value of {@code isEnabled}.
+	 * <p>
+	 * Returns the state of the setting, which should be {@code isEnabled} at all times.
+	 * <p>
+	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param name the name of the setting
+	 * @return the state of the setting, which should be {@code isEnabled} at all times
+	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
+	 */
+	protected final boolean setSetting(final String name, final boolean isEnabled) {
+		return this.settings.compute(Objects.requireNonNull(name, "name == null"), (key, value) -> Boolean.valueOf(isEnabled)).booleanValue();
+	}
+	
+	/**
+	 * Toggles the setting with a name of {@code name}.
+	 * <p>
+	 * Returns the state of the setting.
+	 * <p>
+	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param name the name of the setting
+	 * @return the state of the setting
+	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
+	 */
+	protected final boolean toggleSetting(final String name) {
+		return this.settings.compute(Objects.requireNonNull(name, "name == null"), (key, value) -> value == null ? Boolean.TRUE : Boolean.valueOf(!value.booleanValue())).booleanValue();
 	}
 	
 	/**
@@ -446,7 +542,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 */
 	@Override
 	public final void start(final Stage stage) {
-		final Robot robot = doCreateRobot();
+		this.robot = doCreateRobot();
 		
 		final TextArea textArea = new TextArea();
 		
@@ -456,81 +552,22 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		ImageView imageView = new ImageView();
 		imageView.setSmooth(true);
 		
-		final Canvas canvas = new Canvas(getCanvasWidth(), getCanvasHeight());
+		this.canvas = new Canvas(getCanvasWidth(), getCanvasHeight());
 		
-		final ScrollPane scrollPane = new ScrollPane(canvas);
+		final ScrollPane scrollPane = new ScrollPane(this.canvas);
 		
-		canvas.widthProperty().bind(scrollPane.widthProperty());
-		canvas.heightProperty().bind(scrollPane.heightProperty());
-		canvas.addEventFilter(MouseEvent.ANY, e -> canvas.requestFocus());
-		canvas.widthProperty().addListener(observable -> doUpdateTransform(canvas, imageView));
-		canvas.heightProperty().addListener(observable -> doUpdateTransform(canvas, imageView));
-		canvas.setFocusTraversable(true);
-		canvas.setOnKeyPressed(e -> {
-			if(!this.isKeyPressed[e.getCode().ordinal()]) {
-				this.keysPressed.incrementAndGet();
-			}
-			
-			this.isKeyPressed[e.getCode().ordinal()] = true;
-		});
-		canvas.setOnKeyReleased(e -> {
-			if(this.isKeyPressed[e.getCode().ordinal()]) {
-				this.keysPressed.decrementAndGet();
-			}
-			
-			this.isKeyPressed[e.getCode().ordinal()] = false;
-			this.isKeyPressedOnce[e.getCode().ordinal()] = false;
-		});
-		canvas.setOnMouseMoved(e -> {
-			final int mouseMovedDeltaX = this.mouseMovedDeltaX.get();
-			final int mouseMovedDeltaY = this.mouseMovedDeltaY.get();
-			
-			this.mouseMovementTime.set(System.currentTimeMillis());
-			
-			if(mouseMovedDeltaX != 0 || mouseMovedDeltaY != 0) {
-				this.mouseMovedX.addAndGet(this.mouseMovedDeltaX.get() - (int)(e.getScreenX()));
-				this.mouseMovedY.addAndGet(this.mouseMovedDeltaY.get() - (int)(e.getScreenY()));
-			}
-			
-			onMouseMoved(this.mouseMovedX.getAndSet(0), this.mouseMovedY.getAndSet(0));
-			
-			if(isRecenteringMouse()) {
-				final Bounds bounds = canvas.localToScreen(canvas.getBoundsInLocal());
-				
-				final int minX = (int)(bounds.getMinX());
-				final int minY = (int)(bounds.getMinY());
-				final int width = (int)(bounds.getWidth());
-				final int height = (int)(bounds.getHeight());
-				final int x = minX + width / 2;
-				final int y = minY + height / 2;
-				
-				robot.mouseMove(x, y);
-				
-				this.mouseMovedDeltaX.set(x);
-				this.mouseMovedDeltaY.set(y);
-			} else {
-				this.mouseMovedDeltaX.set((int)(e.getScreenX()));
-				this.mouseMovedDeltaY.set((int)(e.getScreenY()));
-			}
-		});
-		canvas.setOnMousePressed(e -> {
-			this.isDraggingMouse.set(true);
-			this.mouseDraggedDeltaX.set((int)(e.getScreenX()));
-			this.mouseDraggedDeltaY.set((int)(e.getScreenY()));
-		});
-		canvas.setOnMouseReleased(e -> this.isDraggingMouse.set(false));
-		canvas.setOnMouseDragged(e -> {
-			this.mouseDraggedX.addAndGet(this.mouseDraggedDeltaX.get() - (int)(e.getScreenX()));
-			this.mouseDraggedY.addAndGet(this.mouseDraggedDeltaY.get() - (int)(e.getScreenY()));
-			this.mouseDraggedDeltaX.set((int)(e.getScreenX()));
-			this.mouseDraggedDeltaY.set((int)(e.getScreenY()));
-			this.mouseMovedDeltaX.set(0);
-			this.mouseMovedDeltaY.set(0);
-			this.mouseMovedX.set(0);
-			this.mouseMovedY.set(0);
-			
-			onMouseDragged(this.mouseDraggedX.getAndSet(0), this.mouseDraggedY.getAndSet(0));
-		});
+		this.canvas.widthProperty().bind(scrollPane.widthProperty());
+		this.canvas.heightProperty().bind(scrollPane.heightProperty());
+		this.canvas.addEventFilter(MouseEvent.ANY, e -> this.canvas.requestFocus());
+		this.canvas.widthProperty().addListener(observable -> doUpdateTransform(this.canvas, imageView));
+		this.canvas.heightProperty().addListener(observable -> doUpdateTransform(this.canvas, imageView));
+		this.canvas.setFocusTraversable(true);
+		this.canvas.setOnKeyPressed(this::doOnKeyPressed);
+		this.canvas.setOnKeyReleased(this::doOnKeyReleased);
+		this.canvas.setOnMouseDragged(this::doOnMouseDragged);
+		this.canvas.setOnMouseMoved(this::doOnMouseMoved);
+		this.canvas.setOnMousePressed(this::doOnMousePressed);
+		this.canvas.setOnMouseReleased(this::doOnMouseReleased);
 		
 		final
 		TabPane tabPane = new TabPane();
@@ -593,6 +630,8 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		
 		final ByteBuffer[] byteBuffer = new ByteBuffer[1];
 		
+		final Canvas canvas = this.canvas;
+		
 		new AnimationTimer() {
 			@Override
 			public void handle(final long now) {
@@ -627,19 +666,95 @@ public abstract class AbstractApplication extends Application implements Runnabl
 					if(pixelWriter0 != null && byteBuffer0 != null) {
 						pixelWriter0.setPixels(0, 0, getCanvasWidth(), getCanvasHeight(), pixelFormat, byteBuffer0, getCanvasWidth() * 4);
 					}
+					
+					final WritableImage writableImage = imageView.snapshot(null, null);
+					
+					final
+					GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+					graphicsContext.drawImage(writableImage, 0.0D, 0.0D);
 				} finally {
 					lock.unlock();
 				}
-				
-				final WritableImage writableImage = imageView.snapshot(null, null);
-				
-				final
-				GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-				graphicsContext.drawImage(writableImage, 0.0D, 0.0D);
 			}
 		}.start();
 		
 		new Thread(this).start();
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private void doOnKeyPressed(final KeyEvent e) {
+		if(!this.isKeyPressed[e.getCode().ordinal()]) {
+			this.keysPressed.incrementAndGet();
+		}
+		
+		this.isKeyPressed[e.getCode().ordinal()] = true;
+	}
+	
+	private void doOnKeyReleased(final KeyEvent e) {
+		if(this.isKeyPressed[e.getCode().ordinal()]) {
+			this.keysPressed.decrementAndGet();
+		}
+		
+		this.isKeyPressed[e.getCode().ordinal()] = false;
+		this.isKeyPressedOnce[e.getCode().ordinal()] = false;
+	}
+	
+	private void doOnMouseDragged(final MouseEvent e) {
+		this.mouseDraggedX.addAndGet(this.mouseDraggedDeltaX.get() - (int)(e.getScreenX()));
+		this.mouseDraggedY.addAndGet(this.mouseDraggedDeltaY.get() - (int)(e.getScreenY()));
+		this.mouseDraggedDeltaX.set((int)(e.getScreenX()));
+		this.mouseDraggedDeltaY.set((int)(e.getScreenY()));
+		this.mouseMovedDeltaX.set(0);
+		this.mouseMovedDeltaY.set(0);
+		this.mouseMovedX.set(0);
+		this.mouseMovedY.set(0);
+		
+		onMouseDragged(this.mouseDraggedX.getAndSet(0), this.mouseDraggedY.getAndSet(0));
+	}
+	
+	private void doOnMouseMoved(final MouseEvent e) {
+		final int mouseMovedDeltaX = this.mouseMovedDeltaX.get();
+		final int mouseMovedDeltaY = this.mouseMovedDeltaY.get();
+		
+		this.mouseMovementTime.set(System.currentTimeMillis());
+		
+		if(mouseMovedDeltaX != 0 || mouseMovedDeltaY != 0) {
+			this.mouseMovedX.addAndGet(this.mouseMovedDeltaX.get() - (int)(e.getScreenX()));
+			this.mouseMovedY.addAndGet(this.mouseMovedDeltaY.get() - (int)(e.getScreenY()));
+		}
+		
+		onMouseMoved(this.mouseMovedX.getAndSet(0), this.mouseMovedY.getAndSet(0));
+		
+		if(isRecenteringMouse()) {
+			final Bounds bounds = this.canvas.localToScreen(this.canvas.getBoundsInLocal());
+			
+			final int minX = (int)(bounds.getMinX());
+			final int minY = (int)(bounds.getMinY());
+			final int width = (int)(bounds.getWidth());
+			final int height = (int)(bounds.getHeight());
+			final int x = minX + width / 2;
+			final int y = minY + height / 2;
+			
+			this.robot.mouseMove(x, y);
+			
+			this.mouseMovedDeltaX.set(x);
+			this.mouseMovedDeltaY.set(y);
+		} else {
+			this.mouseMovedDeltaX.set((int)(e.getScreenX()));
+			this.mouseMovedDeltaY.set((int)(e.getScreenY()));
+		}
+	}
+	
+	private void doOnMousePressed(final MouseEvent e) {
+		this.isDraggingMouse.set(true);
+		this.mouseDraggedDeltaX.set((int)(e.getScreenX()));
+		this.mouseDraggedDeltaY.set((int)(e.getScreenY()));
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnMouseReleased(final MouseEvent e) {
+		this.isDraggingMouse.set(false);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -168,9 +168,9 @@ public final class Mesh {
 				
 				final Surface surface = meshConfigurator.getSurface(materialName);
 				
-				final Vertex a = new Vertex(textureCoordinates.get(indexA), positions.get(indexA), materials.get(indexA), normals.get(indexA));
-				final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), materials.get(indexB), normals.get(indexB));
-				final Vertex c = new Vertex(textureCoordinates.get(indexC), positions.get(indexC), materials.get(indexC), normals.get(indexC));
+				final Vertex a = new Vertex(textureCoordinates.get(indexA), positions.get(indexA), normals.get(indexA));
+				final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), normals.get(indexB));
+				final Vertex c = new Vertex(textureCoordinates.get(indexC), positions.get(indexC), normals.get(indexC));
 				
 				final Triangle triangle = new Triangle(surface, a, b, c);
 				
@@ -242,54 +242,6 @@ public final class Mesh {
 		 * @return the {@code Surface} given a material name
 		 */
 		Surface getSurface(final String materialName);
-		
-		/**
-		 * Returns the emission given a material name.
-		 * 
-		 * @param materialName the material name
-		 * @return the emission given a material name
-		 */
-//		Color getEmission(final String materialName);
-		
-		/**
-		 * Returns the Perlin Noise amount given a material name.
-		 * 
-		 * @param materialName the material name
-		 * @return the Perlin Noise amount given a material name
-		 */
-//		float getPerlinNoiseAmount(final String materialName);
-		
-		/**
-		 * Returns the Perlin Noise scale given a material name.
-		 * 
-		 * @param materialName the material name
-		 * @return the Perlin Noise scale given a material name
-		 */
-//		float getPerlinNoiseScale(final String materialName);
-		
-		/**
-		 * Returns the {@link Material} given a material name.
-		 * 
-		 * @param materialName the material name
-		 * @return the {@code Material} given a material name
-		 */
-//		Material getMaterial(final String materialName);
-		
-		/**
-		 * Returns the Albedo {@link Texture} given a material name.
-		 * 
-		 * @param materialName the material name
-		 * @return the Albedo {@code Texture} given a material name
-		 */
-//		Texture getTextureAlbedo(final String materialName);
-		
-		/**
-		 * Returns the Normal Map {@link Texture} given a material name.
-		 * 
-		 * @param materialName the material name
-		 * @return the Normal Map {@code Texture} given a material name
-		 */
-//		Texture getTextureNormal(final String materialName);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

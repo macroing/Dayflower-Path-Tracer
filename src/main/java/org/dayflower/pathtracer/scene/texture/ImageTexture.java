@@ -248,10 +248,18 @@ public final class ImageTexture implements Texture {
 		
 		final int[] data0 = doGetDataFrom(bufferedImage);
 		
-		final float[] data1 = new float[width * height];
+		final float[] data1 = new float[width * height * 3];
 		
-		for(int i = 0; i < data0.length; i++) {
-			data1[i] = data0[i];
+		for(int i = 0, j = 0; i < data0.length; i++, j += 3) {
+			final int rGB = data0[i];
+			
+			final float r = ((rGB >> 16) & 0xFF) / 255.0F;
+			final float g = ((rGB >> 8) & 0xFF) / 255.0F;
+			final float b = (rGB & 0xFF) / 255.0F;
+			
+			data1[j + 0] = r;
+			data1[j + 1] = g;
+			data1[j + 2] = b;
 		}
 		
 		return new ImageTexture(degrees, width, height, scaleU, scaleV, data1);

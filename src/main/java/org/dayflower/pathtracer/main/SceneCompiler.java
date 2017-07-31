@@ -36,23 +36,32 @@ public final class SceneCompiler {
 	public static void main(final String[] args) {
 		final Camera camera = new Camera();
 		
-		doCompileAndWriteScene(camera, Scenes.newCarScene());
-		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene());
-		doCompileAndWriteScene(camera, Scenes.newGirlScene());
-		doCompileAndWriteScene(camera, Scenes.newHouseScene());
+//		doCompileAndWriteScene(camera, Scenes.newCarScene());
+//		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene());
+//		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene2());
+//		doCompileAndWriteScene(camera, Scenes.newGirlScene());
+//		doCompileAndWriteScene(camera, Scenes.newHouseScene());
+//		doCompileAndWriteScene(camera, Scenes.newHouseScene2());
 		doCompileAndWriteScene(camera, Scenes.newMaterialShowcaseScene());
-		doCompileAndWriteScene(camera, Scenes.newTerrainScene());
+//		doCompileAndWriteScene(camera, Scenes.newMonkeyScene());
+//		doCompileAndWriteScene(camera, Scenes.newSponzaScene());
+//		doCompileAndWriteScene(camera, Scenes.newTerrainScene());
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private static void doCompileAndWriteScene(final Camera camera, final Scene scene) {
-		System.out.println("Compiling and writing scene " + scene.getName() + "...");
+		System.out.printf("Compiling and writing scene \"%s\"...%n", scene.getName());
+		
+		final long currentTimeMillis0 = System.currentTimeMillis();
 		
 		final
 		CompiledScene compiledScene = CompiledScene.compile(camera, scene);
 		compiledScene.write();
 		
-		System.out.println("Scene " + scene.getName() + " successfully compiled and written.");
+		final long currentTimeMillis1 = System.currentTimeMillis();
+		final long elapsedTimeMillis = currentTimeMillis1 - currentTimeMillis0;
+		
+		System.out.printf("Scene \"%s\" successfully compiled and written in %s milliseconds.%n", scene.getName(), Long.toString(elapsedTimeMillis));
 	}
 }

@@ -193,6 +193,10 @@ public final class RGBColorSpace extends ColorSpace {
 		return this.matrixRGBToXYZ[8];
 	}
 	
+	public float getBreakPoint() {
+		return this.breakPoint;
+	}
+	
 	/**
 	 * Returns the GW component of the matrix that converts from RGB color space to XYZ color space.
 	 * 
@@ -229,6 +233,10 @@ public final class RGBColorSpace extends ColorSpace {
 		return this.matrixRGBToXYZ[5];
 	}
 	
+	public float getGamma() {
+		return this.gamma;
+	}
+	
 	/**
 	 * Returns the RW component of the matrix that converts from RGB color space to XYZ color space.
 	 * 
@@ -263,6 +271,18 @@ public final class RGBColorSpace extends ColorSpace {
 	 */
 	public float getRZ() {
 		return this.matrixRGBToXYZ[2];
+	}
+	
+	public float getSegmentOffset() {
+		return this.segmentOffset;
+	}
+	
+	public float getSlope() {
+		return this.slope;
+	}
+	
+	public float getSlopeMatch() {
+		return this.slopeMatch;
 	}
 	
 	/**

@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -292,6 +293,113 @@ public final class CompiledScene {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
+	public boolean hasNormalMapping() {
+		boolean hasNormalMapping = false;
+		
+		for(int i = 0; i < this.surfaces.length; i += SURFACE_SIZE) {
+			final int textureOffsetNormal = (int)(this.surfaces[i + SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL]);
+			final int textureType = (int)(this.textures[textureOffsetNormal + TEXTURE_RELATIVE_OFFSET_TYPE]);
+			
+			if(textureType == IMAGE_TEXTURE_TYPE) {
+				hasNormalMapping = true;
+				
+				break;
+			}
+		}
+		
+		return hasNormalMapping;
+	}
+	
+//	TODO: Add Javadocs.
+	public boolean hasPerlinNoiceNormalMapping() {
+		boolean hasPerlinNoiceNormalMapping = false;
+		
+		for(int i = 0; i < this.surfaces.length; i += SURFACE_SIZE) {
+			final float perlinNoiceAmount = this.surfaces[i + SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT];
+			final float perlinNoiceScale = this.surfaces[i + SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE];
+			
+			if(perlinNoiceAmount > 0.0F || perlinNoiceScale > 0.0F) {
+				hasPerlinNoiceNormalMapping = true;
+				
+				break;
+			}
+		}
+		
+		return hasPerlinNoiceNormalMapping;
+	}
+	
+//	TODO: Add Javadocs.
+	public boolean hasPlanes() {
+		return hasShapes(PLANE_TYPE);
+	}
+	
+//	TODO: Add Javadocs.
+	public boolean hasShapes(final int shapeType) {
+		boolean hasShapes = false;
+		
+		for(int i = 0; i < this.shapes.length;) {
+			final int shapeType0 = (int)(this.shapes[i + SHAPE_RELATIVE_OFFSET_TYPE]);
+			
+			if(shapeType0 == PLANE_TYPE) {
+				i += PLANE_SIZE;
+			} else if(shapeType0 == SPHERE_TYPE) {
+				i += SPHERE_SIZE;
+			} else if(shapeType0 == TRIANGLE_TYPE) {
+				i += TRIANGLE_SIZE;
+			}
+			
+			if(shapeType0 == shapeType) {
+				hasShapes = true;
+				
+				break;
+			}
+		}
+		
+		return hasShapes;
+	}
+	
+//	TODO: Add Javadocs.
+	public boolean hasSpheres() {
+		return hasShapes(SPHERE_TYPE);
+	}
+	
+//	TODO: Add Javadocs.
+	public boolean hasTriangles() {
+		return hasShapes(TRIANGLE_TYPE);
+	}
+	
+//	TODO: Add Javadocs.
+	public CompiledScene scale(final float scale) {
+		for(int i = 0; i < this.boundingVolumeHierarchy.length;) {
+			final int type = (int)(this.boundingVolumeHierarchy[i]);
+			
+			for(int j = 2; j < 8; j++) {
+				this.boundingVolumeHierarchy[i + j] *= scale;
+			}
+			
+			if(type == BVH_NODE_TYPE_TREE) {
+				i += 9;
+			} else {
+				i += 9 + (int)(this.boundingVolumeHierarchy[i + 8]);
+			}
+		}
+		
+		for(int i = 0; i < this.point2s.length; i++) {
+			this.point2s[i] *= scale;
+		}
+		
+		for(int i = 0; i < this.point3s.length; i++) {
+			this.point3s[i] *= scale;
+		}
+		
+		for(int i = 0; i < this.vector3s.length; i++) {
+			this.vector3s[i] *= scale;
+		}
+		
+		return this;
+	}
+	
+//	TODO: Add Javadocs.
 	public float[] getBoundingVolumeHierarchy() {
 		return this.boundingVolumeHierarchy;
 	}
@@ -339,6 +447,24 @@ public final class CompiledScene {
 //	TODO: Add Javadocs.
 	public String getName() {
 		return this.name;
+	}
+	
+//	TODO: Add Javadocs.
+	@Override
+	public String toString() {
+		final
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("BoundingVolumeHierarchy: " + Arrays.toString(this.boundingVolumeHierarchy) + "\n");
+		stringBuilder.append("Camera: " + Arrays.toString(this.camera) + "\n");
+		stringBuilder.append("Point2s: " + Arrays.toString(this.point2s) + "\n");
+		stringBuilder.append("Point3s: " + Arrays.toString(this.point3s) + "\n");
+		stringBuilder.append("Shapes: " + Arrays.toString(this.shapes) + "\n");
+		stringBuilder.append("Surfaces: " + Arrays.toString(this.surfaces) + "\n");
+		stringBuilder.append("Textures: " + Arrays.toString(this.textures) + "\n");
+		stringBuilder.append("Vector3s: " + Arrays.toString(this.vector3s) + "\n");
+		stringBuilder.append("ShapeOffsets: " + Arrays.toString(this.shapeOffsets) + "\n");
+		
+		return stringBuilder.toString();
 	}
 	
 //	TODO: Add Javadocs.
@@ -442,6 +568,8 @@ public final class CompiledScene {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private static float[] doCompileBoundingVolumeHierarchy(final Scene scene) {
+		doReportProgress("Compiling BoundingVolumeHierarchy...");
+		
 		final List<Shape> shapes = scene.getShapes();
 		final List<Triangle> triangles = new ArrayList<>();
 		
@@ -501,12 +629,12 @@ public final class CompiledScene {
 				
 				boundingVolumeHierarchyArray[j + 0] = BVH_NODE_TYPE_LEAF;
 				boundingVolumeHierarchyArray[j + 1] = next;
-				boundingVolumeHierarchyArray[j + 2] = leafNode.getMinimum().x;
-				boundingVolumeHierarchyArray[j + 3] = leafNode.getMinimum().y;
-				boundingVolumeHierarchyArray[j + 4] = leafNode.getMinimum().z;
-				boundingVolumeHierarchyArray[j + 5] = leafNode.getMaximum().x;
-				boundingVolumeHierarchyArray[j + 6] = leafNode.getMaximum().y;
-				boundingVolumeHierarchyArray[j + 7] = leafNode.getMaximum().z;
+				boundingVolumeHierarchyArray[j + 2] = leafNode.getMinimumX();
+				boundingVolumeHierarchyArray[j + 3] = leafNode.getMinimumY();
+				boundingVolumeHierarchyArray[j + 4] = leafNode.getMinimumZ();
+				boundingVolumeHierarchyArray[j + 5] = leafNode.getMaximumX();
+				boundingVolumeHierarchyArray[j + 6] = leafNode.getMaximumY();
+				boundingVolumeHierarchyArray[j + 7] = leafNode.getMaximumZ();
 				boundingVolumeHierarchyArray[j + 8] = leafNode.getTriangles().size();
 				
 				for(int k = 0; k < leafNode.getTriangles().size(); k++) {
@@ -546,22 +674,26 @@ public final class CompiledScene {
 				
 				boundingVolumeHierarchyArray[j + 0] = BVH_NODE_TYPE_TREE;
 				boundingVolumeHierarchyArray[j + 1] = next;
-				boundingVolumeHierarchyArray[j + 2] = treeNode.getMinimum().x;
-				boundingVolumeHierarchyArray[j + 3] = treeNode.getMinimum().y;
-				boundingVolumeHierarchyArray[j + 4] = treeNode.getMinimum().z;
-				boundingVolumeHierarchyArray[j + 5] = treeNode.getMaximum().x;
-				boundingVolumeHierarchyArray[j + 6] = treeNode.getMaximum().y;
-				boundingVolumeHierarchyArray[j + 7] = treeNode.getMaximum().z;
+				boundingVolumeHierarchyArray[j + 2] = treeNode.getMinimumX();
+				boundingVolumeHierarchyArray[j + 3] = treeNode.getMinimumY();
+				boundingVolumeHierarchyArray[j + 4] = treeNode.getMinimumZ();
+				boundingVolumeHierarchyArray[j + 5] = treeNode.getMaximumX();
+				boundingVolumeHierarchyArray[j + 6] = treeNode.getMaximumY();
+				boundingVolumeHierarchyArray[j + 7] = treeNode.getMaximumZ();
 				boundingVolumeHierarchyArray[j + 8] = leftIndex;
 				
 				j += 9;
 			}
 		}
 		
+		doReportProgress(" Done.\n");
+		
 		return boundingVolumeHierarchyArray;
 	}
 	
 	private static float[] doCompilePoint2s(final List<Point2> point2s) {
+		doReportProgress("Compiling Point2s...");
+		
 		final float[] point2s0 = new float[point2s.size() * 2];
 		
 		for(int i = 0, j = 0; i < point2s.size(); i++, j += 2) {
@@ -571,10 +703,14 @@ public final class CompiledScene {
 			point2s0[j + 1] = point2.y;
 		}
 		
+		doReportProgress(" Done.\n");
+		
 		return point2s0;
 	}
 	
 	private static float[] doCompilePoint3s(final List<Point3> point3s) {
+		doReportProgress("Compiling Point3s...");
+		
 		final float[] point3s0 = new float[point3s.size() * 3];
 		
 		for(int i = 0, j = 0; i < point3s.size(); i++, j += 3) {
@@ -585,10 +721,14 @@ public final class CompiledScene {
 			point3s0[j + 2] = point3.z;
 		}
 		
+		doReportProgress(" Done.\n");
+		
 		return point3s0;
 	}
 	
 	private static float[] doCompileShapes(final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s, final Scene scene) {
+		doReportProgress("Compiling Shapes...");
+		
 		final List<Float> floats = new ArrayList<>();
 		
 		for(final Shape shape : scene.getShapes()) {
@@ -605,10 +745,14 @@ public final class CompiledScene {
 			floatArray[i] = floats.get(i).floatValue();
 		}
 		
+		doReportProgress(" Done.\n");
+		
 		return floatArray;
 	}
 	
 	private static float[] doCompileSurfaces(final List<Surface> surfaces, final List<Texture> textures) {
+		doReportProgress("Compiling Surfaces...");
+		
 		final List<Float> floats = new ArrayList<>();
 		
 		for(final Surface surface : surfaces) {
@@ -625,10 +769,14 @@ public final class CompiledScene {
 			floatArray[i] = floats.get(i).floatValue();
 		}
 		
+		doReportProgress(" Done.\n");
+		
 		return floatArray;
 	}
 	
 	private static float[] doCompileTextures(final List<Texture> textures) {
+		doReportProgress("Compiling Textures...");
+		
 		final List<Float> floats = new ArrayList<>();
 		
 		for(final Texture texture : textures) {
@@ -645,10 +793,14 @@ public final class CompiledScene {
 			floatArray[i] = floats.get(i).floatValue();
 		}
 		
+		doReportProgress(" Done.\n");
+		
 		return floatArray;
 	}
 	
 	private static float[] doCompileVector3s(final List<Vector3> vector3s) {
+		doReportProgress("Compiling Vector3s...");
+		
 		final float[] vector3s0 = new float[vector3s.size() * 3];
 		
 		for(int i = 0, j = 0; i < vector3s.size(); i++, j += 3) {
@@ -658,6 +810,8 @@ public final class CompiledScene {
 			vector3s0[j + 1] = vector3.y;
 			vector3s0[j + 2] = vector3.z;
 		}
+		
+		doReportProgress(" Done.\n");
 		
 		return vector3s0;
 	}
@@ -1123,52 +1277,62 @@ public final class CompiledScene {
 	}
 	
 	private static void doReorderShapes(final float[] boundingVolumeHierarchy, final float[] shapes, final int[] shapeOffsets) {
-		final float[] shapes0 = shapes;
-		final float[] shapes1 = new float[shapes0.length];
+		doReportProgress("Reordering Shapes...");
 		
-		int boundingVolumeHierarchyOffset = 0;
-		int shapes1Offset = 0;
-		
-		while(boundingVolumeHierarchyOffset != -1) {
-			final int type = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
+		if(boundingVolumeHierarchy.length > 9) {
+			final float[] shapes0 = shapes;
+			final float[] shapes1 = new float[shapes0.length];
 			
-			if(type == BVH_NODE_TYPE_TREE) {
-				boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
-			} else if(type == BVH_NODE_TYPE_LEAF) {
-				for(int i = 0; i < (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]); i++) {
-					final int index = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
-					final int type0 = (int)(shapes0[index + SHAPE_RELATIVE_OFFSET_TYPE]);
-					final int size = doSize(type0);
+			int boundingVolumeHierarchyOffset = 0;
+			int shapes1Offset = 0;
+			
+			while(boundingVolumeHierarchyOffset != -1) {
+				final int type = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
+				
+				if(type == BVH_NODE_TYPE_TREE) {
+					boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
+				} else if(type == BVH_NODE_TYPE_LEAF) {
+					for(int i = 0; i < (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]); i++) {
+						final int index = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
+						final int type0 = (int)(shapes0[index + SHAPE_RELATIVE_OFFSET_TYPE]);
+						final int size = doSize(type0);
+						
+						System.arraycopy(shapes0, index, shapes1, shapes1Offset, size);
+						
+						boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i] = shapes1Offset;
+						
+						shapes1Offset += size;
+					}
 					
-					System.arraycopy(shapes0, index, shapes1, shapes1Offset, size);
+					boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
+				}
+			}
+			
+			for(int i = 0, j = 0, k = 0; i < shapes0.length; i += j) {
+				final int type = (int)(shapes0[i + SHAPE_RELATIVE_OFFSET_TYPE]);
+				final int size = doSize(type);
+				
+				j = size;
+				
+				if(type != TRIANGLE_TYPE) {
+					System.arraycopy(shapes0, i, shapes1, shapes1Offset, size);
 					
-					boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i] = shapes1Offset;
+					shapeOffsets[k] = shapes1Offset;
 					
 					shapes1Offset += size;
+					
+					k++;
 				}
-				
-				boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
 			}
+			
+			System.arraycopy(shapes1, 0, shapes0, 0, shapes1.length);
 		}
 		
-		for(int i = 0, j = 0, k = 0; i < shapes0.length; i += j) {
-			final int type = (int)(shapes0[i + SHAPE_RELATIVE_OFFSET_TYPE]);
-			final int size = doSize(type);
-			
-			j = size;
-			
-			if(type != TRIANGLE_TYPE) {
-				System.arraycopy(shapes0, i, shapes1, shapes1Offset, size);
-				
-				shapeOffsets[k] = shapes1Offset;
-				
-				shapes1Offset += size;
-				
-				k++;
-			}
-		}
-		
-		System.arraycopy(shapes1, 0, shapes0, 0, shapes1.length);
+		doReportProgress(" Done.\n");
+	}
+	
+	private static void doReportProgress(final String message) {
+		System.out.print(message);
 	}
 	
 	private static void doWriteFloatArray(final DataOutputStream dataOutputStream, final float[] array) throws IOException {

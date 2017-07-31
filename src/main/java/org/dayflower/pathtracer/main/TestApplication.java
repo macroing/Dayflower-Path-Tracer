@@ -18,9 +18,10 @@
  */
 package org.dayflower.pathtracer.main;
 
-import static org.dayflower.pathtracer.math.Math2.max;
-import static org.dayflower.pathtracer.math.Math2.min;
+import static org.dayflower.pathtracer.math.Math2.tan;
+import static org.dayflower.pathtracer.math.Math2.toRadians;
 
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,33 +39,41 @@ import com.amd.aparapi.Range;
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.camera.Camera;
 import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.filter.ConvolutionFilters;
+import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.RendererKernel;
 import org.dayflower.pathtracer.scene.Matrix44;
+import org.dayflower.pathtracer.scene.Point2;
+import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
-import org.dayflower.pathtracer.scene.Vector4;
+import org.dayflower.pathtracer.scene.Sky;
+import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.util.FPSCounter;
 
 /**
- * An implementation of {@link AbstractApplication} that performs Path Tracing or Ray Casting.
+ * An implementation of {@link AbstractApplication} that performs Path Tracing, Ray Casting or Ray Marching.
  * 
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
 public final class TestApplication extends AbstractApplication {
-	private static final float[][] FILTER_BLUR = new float[][] {new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F}, new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F}, new float[] {1.0F, 1.0F, 1.0F, 1.0F, 1.0F}, new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F}, new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F}};
-	private static final float[][] FILTER_DETECT_EDGES = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 8.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
-	private static final float[][] FILTER_EMBOSS = new float[][] {new float[] {-1.0F, -1.0F, 0.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {0.0F, 1.0F, 1.0F}};
-	private static final float[][] FILTER_GRADIENT_HORIZONTAL = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {0.0F, 0.0F, 0.0F}, new float[] {1.0F, 1.0F, 1.0F}};
-	private static final float[][] FILTER_GRADIENT_VERTICAL = new float[][] {new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}};
-	private static final float[][] FILTER_SHARPEN = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 9.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
 	private static final String ENGINE_NAME = "Dayflower Engine";
-	private static final String ENGINE_VERSION = "v.0.0.16";
+	private static final String ENGINE_VERSION = "v.0.0.20";
+	private static final String SETTING_NAME_BOUNDING_VOLUME_HIERARCHY_WIREFRAME = "BoundingVolumeHierarchy.Wireframe";
+	private static final String SETTING_NAME_FILTER_BLUR = "Filter.Blur";
+	private static final String SETTING_NAME_FILTER_DETECT_EDGES = "Filter.DetectEdges";
+	private static final String SETTING_NAME_FILTER_EMBOSS = "Filter.Emboss";
+	private static final String SETTING_NAME_FILTER_GRADIENT_HORIZONTAL = "Filter.Gradient.Horizontal";
+	private static final String SETTING_NAME_FILTER_GRADIENT_VERTICAL = "Filter.Gradient.Vertical";
+	private static final String SETTING_NAME_FILTER_SHARPEN = "Filter.Sharpen";
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private final AtomicBoolean hasInitialized = new AtomicBoolean();
+	private byte[] pixels;
 	private final Camera camera = new Camera();
 	private final Label labelApertureRadius = new Label("Aperture radius: N/A");
 	private final Label labelFieldOfView = new Label("FOV: N/A - N/A");
@@ -75,8 +84,9 @@ public final class TestApplication extends AbstractApplication {
 	private final Label labelRenderTime = new Label("Time: 00:00:00");
 	private final Label labelRenderType = new Label("Type: Path Tracer");
 	private final Label labelSPS = new Label("SPS: 00000000");
-	private final RendererKernel rendererKernel;
-	private final Scene scene = Scenes.newHouseScene();
+	private final AbstractRendererKernel abstractRendererKernel;
+	private final Scene scene = Scenes.newMaterialShowcaseScene();//.newGirlScene();
+	private final Sky sky;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -86,7 +96,8 @@ public final class TestApplication extends AbstractApplication {
 	public TestApplication() {
 		super(String.format("%s %s", ENGINE_NAME, ENGINE_VERSION));
 		
-		this.rendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, String.format("resources/%s.scene", this.scene.getName()));
+		this.sky = new Sky();
+		this.abstractRendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.sky, String.format("resources/%s.scene", this.scene.getName()), 1.0F);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,21 +109,23 @@ public final class TestApplication extends AbstractApplication {
 	 */
 	@Override
 	protected void doConfigurePixels(final byte[] pixels) {
-		this.rendererKernel.compile(pixels, getCanvasWidth(), getCanvasHeight());
+		this.pixels = pixels;
 		
 		final
 		Camera camera = this.camera;
-		camera.setApertureRadius(0.004F);
+		camera.setApertureRadius(0.0F);
 		camera.setCameraPredicate(this::doTest);
 		camera.setCenter(55.0F, 42.0F, 155.6F);
-		camera.setFieldOfViewX(40.0F);
-		camera.setFocalDistance(4.0F);
+		camera.setFieldOfViewX(70.0F);
+		camera.setFocalDistance(30.0F);
 		camera.setPitch(0.0F);
-		camera.setRadius(4.0F);
+		camera.setRadius(16.0F);
 		camera.setResolution(800.0F / getCanvasWidthScale(), 800.0F / getCanvasHeightScale());
 		camera.setWalkLockEnabled(true);
 		camera.setYaw(0.0F);
 		camera.update();
+		
+		this.hasInitialized.set(true);
 	}
 	
 	/**
@@ -173,10 +186,12 @@ public final class TestApplication extends AbstractApplication {
 		print("- I: Decrease focal distance");
 		print("- O: Increase field of view for X");
 		print("- P: Decrease field of view for X");
-		print("- H: Path Tracing or Ray Casting");
+		print("- F: Toggle Wireframe");
+		print("- H: Toggle between Path Tracing, Ray Casting and Ray Marching");
 		print("- K: Toggle walk-lock");
 		print("- L: Toggle mouse recentering and cursor visibility");
 		print("- C: Toggle between camera lenses");
+		print("- B: Toggle Normal Mapping");
 		print("- M: Increase maximum ray depth");
 		print("- N: Decrease maximum ray depth");
 		print("- UP ARROW: Decrease pitch");
@@ -185,13 +200,18 @@ public final class TestApplication extends AbstractApplication {
 		print("- RIGHT ARROW: Decrease yaw");
 		print("- MOVE MOUSE: Look around");
 		print("- 1: Toggle Blur effect");
-		print("- 2: Toggle Ddge Detection effect");
+		print("- 2: Toggle Edge Detection effect");
 		print("- 3: Toggle Emboss effect");
 		print("- 4: Toggle Horizontal Gradient effect");
 		print("- 5: Toggle Vertical Gradient effect");
 		print("- 6: Toggle Sharpen effect");
 		print("- 7: Toggle Grayscale effect");
 		print("- 8: Toggle Sepia Tone effect");
+		print("- 9: Toggle between Flat Shading and Gouraud Shading");
+		print("- NUMPAD 0: Use Tone Mapping and Gamma Correction Filmic Curve");
+		print("- NUMPAD 1: Use Tone Mapping and Gamma Correction Linear");
+		print("- NUMPAD 2: Use Tone Mapping and Gamma Correction Reinhard version 1");
+		print("- NUMPAD 3: Use Tone Mapping and Gamma Correction Reinhard version 2");
 		print("");
 		print("Supported Features:");
 		print("- Shape: Plane");
@@ -222,6 +242,11 @@ public final class TestApplication extends AbstractApplication {
 		print("- Effect: Sharpen");
 		print("- Renderer: Path Tracing");
 		print("- Renderer: Ray Casting");
+		print("- Renderer: Ray Marching");
+		print("- Tone Mapping and Gamma Correction: Filmic Curve");
+		print("- Tone Mapping and Gamma Correction: Linear");
+		print("- Tone Mapping and Gamma Correction: Reinhard version 1");
+		print("- Tone Mapping and Gamma Correction: Reinhard version 2");
 		
 		setCursorHidden(true);
 		setRecenteringMouse(true);
@@ -254,10 +279,18 @@ public final class TestApplication extends AbstractApplication {
 	}
 	
 	/**
-	 * Called each frame.
+	 * Called when rendering.
 	 */
 	@Override
 	public void run() {
+		while(!this.hasInitialized.get()) {
+			try {
+				Thread.sleep(100L);
+			} catch(final InterruptedException e) {
+//				Do nothing.
+			}
+		}
+		
 		final AtomicInteger renderPass = new AtomicInteger();
 		
 		final AtomicLong currentTimeMillis = new AtomicLong(System.currentTimeMillis());
@@ -266,65 +299,25 @@ public final class TestApplication extends AbstractApplication {
 		
 		final FPSCounter fPSCounter = getFPSCounter();
 		
-		final Matrix44 perspective = Matrix44.perspective(40.0F, getCanvasWidth() / getCanvasHeight(), 0.1F, 1000.0F);
-		final Matrix44 screenSpaceTransform = Matrix44.screenSpaceTransform(getCanvasWidth() / 2.0F, getCanvasHeight() / 2.0F);
-		final Matrix44 matrix = screenSpaceTransform.multiply(perspective);
+		final Range range = Range.create(getCanvasWidth() * getCanvasHeight());
 		
-		final RendererKernel rendererKernel = this.rendererKernel;
+		final
+		AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
+		abstractRendererKernel.updateLocalVariables(range.getLocalSize(0));
+		abstractRendererKernel.compile(this.pixels, getCanvasWidth(), getCanvasHeight());
 		
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> rendererKernel.dispose()));
-		
-		final AtomicBoolean isFilteringBlur = new AtomicBoolean();
-		final AtomicBoolean isFilteringDetectEdges = new AtomicBoolean();
-		final AtomicBoolean isFilteringEmboss = new AtomicBoolean();
-		final AtomicBoolean isFilteringGradientHorizontal = new AtomicBoolean();
-		final AtomicBoolean isFilteringGradientVertical = new AtomicBoolean();
-		final AtomicBoolean isFilteringSharpen = new AtomicBoolean();
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> abstractRendererKernel.dispose()));
 		
 		while(true) {
-			final Range range = Range.create(getCanvasWidth() * getCanvasHeight());
-			
-			final float velocity = 250.0F;
+			final float velocity = abstractRendererKernel.isRayMarching() ? 1.0F : 250.0F;
 			final float movement = fPSCounter.getFrameTimeMillis() / 1000.0F * velocity;
 			
 			if(isKeyPressed(KeyCode.A)) {
 				camera.strafe(-movement);
 			}
 			
-			if(isKeyPressed(KeyCode.B)) {
-//				TODO: Fix this Bounding Volume Hierarchy wireframe rendering!
-				
-				final CompiledScene compiledScene = rendererKernel.getCompiledScene();
-				
-				final float[] boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
-				
-				int boundingVolumeHierarchyOffset = 0;
-				
-				do {
-					final float minimumX = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 2];
-					final float minimumY = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3];
-					final float minimumZ = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 4];
-					
-					final float maximumX = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 5];
-					final float maximumY = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 6];
-					final float maximumZ = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 7];
-					
-					final Vector4 v0 = new Vector4(minimumX, minimumY, minimumZ).transform(matrix);
-					final Vector4 v1 = new Vector4(maximumX, maximumY, maximumZ).transform(matrix);
-					final Vector4 v2 = new Vector4(minimumX, maximumY, maximumZ).transform(matrix);
-					final Vector4 v3 = new Vector4(minimumX, maximumY, minimumZ).transform(matrix);
-					final Vector4 v4 = new Vector4(maximumX, maximumY, minimumZ).transform(matrix);
-					final Vector4 v5 = new Vector4(maximumX, minimumY, maximumZ).transform(matrix);
-					final Vector4 v6 = new Vector4(maximumX, minimumY, minimumZ).transform(matrix);
-					final Vector4 v7 = new Vector4(minimumX, minimumY, maximumZ).transform(matrix);
-					
-					rendererKernel.drawLine((int)(v0.x / v0.w), (int)(v0.y / v0.w), (int)(v3.x / v3.w), (int)(v3.y / v3.w), Color.RED);
-					rendererKernel.drawLine((int)(v3.x / v3.w), (int)(v3.y / v3.w), (int)(v4.x / v4.w), (int)(v4.y / v4.w), Color.RED);
-					rendererKernel.drawLine((int)(v4.x / v4.w), (int)(v4.y / v4.w), (int)(v6.x / v6.w), (int)(v6.y / v6.w), Color.RED);
-					rendererKernel.drawLine((int)(v6.x / v6.w), (int)(v6.y / v6.w), (int)(v0.x / v0.w), (int)(v0.y / v0.w), Color.RED);
-					
-					boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
-				} while(boundingVolumeHierarchyOffset != -1);
+			if(isKeyPressed(KeyCode.B, true)) {
+				abstractRendererKernel.setNormalMapping(!abstractRendererKernel.isNormalMapping());
 			}
 			
 			if(isKeyPressed(KeyCode.C, true)) {
@@ -336,35 +329,39 @@ public final class TestApplication extends AbstractApplication {
 			}
 			
 			if(isKeyPressed(KeyCode.DIGIT1, true)) {
-				isFilteringBlur.set(!isFilteringBlur.get());
+				toggleSetting(SETTING_NAME_FILTER_BLUR);
 			}
 			
 			if(isKeyPressed(KeyCode.DIGIT2, true)) {
-				isFilteringDetectEdges.set(!isFilteringDetectEdges.get());
+				toggleSetting(SETTING_NAME_FILTER_DETECT_EDGES);
 			}
 			
 			if(isKeyPressed(KeyCode.DIGIT3, true)) {
-				isFilteringEmboss.set(!isFilteringEmboss.get());
+				toggleSetting(SETTING_NAME_FILTER_EMBOSS);
 			}
 			
 			if(isKeyPressed(KeyCode.DIGIT4, true)) {
-				isFilteringGradientHorizontal.set(!isFilteringGradientHorizontal.get());
+				toggleSetting(SETTING_NAME_FILTER_GRADIENT_HORIZONTAL);
 			}
 			
 			if(isKeyPressed(KeyCode.DIGIT5, true)) {
-				isFilteringGradientVertical.set(!isFilteringGradientVertical.get());
+				toggleSetting(SETTING_NAME_FILTER_GRADIENT_VERTICAL);
 			}
 			
 			if(isKeyPressed(KeyCode.DIGIT6, true)) {
-				isFilteringSharpen.set(!isFilteringSharpen.get());
+				toggleSetting(SETTING_NAME_FILTER_SHARPEN);
 			}
 			
 			if(isKeyPressed(KeyCode.DIGIT7, true)) {
-				rendererKernel.setEffectGrayScale(!rendererKernel.isEffectGrayScale());
+				abstractRendererKernel.setEffectGrayScale(!abstractRendererKernel.isEffectGrayScale());
 			}
 			
 			if(isKeyPressed(KeyCode.DIGIT8, true)) {
-				rendererKernel.setEffectSepiaTone(!rendererKernel.isEffectSepiaTone());
+				abstractRendererKernel.setEffectSepiaTone(!abstractRendererKernel.isEffectSepiaTone());
+			}
+			
+			if(isKeyPressed(KeyCode.DIGIT9, true)) {
+				abstractRendererKernel.toggleShading();
 			}
 			
 			if(isKeyPressed(KeyCode.DOWN)) {
@@ -376,7 +373,7 @@ public final class TestApplication extends AbstractApplication {
 			}
 			
 			if(isKeyPressed(KeyCode.ESCAPE)) {
-				rendererKernel.dispose();
+				abstractRendererKernel.dispose();
 				
 				Platform.exit();
 				
@@ -384,25 +381,28 @@ public final class TestApplication extends AbstractApplication {
 			}
 			
 			if(isKeyPressed(KeyCode.F, true)) {
-				setCanvasWidthScale(Math.min(getCanvasWidthScale() + 1, 8));
-				setCanvasHeightScale(Math.min(getCanvasHeightScale() + 1, 8));
-				setCanvasWidth(1024 / getCanvasWidthScale());
-				setCanvasHeight(768 / getCanvasHeightScale());
+				toggleSetting(SETTING_NAME_BOUNDING_VOLUME_HIERARCHY_WIREFRAME);
 			}
 			
 			if(isKeyPressed(KeyCode.G, true)) {
-				setCanvasWidthScale(Math.max(getCanvasWidthScale() - 1, 1));
-				setCanvasHeightScale(Math.max(getCanvasHeightScale() - 1, 1));
-				setCanvasWidth(1024 / getCanvasWidthScale());
-				setCanvasHeight(768 / getCanvasHeightScale());
+				this.sky.set(new Vector3(ThreadLocalRandom.current().nextFloat(), ThreadLocalRandom.current().nextFloat(), -1.0F).normalize());
+				
+				abstractRendererKernel.updateSky();
 			}
 			
 			if(isKeyPressed(KeyCode.H, true)) {
-				rendererKernel.setPathTracing(!rendererKernel.isPathTracing());
+				abstractRendererKernel.toggleRenderer();
 			}
 			
 			if(isKeyPressed(KeyCode.I)) {
 				camera.changeFocalDistance(-0.1F);
+			}
+			
+			if(isKeyPressed(KeyCode.J)) {
+				abstractRendererKernel.setAmplitude(0.5F);
+				abstractRendererKernel.setFrequency(0.2F);
+				abstractRendererKernel.setLacunarity(10.0F);
+				abstractRendererKernel.setGain(1.0F / abstractRendererKernel.getLacunarity());
 			}
 			
 			if(isKeyPressed(KeyCode.K, true)) {
@@ -419,11 +419,51 @@ public final class TestApplication extends AbstractApplication {
 			}
 			
 			if(isKeyPressed(KeyCode.M, true)) {
-				rendererKernel.setDepthMaximum(rendererKernel.getDepthMaximum() + 1);
+				abstractRendererKernel.setDepthMaximum(abstractRendererKernel.getDepthMaximum() + 1);
 			}
 			
 			if(isKeyPressed(KeyCode.N, true)) {
-				rendererKernel.setDepthMaximum(Math.max(rendererKernel.getDepthMaximum() - 1, 1));
+				abstractRendererKernel.setDepthMaximum(Math.max(abstractRendererKernel.getDepthMaximum() - 1, 1));
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD0, true)) {
+				abstractRendererKernel.setToneMappingAndGammaCorrectionFilmicCurve();
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD1, true)) {
+				abstractRendererKernel.setToneMappingAndGammaCorrectionLinear();
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD2, true)) {
+				abstractRendererKernel.setToneMappingAndGammaCorrectionReinhard1();
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD3, true)) {
+				abstractRendererKernel.setToneMappingAndGammaCorrectionReinhard2();
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD4, false)) {
+				abstractRendererKernel.setAmplitude(abstractRendererKernel.getAmplitude() + 0.005F);
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD5, true)) {
+				abstractRendererKernel.setFrequency(abstractRendererKernel.getFrequency() + 0.005F);
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD6, false)) {
+				abstractRendererKernel.setGain(abstractRendererKernel.getGain() + 0.005F);
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD7, false)) {
+				abstractRendererKernel.setAmplitude(abstractRendererKernel.getAmplitude() - 0.005F);
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD8, true)) {
+				abstractRendererKernel.setFrequency(abstractRendererKernel.getFrequency() - 0.005F);
+			}
+			
+			if(isKeyPressed(KeyCode.NUMPAD9, false)) {
+				abstractRendererKernel.setGain(abstractRendererKernel.getGain() - 0.005F);
 			}
 			
 			if(isKeyPressed(KeyCode.O)) {
@@ -467,54 +507,149 @@ public final class TestApplication extends AbstractApplication {
 			}
 			
 			if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || isPressingKey()) {
-				rendererKernel.reset();
+				abstractRendererKernel.reset();
 				
 				renderPass.set(0);
 				
 				currentTimeMillis.set(System.currentTimeMillis());
 			}
 			
-			rendererKernel.execute(range);
-			
-			fPSCounter.update();
-			
-			final long elapsedTimeMillis = System.currentTimeMillis() - currentTimeMillis.get();
-			
 			final
 			Lock lock = getLock();
 			lock.lock();
 			
 			try {
-				rendererKernel.get(rendererKernel.getPixels());
+				abstractRendererKernel.execute(range);
 				
-				if(isFilteringBlur.get()) {
-					doFilterBlur(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				fPSCounter.update();
+				
+				abstractRendererKernel.get(abstractRendererKernel.getPixels());
+				
+				if(isSettingEnabled(SETTING_NAME_BOUNDING_VOLUME_HIERARCHY_WIREFRAME)) {
+					final float width = abstractRendererKernel.getWidth();
+					final float height = abstractRendererKernel.getHeight();
+					final float angle = toRadians(40.0F);
+//					final float distance = width * 0.5F / tan(angle * 0.5F);
+					final float zNear = 1.0F;
+					final float zFar = 1000.0F;//this.camera.getFocalDistance();
+					
+					final float eyeX = this.camera.getEyeX();
+					final float eyeY = this.camera.getEyeY();
+					final float eyeZ = this.camera.getEyeZ();
+					
+					final float uX = this.camera.getOrthoNormalBasisUX();
+					final float uY = this.camera.getOrthoNormalBasisUY();
+					final float uZ = this.camera.getOrthoNormalBasisUZ();
+					final float vX = this.camera.getOrthoNormalBasisVX();
+					final float vY = this.camera.getOrthoNormalBasisVY();
+					final float vZ = this.camera.getOrthoNormalBasisVZ();
+					final float wX = this.camera.getOrthoNormalBasisWX();
+					final float wY = this.camera.getOrthoNormalBasisWY();
+					final float wZ = this.camera.getOrthoNormalBasisWZ();
+					
+					final Matrix44 cameraToScreen = Matrix44.perspective(angle, width / height, zNear, zFar);
+					final Matrix44 cameraToWorld = Matrix44.rotation(new Vector3(uX, uY, uZ), new Vector3(vX, vY, vZ), new Vector3(wX, wY, wZ)).multiply(Matrix44.translation(new Point3(eyeX, eyeY, eyeZ)));
+//					final Matrix44 screenToCamera = cameraToScreen.inverse();
+//					final Matrix44 screenToRaster = doCreateScreenToRaster(width, height);
+//					final Matrix44 rasterToScreen = screenToRaster.inverse();
+//					final Matrix44 rasterToCamera = screenToCamera.multiply(rasterToScreen);
+//					final Matrix44 cameraToRaster = rasterToCamera.inverse();
+					final Matrix44 worldToCamera = cameraToWorld.inverse();
+//					final Matrix44 worldToRaster = cameraToRaster.multiply(worldToCamera);
+					final Matrix44 worldToScreen = cameraToScreen.multiply(worldToCamera);
+//					final Matrix44 rasterToWorld = worldToCamera.multiply(cameraToRaster);
+//					final Matrix44 screenToWorld = worldToCamera.multiply(cameraToScreen);
+					
+//					final Matrix44 projection = Matrix44.perspective(angle, width / height, zNear, zFar);
+//					final Matrix44 cameraToWorld = Matrix44.rotation(new Vector3(uX, uY, uZ), new Vector3(vX, vY, vZ), new Vector3(wX, wY, wZ)).multiply(Matrix44.translation(new Point3(eyeX, eyeY, eyeZ)));
+//					final Matrix44 worldToCamera = cameraToWorld.inverse();
+					
+					final CompiledScene compiledScene = abstractRendererKernel.getCompiledScene();
+					
+					final float[] boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
+					
+					int boundingVolumeHierarchyOffset = 0;
+					
+					do {
+						final float minimumX = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 2];
+						final float minimumY = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3];
+						final float minimumZ = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 4];
+						
+						final float maximumX = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 5];
+						final float maximumY = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 6];
+						final float maximumZ = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 7];
+						
+						final Point3 a = new Point3(minimumX, maximumY, minimumZ).transform(worldToScreen);
+						final Point3 b = new Point3(minimumX, minimumY, minimumZ).transform(worldToScreen);
+						final Point3 c = new Point3(maximumX, minimumY, minimumZ).transform(worldToScreen);
+						final Point3 d = new Point3(maximumX, maximumY, minimumZ).transform(worldToScreen);
+						final Point3 e = new Point3(minimumX, maximumY, maximumZ).transform(worldToScreen);
+						final Point3 f = new Point3(minimumX, minimumY, maximumZ).transform(worldToScreen);
+						final Point3 g = new Point3(maximumX, minimumY, maximumZ).transform(worldToScreen);
+						final Point3 h = new Point3(maximumX, maximumY, maximumZ).transform(worldToScreen);
+						
+//						final Point3 a = doPerspectiveDivide(new Point3(minimumX, maximumY, minimumZ).transform(worldToCamera), width, height);
+//						final Point3 b = doPerspectiveDivide(new Point3(minimumX, minimumY, minimumZ).transform(worldToCamera), width, height);
+//						final Point3 c = doPerspectiveDivide(new Point3(maximumX, minimumY, minimumZ).transform(worldToCamera), width, height);
+//						final Point3 d = doPerspectiveDivide(new Point3(maximumX, maximumY, minimumZ).transform(worldToCamera), width, height);
+//						final Point3 e = doPerspectiveDivide(new Point3(minimumX, maximumY, maximumZ).transform(worldToCamera), width, height);
+//						final Point3 f = doPerspectiveDivide(new Point3(minimumX, minimumY, maximumZ).transform(worldToCamera), width, height);
+//						final Point3 g = doPerspectiveDivide(new Point3(maximumX, minimumY, maximumZ).transform(worldToCamera), width, height);
+//						final Point3 h = doPerspectiveDivide(new Point3(maximumX, maximumY, maximumZ).transform(worldToCamera), width, height);
+						
+						abstractRendererKernel.drawLine((int)(a.x - 400.0F), (int)(-a.y + 600.0F), (int)(b.x - 400.0F), (int)(-b.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(b.x - 400.0F), (int)(-b.y + 600.0F), (int)(c.x - 400.0F), (int)(-c.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(c.x - 400.0F), (int)(-c.y + 600.0F), (int)(d.x - 400.0F), (int)(-d.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(d.x - 400.0F), (int)(-d.y + 600.0F), (int)(a.x - 400.0F), (int)(-a.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(c.x - 400.0F), (int)(-c.y + 600.0F), (int)(g.x - 400.0F), (int)(-g.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(g.x - 400.0F), (int)(-g.y + 600.0F), (int)(h.x - 400.0F), (int)(-h.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(h.x - 400.0F), (int)(-h.y + 600.0F), (int)(d.x - 400.0F), (int)(-d.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(h.x - 400.0F), (int)(-h.y + 600.0F), (int)(e.x - 400.0F), (int)(-e.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(e.x - 400.0F), (int)(-e.y + 600.0F), (int)(f.x - 400.0F), (int)(-f.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(f.x - 400.0F), (int)(-f.y + 600.0F), (int)(g.x - 400.0F), (int)(-g.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(a.x - 400.0F), (int)(-a.y + 600.0F), (int)(e.x - 400.0F), (int)(-e.y + 600.0F), Color.RED);
+						abstractRendererKernel.drawLine((int)(b.x - 400.0F), (int)(-b.y + 600.0F), (int)(f.x - 400.0F), (int)(-f.y + 600.0F), Color.RED);
+						
+						final float type = boundingVolumeHierarchy[boundingVolumeHierarchyOffset];
+						
+						if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
+							boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
+						} else {
+							boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
+						}
+					} while(boundingVolumeHierarchyOffset != -1);
 				}
 				
-				if(isFilteringDetectEdges.get()) {
-					doFilterDetectEdges(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				if(isSettingEnabled(SETTING_NAME_FILTER_BLUR)) {
+					ConvolutionFilters.filterBlur(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
 				}
 				
-				if(isFilteringEmboss.get()) {
-					doFilterEmboss(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				if(isSettingEnabled(SETTING_NAME_FILTER_DETECT_EDGES)) {
+					ConvolutionFilters.filterDetectEdges(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
 				}
 				
-				if(isFilteringGradientHorizontal.get()) {
-					doFilterGradientHorizontal(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				if(isSettingEnabled(SETTING_NAME_FILTER_EMBOSS)) {
+					ConvolutionFilters.filterEmboss(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
 				}
 				
-				if(isFilteringGradientVertical.get()) {
-					doFilterGradientVertical(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				if(isSettingEnabled(SETTING_NAME_FILTER_GRADIENT_HORIZONTAL)) {
+					ConvolutionFilters.filterGradientHorizontal(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
 				}
 				
-				if(isFilteringSharpen.get()) {
-					doFilterSharpen(rendererKernel.getPixels(), rendererKernel.getWidth(), rendererKernel.getHeight());
+				if(isSettingEnabled(SETTING_NAME_FILTER_GRADIENT_VERTICAL)) {
+					ConvolutionFilters.filterGradientVertical(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
+				}
+				
+				if(isSettingEnabled(SETTING_NAME_FILTER_SHARPEN)) {
+					ConvolutionFilters.filterSharpen(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
 				}
 			} finally {
 				lock.unlock();
 			}
 			
 			final int renderPass0 = renderPass.incrementAndGet();
+			
+			final long elapsedTimeMillis = System.currentTimeMillis() - currentTimeMillis.get();
 			
 			Platform.runLater(() -> {
 				final long hours = elapsedTimeMillis / (60L * 60L * 1000L);
@@ -527,7 +662,7 @@ public final class TestApplication extends AbstractApplication {
 				this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPSCounter.getFPS())));
 				this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass0)));
 				this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
-				this.labelRenderType.setText(String.format("Type: %s", rendererKernel.isPathTracing() ? "Path Tracer" : "Ray Caster"));
+				this.labelRenderType.setText(String.format("Type: %s", abstractRendererKernel.isPathTracing() ? "Path Tracer" : abstractRendererKernel.isRayCasting() ? "Ray Caster" : "Ray Marcher"));
 				this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(fPSCounter.getFPS() * getCanvasWidth() * getCanvasHeight())));
 			});
 			
@@ -578,68 +713,46 @@ public final class TestApplication extends AbstractApplication {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private static void doFilter(final byte[] pixels, final int width, final int height, final int filterWidth, final int filterHeight, final float[][] filter, final float factor, final float bias) {
-		final byte[] result = new byte[pixels.length];
+	private static Matrix44 doCreateScreenToRaster(final float width, final float height) {
+		final float aspectRatio = width / height;
+		final float x0 = aspectRatio > 1.0F ? -aspectRatio : -1.0F;
+		final float y0 = aspectRatio > 1.0F ? -1.0F : -1.0F / aspectRatio;
+		final float x1 = aspectRatio > 1.0F ? aspectRatio : 1.0F;
+		final float y1 = aspectRatio > 1.0F ? 1.0F : 1.0F / aspectRatio;
 		
-		for(int y = 0; y < height; y++) {
-			for(int x = 0; x < width; x++) {
-				float r0 = 0.0F;
-				float g0 = 0.0F;
-				float b0 = 0.0F;
-				
-				for(int filterY = 0; filterY < filterHeight; filterY++) {
-					for(int filterX = 0; filterX < filterWidth; filterX++) {
-						final int imageX = (x - filterWidth / 2 + filterX + width) % width;
-						final int imageY = (y - filterHeight / 2 + filterY + height) % height;
-						
-						final int index = (imageY * width + imageX) * 4;
-						
-						r0 += (pixels[index + 0] & 0xFF) * filter[filterY][filterX];
-						g0 += (pixels[index + 1] & 0xFF) * filter[filterY][filterX];
-						b0 += (pixels[index + 2] & 0xFF) * filter[filterY][filterX];
-					}
-				}
-				
-				final int index = (y * width + x) * 4;
-				
-				final int r1 = min(max((int)(factor * r0 + bias), 0), 255);
-				final int g1 = min(max((int)(factor * g0 + bias), 0), 255);
-				final int b1 = min(max((int)(factor * b0 + bias), 0), 255);
-				
-				result[index + 0] = (byte)(r1);
-				result[index + 1] = (byte)(g1);
-				result[index + 2] = (byte)(b1);
-			}
-		}
+		return doCreateScreenToRaster(width, height, x0, y0, x1, y1);
+	}
+	
+	private static Matrix44 doCreateScreenToRaster(final float width, final float height, final float x0, final float y0, final float x1, final float y1) {
+		final float transform0X = width;
+		final float transform0Y = height;
+		final float transform0Z = 1.0F;
 		
-		for(int i = 0; i < pixels.length; i += 4) {
-			pixels[i + 0] = result[i + 0];
-			pixels[i + 1] = result[i + 1];
-			pixels[i + 2] = result[i + 2];
-		}
+		final float transform1X = 1.0F / (x1 - x0);
+		final float transform1Y = 1.0F / (y0 - y1);
+		final float transform1Z = 1.0F;
+		
+		final float transform2X = -x0;
+		final float transform2Y = -y1;
+		final float transform2Z = 0.0F;
+		
+		final Matrix44 m0 = Matrix44.scale(new Vector3(transform0X, transform0Y, transform0Z));
+		final Matrix44 m1 = Matrix44.scale(new Vector3(transform1X, transform1Y, transform1Z));
+		final Matrix44 m2 = Matrix44.translation(new Point3(transform2X, transform2Y, transform2Z));
+		final Matrix44 m3 = m0.multiply(m1).multiply(m2);
+		
+		return m3;
 	}
 	
-	private static void doFilterBlur(final byte[] pixels, final int width, final int height) {
-		doFilter(pixels, width, height, 5, 5, FILTER_BLUR, 1.0F / 13.0F, 0.0F);
+	private static Point2 doProject(final float distance, final float width, final float height, final Point3 p) {
+		final float z = 1.0F / p.z;
+		final float x = distance * p.x * z + width * 0.5F;
+		final float y = -(distance * p.y * z) + height * 0.5F;
+		
+		return new Point2(x, y);
 	}
 	
-	private static void doFilterDetectEdges(final byte[] pixels, final int width, final int height) {
-		doFilter(pixels, width, height, 3, 3, FILTER_DETECT_EDGES, 1.0F, 0.0F);
-	}
-	
-	private static void doFilterEmboss(final byte[] pixels, final int width, final int height) {
-		doFilter(pixels, width, height, 3, 3, FILTER_EMBOSS, 1.0F, 128.0F);
-	}
-	
-	private static void doFilterGradientHorizontal(final byte[] pixels, final int width, final int height) {
-		doFilter(pixels, width, height, 3, 3, FILTER_GRADIENT_HORIZONTAL, 1.0F, 0.0F);
-	}
-	
-	private static void doFilterGradientVertical(final byte[] pixels, final int width, final int height) {
-		doFilter(pixels, width, height, 3, 3, FILTER_GRADIENT_VERTICAL, 1.0F, 0.0F);
-	}
-	
-	private static void doFilterSharpen(final byte[] pixels, final int width, final int height) {
-		doFilter(pixels, width, height, 3, 3, FILTER_SHARPEN, 1.0F, 0.0F);
+	private static Point3 doPerspectiveDivide(final Point3 p, final float width, final float height) {
+		return new Point3((p.x / -p.z + 1.0F) / 2.0F * width, (p.y / -p.z + 1.0F) / 2.0F * height, p.z);
 	}
 }
