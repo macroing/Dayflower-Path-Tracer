@@ -18,9 +18,10 @@
  */
 package org.dayflower.pathtracer.main;
 
-import static org.dayflower.pathtracer.math.Math2.tan;
 import static org.dayflower.pathtracer.math.Math2.toRadians;
 
+import java.io.File;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,13 +45,10 @@ import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.RendererKernel;
 import org.dayflower.pathtracer.scene.Matrix44;
-import org.dayflower.pathtracer.scene.Point2;
 import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Scene;
-import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.Vector3;
-import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.util.FPSCounter;
 
 /**
@@ -84,9 +82,8 @@ public final class TestApplication extends AbstractApplication {
 	private final Label labelRenderTime = new Label("Time: 00:00:00");
 	private final Label labelRenderType = new Label("Type: Path Tracer");
 	private final Label labelSPS = new Label("SPS: 00000000");
-	private final AbstractRendererKernel abstractRendererKernel;
-	private final Scene scene = Scenes.newMaterialShowcaseScene();
-	private final Sky sky;
+	private AbstractRendererKernel abstractRendererKernel;
+	private final Sky sky = new Sky();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -95,9 +92,6 @@ public final class TestApplication extends AbstractApplication {
 	 */
 	public TestApplication() {
 		super(String.format("%s %s", ENGINE_NAME, ENGINE_VERSION));
-		
-		this.sky = new Sky();
-		this.abstractRendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.sky, String.format("%s", Dayflower.getSceneFilename(this.scene.getName() + ".scene")), 1.0F);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +108,6 @@ public final class TestApplication extends AbstractApplication {
 		final
 		Camera camera = this.camera;
 		camera.setApertureRadius(0.0F);
-		camera.setCameraPredicate(this::doTest);
 		camera.setCenter(55.0F, 42.0F, 155.6F);
 		camera.setFieldOfViewX(70.0F);
 		camera.setFocalDistance(30.0F);
@@ -250,6 +243,36 @@ public final class TestApplication extends AbstractApplication {
 		
 		setCursorHidden(true);
 		setRecenteringMouse(true);
+	}
+	
+	/**
+	 * Initializes this {@code TestApplication} instance.
+	 */
+	@Override
+	public void init() {
+		final Parameters parameters = getParameters();
+		
+		final Map<String, String> namedParameters = parameters.getNamed();
+		
+		final Scene scene = Scenes.getSceneByName(namedParameters.containsKey("scene") ? namedParameters.get("scene") : "Material_Showcase_Scene.scene");
+		
+		final String sceneFilename = Dayflower.getSceneFilename(String.format("%s.scene", scene.getName()));
+		
+		final File sceneFile = new File(sceneFilename);
+		
+		if(!sceneFile.isFile()) {
+			final
+			CompiledScene compiledScene = CompiledScene.compile(this.camera, scene);
+			compiledScene.write(sceneFile);
+			
+			try {
+				Thread.sleep(100L);
+			} catch(final InterruptedException e) {
+//				Do nothing.
+			}
+		}
+		
+		this.abstractRendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.sky, sceneFilename, 1.0F);
 	}
 	
 	/**
@@ -683,76 +706,5 @@ public final class TestApplication extends AbstractApplication {
 	 */
 	public static void main(final String[] args) {
 		launch(args);
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private boolean[] doTest(final float oldX, final float oldY, final float oldZ, final float newX, final float newY, final float newZ) {
-		final boolean[] test = new boolean[] {true, true, true};
-		
-		for(final Shape shape : this.scene.getShapes()) {
-			if(shape instanceof Sphere) {
-				final Sphere sphere = Sphere.class.cast(shape);
-				
-				if(sphere.isWithinRadius(newX, oldY, oldZ, 5.0F)) {
-					test[0] = false;
-				}
-				
-				if(sphere.isWithinRadius(oldX, newY, oldZ, 5.0F)) {
-					test[1] = false;
-				}
-				
-				if(sphere.isWithinRadius(oldX, oldY, newZ, 5.0F)) {
-					test[2] = false;
-				}
-			}
-		}
-		
-		return test;
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private static Matrix44 doCreateScreenToRaster(final float width, final float height) {
-		final float aspectRatio = width / height;
-		final float x0 = aspectRatio > 1.0F ? -aspectRatio : -1.0F;
-		final float y0 = aspectRatio > 1.0F ? -1.0F : -1.0F / aspectRatio;
-		final float x1 = aspectRatio > 1.0F ? aspectRatio : 1.0F;
-		final float y1 = aspectRatio > 1.0F ? 1.0F : 1.0F / aspectRatio;
-		
-		return doCreateScreenToRaster(width, height, x0, y0, x1, y1);
-	}
-	
-	private static Matrix44 doCreateScreenToRaster(final float width, final float height, final float x0, final float y0, final float x1, final float y1) {
-		final float transform0X = width;
-		final float transform0Y = height;
-		final float transform0Z = 1.0F;
-		
-		final float transform1X = 1.0F / (x1 - x0);
-		final float transform1Y = 1.0F / (y0 - y1);
-		final float transform1Z = 1.0F;
-		
-		final float transform2X = -x0;
-		final float transform2Y = -y1;
-		final float transform2Z = 0.0F;
-		
-		final Matrix44 m0 = Matrix44.scale(new Vector3(transform0X, transform0Y, transform0Z));
-		final Matrix44 m1 = Matrix44.scale(new Vector3(transform1X, transform1Y, transform1Z));
-		final Matrix44 m2 = Matrix44.translation(new Point3(transform2X, transform2Y, transform2Z));
-		final Matrix44 m3 = m0.multiply(m1).multiply(m2);
-		
-		return m3;
-	}
-	
-	private static Point2 doProject(final float distance, final float width, final float height, final Point3 p) {
-		final float z = 1.0F / p.z;
-		final float x = distance * p.x * z + width * 0.5F;
-		final float y = -(distance * p.y * z) + height * 0.5F;
-		
-		return new Point2(x, y);
-	}
-	
-	private static Point3 doPerspectiveDivide(final Point3 p, final float width, final float height) {
-		return new Point3((p.x / -p.z + 1.0F) / 2.0F * width, (p.y / -p.z + 1.0F) / 2.0F * height, p.z);
 	}
 }

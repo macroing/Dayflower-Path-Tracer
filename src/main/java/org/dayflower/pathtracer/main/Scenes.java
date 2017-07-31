@@ -55,6 +55,44 @@ public final class Scenes {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
+	public static Scene getSceneByName(final String name) {
+		switch(name) {
+			case "Car_Scene":
+			case "Car_Scene.scene":
+				return newCarScene();
+			case "Cornell_Box_Scene":
+			case "Cornell_Box_Scene.scene":
+				return newCornellBoxScene();
+			case "Cornell_Box_Scene_2":
+			case "Cornell_Box_Scene_2.scene":
+				return newCornellBoxScene2();
+			case "Girl_Scene":
+			case "Girl_Scene.scene":
+				return newGirlScene();
+			case "House_Scene":
+			case "House_Scene.scene":
+				return newHouseScene();
+			case "House_Scene_2":
+			case "House_Scene_2.scene":
+				return newHouseScene2();
+			case "Material_Showcase_Scene":
+			case "Material_Showcase_Scene.scene":
+				return newMaterialShowcaseScene();
+			case "Monkey_Scene":
+			case "Monkey_Scene.scene":
+				return newMonkeyScene();
+			case "Sponza_Scene":
+			case "Sponza_Scene.scene":
+				return newSponzaScene();
+			case "Terrain_Scene":
+			case "Terrain_Scene.scene":
+				return newTerrainScene();
+			default:
+				return newMaterialShowcaseScene();
+		}
+	}
+	
+//	TODO: Add Javadocs.
 	public static Scene newCarScene() {
 		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);

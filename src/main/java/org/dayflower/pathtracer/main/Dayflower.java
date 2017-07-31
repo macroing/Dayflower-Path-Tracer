@@ -18,7 +18,7 @@
  */
 package org.dayflower.pathtracer.main;
 
-public final class Dayflower {
+final class Dayflower {
 	private Dayflower() {
 		
 	}
