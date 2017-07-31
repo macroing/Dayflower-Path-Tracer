@@ -6,6 +6,7 @@ This project is mainly a test project for the real renderer, Dayflower.
 
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Scene-1.png "Dayflower Path Tracer")
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Scene-2.png "Dayflower Path Tracer")
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Material-Showcase.png "Dayflower Path Tracer")
 
 Supported Features
 ------------------
