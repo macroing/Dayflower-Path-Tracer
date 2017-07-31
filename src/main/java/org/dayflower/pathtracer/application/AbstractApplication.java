@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2016 J&#246;rgen Lundgren
+ * Copyright 2009 - 2017 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -342,6 +342,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param name the name of the setting
+	 * @param isEnabled {@code true} if, and only if, the setting should be enabled, {@code false} otherwise
 	 * @return the state of the setting, which should be {@code isEnabled} at all times
 	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
 	 */

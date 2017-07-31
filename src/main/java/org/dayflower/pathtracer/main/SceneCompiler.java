@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2016 J&#246;rgen Lundgren
+ * Copyright 2009 - 2017 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -36,16 +36,16 @@ public final class SceneCompiler {
 	public static void main(final String[] args) {
 		final Camera camera = new Camera();
 		
-//		doCompileAndWriteScene(camera, Scenes.newCarScene());
-//		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene());
-//		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene2());
-//		doCompileAndWriteScene(camera, Scenes.newGirlScene());
-//		doCompileAndWriteScene(camera, Scenes.newHouseScene());
+		doCompileAndWriteScene(camera, Scenes.newCarScene());
+		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene());
+		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene2());
+		doCompileAndWriteScene(camera, Scenes.newGirlScene());
+		doCompileAndWriteScene(camera, Scenes.newHouseScene());
 //		doCompileAndWriteScene(camera, Scenes.newHouseScene2());
 		doCompileAndWriteScene(camera, Scenes.newMaterialShowcaseScene());
-//		doCompileAndWriteScene(camera, Scenes.newMonkeyScene());
+		doCompileAndWriteScene(camera, Scenes.newMonkeyScene());
 //		doCompileAndWriteScene(camera, Scenes.newSponzaScene());
-//		doCompileAndWriteScene(camera, Scenes.newTerrainScene());
+		doCompileAndWriteScene(camera, Scenes.newTerrainScene());
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

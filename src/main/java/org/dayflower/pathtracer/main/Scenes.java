@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2016 J&#246;rgen Lundgren
+ * Copyright 2009 - 2017 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -56,7 +56,7 @@ public final class Scenes {
 	
 //	TODO: Add Javadocs.
 	public static Scene newCarScene() {
-		final Texture textureGroundAlbedo = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);
 		
 		final Texture textureCarAlbedo = new SolidTexture(Color.BLACK);
@@ -152,7 +152,7 @@ public final class Scenes {
 		//			Material__600
 		//License0
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/SL500.obj", 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("SL500.obj"), 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
@@ -200,7 +200,7 @@ public final class Scenes {
 	
 //	TODO: Add Javadocs.
 	public static Scene newCornellBoxScene2() {
-		final Texture textureGroundAlbedo = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);
 		
 		final Texture textureAlbedo0 = new SolidTexture(Color.BLACK);
@@ -230,7 +230,7 @@ public final class Scenes {
 	public static Scene newGirlScene() {
 		final Texture texture1 = new SolidTexture(new Color(227, 161, 115));
 		final Texture texture2 = new CheckerboardTexture(Color.BLACK, Color.WHITE, 0.05F, 0.05F, 0.0F);//new SolidTexture(new Color(32, 53, 98));
-		final Texture texture3 = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.005F, 0.005F, 0.0F);//ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture texture3 = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.005F, 0.005F, 0.0F);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture texture4 = new SolidTexture(Color.BLACK);
 		final Texture texture5 = new SolidTexture(new Color(216, 192, 120));
 		final Texture texture6 = new SolidTexture(Color.WHITE);
@@ -246,7 +246,7 @@ public final class Scenes {
 		surfaces.put("04___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture6, texture4));
 		surfaces.put("05___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture4));
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/aphroditegirl.obj", 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("aphroditegirl.obj"), 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
@@ -270,7 +270,7 @@ public final class Scenes {
 	public static Scene newHouseScene() {
 		final Texture textureAlbedo = new SolidTexture(Color.WHITE);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
-		final Texture texture0 = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture texture0 = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new CheckerboardTexture(Color.GRAY, Color.WHITE);
 		final Texture texture2 = new SolidTexture(Color.GRAY);
 		final Texture texture3 = new SolidTexture(Color.RED);
@@ -297,8 +297,8 @@ public final class Scenes {
 		surfaces.put("20___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture9, textureNormal));
 		surfaces.put("double_sopha_wood_right_texture", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture10, textureNormal));
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/house interior.obj", 1.0F);
-//		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/trail.obj", 1.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("house interior.obj"), 1.0F);
+//		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("trail.obj"), 1.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
@@ -316,14 +316,14 @@ public final class Scenes {
 //	TODO: Add Javadocs.
 	public static Scene newHouseScene2() {
 		final Texture textureAlbedo = new SolidTexture(Color.WHITE);
-		final Texture textureGround = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture textureGround = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal);
 		
 		final Map<String, Surface> surfaces = new HashMap<>();
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), "resources/luxury house interior.obj", 1.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("luxury house interior.obj"), 1.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
@@ -340,12 +340,12 @@ public final class Scenes {
 	
 //	TODO: Add Javadocs.
 	public static Scene newMaterialShowcaseScene() {
-		final Texture texture0 = ImageTexture.load(new File("resources/bricks2.jpg"), 0.0F, 0.008F, 0.008F);//ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture texture0 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new SolidTexture(Color.RED);//new CheckerboardTexture(Color.RED, Color.ORANGE);
 		final Texture texture2 = new SolidTexture(Color.BLACK);
-		final Texture texture3 = ImageTexture.load(new File("resources/bricks2_normal.jpg"), 0.0F, 0.008F, 0.008F);
-		final Texture texture4 = ImageTexture.load(new File("resources/bricks2.jpg"));
-		final Texture texture5 = ImageTexture.load(new File("resources/bricks2_normal.jpg"));
+		final Texture texture3 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 0.008F, 0.008F);
+		final Texture texture4 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")));
+		final Texture texture5 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")));
 		
 		final
 		Scene scene = new Scene("Material_Showcase_Scene");
@@ -365,14 +365,14 @@ public final class Scenes {
 	
 //	TODO: Add Javadocs.
 	public static Scene newMonkeyScene() {
-		final Texture textureGroundAlbedo = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormal = new SolidTexture(Color.BLACK);
 		final Texture textureMonkeyAlbedo = new SolidTexture(Color.RED);
 		final Texture textureMonkeyNormal = new SolidTexture(Color.BLACK);
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureMonkeyAlbedo, textureMonkeyNormal);
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, "resources/smoothMonkey2.obj", 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, Dayflower.getModelFilename("smoothMonkey2.obj"), 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
@@ -388,68 +388,6 @@ public final class Scenes {
 	}
 	
 //	TODO: Add Javadocs.
-	public static Scene newPBSPScene() {
-		try(final DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(new File("resources/q1map.pbsp"))))) {
-			final float[] planes = new float[dataInputStream.readShort() * 4];
-			
-			for(int i = 0; i < planes.length; i += 4) {
-				planes[i + 0] = dataInputStream.readByte() / 127.0F;
-				planes[i + 1] = dataInputStream.readByte() / 127.0F;
-				planes[i + 2] = dataInputStream.readByte() / 127.0F;
-				planes[i + 3] = dataInputStream.readShort();
-			}
-			
-			final float[] vertices = new float[dataInputStream.readShort() * 3];
-			
-			for(int i = 0; i < vertices.length; i += 3) {
-				vertices[i + 0] = dataInputStream.readShort();
-				vertices[i + 1] = dataInputStream.readShort();
-				vertices[i + 2] = dataInputStream.readShort();
-			}
-			
-			final Material material = Material.LAMBERTIAN_DIFFUSE;
-			
-			final Texture textureAlbedo = new SolidTexture(Color.GRAY);
-			final Texture textureNormal = new SolidTexture(Color.BLACK);
-			
-			final List<Triangle> triangles = new ArrayList<>();
-			
-			for(int i = 0; i + 11 < vertices.length; i += 12) {
-				final Point3 p0 = new Point3(vertices[i + 11], vertices[i + 10], vertices[i + 9]);
-				final Point3 p1 = new Point3(vertices[i +  8], vertices[i +  7], vertices[i + 6]);
-				final Point3 p2 = new Point3(vertices[i +  5], vertices[i +  4], vertices[i + 3]);
-				final Point3 p3 = new Point3(vertices[i +  2], vertices[i +  1], vertices[i + 0]);
-				
-				final Vector3 surfaceNormal0 = Vector3.normalNormalized(p0, p1, p2);
-				final Vector3 surfaceNormal1 = Vector3.normalNormalized(p0, p2, p3);
-				
-				final Vertex vertexA0 = new Vertex(new Point2(), p0, surfaceNormal0);
-				final Vertex vertexB0 = new Vertex(new Point2(), p1, surfaceNormal0);
-				final Vertex vertexC0 = new Vertex(new Point2(), p2, surfaceNormal0);
-				
-				final Vertex vertexA1 = new Vertex(new Point2(), p0, surfaceNormal1);
-				final Vertex vertexB1 = new Vertex(new Point2(), p2, surfaceNormal1);
-				final Vertex vertexC1 = new Vertex(new Point2(), p3, surfaceNormal1);
-				
-				triangles.add(new Triangle(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal), vertexA0, vertexB0, vertexC0));
-				triangles.add(new Triangle(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal), vertexA1, vertexB1, vertexC1));
-			}
-			
-			final
-			Scene scene = new Scene("PBSP_Scene");
-			scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
-			
-			for(final Triangle triangle : triangles) {
-				scene.addShape(triangle);
-			}
-			
-			return scene;
-		} catch(final IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
-	
-//	TODO: Add Javadocs.
 	public static Scene newSponzaScene() {
 		final Texture textureAlbedo = new SolidTexture(Color.GRAY);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
@@ -458,7 +396,7 @@ public final class Scenes {
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal);
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, "resources/sponza.obj", 1.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, Dayflower.getModelFilename("sponza.obj"), 1.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
@@ -475,14 +413,14 @@ public final class Scenes {
 	
 //	TODO: Add Javadocs.
 	public static Scene newTerrainScene() {
-		final Texture textureAlbedo = ImageTexture.load(new File("resources/Texture_2.png"), 0.0F, 0.008F, 0.008F);
+		final Texture textureAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
 		
 		final Material material = Material.LAMBERTIAN_DIFFUSE;
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, material, textureAlbedo, textureNormal);
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, "resources/terrain2.obj", 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, Dayflower.getModelFilename("terrain2.obj"), 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		

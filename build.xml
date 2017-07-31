@@ -1,201 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="org.dayflower.pathtracer" default="distribution" basedir=".">
-<!--The following properties should be specified by each project. Some of them are the same for all projects, whereas others are not.-->
+	<!--The following properties should be specified by each project. Some of them are the same for all projects, whereas others are not.-->
 	<property name="java.source" value="1.8"/>
 	<property name="java.target" value="1.8"/>
-	<property name="project.class.classpath" value="."/>
-<!--<property name="project.class.main" value=""/>-->
-	<property name="project.version" value="0.1-beta"/>
-	<property name="root.directory" location="../.."/>
-	<property name="vendor.name" value="Dayflower.org"/>
-	
-<!--The following properties are based on the above properties and don't really need to change.-->
-	<property name="distribution.directory" location="${root.directory}/distribution"/>
-	<property name="project.build.directory" location="build"/>
-	<property name="project.build.main.directory" location="${project.build.directory}/main/java"/>
-	<property name="project.build.test.directory" location="${project.build.directory}/test/java"/>
-	<property name="project.documentation.directory" location="doc"/>
-	<property name="project.documentation.data.directory" location="${project.documentation.directory}/data"/>
-	<property name="project.documentation.html.directory" location="${project.documentation.directory}/html"/>
-	<property name="project.documentation.javadoc.directory" location="${project.documentation.directory}/javadoc"/>
+	<property name="project.class.classpath" value=". ./lib/aparapi.jar"/>
+	<property name="project.class.main" value="org.dayflower.pathtracer.main.TestApplication"/>
+	<property name="project.directory.root" location="."/>
 	<property name="project.name" value="${ant.project.name}"/>
-	<property name="project.resources.directory" location="resources"/>
-	<property name="project.resources.distribution.directory" location="${project.resources.directory}/distribution"/>
-	<property name="project.resources.jar.directory" location="${project.resources.directory}/main/java/jar"/>
-	<property name="project.resources.metainf.directory" location="${project.resources.directory}/main/java/metainf"/>
-	<property name="project.source.directory" location="src"/>
-	<property name="project.source.main.directory" location="${project.source.directory}/main/java"/>
-	<property name="project.source.test.directory" location="${project.source.directory}/test/java"/>
-	<property name="repository.directory" location="${root.directory}/repository"/>
-	<property name="repository.file" location="${repository.directory}/${project.name}.jar"/>
+	<property name="project.vendor" value="Dayflower.org"/>
+	<property name="project.version" value="0.0.20"/>
 	
-	<condition property="hasMainClass" value="true">
-		<isset property="project.class.main"/>
-	</condition>
-	
-	<condition property="hasNoMainClass" value="true">
-		<not>
-			<isset property="project.class.main"/>
-		</not>
-	</condition>
-	
-	<path id="repository.path">
-		<fileset dir="${repository.directory}" includes="**/*.jar"/>
-	</path>
-	
-	<path id="project.build.main.path">
-		<path refid="repository.path"/>
-		
-		<pathelement location="${project.build.main.directory}"/>
-	</path>
-	
-	<path id="project.build.test.path">
-		<path refid="repository.path"/>
-		
-		<pathelement location="${project.build.main.directory}"/>
-		<pathelement location="${project.build.test.directory}"/>
-	</path>
+	<!--The following properties are based on the above properties and don't really need to change.-->
+	<property name="project.directory.binary" location="bin"/>
+	<property name="project.directory.binary.main" location="${project.directory.binary}/main/java"/>
+	<property name="project.directory.distribution" location="${project.directory.root}/distribution"/>
+	<property name="project.directory.distribution.current" location="${project.directory.distribution}/${project.name}-${project.version}"/>
+	<property name="project.directory.library" location="lib"/>
+	<property name="project.directory.resources" location="resources"/>
+	<property name="project.directory.resources.distribution" location="${project.directory.resources}/distribution"/>
+	<property name="project.directory.resources.jar" location="${project.directory.resources}/jar"/>
+	<property name="project.directory.resources.metainf" location="${project.directory.resources}/metainf"/>
+	<property name="project.directory.source" location="src"/>
+	<property name="project.directory.source.main" location="${project.directory.source}/main/java"/>
 	
 	<target name="clean" description="Deletes generated directories and files for project ${project.name}.">
-		<delete dir="${project.build.directory}"/>
-		<delete dir="${project.documentation.directory}"/>
-		<delete file="${repository.file}"/>
+<!--	<delete dir="${project.directory.binary}"/>-->
+		<delete dir="${project.directory.distribution}"/>
 	</target>
 	
-	<target name="initialize" description="Creates needed directories for project ${project.name}.">
-		<mkdir dir="${project.build.main.directory}"/>
-		<mkdir dir="${project.build.test.directory}"/>
-		<mkdir dir="${project.documentation.data.directory}"/>
-		<mkdir dir="${project.documentation.html.directory}"/>
-		<mkdir dir="${project.documentation.javadoc.directory}"/>
-		<mkdir dir="${project.resources.distribution.directory}"/>
-		<mkdir dir="${project.resources.jar.directory}"/>
-		<mkdir dir="${project.resources.metainf.directory}"/>
-		<mkdir dir="${project.source.main.directory}"/>
-		<mkdir dir="${project.source.test.directory}"/>
-		<mkdir dir="${repository.directory}"/>
-	</target>
-	
-	<target name="compile.main" depends="initialize" description="Compiles the main Java source code for project ${project.name}.">
-		<javac source="${java.source}" target="${java.target}" srcdir="${project.source.main.directory}" destdir="${project.build.main.directory}" classpathref="repository.path" includeAntRuntime="false" encoding="UTF-8" debug="true" debuglevel="lines,vars,source">
+	<target name="distribution" depends="clean">
+		<!--Initialize all directories.-->
+		<mkdir dir="${project.directory.binary.main}"/>
+		<mkdir dir="${project.directory.distribution.current}"/>
+		<mkdir dir="${project.directory.resources.distribution}"/>
+		<mkdir dir="${project.directory.resources.jar}"/>
+		<mkdir dir="${project.directory.resources.metainf}"/>
+		<mkdir dir="${project.directory.source.main}"/>
+		
+		<path id="library.path">
+			<fileset dir="${project.directory.library}" includes="**/*.jar"/>
+		</path>
+		
+		<!--Perform Java compilation.-->
+		<javac source="${java.source}" target="${java.target}" srcdir="${project.directory.source.main}" destdir="${project.directory.binary.main}" classpathref="library.path" includeAntRuntime="false" encoding="UTF-8" debug="true" debuglevel="lines,vars,source">
 			<compilerarg value="-Xlint:all"/>
 		</javac>
-	</target>
-	
-	<target name="compile.test" depends="compile.main" description="Compiles the test Java source code for project ${project.name}.">
-		<javac source="${java.source}" target="${java.target}" srcdir="${project.source.test.directory}" destdir="${project.build.test.directory}" classpathref="project.build.main.path" includeAntRuntime="false" encoding="UTF-8" debug="true" debuglevel="lines,vars,source">
-			<compilerarg value="-Xlint:all"/>
-		</javac>
-	</target>
-	
-	<target name="test" depends="compile.test" description="Runs JUnit tests for project ${project.name}.">
-		<junit printsummary="true">
-			<classpath refid="project.build.test.path"/>
-			
-			<formatter type="plain"/>
-			<formatter type="xml"/>
-			
-			<batchtest todir="${project.documentation.data.directory}">
-				<fileset dir="${project.build.test.directory}" includes="**/*Test.class"/>
-			</batchtest>
-		</junit>
-	</target>
-	
-	<target name="test.report" depends="test" description="Generates JUnit test reports for project ${project.name}.">
-		<junitreport todir="${project.documentation.data.directory}">
-			<fileset dir="${project.documentation.data.directory}">
-				<include name="TEST-*.xml"/>
-			</fileset>
-			
-		<!--The report task could not be used due to bugs in previous versions of required libraries (either Apache Ant, Apache Xalan, ...). It was in Java 7.-->
-			
-			<report format="frames" todir="${project.documentation.html.directory}"/>
-		</junitreport>
-	</target>
-	
-	<target name="jar" depends="compile.main" description="Generates a Jar file for project ${project.name}.">
-		<antcall target="jar.1"/>
-		<antcall target="jar.2"/>
-	</target>
-	
-	<target name="jar.1" depends="compile.main" description="Generates a Jar file for project ${project.name}." if="hasNoMainClass">
+		
+		<!--Initialize time-stamps.-->
 		<tstamp>
 			<format property="build.date" pattern="EEEE, d MMMM yyyy"/>
 			<format property="build.time" pattern="hh:mm a"/>
 		</tstamp>
 		
-		<jar destfile="${repository.file}" basedir="${project.build.main.directory}">
-			<manifest>
-				<attribute name="Built-By" value="${user.name}"/>
-				<attribute name="Specification-Title" value="${project.name}"/>
-				<attribute name="Specification-Version" value="${project.version}"/>
-				<attribute name="Specification-Vendor" value="${vendor.name}"/>
-				<attribute name="Implementation-Title" value="${project.name}"/>
-				<attribute name="Implementation-Version" value="${project.version} - built at ${build.time} on ${build.date}"/>
-				<attribute name="Implementation-Vendor" value="${vendor.name}"/>
-			</manifest>
-			
-			<fileset dir="${project.resources.jar.directory}" excludes="**/.*/**"/>
-			
-			<metainf dir="${project.resources.metainf.directory}" excludes="**/.*/**"/>
-		</jar>
-	</target>
-	
-	<target name="jar.2" depends="compile.main" description="Generates a Jar file for project ${project.name}." if="hasMainClass">
-		<tstamp>
-			<format property="build.date" pattern="EEEE, d MMMM yyyy"/>
-			<format property="build.time" pattern="hh:mm a"/>
-		</tstamp>
-		
-		<jar destfile="${repository.file}" basedir="${project.build.main.directory}">
+		<!--Create a JAR-file.-->
+		<jar destfile="${project.directory.distribution.current}/${project.name}.jar" basedir="${project.directory.binary.main}">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}"/>
 				<attribute name="Class-Path" value="${project.class.classpath}"/>
 				<attribute name="Main-Class" value="${project.class.main}"/>
 				<attribute name="Specification-Title" value="${project.name}"/>
 				<attribute name="Specification-Version" value="${project.version}"/>
-				<attribute name="Specification-Vendor" value="${vendor.name}"/>
+				<attribute name="Specification-Vendor" value="${project.vendor}"/>
 				<attribute name="Implementation-Title" value="${project.name}"/>
-				<attribute name="Implementation-Version" value="${project.version} - built at ${build.time} on ${build.date}"/>
-				<attribute name="Implementation-Vendor" value="${vendor.name}"/>
-			<!--<attribute name="SplashScreen-Image" value="SplashScreen.jpg"/>-->
+				<attribute name="Implementation-Version" value="${project.version}"/>
+				<attribute name="Implementation-Vendor" value="${project.vendor}"/>
 			</manifest>
 			
-			<fileset dir="${project.resources.jar.directory}" excludes="**/.*/**"/>
-			
-			<metainf dir="${project.resources.metainf.directory}" excludes="**/.*/**"/>
+			<fileset dir="${project.directory.resources.jar}" excludes="**/.*/**"/>
+			<metainf dir="${project.directory.resources.metainf}" excludes="**/.*/**"/>
 		</jar>
-	</target>
-	
-	<target name="javadoc" depends="compile.main" description="Generates Javadoc for project ${project.name}.">
-		<javadoc encoding="UTF-8" charset="UTF-8" docencoding="UTF-8" sourcepath="${project.source.main.directory}" destdir="${project.documentation.javadoc.directory}" author="true" version="true" use="true" access="protected" linksource="false" windowtitle="${project.name} API">
+		
+		<!--Generate Javadocs.-->
+		<javadoc encoding="UTF-8" charset="UTF-8" docencoding="UTF-8" sourcepath="${project.directory.source.main}" destdir="${project.directory.distribution.current}/doc" author="true" version="true" use="true" access="protected" linksource="false" windowtitle="${project.name} API">
 			<classpath>
-				<path refid="repository.path"/>
-				
-				<pathelement location="${project.build.main.directory}"/>
+				<path refid="library.path"/>
+				<pathelement location="${project.directory.binary.main}"/>
 			</classpath>
 		</javadoc>
-	</target>
-	
-	<target name="distribution" depends="test.report, jar, javadoc">
-		<delete dir="${distribution.directory}/${project.name}-${project.version}"/>
 		
-		<mkdir dir="${distribution.directory}/${project.name}-${project.version}"/>
-		
-		<copy todir="${distribution.directory}/${project.name}-${project.version}">
-			<fileset dir="${repository.directory}" includes="${project.name}.jar"/>
-			<fileset dir="${project.resources.distribution.directory}"/>
-			<fileset dir="." includes="COPYING"/>
-			<fileset dir="." includes="COPYING.LESSER"/>
-			<fileset dir="." includes="README.md"/>
+		<!--Copy files.-->
+		<copy todir="${project.directory.distribution.current}">
+			<fileset dir="${project.directory.resources.distribution}"/>
 		</copy>
 		
-		<copy todir="${distribution.directory}/${project.name}-${project.version}/doc">
-			<fileset dir="${project.documentation.javadoc.directory}"/>
+		<!--Copy the source code.-->
+		<copy todir="${project.directory.distribution.current}/src">
+			<fileset dir="${project.directory.source.main}"/>
 		</copy>
 		
-		<copy todir="${distribution.directory}/${project.name}-${project.version}/src">
-			<fileset dir="${project.source.main.directory}"/>
+		<!--Copy the libraries.-->
+		<copy todir="${project.directory.distribution.current}/lib">
+			<fileset dir="${project.directory.library}"/>
 		</copy>
 	</target>
 </project>

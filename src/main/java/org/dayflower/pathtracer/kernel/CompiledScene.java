@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2016 J&#246;rgen Lundgren
+ * Copyright 2009 - 2017 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -469,11 +469,17 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public void write() {
-		write(new File("resources/" + getName() + ".scene"));
+		write(new File("resources/distribution/scene/" + getName() + ".scene"));
 	}
 	
 //	TODO: Add Javadocs.
 	public void write(final File file) {
+		final File parentFile = file.getParentFile();
+		
+		if(parentFile != null && !parentFile.exists()) {
+			parentFile.mkdirs();
+		}
+		
 		try(final DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(Objects.requireNonNull(file, "file == null"))))) {
 			write(dataOutputStream);
 		} catch(final IOException e) {

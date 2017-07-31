@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2016 J&#246;rgen Lundgren
+ * Copyright 2009 - 2017 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -269,6 +269,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @param camera the {@link Camera} to use
 	 * @param sky the {@link Sky} to use
 	 * @param filename the filename of the file to read from
+	 * @param scale the scale to use in the scene
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code filename} are {@code null}
 	 */
 	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final Sky sky, final String filename, final float scale) {

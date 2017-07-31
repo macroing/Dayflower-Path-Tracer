@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2016 J&#246;rgen Lundgren
+ * Copyright 2009 - 2017 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -85,7 +85,7 @@ public final class TestApplication extends AbstractApplication {
 	private final Label labelRenderType = new Label("Type: Path Tracer");
 	private final Label labelSPS = new Label("SPS: 00000000");
 	private final AbstractRendererKernel abstractRendererKernel;
-	private final Scene scene = Scenes.newMaterialShowcaseScene();//.newGirlScene();
+	private final Scene scene = Scenes.newMaterialShowcaseScene();
 	private final Sky sky;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ public final class TestApplication extends AbstractApplication {
 		super(String.format("%s %s", ENGINE_NAME, ENGINE_VERSION));
 		
 		this.sky = new Sky();
-		this.abstractRendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.sky, String.format("resources/%s.scene", this.scene.getName()), 1.0F);
+		this.abstractRendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.sky, String.format("%s", Dayflower.getSceneFilename(this.scene.getName() + ".scene")), 1.0F);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
