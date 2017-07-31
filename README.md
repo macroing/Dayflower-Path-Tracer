@@ -87,6 +87,30 @@ Supported Controls
 * NUMPAD 2: Use Tone Mapping and Gamma Correction Reinhard v.1
 * NUMPAD 3: Use Tone Mapping and Gamma Correction Reinhard v.2
 
+Getting Started
+---------------
+To clone this repository, build the project and run it, you can type the following in Git Bash. You need Apache Ant though.
+```bash
+git clone https://github.com/macroing/Dayflower-Path-Tracer.git
+cd Dayflower-Path-Tracer
+ant
+cd distribution/org.dayflower.pathtracer-0.0.20
+java -Djava.library.path=lib -jar org.dayflower.pathtracer.jar
+```
+To use a different scene than the default, type the following.
+```bash
+java -Djava.library.path=lib -jar org.dayflower.pathtracer.jar --scene=SceneName
+```
+The scenes that exists are the following.
+* Car_Scene
+* Cornell_Box_Scene
+* Cornell_Box_Scene_2
+* Girl_Scene
+* House_Scene
+* Material_Showcase_Scene (Default)
+* Monkey_Scene
+* Terrain_Scene
+
 Dependencies
 ------------
  - [Java 8](http://www.java.com).
