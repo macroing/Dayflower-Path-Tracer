@@ -10,42 +10,61 @@ This project is mainly a test project for the real renderer, Dayflower.
 
 Supported Features
 ------------------
-* Acceleration Structure: Bounding Volume Hierarchy (BVH)
-* Camera: Depth of Field
-* Camera: Field of View
-* Camera: Free Movement
-* Camera: Fisheye Camera Lens
-* Camera: Thin Camera Lens
-* Effect: Blur
-* Effect: Detect Edges
-* Effect: Emboss
-* Effect: Gradient - Horizontal
-* Effect: Gradient - Vertical
-* Effect: Grayscale - Luminosity
-* Effect: Sepia Tone
-* Effect: Sharpen
-* Material: Diffuse using Lambertian reflection
-* Material: Clear Coat
-* Material: Glass
-* Material: Metal using Phong
-* Material: Specular (Mirror)
-* Normal Mapping: Image Texture
-* Normal Mapping: Perlin Noise
-* Rendering Algorithm: Path Tracing
-* Rendering Algorithm: Ray Casting
-* Rendering Algorithm: Ray Marching
-* Shape: Plane
-* Shape: Sphere
-* Shape: Triangle
-* Shape: Triangle Mesh
-* Sun and Sky Model: Perez
-* Texture: Checkerboard
-* Texture: Constant (Solid)
-* Texture: Image
-* Tone Mapping and Gamma Correction: Filmic Curve
-* Tone Mapping and Gamma Correction: Linear
-* Tone Mapping and Gamma Correction: Reinhard v.1
-* Tone Mapping and Gamma Correction: Reinhard v.2
+### Acceleration Structure
+* Bounding Volume Hierarchy (BVH)
+
+### Camera
+* Depth of Field
+* Field of View
+* Free Movement
+* Fisheye Camera Lens
+* Thin Camera Lens
+
+### Effect
+* Blur
+* Detect Edges
+* Emboss
+* Gradient - Horizontal
+* Gradient - Vertical
+* Grayscale - Luminosity
+* Sepia Tone
+* Sharpen
+
+### Material
+* Diffuse using Lambertian reflection
+* Clear Coat
+* Glass
+* Metal using Phong
+* Specular (Mirror)
+
+### Normal Mapping
+* Image Texture
+* Perlin Noise
+
+### Rendering Algorithm
+* Path Tracing
+* Ray Casting
+* Ray Marching
+
+### Shape
+* Plane
+* Sphere
+* Triangle
+* Triangle Mesh
+
+### Sun and Sky Model
+* Perez
+
+### Texture
+* Checkerboard
+* Constant (Solid)
+* Image
+
+### Tone Mapping and Gamma Correction
+* Filmic Curve
+* Linear
+* Reinhard v.1
+* Reinhard v.2
 
 Supported Controls
 ------------------
