@@ -18,13 +18,16 @@
  */
 package org.dayflower.pathtracer.main;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
 import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Scene;
 
-//TODO: Add Javadocs.
+/**
+ * A class that compiles {@link Scene}s so they can be used by Dayflower - Path Tracer.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class SceneCompiler {
 	private SceneCompiler() {
 		
@@ -32,7 +35,11 @@ public final class SceneCompiler {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The main entry-point for this class.
+	 * 
+	 * @param args these arguments are not used
+	 */
 	public static void main(final String[] args) {
 		final Camera camera = new Camera();
 		

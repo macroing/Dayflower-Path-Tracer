@@ -25,6 +25,12 @@ import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Sky;
 
+/**
+ * An abstract extension of the {@code AbstractKernel} class that performs Path Tracing, Ray Casting and Ray Marching.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public abstract class AbstractRendererKernel extends AbstractKernel {
 	private final Camera camera;
 	private final CompiledScene compiledScene;
@@ -33,6 +39,17 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	/**
+	 * Constructs a new {@code AbstractRendererKernel} instance.
+	 * <p>
+	 * If either {@code camera} or {@code compiledScene} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param width the width to use
+	 * @param height the height to use
+	 * @param camera the {@link Camera} to use
+	 * @param compiledScene the {@link CompiledScene} to use
+	 * @throws NullPointerException thrown if, and only if, either {@code camera} or {@code compiledScene} are {@code null}
+	 */
 	protected AbstractRendererKernel(final int width, final int height, final Camera camera, final CompiledScene compiledScene) {
 		this.width = width;
 		this.height = height;
@@ -192,21 +209,41 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 		return this.compiledScene;
 	}
 	
+	/**
+	 * Returns the amplitude currently used.
+	 * 
+	 * @return the amplitude currently used
+	 */
 	@SuppressWarnings("static-method")
 	public float getAmplitude() {
 		return 1.0F;
 	}
 	
+	/**
+	 * Returns the frequency currently used.
+	 * 
+	 * @return the frequency currently used
+	 */
 	@SuppressWarnings("static-method")
 	public float getFrequency() {
 		return 1.0F;
 	}
 	
+	/**
+	 * Returns the gain currently used.
+	 * 
+	 * @return the gain currently used
+	 */
 	@SuppressWarnings("static-method")
 	public float getGain() {
 		return 1.0F;
 	}
 	
+	/**
+	 * Returns the lacunarity currently used.
+	 * 
+	 * @return the lacunarity currently used
+	 */
 	@SuppressWarnings("static-method")
 	public float getLacunarity() {
 		return 1.0F;
@@ -228,6 +265,11 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 		return this.height;
 	}
 	
+	/**
+	 * Returns the octaves currently used.
+	 * 
+	 * @return the octaves currently used
+	 */
 	@SuppressWarnings("static-method")
 	public int getOctaves() {
 		return 1;
@@ -348,7 +390,11 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 //		Do nothing.
 	}
 	
-	@SuppressWarnings("unused")
+	/**
+	 * Sets the amplitude to use.
+	 * 
+	 * @param amplitude the new amplitude
+	 */
 	public void setAmplitude(final float amplitude) {
 //		Do nothing.
 	}
@@ -389,17 +435,29 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 //		Do nothing.
 	}
 	
-	@SuppressWarnings("unused")
+	/**
+	 * Sets the frequency to use.
+	 * 
+	 * @param frequency the new frequency
+	 */
 	public void setFrequency(final float frequency) {
 //		Do nothing.
 	}
 	
-	@SuppressWarnings("unused")
+	/**
+	 * Sets the gain to use.
+	 * 
+	 * @param gain the new gain
+	 */
 	public void setGain(final float gain) {
 //		Do nothing.
 	}
 	
-	@SuppressWarnings("unused")
+	/**
+	 * Sets the lacunarity to use.
+	 * 
+	 * @param lacunarity the new lacunarity
+	 */
 	public void setLacunarity(final float lacunarity) {
 //		Do nothing.
 	}
@@ -413,7 +471,11 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 //		Do nothing.
 	}
 	
-	@SuppressWarnings("unused")
+	/**
+	 * Sets the octaves to use.
+	 * 
+	 * @param octaves the new octaves
+	 */
 	public void setOctaves(final int octaves) {
 //		Do nothing.
 	}

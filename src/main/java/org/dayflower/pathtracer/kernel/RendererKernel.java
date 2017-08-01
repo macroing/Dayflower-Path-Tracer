@@ -35,8 +35,6 @@ import org.dayflower.pathtracer.scene.Sky;
  * @author J&#246;rgen Lundgren
  */
 public final class RendererKernel extends AbstractRendererKernel {
-//	private static final float MAXIMUM_COLOR_COMPONENT = 255.0F;
-//	private static final float MAXIMUM_COLOR_COMPONENT_RECIPROCAL = 1.0F / MAXIMUM_COLOR_COMPONENT;
 	private static final float PHONG_EXPONENT = 20.0F;
 	private static final float PHONE_EXPONENT_PLUS_ONE_RECIPROCAL = 1.0F / (PHONG_EXPONENT + 1.0F);
 	private static final float REFRACTIVE_INDEX_0 = 1.0F;
@@ -368,21 +366,41 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return this.pixels;
 	}
 	
+	/**
+	 * Returns the amplitude currently used.
+	 * 
+	 * @return the amplitude currently used
+	 */
 	@Override
 	public float getAmplitude() {
 		return this.amplitude;
 	}
 	
+	/**
+	 * Returns the frequency currently used.
+	 * 
+	 * @return the frequency currently used
+	 */
 	@Override
 	public float getFrequency() {
 		return this.frequency;
 	}
 	
+	/**
+	 * Returns the gain currently used.
+	 * 
+	 * @return the gain currently used
+	 */
 	@Override
 	public float getGain() {
 		return this.gain;
 	}
 	
+	/**
+	 * Returns the lacunarity currently used.
+	 * 
+	 * @return the lacunarity currently used
+	 */
 	@Override
 	public float getLacunarity() {
 		return this.lacunarity;
@@ -408,6 +426,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return this.depthRussianRoulette;
 	}
 	
+	/**
+	 * Returns the octaves currently used.
+	 * 
+	 * @return the octaves currently used
+	 */
 	@Override
 	public int getOctaves() {
 		return this.octaves;
@@ -430,7 +453,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	public RendererKernel compile(final byte[] pixels, final int width, final int height) {
 		this.pixels = Objects.requireNonNull(pixels, "pixels == null");
 		
-//		setExecutionMode(EXECUTION_MODE.JTP);
 		setExplicit(true);
 		setSeed(System.nanoTime(), width * height);
 		
@@ -733,6 +755,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 		doCalculateColor(pixelIndex);
 	}
 	
+	/**
+	 * Sets the amplitude to use.
+	 * 
+	 * @param amplitude the new amplitude
+	 */
 	@Override
 	public void setAmplitude(final float amplitude) {
 		this.amplitude = Math2.max(amplitude, 0.0F);
@@ -778,16 +805,31 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.effectSepiaTone = isEffectSepiaTone ? 1 : 0;
 	}
 	
+	/**
+	 * Sets the frequency to use.
+	 * 
+	 * @param frequency the new frequency
+	 */
 	@Override
 	public void setFrequency(final float frequency) {
 		this.frequency = Math2.max(frequency, 0.0F);
 	}
 	
+	/**
+	 * Sets the gain to use.
+	 * 
+	 * @param gain the new gain
+	 */
 	@Override
 	public void setGain(final float gain) {
 		this.gain = Math2.max(gain, 0.0F);
 	}
 	
+	/**
+	 * Sets the lacunarity to use.
+	 * 
+	 * @param lacunarity the new lacunarity
+	 */
 	@Override
 	public void setLacunarity(final float lacunarity) {
 		this.lacunarity = Math2.max(lacunarity, 0.0F);
@@ -803,6 +845,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.isNormalMapping = isNormalMapping ? 1 : 0;
 	}
 	
+	/**
+	 * Sets the octaves to use.
+	 * 
+	 * @param octaves the new octaves
+	 */
 	@Override
 	public void setOctaves(final int octaves) {
 		this.octaves = Math2.max(octaves, 1);
@@ -1312,24 +1359,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return lerp6;
 	}
 	
-	/*
-	private float doSimplexFractalX(final int octaves, final float x) {
-		float result = 0.0F;
-		
-		float amplitude = this.amplitude;
-		float frequency = this.frequency;
-		
-		for(int i = 0; i < octaves; i++) {
-			result += amplitude * doSimplexNoiseX(x * frequency);
-			
-			amplitude *= this.gain;
-			frequency *= this.lacunarity;
-		}
-		
-		return result;
-	}
-	*/
-	
 	private float doSimplexFractalXY(final int octaves, final float x, final float y) {
 		float result = 0.0F;
 		
@@ -1345,27 +1374,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		return result;
 	}
-	
-	/*
-	private float doSimplexNoiseX(final float x) {
-		final int i0 = doFastFloor(x);
-		final int i1 = i0 + 1;
-		
-		final float x0 = x - i0;
-		final float x1 = x0 - 1.0F;
-		
-		final float t00 = 1.0F - x0 * x0;
-		final float t01 = t00 * t00;
-		
-		final float t10 = 1.0F - x1 * x1;
-		final float t11 = t10 * t10;
-		
-		final float n0 = t01 * t01 * doGradientX(doHash(i0), x0);
-		final float n1 = t11 * t11 * doGradientX(doHash(i1), x1);
-		
-		return 0.395F * (n0 + n1);
-	}
-	*/
 	
 	private float doSimplexNoiseXY(final float x, final float y) {
 		final float a = 0.366025403F;
@@ -3242,7 +3250,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float originY = this.rays[offsetOrigin + 1];
 		float originZ = this.rays[offsetOrigin + 2];
 		
-		originY = doGetY(originX, originZ) + 0.1F;//max(doGetY(originX, originZ) + 0.1F, 0.022F);
+		originY = doGetY(originX, originZ) + 0.1F;
 		
 		float directionX = this.rays[offsetDirection];
 		float directionY = this.rays[offsetDirection + 1];
@@ -3254,11 +3262,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		final float minT = 0.001F;
 		final float maxT = max(originY, 1.0F) * 20.0F;
-		
-//		float lh = 0.0F;
-//		float ly = 0.0F;
-		
-//		float hitT = -1.0F;
 		
 		doCalculateColorForSky(directionX, directionY, directionZ);
 		
@@ -3278,8 +3281,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		final float sunAmbientCoefficient = 0.2F;
 		
-//		final float sunLightIntensity = 3.0F;
-		
 		for(float t = minT; t < maxT; t += delT) {
 			final float surfaceIntersectionPointX = originX + directionX * t;
 			final float surfaceIntersectionPointY = originY + directionY * t;
@@ -3288,30 +3289,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float height = doGetY(surfaceIntersectionPointX, surfaceIntersectionPointZ);
 			
 			if(surfaceIntersectionPointY < height) {
-//				hitT = t - delT + delT * (lh - ly) / (surfaceIntersectionPointY - ly - height + lh);
-				
 				final float gray = 0.5F;
 				
 //				Calculate the albedo color of the surface intersection point:
 				float albedoColorR = gray;
 				float albedoColorG = gray;
 				float albedoColorB = gray;
-				
-				/*
-				if(height > 0.1F) {
-					albedoColorR = gray;
-					albedoColorG = gray;
-					albedoColorB = gray;
-				} else if(height > 0.02F) {
-					albedoColorR = gray;
-					albedoColorG = gray;
-					albedoColorB = gray;
-				} else {
-					albedoColorR = gray;
-					albedoColorG = gray;
-					albedoColorB = gray;
-				}
-				*/
 				
 //				Calculate the surface normal at the surface intersection point:
 				final float surfaceNormal0X = doGetY(surfaceIntersectionPointX - EPSILON, surfaceIntersectionPointZ) - doGetY(surfaceIntersectionPointX + EPSILON, surfaceIntersectionPointZ);
@@ -3321,13 +3304,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
 				final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
 				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
-				
-//				Calculate the sun and sky color given the surface normal at the surface intersection point:
-//				doCalculateColorForSky(pixelIndex, surfaceNormal1X, surfaceNormal1Y, surfaceNormal1Z);
-				
-//				final float sunAndSkyColorR = this.temporaryColors[pixelIndex0];
-//				final float sunAndSkyColorG = this.temporaryColors[pixelIndex0 + 1];
-//				final float sunAndSkyColorB = this.temporaryColors[pixelIndex0 + 2];
 				
 //				Calculate the direction from the surface intersection point to the sun:
 				final float surfaceToSun0X = sunPositionX - surfaceIntersectionPointX;
@@ -3344,16 +3320,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float surfaceToCameraZ = -directionZ;
 				
 //				Calculate the ambient color:
-				final float ambientColorR = sunAmbientCoefficient * albedoColorR * 1.0F;//sunAndSkyColorR;
-				final float ambientColorG = sunAmbientCoefficient * albedoColorG * 1.0F;//sunAndSkyColorG;
-				final float ambientColorB = sunAmbientCoefficient * albedoColorB * 1.0F;//sunAndSkyColorB;
+				final float ambientColorR = sunAmbientCoefficient * albedoColorR * 1.0F;
+				final float ambientColorG = sunAmbientCoefficient * albedoColorG * 1.0F;
+				final float ambientColorB = sunAmbientCoefficient * albedoColorB * 1.0F;
 				
 //				Calculate the diffuse color:
 				final float dotProductSurfaceNormalAndSurfaceToSun = surfaceNormal1X * surfaceToSun1X + surfaceNormal1Y * surfaceToSun1Y + surfaceNormal1Z * surfaceToSun1Z;
 				final float diffuseCoefficient = max(dotProductSurfaceNormalAndSurfaceToSun, 0.0F);
-				final float diffuseColorR = diffuseCoefficient * albedoColorR * 1.0F;//sunAndSkyColorR;
-				final float diffuseColorG = diffuseCoefficient * albedoColorG * 1.0F;//sunAndSkyColorG;
-				final float diffuseColorB = diffuseCoefficient * albedoColorB * 1.0F;//sunAndSkyColorB;
+				final float diffuseColorR = diffuseCoefficient * albedoColorR * 1.0F;
+				final float diffuseColorG = diffuseCoefficient * albedoColorG * 1.0F;
+				final float diffuseColorB = diffuseCoefficient * albedoColorB * 1.0F;
 				
 //				Calculate the specular color:
 				float specularCoefficient = 0.0F;
@@ -3376,68 +3352,20 @@ public final class RendererKernel extends AbstractRendererKernel {
 					specularCoefficient = pow(max(dotProductSurfaceToCameraAndReflection, 0.0F), specularPower);
 				}
 				
-				final float specularColorR = specularCoefficient * 1.0F * 1.0F;//sunAndSkyColorR;
-				final float specularColorG = specularCoefficient * 1.0F * 1.0F;//sunAndSkyColorG;
-				final float specularColorB = specularCoefficient * 1.0F * 1.0F;//sunAndSkyColorB;
+				final float specularColorR = specularCoefficient * 1.0F * 1.0F;
+				final float specularColorG = specularCoefficient * 1.0F * 1.0F;
+				final float specularColorB = specularCoefficient * 1.0F * 1.0F;
 				
 //				Calculate the final color in linear color space:
 				pixelColorR = ambientColorR + diffuseColorR + specularColorR;
 				pixelColorG = ambientColorG + diffuseColorG + specularColorG;
 				pixelColorB = ambientColorB + diffuseColorB + specularColorB;
 				
-				/*
-				final float dotProduct = surfaceNormal1X * sunDirectionX + surfaceNormal1Y * sunDirectionY + surfaceNormal1Z * sunDirectionZ;
-				final float dotProductOrZero = max(dotProduct, 0.0F);
-				
-				final float ambientColorR = albedoColorR * this.temporaryColors[pixelIndex0];
-				final float ambientColorG = albedoColorG * this.temporaryColors[pixelIndex0 + 1];
-				final float ambientColorB = albedoColorB * this.temporaryColors[pixelIndex0 + 2];
-				
-				final float diffuseColorR = albedoColorR * dotProductOrZero * sunLightIntensity;
-				final float diffuseColorG = albedoColorG * dotProductOrZero * sunLightIntensity;
-				final float diffuseColorB = albedoColorB * dotProductOrZero * sunLightIntensity;
-				
-				final float reflectionX = surfaceNormal1X * 2.0F * dotProduct - sunDirectionX;
-				final float reflectionY = surfaceNormal1Y * 2.0F * dotProduct - sunDirectionY;
-				final float reflectionZ = surfaceNormal1Z * 2.0F * dotProduct - sunDirectionZ;
-				
-				final float dotProduct0 = -directionX * reflectionX + -directionY * reflectionY + -directionZ * reflectionZ;
-				
-				final float specularPower = 128.0F;
-				final float specularAmount = dotProduct0 < 0.0F ? 0.0F : pow(dotProduct0, specularPower) * sunLightIntensity;
-				final float specularColorR = specularAmount;
-				final float specularColorG = specularAmount;
-				final float specularColorB = specularAmount;
-				
-				pixelColorR = ambientColorR + diffuseColorR + specularColorR;
-				pixelColorG = ambientColorG + diffuseColorG + specularColorG;
-				pixelColorB = ambientColorB + diffuseColorB + specularColorB;
-				*/
-				
-//				final float fogColorR = 0.5F;
-//				final float fogColorG = 0.6F;
-//				final float fogColorB = 0.7F;
-				
-//				final float distance = 20.0F;//hitT;
-//				final float falloff = 0.2F;
-//				final float exponent = exp(-distance * falloff);
-				
-//				pixelColorR = pixelColorR * (1.0F - exponent) + fogColorR * exponent;
-//				pixelColorG = pixelColorG * (1.0F - exponent) + fogColorG * exponent;
-//				pixelColorB = pixelColorB * (1.0F - exponent) + fogColorB * exponent;
-				
 				t = maxT;
 			}
 			
 			delT = delTMultiplier * t;
-			
-//			lh = height;
-//			ly = surfaceIntersectionPointY;
 		}
-		
-//		if(originY <= 0.02F) {
-//			pixelColorB += 0.4F;
-//		}
 		
 		this.currentPixelColors[pixelIndex0] = pixelColorR;
 		this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
@@ -3445,20 +3373,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/*
-	private static float doGradientX(final int hash, final float x) {
-		final int hash0 = hash & 0x0F;
-		
-		float gradient = 1.0F + (hash0 & 7);
-		
-		if((hash0 & 8) != 0) {
-			gradient = -gradient;
-		}
-		
-		return gradient * x;
-	}
-	*/
 	
 	private static float doGradientXY(final int hash, final float x, final float y) {
 		final int hash0 = hash & 0x3F;
