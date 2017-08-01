@@ -10,17 +10,17 @@ This project is mainly a test project for the real renderer, Dayflower.
 
 Supported Features
 ------------------
-### Acceleration Structure
+#### Acceleration Structure
 * Bounding Volume Hierarchy (BVH)
 
-### Camera
+#### Camera
 * Depth of Field
 * Field of View
 * Free Movement
 * Fisheye Camera Lens
 * Thin Camera Lens
 
-### Effect
+#### Effect
 * Blur
 * Detect Edges
 * Emboss
@@ -30,37 +30,37 @@ Supported Features
 * Sepia Tone
 * Sharpen
 
-### Material
+#### Material
 * Diffuse using Lambertian reflection
 * Clear Coat
 * Glass
 * Metal using Phong
 * Specular (Mirror)
 
-### Normal Mapping
+#### Normal Mapping
 * Image Texture
 * Perlin Noise
 
-### Rendering Algorithm
+#### Rendering Algorithm
 * Path Tracing
 * Ray Casting
 * Ray Marching
 
-### Shape
+#### Shape
 * Plane
 * Sphere
 * Triangle
 * Triangle Mesh
 
-### Sun and Sky Model
+#### Sun and Sky Model
 * Perez
 
-### Texture
+#### Texture
 * Checkerboard
 * Constant (Solid)
 * Image
 
-### Tone Mapping and Gamma Correction
+#### Tone Mapping and Gamma Correction
 * Filmic Curve
 * Linear
 * Reinhard v.1
