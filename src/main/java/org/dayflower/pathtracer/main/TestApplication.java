@@ -171,6 +171,7 @@ public final class TestApplication extends AbstractApplication {
 		print("- I: Decrease focal distance");
 		print("- O: Increase field of view for X");
 		print("- P: Decrease field of view for X");
+		print("- G: Randomly change Sun and Sky");
 		print("- H: Toggle between Path Tracing, Ray Casting and Ray Marching");
 		print("- K: Toggle walk-lock");
 		print("- L: Toggle mouse recentering and cursor visibility");

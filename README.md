@@ -81,6 +81,7 @@ Supported Controls
 * I: Decrease Focal Distance
 * O: Increase Field of View for the X-axis
 * P: Decrease Field of View for the X-axis
+* G: Randomly change Sun and Sky
 * H: Toggle between Path Tracing, Ray Casting and Ray Marching
 * K: Toggle Walk-Lock
 * L: Toggle Mouse Recentering and Cursor Visibility
