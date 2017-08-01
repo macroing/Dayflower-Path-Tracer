@@ -59,6 +59,10 @@ final class Dayflower {
 		return String.format("%s/scene/%s", doGetDirectory(), name);
 	}
 	
+	public static String getSceneName() {
+		return SETTINGS.getProperty("scene.name", "Material_Showcase_Scene");
+	}
+	
 	public static String getTextureFilename(final String name) {
 		return String.format("%s/texture/%s", doGetDirectory(), name);
 	}

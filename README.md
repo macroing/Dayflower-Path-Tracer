@@ -117,11 +117,17 @@ ant
 cd distribution/org.dayflower.pathtracer
 java -Djava.library.path=lib -jar org.dayflower.pathtracer.jar
 ```
-To use a different scene than the default, type the following.
-```bash
-java -Djava.library.path=lib -jar org.dayflower.pathtracer.jar --scene=SceneName
-```
-The scenes that exists are the following.
+
+Settings
+--------
+In the ``settings.properties`` file you can change a few settings. The supported settings are the following.
+* ``width`` - The width of the canvas being rendered to.
+* ``width.scale`` - The width scale to use for the kernel. The width for the kernel is ``width / width.scale``.
+* ``height`` - The height of the canvas being rendered to.
+* ``height.scale`` - The height scale to use for the kernel. The height for the kernel is ``height / height.scale``.
+* ``scene.name`` - The name of the scene to use.
+
+The following is a list of scene names that can be used.
 * Car_Scene
 * Cornell_Box_Scene
 * Cornell_Box_Scene_2

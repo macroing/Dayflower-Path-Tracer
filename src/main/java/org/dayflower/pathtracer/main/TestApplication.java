@@ -19,7 +19,6 @@
 package org.dayflower.pathtracer.main;
 
 import java.io.File;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -242,11 +241,7 @@ public final class TestApplication extends AbstractApplication {
 	 */
 	@Override
 	public void init() {
-		final Parameters parameters = getParameters();
-		
-		final Map<String, String> namedParameters = parameters.getNamed();
-		
-		final Scene scene = Scenes.getSceneByName(namedParameters.containsKey("scene") ? namedParameters.get("scene") : "Material_Showcase_Scene.scene");
+		final Scene scene = Scenes.getSceneByName(Dayflower.getSceneName());
 		
 		final String sceneFilename = Dayflower.getSceneFilename(String.format("%s.scene", scene.getName()));
 		
