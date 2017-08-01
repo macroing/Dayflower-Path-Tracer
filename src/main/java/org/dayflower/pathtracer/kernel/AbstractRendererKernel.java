@@ -21,8 +21,8 @@ package org.dayflower.pathtracer.kernel;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.camera.Camera;
 import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Sky;
 
 public abstract class AbstractRendererKernel extends AbstractKernel {

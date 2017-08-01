@@ -37,6 +37,8 @@ import org.dayflower.pathtracer.color.IrregularSpectralCurve;
 import org.dayflower.pathtracer.color.RGBColorSpace;
 import org.dayflower.pathtracer.color.RegularSpectralCurve;
 import org.dayflower.pathtracer.color.SpectralCurve;
+import org.dayflower.pathtracer.math.OrthoNormalBasis;
+import org.dayflower.pathtracer.math.Vector3;
 
 //TODO: Add Javadocs!
 public final class Sky {
@@ -139,7 +141,7 @@ public final class Sky {
 	
 //	TODO: Add Javadocs.
 	public void set(final Vector3 sunDirectionWorld, final float turbidity) {
-		this.sunDirection = sunDirectionWorld.untransform(this.orthoNormalBasis).normalize();
+		this.sunDirection = sunDirectionWorld.transformReverse(this.orthoNormalBasis).normalize();
 		this.theta = acos(saturate(this.sunDirection.z, -1.0F, 1.0F));
 		
 		if(this.sunDirection.z > 0.0F) {

@@ -20,7 +20,7 @@ package org.dayflower.pathtracer.scene.shape;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.scene.Point3;
+import org.dayflower.pathtracer.math.Point3;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
 

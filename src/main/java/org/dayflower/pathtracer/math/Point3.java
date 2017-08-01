@@ -16,16 +16,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.scene;
+package org.dayflower.pathtracer.math;
 
 import static org.dayflower.pathtracer.math.Math2.abs;
-import static org.dayflower.pathtracer.math.Math2.cos;
-import static org.dayflower.pathtracer.math.Math2.sin;
 import static org.dayflower.pathtracer.math.Math2.sqrt;
 
 import java.util.Objects;
-
-import org.dayflower.pathtracer.math.Math2;
 
 /**
  * A {@code Point3} denotes a point in 3D with coordinates of X, Y and Z.
@@ -286,24 +282,6 @@ public final class Point3 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Returns a {@code Point3} denoting the center between {@code p0} and {@code p1}.
-	 * <p>
-	 * If either {@code p0} or {@code p1} are {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param p0 a {@code Point3}
-	 * @param p1 a {@code Point3}
-	 * @return a {@code Point3} denoting the center between {@code p0} and {@code p1}
-	 * @throws NullPointerException thrown if, and only if, either {@code p0} or {@code p1} are {@code null}
-	 */
-	public static Point3 center(final Point3 p0, final Point3 p1) {
-		final float centerX = (p0.x + p1.x) * 0.5F;
-		final float centerY = (p0.y + p1.y) * 0.5F;
-		final float centerZ = (p0.z + p1.z) * 0.5F;
-		
-		return new Point3(centerX, centerY, centerZ);
-	}
-	
-	/**
 	 * Returns the maximum {@code Point3}.
 	 * 
 	 * @return the maximum {@code Point3}
@@ -393,45 +371,5 @@ public final class Point3 {
 		final float minimumZ = p0.z < p1.z && p0.z < p2.z ? p0.z : p1.z < p2.z ? p1.z : p2.z;
 		
 		return new Point3(minimumX, minimumY, minimumZ);
-	}
-	
-	/**
-	 * Performs a rotation around an arbitrary line.
-	 * <p>
-	 * Returns a {@code Point3}.
-	 * <p>
-	 * If either {@code axis}, {@code direction} or {@code point} are {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param axis a {@code Point3}
-	 * @param direction a {@link Vector3}
-	 * @param point a {@code Point3}
-	 * @param theta a scalar
-	 * @return a {@code Point3}
-	 * @throws NullPointerException thrown if, and only if, either {@code axis}, {@code direction} or {@code point} are {@code null}
-	 */
-	public static Point3 rotate(final Point3 axis, final Vector3 direction, final Point3 point, final float theta) {
-		final Vector3 d = direction.normalize();
-		
-		final float u = d.x * d.x;
-		final float v = d.y * d.y;
-		final float w = d.z * d.z;
-		
-		final float cosTheta = cos(theta);
-		final float oneMinusCosTheta = 1.0F - cosTheta;
-		final float sinTheta = sin(theta);
-		
-		final float x0 = axis.x;
-		final float y0 = axis.y;
-		final float z0 = axis.z;
-		
-		final float x1 = point.x;
-		final float y1 = point.y;
-		final float z1 = point.z;
-		
-		final float x2 = (x0 * (v + w) - d.x * (y0 * d.y + z0 * d.z - d.x * x1 - d.y * y1 - d.z * z1)) * oneMinusCosTheta + x1 * cosTheta + (-z0 * d.y + y0 * d.z - d.z * y1 + d.y * z1) * sinTheta;
-		final float y2 = (y0 * (u + w) - d.y * (x0 * d.x + z0 * d.z - d.x * x1 - d.y * y1 - d.z * z1)) * oneMinusCosTheta + y1 * cosTheta + (z0 * d.x - x0 * d.z + d.z * x1 - d.x * z1) * sinTheta;
-		final float z2 = (z0 * (u + v) - d.z * (x0 * d.x + y0 * d.y - d.x * x1 - d.y * y1 - d.z * z1)) * oneMinusCosTheta + z1 * cosTheta + (-y0 * d.x + x0 * d.y - d.y * x1 + d.x * y1) * sinTheta;
-		
-		return new Point3(x2, y2, z2);
 	}
 }

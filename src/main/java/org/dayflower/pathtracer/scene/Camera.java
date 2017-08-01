@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.camera;
+package org.dayflower.pathtracer.scene;
 
 import static org.dayflower.pathtracer.math.Math2.PI_DIVIDED_BY_TWO;
 import static org.dayflower.pathtracer.math.Math2.PI_MULTIPLIED_BY_TWO;

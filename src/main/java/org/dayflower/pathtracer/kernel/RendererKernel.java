@@ -21,10 +21,10 @@ package org.dayflower.pathtracer.kernel;
 import java.io.File;
 import java.util.Objects;
 
-import org.dayflower.pathtracer.camera.Camera;
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.color.RGBColorSpace;
 import org.dayflower.pathtracer.math.Math2;
+import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 

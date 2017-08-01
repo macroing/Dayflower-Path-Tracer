@@ -30,10 +30,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.dayflower.pathtracer.scene.Point2;
-import org.dayflower.pathtracer.scene.Point3;
+import org.dayflower.pathtracer.math.Point2;
+import org.dayflower.pathtracer.math.Point3;
+import org.dayflower.pathtracer.math.Vector3;
 import org.dayflower.pathtracer.scene.Surface;
-import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
 
 /**

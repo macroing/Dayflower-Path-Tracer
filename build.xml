@@ -14,7 +14,7 @@
 	<property name="project.directory.binary" location="bin"/>
 	<property name="project.directory.binary.main" location="${project.directory.binary}/main/java"/>
 	<property name="project.directory.distribution" location="${project.directory.root}/distribution"/>
-	<property name="project.directory.distribution.current" location="${project.directory.distribution}/${project.name}-${project.version}"/>
+	<property name="project.directory.distribution.current" location="${project.directory.distribution}/${project.name}"/>
 	<property name="project.directory.library" location="lib"/>
 	<property name="project.directory.resources" location="resources"/>
 	<property name="project.directory.resources.distribution" location="${project.directory.resources}/distribution"/>

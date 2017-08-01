@@ -18,8 +18,6 @@
  */
 package org.dayflower.pathtracer.main;
 
-import static org.dayflower.pathtracer.math.Math2.toRadians;
-
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,17 +36,14 @@ import javafx.scene.layout.Region;
 import com.amd.aparapi.Range;
 
 import org.dayflower.pathtracer.application.AbstractApplication;
-import org.dayflower.pathtracer.camera.Camera;
-import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.filter.ConvolutionFilters;
 import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.RendererKernel;
-import org.dayflower.pathtracer.scene.Matrix44;
-import org.dayflower.pathtracer.scene.Point3;
+import org.dayflower.pathtracer.math.Vector3;
+import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
-import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.util.FPSCounter;
 
 /**
@@ -60,7 +55,6 @@ import org.dayflower.pathtracer.util.FPSCounter;
 public final class TestApplication extends AbstractApplication {
 	private static final String ENGINE_NAME = "Dayflower - Path Tracer";
 	private static final String ENGINE_VERSION = "v.0.0.20";
-	private static final String SETTING_NAME_BOUNDING_VOLUME_HIERARCHY_WIREFRAME = "BoundingVolumeHierarchy.Wireframe";
 	private static final String SETTING_NAME_FILTER_BLUR = "Filter.Blur";
 	private static final String SETTING_NAME_FILTER_DETECT_EDGES = "Filter.DetectEdges";
 	private static final String SETTING_NAME_FILTER_EMBOSS = "Filter.Emboss";
@@ -179,7 +173,6 @@ public final class TestApplication extends AbstractApplication {
 		print("- I: Decrease focal distance");
 		print("- O: Increase field of view for X");
 		print("- P: Decrease field of view for X");
-		print("- F: Toggle Wireframe");
 		print("- H: Toggle between Path Tracing, Ray Casting and Ray Marching");
 		print("- K: Toggle walk-lock");
 		print("- L: Toggle mouse recentering and cursor visibility");
@@ -403,10 +396,6 @@ public final class TestApplication extends AbstractApplication {
 				break;
 			}
 			
-			if(isKeyPressed(KeyCode.F, true)) {
-				toggleSetting(SETTING_NAME_BOUNDING_VOLUME_HIERARCHY_WIREFRAME);
-			}
-			
 			if(isKeyPressed(KeyCode.G, true)) {
 				this.sky.set(new Vector3(ThreadLocalRandom.current().nextFloat(), ThreadLocalRandom.current().nextFloat(), -1.0F).normalize());
 				
@@ -547,101 +536,6 @@ public final class TestApplication extends AbstractApplication {
 				fPSCounter.update();
 				
 				abstractRendererKernel.get(abstractRendererKernel.getPixels());
-				
-				if(isSettingEnabled(SETTING_NAME_BOUNDING_VOLUME_HIERARCHY_WIREFRAME)) {
-					final float width = abstractRendererKernel.getWidth();
-					final float height = abstractRendererKernel.getHeight();
-					final float angle = toRadians(40.0F);
-//					final float distance = width * 0.5F / tan(angle * 0.5F);
-					final float zNear = 1.0F;
-					final float zFar = 1000.0F;//this.camera.getFocalDistance();
-					
-					final float eyeX = this.camera.getEyeX();
-					final float eyeY = this.camera.getEyeY();
-					final float eyeZ = this.camera.getEyeZ();
-					
-					final float uX = this.camera.getOrthoNormalBasisUX();
-					final float uY = this.camera.getOrthoNormalBasisUY();
-					final float uZ = this.camera.getOrthoNormalBasisUZ();
-					final float vX = this.camera.getOrthoNormalBasisVX();
-					final float vY = this.camera.getOrthoNormalBasisVY();
-					final float vZ = this.camera.getOrthoNormalBasisVZ();
-					final float wX = this.camera.getOrthoNormalBasisWX();
-					final float wY = this.camera.getOrthoNormalBasisWY();
-					final float wZ = this.camera.getOrthoNormalBasisWZ();
-					
-					final Matrix44 cameraToScreen = Matrix44.perspective(angle, width / height, zNear, zFar);
-					final Matrix44 cameraToWorld = Matrix44.rotation(new Vector3(uX, uY, uZ), new Vector3(vX, vY, vZ), new Vector3(wX, wY, wZ)).multiply(Matrix44.translation(new Point3(eyeX, eyeY, eyeZ)));
-//					final Matrix44 screenToCamera = cameraToScreen.inverse();
-//					final Matrix44 screenToRaster = doCreateScreenToRaster(width, height);
-//					final Matrix44 rasterToScreen = screenToRaster.inverse();
-//					final Matrix44 rasterToCamera = screenToCamera.multiply(rasterToScreen);
-//					final Matrix44 cameraToRaster = rasterToCamera.inverse();
-					final Matrix44 worldToCamera = cameraToWorld.inverse();
-//					final Matrix44 worldToRaster = cameraToRaster.multiply(worldToCamera);
-					final Matrix44 worldToScreen = cameraToScreen.multiply(worldToCamera);
-//					final Matrix44 rasterToWorld = worldToCamera.multiply(cameraToRaster);
-//					final Matrix44 screenToWorld = worldToCamera.multiply(cameraToScreen);
-					
-//					final Matrix44 projection = Matrix44.perspective(angle, width / height, zNear, zFar);
-//					final Matrix44 cameraToWorld = Matrix44.rotation(new Vector3(uX, uY, uZ), new Vector3(vX, vY, vZ), new Vector3(wX, wY, wZ)).multiply(Matrix44.translation(new Point3(eyeX, eyeY, eyeZ)));
-//					final Matrix44 worldToCamera = cameraToWorld.inverse();
-					
-					final CompiledScene compiledScene = abstractRendererKernel.getCompiledScene();
-					
-					final float[] boundingVolumeHierarchy = compiledScene.getBoundingVolumeHierarchy();
-					
-					int boundingVolumeHierarchyOffset = 0;
-					
-					do {
-						final float minimumX = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 2];
-						final float minimumY = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3];
-						final float minimumZ = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 4];
-						
-						final float maximumX = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 5];
-						final float maximumY = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 6];
-						final float maximumZ = boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 7];
-						
-						final Point3 a = new Point3(minimumX, maximumY, minimumZ).transform(worldToScreen);
-						final Point3 b = new Point3(minimumX, minimumY, minimumZ).transform(worldToScreen);
-						final Point3 c = new Point3(maximumX, minimumY, minimumZ).transform(worldToScreen);
-						final Point3 d = new Point3(maximumX, maximumY, minimumZ).transform(worldToScreen);
-						final Point3 e = new Point3(minimumX, maximumY, maximumZ).transform(worldToScreen);
-						final Point3 f = new Point3(minimumX, minimumY, maximumZ).transform(worldToScreen);
-						final Point3 g = new Point3(maximumX, minimumY, maximumZ).transform(worldToScreen);
-						final Point3 h = new Point3(maximumX, maximumY, maximumZ).transform(worldToScreen);
-						
-//						final Point3 a = doPerspectiveDivide(new Point3(minimumX, maximumY, minimumZ).transform(worldToCamera), width, height);
-//						final Point3 b = doPerspectiveDivide(new Point3(minimumX, minimumY, minimumZ).transform(worldToCamera), width, height);
-//						final Point3 c = doPerspectiveDivide(new Point3(maximumX, minimumY, minimumZ).transform(worldToCamera), width, height);
-//						final Point3 d = doPerspectiveDivide(new Point3(maximumX, maximumY, minimumZ).transform(worldToCamera), width, height);
-//						final Point3 e = doPerspectiveDivide(new Point3(minimumX, maximumY, maximumZ).transform(worldToCamera), width, height);
-//						final Point3 f = doPerspectiveDivide(new Point3(minimumX, minimumY, maximumZ).transform(worldToCamera), width, height);
-//						final Point3 g = doPerspectiveDivide(new Point3(maximumX, minimumY, maximumZ).transform(worldToCamera), width, height);
-//						final Point3 h = doPerspectiveDivide(new Point3(maximumX, maximumY, maximumZ).transform(worldToCamera), width, height);
-						
-						abstractRendererKernel.drawLine((int)(a.x - 400.0F), (int)(-a.y + 600.0F), (int)(b.x - 400.0F), (int)(-b.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(b.x - 400.0F), (int)(-b.y + 600.0F), (int)(c.x - 400.0F), (int)(-c.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(c.x - 400.0F), (int)(-c.y + 600.0F), (int)(d.x - 400.0F), (int)(-d.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(d.x - 400.0F), (int)(-d.y + 600.0F), (int)(a.x - 400.0F), (int)(-a.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(c.x - 400.0F), (int)(-c.y + 600.0F), (int)(g.x - 400.0F), (int)(-g.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(g.x - 400.0F), (int)(-g.y + 600.0F), (int)(h.x - 400.0F), (int)(-h.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(h.x - 400.0F), (int)(-h.y + 600.0F), (int)(d.x - 400.0F), (int)(-d.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(h.x - 400.0F), (int)(-h.y + 600.0F), (int)(e.x - 400.0F), (int)(-e.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(e.x - 400.0F), (int)(-e.y + 600.0F), (int)(f.x - 400.0F), (int)(-f.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(f.x - 400.0F), (int)(-f.y + 600.0F), (int)(g.x - 400.0F), (int)(-g.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(a.x - 400.0F), (int)(-a.y + 600.0F), (int)(e.x - 400.0F), (int)(-e.y + 600.0F), Color.RED);
-						abstractRendererKernel.drawLine((int)(b.x - 400.0F), (int)(-b.y + 600.0F), (int)(f.x - 400.0F), (int)(-f.y + 600.0F), Color.RED);
-						
-						final float type = boundingVolumeHierarchy[boundingVolumeHierarchyOffset];
-						
-						if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
-							boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
-						} else {
-							boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
-						}
-					} while(boundingVolumeHierarchyOffset != -1);
-				}
 				
 				if(isSettingEnabled(SETTING_NAME_FILTER_BLUR)) {
 					ConvolutionFilters.filterBlur(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());

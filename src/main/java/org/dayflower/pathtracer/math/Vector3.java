@@ -16,12 +16,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.scene;
+package org.dayflower.pathtracer.math;
 
 import static org.dayflower.pathtracer.math.Math2.PI;
-import static org.dayflower.pathtracer.math.Math2.PI_MULTIPLIED_BY_TWO;
-import static org.dayflower.pathtracer.math.Math2.acos;
-import static org.dayflower.pathtracer.math.Math2.atan2;
 import static org.dayflower.pathtracer.math.Math2.cos;
 import static org.dayflower.pathtracer.math.Math2.sin;
 import static org.dayflower.pathtracer.math.Math2.sqrt;
@@ -95,20 +92,6 @@ public final class Vector3 {
 	}
 	
 //	TODO: Add Javadocs!
-	public float sphericalPhi() {
-		final float theta = atan2(this.y, this.x);
-		
-		return theta < 0.0F ? theta + PI_MULTIPLIED_BY_TWO : theta;
-	}
-	
-//	TODO: Add Javadocs!
-	public float sphericalTheta() {
-		final float z = this.z < -1.0F ? -1.0F : this.z > 1.0F ? 1.0F : this.z;
-		
-		return acos(z);
-	}
-	
-//	TODO: Add Javadocs!
 	@Override
 	public int hashCode() {
 		return Objects.hash(Float.valueOf(this.x), Float.valueOf(this.y), Float.valueOf(this.z));
@@ -136,15 +119,6 @@ public final class Vector3 {
 	}
 	
 //	TODO: Add Javadocs!
-	public Vector3 linearInterpolation(final Vector3 v, final float fraction) {
-		final Vector3 v0 = v.subtract(this);
-		final Vector3 v1 = v0.multiply(fraction);
-		final Vector3 v2 = v1.add(this);
-		
-		return v2;
-	}
-	
-//	TODO: Add Javadocs!
 	public Vector3 multiply(final float s) {
 		return new Vector3(this.x * s, this.y * s, this.z * s);
 	}
@@ -152,21 +126,6 @@ public final class Vector3 {
 //	TODO: Add Javadocs!
 	public Vector3 negate() {
 		return new Vector3(-this.x, -this.y, -this.z);
-	}
-	
-//	TODO: Add Javadocs!
-	public Vector3 negateX() {
-		return new Vector3(-this.x, this.y, this.z);
-	}
-	
-//	TODO: Add Javadocs!
-	public Vector3 negateY() {
-		return new Vector3(this.x, -this.y, this.z);
-	}
-	
-//	TODO: Add Javadocs!
-	public Vector3 negateZ() {
-		return new Vector3(this.x, this.y, -this.z);
 	}
 	
 //	TODO: Add Javadocs!
@@ -180,34 +139,7 @@ public final class Vector3 {
 	}
 	
 //	TODO: Add Javadocs!
-	public Vector3 transform(final Matrix44 m) {
-		final float x = m.e11 * this.x + m.e12 * this.y + m.e13 * this.z;
-		final float y = m.e21 * this.x + m.e22 * this.y + m.e23 * this.z;
-		final float z = m.e31 * this.x + m.e32 * this.y + m.e33 * this.z;
-		
-		return new Vector3(x, y, z);
-	}
-	
-//	TODO: Add Javadocs!
-	public Vector3 transform(final OrthoNormalBasis orthoNormalBasis) {
-		final float x = this.x * orthoNormalBasis.u.x + this.y * orthoNormalBasis.v.x + this.z * orthoNormalBasis.w.x;
-		final float y = this.x * orthoNormalBasis.u.y + this.y * orthoNormalBasis.v.y + this.z * orthoNormalBasis.w.y;
-		final float z = this.x * orthoNormalBasis.u.z + this.y * orthoNormalBasis.v.z + this.z * orthoNormalBasis.w.z;
-		
-		return new Vector3(x, y, z);
-	}
-	
-//	TODO: Add Javadocs!
-	public Vector3 transformTranspose(final Matrix44 m) {
-		final float x = m.e11 * this.x + m.e21 * this.y + m.e31 * this.z;
-		final float y = m.e12 * this.x + m.e22 * this.y + m.e32 * this.z;
-		final float z = m.e13 * this.x + m.e23 * this.y + m.e33 * this.z;
-		
-		return new Vector3(x, y, z);
-	}
-	
-//	TODO: Add Javadocs!
-	public Vector3 untransform(final OrthoNormalBasis orthoNormalBasis) {
+	public Vector3 transformReverse(final OrthoNormalBasis orthoNormalBasis) {
 		final float x = dotProduct(orthoNormalBasis.u);
 		final float y = dotProduct(orthoNormalBasis.v);
 		final float z = dotProduct(orthoNormalBasis.w);

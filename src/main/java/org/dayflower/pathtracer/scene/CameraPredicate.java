@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.camera;
+package org.dayflower.pathtracer.scene;
 
 /**
  * A {@code CameraPredicate} is used for collision detection.

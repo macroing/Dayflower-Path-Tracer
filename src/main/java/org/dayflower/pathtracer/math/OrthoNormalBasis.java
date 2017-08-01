@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.scene;
+package org.dayflower.pathtracer.math;
 
 import static org.dayflower.pathtracer.math.Math2.abs;
 

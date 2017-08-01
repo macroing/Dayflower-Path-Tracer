@@ -42,14 +42,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import org.dayflower.pathtracer.camera.Camera;
-import org.dayflower.pathtracer.scene.Point2;
-import org.dayflower.pathtracer.scene.Point3;
+import org.dayflower.pathtracer.math.Point2;
+import org.dayflower.pathtracer.math.Point3;
+import org.dayflower.pathtracer.math.Vector3;
+import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
-import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.LeafNode;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;

@@ -16,10 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.scene;
-
-import static org.dayflower.pathtracer.math.Math2.abs;
-import static org.dayflower.pathtracer.math.Math2.sqrt;
+package org.dayflower.pathtracer.math;
 
 import java.util.Objects;
 
@@ -87,52 +84,6 @@ public final class Point2 {
 		} else {
 			return true;
 		}
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, {@code p} is contained in the circle defined with the center as this {@code Point2} instance and a radius of {@code radius}, {@code false} otherwise.
-	 * <p>
-	 * If {@code p} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param p the {@code Point2} instance to check
-	 * @param radius the radius to use
-	 * @return {@code true} if, and only if, {@code p} is contained in the circle defined with the center as this {@code Point2} instance and a radius of {@code radius}, {@code false} otherwise
-	 * @throws NullPointerException thrown if, and only if, {@code p} is {@code null}
-	 */
-	public boolean isWithinCircleRadius(final Point2 p, final float radius) {
-		final float x = abs(this.x - p.x);
-		final float y = abs(this.y - p.y);
-		
-		return x * x + y * y < radius;
-	}
-	
-	/**
-	 * Returns the distance from this {@code Point2} to {@code p}.
-	 * <p>
-	 * If {@code p} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param p a {@code Point2} instance
-	 * @return the distance from this {@code Point2} to {@code p}
-	 * @throws NullPointerException thrown if, and only if, {@code p} is {@code null}
-	 */
-	public float distanceTo(final Point2 p) {
-		return sqrt(distanceToSquared(p));
-	}
-	
-	/**
-	 * Returns the squared distance from this {@code Point2} to {@code p}.
-	 * <p>
-	 * If {@code p} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param p a {@code Point2} instance
-	 * @return the squared distance from this {@code Point2} to {@code p}
-	 * @throws NullPointerException thrown if, and only if, {@code p} is {@code null}
-	 */
-	public float distanceToSquared(final Point2 p) {
-		final float deltaX = this.x - p.x;
-		final float deltaY = this.y - p.y;
-		
-		return deltaX * deltaX + deltaY * deltaY;
 	}
 	
 	/**

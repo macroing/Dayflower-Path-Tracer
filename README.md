@@ -81,7 +81,6 @@ Supported Controls
 * I: Decrease Focal Distance
 * O: Increase Field of View for the X-axis
 * P: Decrease Field of View for the X-axis
-* F: Toggle Wireframe
 * H: Toggle between Path Tracing, Ray Casting and Ray Marching
 * K: Toggle Walk-Lock
 * L: Toggle Mouse Recentering and Cursor Visibility
@@ -115,7 +114,7 @@ To clone this repository, build the project and run it, you can type the followi
 git clone https://github.com/macroing/Dayflower-Path-Tracer.git
 cd Dayflower-Path-Tracer
 ant
-cd distribution/org.dayflower.pathtracer-0.0.20
+cd distribution/org.dayflower.pathtracer
 java -Djava.library.path=lib -jar org.dayflower.pathtracer.jar
 ```
 To use a different scene than the default, type the following.

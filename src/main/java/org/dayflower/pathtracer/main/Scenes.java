@@ -18,25 +18,19 @@
  */
 package org.dayflower.pathtracer.main;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.math.Point2;
+import org.dayflower.pathtracer.math.Point3;
+import org.dayflower.pathtracer.math.Vector3;
 import org.dayflower.pathtracer.scene.Material;
-import org.dayflower.pathtracer.scene.Point2;
-import org.dayflower.pathtracer.scene.Point3;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
-import org.dayflower.pathtracer.scene.Vector3;
 import org.dayflower.pathtracer.scene.shape.Mesh;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
@@ -46,15 +40,13 @@ import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SolidTexture;
 
-//TODO: Add Javadocs.
-public final class Scenes {
+final class Scenes {
 	private Scenes() {
 		
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
 	public static Scene getSceneByName(final String name) {
 		switch(name) {
 			case "Car_Scene":
@@ -92,7 +84,6 @@ public final class Scenes {
 		}
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newCarScene() {
 		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);
@@ -208,7 +199,6 @@ public final class Scenes {
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newCornellBoxScene() {
 		final Texture textureAlbedo0 = new SolidTexture(new Color(0.75F, 0.25F, 0.25F));
 		final Texture textureAlbedo1 = new SolidTexture(new Color(0.25F, 0.25F, 0.75F));
@@ -236,7 +226,6 @@ public final class Scenes {
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newCornellBoxScene2() {
 		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);
@@ -244,8 +233,7 @@ public final class Scenes {
 		final Texture textureAlbedo0 = new SolidTexture(Color.BLACK);
 		final Texture textureAlbedo1 = new SolidTexture(new Color(1.0F, 0.0F, 0.0F));
 		
-		final Surface surface0 = Surface.getInstance(new Color(12.0F, 12.0F, 12.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo0, textureAlbedo0);
-		final Surface surface1 = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo1, textureAlbedo0);
+		final Surface surface0 = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo1, textureAlbedo0);
 		
 		/*
 		 * doCreateTriangle(...):
@@ -258,13 +246,12 @@ public final class Scenes {
 		
 		final
 		Scene scene = new Scene("Cornell_Box_Scene_2");
-		scene.addShape(doCreateTriangle(surface1, 0.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F));
+		scene.addShape(doCreateTriangle(surface0, 0.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F));
 		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
 		
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newGirlScene() {
 		final Texture texture1 = new SolidTexture(new Color(227, 161, 115));
 		final Texture texture2 = new CheckerboardTexture(Color.BLACK, Color.WHITE, 0.05F, 0.05F, 0.0F);//new SolidTexture(new Color(32, 53, 98));
@@ -304,7 +291,6 @@ public final class Scenes {
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newHouseScene() {
 		final Texture textureAlbedo = new SolidTexture(Color.WHITE);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
@@ -336,7 +322,6 @@ public final class Scenes {
 		surfaces.put("double_sopha_wood_right_texture", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture10, textureNormal));
 		
 		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("house interior.obj"), 1.0F);
-//		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("trail.obj"), 1.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
@@ -351,7 +336,6 @@ public final class Scenes {
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newHouseScene2() {
 		final Texture textureAlbedo = new SolidTexture(Color.WHITE);
 		final Texture textureGround = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
@@ -376,7 +360,6 @@ public final class Scenes {
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newMaterialShowcaseScene() {
 		final Texture texture0 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new SolidTexture(Color.RED);//new CheckerboardTexture(Color.RED, Color.ORANGE);
@@ -401,7 +384,6 @@ public final class Scenes {
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newMonkeyScene() {
 		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormal = new SolidTexture(Color.BLACK);
@@ -425,7 +407,6 @@ public final class Scenes {
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newSponzaScene() {
 		final Texture textureAlbedo = new SolidTexture(Color.GRAY);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
@@ -449,7 +430,6 @@ public final class Scenes {
 		return scene;
 	}
 	
-//	TODO: Add Javadocs.
 	public static Scene newTerrainScene() {
 		final Texture textureAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);

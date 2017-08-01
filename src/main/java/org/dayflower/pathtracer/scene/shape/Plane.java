@@ -20,10 +20,10 @@ package org.dayflower.pathtracer.scene.shape;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.scene.Point3;
+import org.dayflower.pathtracer.math.Point3;
+import org.dayflower.pathtracer.math.Vector3;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
-import org.dayflower.pathtracer.scene.Vector3;
 
 /**
  * A {@link Shape} implementation that implements a plane.

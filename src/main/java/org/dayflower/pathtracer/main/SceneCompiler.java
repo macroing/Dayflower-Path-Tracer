@@ -20,8 +20,8 @@ package org.dayflower.pathtracer.main;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 
-import org.dayflower.pathtracer.camera.Camera;
 import org.dayflower.pathtracer.kernel.CompiledScene;
+import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Scene;
 
 //TODO: Add Javadocs.
