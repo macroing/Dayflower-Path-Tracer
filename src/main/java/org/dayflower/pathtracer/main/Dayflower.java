@@ -18,12 +18,38 @@
  */
 package org.dayflower.pathtracer.main;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 final class Dayflower {
+	private static final Properties SETTINGS = doReadSettings();
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private Dayflower() {
 		
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	public static int getHeight() {
+		return doReadSettingAsInt("height", 768);
+	}
+	
+	public static int getHeightScale() {
+		return doReadSettingAsInt("height.scale", 1);
+	}
+	
+	public static int getWidth() {
+		return doReadSettingAsInt("width", 1024);
+	}
+	
+	public static int getWidthScale() {
+		return doReadSettingAsInt("width.scale", 1);
+	}
 	
 	public static String getModelFilename(final String name) {
 		return String.format("%s/model/%s", doGetDirectory(), name);
@@ -37,7 +63,41 @@ final class Dayflower {
 		return String.format("%s/texture/%s", doGetDirectory(), name);
 	}
 	
+	public static String getVersion() {
+		final Package package_ = Dayflower.class.getPackage();
+		
+		if(package_ != null) {
+			final String implementationVersion = package_.getImplementationVersion();
+			
+			if(implementationVersion != null) {
+				return String.format("v.%s", implementationVersion);
+			}
+		}
+		
+		return "v.0.0.0";
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static int doReadSettingAsInt(final String key, final int defaultValue) {
+		try {
+			return Math.abs(Integer.parseInt(SETTINGS.getProperty(key, Integer.toString(defaultValue))));
+		} catch(final NumberFormatException e) {
+			return defaultValue;
+		}
+	}
+	
+	private static Properties doReadSettings() {
+		final Properties properties = new Properties();
+		
+		try(final InputStream inputStream = new FileInputStream(new File(doGetDirectory(), "settings.properties"))) {
+			properties.load(inputStream);
+		} catch(final IOException e) {
+//			Do nothing.
+		}
+		
+		return properties;
+	}
 	
 	private static String doGetDirectory() {
 		final Package package_ = Dayflower.class.getPackage();

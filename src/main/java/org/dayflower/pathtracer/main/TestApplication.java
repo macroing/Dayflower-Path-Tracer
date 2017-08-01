@@ -54,7 +54,6 @@ import org.dayflower.pathtracer.util.FPSCounter;
  */
 public final class TestApplication extends AbstractApplication {
 	private static final String ENGINE_NAME = "Dayflower - Path Tracer";
-	private static final String ENGINE_VERSION = "v.0.0.20";
 	private static final String SETTING_NAME_FILTER_BLUR = "Filter.Blur";
 	private static final String SETTING_NAME_FILTER_DETECT_EDGES = "Filter.DetectEdges";
 	private static final String SETTING_NAME_FILTER_EMBOSS = "Filter.Emboss";
@@ -85,7 +84,7 @@ public final class TestApplication extends AbstractApplication {
 	 * Constructs a new {@code TestApplication} instance.
 	 */
 	public TestApplication() {
-		super(String.format("%s %s", ENGINE_NAME, ENGINE_VERSION));
+		super(String.format("%s %s", ENGINE_NAME, Dayflower.getVersion()));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +156,7 @@ public final class TestApplication extends AbstractApplication {
 		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime, region3, this.labelRenderMode, region4, this.labelRenderType, region5, this.labelApertureRadius, region6, this.labelFocalDistance, region7, this.labelFieldOfView);
 		
 		printf("Engine Name: %s", ENGINE_NAME);
-		printf("Engine Version: %s", ENGINE_VERSION);
+		printf("Engine Version: %s", Dayflower.getVersion());
 		print("");
 		print("Keys:");
 		print("- ESC: Exit");
@@ -264,6 +263,11 @@ public final class TestApplication extends AbstractApplication {
 //				Do nothing.
 			}
 		}
+		
+		setCanvasWidthScale(Dayflower.getWidthScale());
+		setCanvasWidth(Dayflower.getWidth() / getCanvasWidthScale());
+		setCanvasHeightScale(Dayflower.getHeightScale());
+		setCanvasHeight(Dayflower.getHeight() / getCanvasHeightScale());
 		
 		this.abstractRendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.sky, sceneFilename, 1.0F);
 	}

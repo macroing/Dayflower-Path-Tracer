@@ -77,22 +77,22 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	/**
 	 * The default height scale.
 	 */
-	public static final int CANVAS_HEIGHT_SCALE = 1;
+	private static final int CANVAS_HEIGHT_SCALE = 1;
 	
 	/**
 	 * The default height.
 	 */
-	public static final int CANVAS_HEIGHT = 768 / CANVAS_HEIGHT_SCALE;
+	private static final int CANVAS_HEIGHT = 768 / CANVAS_HEIGHT_SCALE;
 	
 	/**
 	 * The default width scale.
 	 */
-	public static final int CANVAS_WIDTH_SCALE = 1;
+	private static final int CANVAS_WIDTH_SCALE = 1;
 	
 	/**
 	 * The default width.
 	 */
-	public static final int CANVAS_WIDTH = 1024 / CANVAS_WIDTH_SCALE;
+	private static final int CANVAS_WIDTH = 1024 / CANVAS_WIDTH_SCALE;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
