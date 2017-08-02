@@ -3010,46 +3010,82 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float wY = this.intersections[offsetIntersectionSurfaceNormal + 1];
 			final float wZ = this.intersections[offsetIntersectionSurfaceNormal + 2];
 			
-//			Calculate the absolute values of the orthonormal basis W-vector:
-			final float absWX = abs(wX);
-			final float absWY = abs(wY);
-			final float absWZ = abs(wZ);
+			final int type = (int)(this.shapes[shapesOffset]);
 			
-//			Check the direction of the orthonormal basis:
-			final boolean isWX = absWX < absWY && absWX < absWZ;
-			final boolean isWY = absWY < absWZ;
-			
-//			Calculate the orthonormal basis V-vector:
-			final float v0X = isWX ? 0.0F : isWY ? wZ : wY;
-			final float v0Y = isWX ? wZ : isWY ? 0.0F : -wX;
-			final float v0Z = isWX ? -wY : isWY ? -wX : 0.0F;
-			final float v0LengthReciprocal = rsqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
-			final float v1X = v0X * v0LengthReciprocal;
-			final float v1Y = v0Y * v0LengthReciprocal;
-			final float v1Z = v0Z * v0LengthReciprocal;
-			
-//			Calculate the orthonormal basis U-vector:
-			final float u0X = v1Y * wZ - v1Z * wY;
-			final float u0Y = v1Z * wX - v1X * wZ;
-			final float u0Z = v1X * wY - v1Y * wX;
-			final float u0LengthReciprocal = rsqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
-			final float u1X = u0X * u0LengthReciprocal;
-			final float u1Y = u0Y * u0LengthReciprocal;
-			final float u1Z = u0Z * u0LengthReciprocal;
-			
-//			Calculate the new surface normal:
-			final float surfaceNormal0X = r * u1X + g * v1X + b * wX;
-			final float surfaceNormal0Y = r * u1Y + g * v1Y + b * wY;
-			final float surfaceNormal0Z = r * u1Z + g * v1Z + b * wZ;
-			final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
-			final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
-			final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
-			final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
-			
-//			Update the intersections array:
-			this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
-			this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
-			this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
+			if(type == CompiledScene.SPHERE_TYPE) {
+				final float v0X = -2.0F * PI * wY;
+				final float v0Y = 2.0F * PI * wX;
+				final float v0Z = 0.0F;
+				
+				final float u0X = v0Y * wZ - v0Z * wY;
+				final float u0Y = v0Z * wX - v0X * wZ;
+				final float u0Z = v0X * wY - v0Y * wX;
+				final float u0LengthReciprocal = rsqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
+				final float u1X = u0X * u0LengthReciprocal;
+				final float u1Y = u0Y * u0LengthReciprocal;
+				final float u1Z = u0Z * u0LengthReciprocal;
+				
+				final float v1X = wY * u1Z - wZ * u1Y;
+				final float v1Y = wZ * u1X - wX * u1Z;
+				final float v1Z = wX * u1Y - wY * u1X;
+				final float v1LengthReciprocal = rsqrt(v1X * v1X + v1Y * v1Y + v1Z * v1Z);
+				final float v2X = v1X * v1LengthReciprocal;
+				final float v2Y = v1Y * v1LengthReciprocal;
+				final float v2Z = v1Z * v1LengthReciprocal;
+				
+				final float surfaceNormal0X = r * u1X + g * v2X + b * wX;
+				final float surfaceNormal0Y = r * u1Y + g * v2Y + b * wY;
+				final float surfaceNormal0Z = r * u1Z + g * v2Z + b * wZ;
+				final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
+				final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
+				final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
+				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
+				
+				this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
+				this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
+				this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
+			} else {
+//				Calculate the absolute values of the orthonormal basis W-vector:
+				final float absWX = abs(wX);
+				final float absWY = abs(wY);
+				final float absWZ = abs(wZ);
+				
+//				Check the direction of the orthonormal basis:
+				final boolean isWX = absWX < absWY && absWX < absWZ;
+				final boolean isWY = absWY < absWZ;
+				
+//				Calculate the orthonormal basis V-vector:
+				final float v0X = isWX ? 0.0F : isWY ? wZ : wY;
+				final float v0Y = isWX ? wZ : isWY ? 0.0F : -wX;
+				final float v0Z = isWX ? -wY : isWY ? -wX : 0.0F;
+				final float v0LengthReciprocal = rsqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
+				final float v1X = v0X * v0LengthReciprocal;
+				final float v1Y = v0Y * v0LengthReciprocal;
+				final float v1Z = v0Z * v0LengthReciprocal;
+				
+//				Calculate the orthonormal basis U-vector:
+				final float u0X = v1Y * wZ - v1Z * wY;
+				final float u0Y = v1Z * wX - v1X * wZ;
+				final float u0Z = v1X * wY - v1Y * wX;
+				final float u0LengthReciprocal = rsqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
+				final float u1X = u0X * u0LengthReciprocal;
+				final float u1Y = u0Y * u0LengthReciprocal;
+				final float u1Z = u0Z * u0LengthReciprocal;
+				
+//				Calculate the new surface normal:
+				final float surfaceNormal0X = r * u1X + g * v1X + b * wX;
+				final float surfaceNormal0Y = r * u1Y + g * v1Y + b * wY;
+				final float surfaceNormal0Z = r * u1Z + g * v1Z + b * wZ;
+				final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
+				final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
+				final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
+				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
+				
+//				Update the intersections array:
+				this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
+				this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
+				this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
+			}
 		}
 	}
 	
