@@ -39,6 +39,7 @@ import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SolidTexture;
+import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 
 final class Scenes {
 	private Scenes() {
@@ -361,16 +362,16 @@ final class Scenes {
 	}
 	
 	public static Scene newMaterialShowcaseScene() {
-		final Texture texture0 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture texture0 = new SurfaceNormalTexture();//new SolidTexture(Color.WHITE);//ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new SolidTexture(Color.RED);//new CheckerboardTexture(Color.RED, Color.ORANGE);
 		final Texture texture2 = new SolidTexture(Color.BLACK);
-		final Texture texture3 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 0.008F, 0.008F);
+		final Texture texture3 = ImageTexture.load(new File(Dayflower.getTextureFilename("NormalMap.png")), 0.0F, 0.008F, 0.008F);//bricks2_normal.jpg
 		final Texture texture4 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")));
 		final Texture texture5 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")));
 		
 		final
 		Scene scene = new Scene("Material_Showcase_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture0, texture3), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture0, texture3), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
 //		scene.addShape(new Sphere(Surface.getInstance(Color.WHITE, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 100000.0F, new Point3(50.0F, -100000.0F + 81.6F, 81.6F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 80.0F)));

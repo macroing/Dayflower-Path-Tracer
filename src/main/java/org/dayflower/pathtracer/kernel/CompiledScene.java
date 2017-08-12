@@ -60,6 +60,7 @@ import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SolidTexture;
+import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 
 //TODO: Add Javadocs.
 //TODO: Split "float[] shapes" into "float[] shapes" and "int[] triangles".
@@ -192,6 +193,15 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static final int SPHERE_TYPE = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_NORMAL_TEXTURE_RELATIVE_OFFSET_IS_TANGENT_SPACE = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_NORMAL_TEXTURE_SIZE = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int SURFACE_NORMAL_TEXTURE_TYPE = 4;
 	
 //	TODO: Add Javadocs.
 	public static final int SURFACE_RELATIVE_OFFSET_EMISSION = 0;
@@ -586,6 +596,8 @@ public final class CompiledScene {
 		}
 		
 		if(triangles.size() == 0) {
+			doReportProgress(" Done.\n");
+			
 			return new float[] {BVH_NODE_TYPE_LEAF, -1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
 		}
 		
@@ -876,6 +888,8 @@ public final class CompiledScene {
 			return doToFloatArrayImageTexture(ImageTexture.class.cast(texture));
 		} else if(texture instanceof SolidTexture) {
 			return doToFloatArraySolidTexture(SolidTexture.class.cast(texture));
+		} else if(texture instanceof SurfaceNormalTexture) {
+			return doToFloatArraySurfaceNormalTexture(SurfaceNormalTexture.class.cast(texture));
 		} else {
 			throw new IllegalArgumentException(String.format("The Texture provided is not supported: %s", texture));
 		}
@@ -948,6 +962,14 @@ public final class CompiledScene {
 			doGetOffset(sphere.getSurface(), surfaces),
 			sphere.getRadius(),
 			point3s.get(sphere.getPosition()).intValue()
+		};
+	}
+	
+	private static float[] doToFloatArraySurfaceNormalTexture(final SurfaceNormalTexture surfaceNormalTexture) {
+		return new float[] {
+			SURFACE_NORMAL_TEXTURE_TYPE,
+			SURFACE_NORMAL_TEXTURE_SIZE,
+			surfaceNormalTexture.isTangentSpace() ? 1.0F : 0.0F
 		};
 	}
 	
@@ -1064,6 +1086,8 @@ public final class CompiledScene {
 			return 8 + ImageTexture.class.cast(texture).getData().length;
 		} else if(texture instanceof SolidTexture) {
 			return SOLID_TEXTURE_SIZE;
+		} else if(texture instanceof SurfaceNormalTexture) {
+			return SURFACE_NORMAL_TEXTURE_SIZE;
 		} else {
 			throw new IllegalArgumentException(String.format("The Texture provided is not supported: %s", texture));
 		}

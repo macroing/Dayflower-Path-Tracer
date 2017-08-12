@@ -154,85 +154,6 @@ public final class TestApplication extends AbstractApplication {
 		
 		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime, region3, this.labelRenderMode, region4, this.labelRenderType, region5, this.labelApertureRadius, region6, this.labelFocalDistance, region7, this.labelFieldOfView);
 		
-		printf("Engine Name: %s", ENGINE_NAME);
-		printf("Engine Version: %s", Dayflower.getVersion());
-		print("");
-		print("Keys:");
-		print("- ESC: Exit");
-		print("- W: Walk forward");
-		print("- A: Strafe left");
-		print("- S: Walk backward");
-		print("- D: Strafe right");
-		print("- E: Increase altitude");
-		print("- R: Decrease altitude");
-		print("- T: Increase aperture diameter");
-		print("- Y: Decrease aperture diameter");
-		print("- U: Increase focal distance");
-		print("- I: Decrease focal distance");
-		print("- O: Increase field of view for X");
-		print("- P: Decrease field of view for X");
-		print("- G: Randomly change Sun and Sky");
-		print("- H: Toggle between Path Tracing, Ray Casting and Ray Marching");
-		print("- K: Toggle walk-lock");
-		print("- L: Toggle mouse recentering and cursor visibility");
-		print("- C: Toggle between camera lenses");
-		print("- B: Toggle Normal Mapping");
-		print("- M: Increase maximum ray depth");
-		print("- N: Decrease maximum ray depth");
-		print("- UP ARROW: Decrease pitch");
-		print("- LEFT ARROW: Increase yaw");
-		print("- DOWN ARROW: Increase pitch");
-		print("- RIGHT ARROW: Decrease yaw");
-		print("- MOVE MOUSE: Look around");
-		print("- 1: Toggle Blur effect");
-		print("- 2: Toggle Edge Detection effect");
-		print("- 3: Toggle Emboss effect");
-		print("- 4: Toggle Horizontal Gradient effect");
-		print("- 5: Toggle Vertical Gradient effect");
-		print("- 6: Toggle Sharpen effect");
-		print("- 7: Toggle Grayscale effect");
-		print("- 8: Toggle Sepia Tone effect");
-		print("- 9: Toggle between Flat Shading and Gouraud Shading");
-		print("- NUMPAD 0: Use Tone Mapping and Gamma Correction Filmic Curve");
-		print("- NUMPAD 1: Use Tone Mapping and Gamma Correction Linear");
-		print("- NUMPAD 2: Use Tone Mapping and Gamma Correction Reinhard version 1");
-		print("- NUMPAD 3: Use Tone Mapping and Gamma Correction Reinhard version 2");
-		print("");
-		print("Supported Features:");
-		print("- Shape: Plane");
-		print("- Shape: Sphere");
-		print("- Shape: Triangle");
-		print("- Material: Clear Coat (Reflection + Diffuse)");
-		print("- Material: Diffuse (Lambertian)");
-		print("- Material: Metal (Phong)");
-		print("- Material: Glass (Reflection + Refraction)");
-		print("- Material: Mirror (Reflection)");
-		print("- Texture: Checkerboard");
-		print("- Texture: Image");
-		print("- Texture: Solid");
-		print("- Perez Sun Sky Model");
-		print("- Normal Mapping: Texture: Image");
-		print("- Normal Mapping: Perlin Noise");
-		print("- Cosine-Weighted Hemisphere-Sampling of Sun");
-		print("- Acceleration Structure: Bounding Volume Hierarchy");
-		print("- Camera Lens: Thin");
-		print("- Camera Lens: Fisheye");
-		print("- Effect: Blur");
-		print("- Effect: Detect Edges");
-		print("- Effect: Emboss");
-		print("- Effect: Gradient: Horizontal");
-		print("- Effect: Gradient: Vertical");
-		print("- Effect: Grayscale");
-		print("- Effect: Sepia Tone");
-		print("- Effect: Sharpen");
-		print("- Renderer: Path Tracing");
-		print("- Renderer: Ray Casting");
-		print("- Renderer: Ray Marching");
-		print("- Tone Mapping and Gamma Correction: Filmic Curve");
-		print("- Tone Mapping and Gamma Correction: Linear");
-		print("- Tone Mapping and Gamma Correction: Reinhard version 1");
-		print("- Tone Mapping and Gamma Correction: Reinhard version 2");
-		
 		setCursorHidden(true);
 		setRecenteringMouse(true);
 	}
@@ -248,7 +169,7 @@ public final class TestApplication extends AbstractApplication {
 		
 		final File sceneFile = new File(sceneFilename);
 		
-		if(!sceneFile.isFile()) {
+		if(!sceneFile.isFile() || Dayflower.getSceneCompile()) {
 			final
 			CompiledScene compiledScene = CompiledScene.compile(this.camera, scene);
 			compiledScene.write(sceneFile);
@@ -567,24 +488,33 @@ public final class TestApplication extends AbstractApplication {
 			final int renderPass0 = renderPass.incrementAndGet();
 			
 			final long elapsedTimeMillis = System.currentTimeMillis() - currentTimeMillis.get();
+			final long fPS = fPSCounter.getFPS();
+			final long sPS = fPS * getCanvasWidth() * getCanvasHeight();
+			
+			final float apertureRadius = camera.getApertureRadius();
+			final float fieldOfViewX = camera.getFieldOfViewX();
+			final float fieldOfViewY = camera.getFieldOfViewY();
+			final float focalDistance = camera.getFocalDistance();
+			
+			final String rendererType = abstractRendererKernel.isPathTracing() ? "Path Tracer" : abstractRendererKernel.isRayCasting() ? "Ray Caster" : "Ray Marcher";
 			
 			Platform.runLater(() -> {
 				final long hours = elapsedTimeMillis / (60L * 60L * 1000L);
 				final long minutes = (elapsedTimeMillis - (hours * 60L * 60L * 1000L)) / (60L * 1000L);
 				final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 				
-				this.labelApertureRadius.setText(String.format("Aperture radius: %.2f", Float.valueOf(camera.getApertureRadius())));
-				this.labelFieldOfView.setText(String.format("FOV: %.2f - %.2f", Float.valueOf(camera.getFieldOfViewX()), Float.valueOf(camera.getFieldOfViewY())));
-				this.labelFocalDistance.setText(String.format("Focal distance: %.2f", Float.valueOf(camera.getFocalDistance())));
-				this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPSCounter.getFPS())));
+				this.labelApertureRadius.setText(String.format("Aperture radius: %.2f", Float.valueOf(apertureRadius)));
+				this.labelFieldOfView.setText(String.format("FOV: %.2f - %.2f", Float.valueOf(fieldOfViewX), Float.valueOf(fieldOfViewY)));
+				this.labelFocalDistance.setText(String.format("Focal distance: %.2f", Float.valueOf(focalDistance)));
+				this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
 				this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass0)));
 				this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
-				this.labelRenderType.setText(String.format("Type: %s", abstractRendererKernel.isPathTracing() ? "Path Tracer" : abstractRendererKernel.isRayCasting() ? "Ray Caster" : "Ray Marcher"));
-				this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(fPSCounter.getFPS() * getCanvasWidth() * getCanvasHeight())));
+				this.labelRenderType.setText(String.format("Type: %s", rendererType));
+				this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));
 			});
 			
 			try {
-				Thread.sleep(0L);
+				Thread.sleep(1L);
 			} catch(final InterruptedException e) {
 //				Do nothing.
 			}

@@ -26,7 +26,6 @@ import java.awt.image.WritableRaster;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -268,9 +267,9 @@ public final class ImageTexture implements Texture {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private static BufferedImage doCreateBufferedImageFrom(final File file) {
-		try {
-			return doCreateBufferedImageFrom(new FileInputStream(file));
-		} catch(final FileNotFoundException e) {
+		try(final InputStream inputStream = new FileInputStream(file)) {
+			return doCreateBufferedImageFrom(inputStream);
+		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}
 	}

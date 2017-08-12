@@ -35,6 +35,10 @@ final class Dayflower {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	public static boolean getSceneCompile() {
+		return doReadSettingAsBoolean("scene.compile", false);
+	}
+	
 	public static int getHeight() {
 		return doReadSettingAsInt("height", 768);
 	}
@@ -82,6 +86,10 @@ final class Dayflower {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static boolean doReadSettingAsBoolean(final String key, final boolean defaultValue) {
+		return Boolean.parseBoolean(SETTINGS.getProperty(key, Boolean.toString(defaultValue)));
+	}
 	
 	private static int doReadSettingAsInt(final String key, final int defaultValue) {
 		try {

@@ -24,23 +24,19 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -48,12 +44,6 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelWriter;
@@ -122,7 +112,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	private final boolean[] isKeyPressed = new boolean[KeyCode.values().length];
 	private final boolean[] isKeyPressedOnce = new boolean[KeyCode.values().length];
 	private Canvas canvas;
-	private final CopyOnWriteArrayList<Consumer<String>> printConsumers = new CopyOnWriteArrayList<>();
 	private final FPSCounter fPSCounter = new FPSCounter();
 	private final Lock lock = new ReentrantLock();
 	private final Map<String, Boolean> settings = new HashMap<>();
@@ -153,21 +142,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Adds a print {@code Consumer} to this {@code AbstractApplication}, if absent.
-	 * <p>
-	 * Returns {@code true} if, and only if, {@code printConsumer} was added, {@code false} otherwise.
-	 * <p>
-	 * If {@code printConsumer} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param printConsumer the print {@code Consumer} to add
-	 * @return {@code true} if, and only if, {@code printConsumer} was added, {@code false} otherwise
-	 * @throws NullPointerException thrown if, and only if, {@code printConsumer} is {@code null}
-	 */
-	protected final boolean addPrintConsumer(final Consumer<String> printConsumer) {
-		return this.printConsumers.addIfAbsent(Objects.requireNonNull(printConsumer, "printConsumer == null"));
-	}
 	
 	/**
 	 * Disables the setting with a name of {@code name}.
@@ -320,21 +294,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 	/**
-	 * Removes a print {@code Consumer} from this {@code AbstractApplication}, if present.
-	 * <p>
-	 * Returns {@code true} if, and only if, {@code printConsumer} was removed, {@code false} otherwise.
-	 * <p>
-	 * If {@code printConsumer} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param printConsumer the print {@code Consumer} to remove
-	 * @return {@code true} if, and only if, {@code printConsumer} was removed, {@code false} otherwise
-	 * @throws NullPointerException thrown if, and only if, {@code printConsumer} is {@code null}
-	 */
-	protected final boolean removePrintConsumer(final Consumer<String> printConsumer) {
-		return this.printConsumers.remove(Objects.requireNonNull(printConsumer, "printConsumer == null"));
-	}
-	
-	/**
 	 * Sets the setting with a name of {@code name} to the value of {@code isEnabled}.
 	 * <p>
 	 * Returns the state of the setting, which should be {@code isEnabled} at all times.
@@ -450,33 +409,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	protected abstract void onMouseMoved(final float x, final float y);
 	
 	/**
-	 * This method "prints" {@code string} as a message to all currently added print {@code Consumer}s.
-	 * <p>
-	 * If {@code message} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param string the message to print
-	 * @throws NullPointerException thrown if, and only if, {@code string} is {@code null}
-	 */
-	protected final void print(final String string) {
-		this.printConsumers.forEach(printConsumer -> printConsumer.accept(Objects.requireNonNull(string, "string == null")));
-	}
-	
-	/**
-	 * This method "prints" a message constructed via {@code String.format(format, objects)} to all currently added print {@code Consumer}s.
-	 * <p>
-	 * Calling this method is practically equivalent to {@code print(String.format(format, objects))}, assuming neither {@code format} nor {@code objects} are {@code null}.
-	 * <p>
-	 * If either {@code format} or {@code objects} are {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param format a format {@code String}
-	 * @param objects an array of {@code Object}s to format
-	 * @throws NullPointerException thrown if, and only if, either {@code format} or {@code objects} are {@code null}
-	 */
-	protected final void printf(final String format, final Object... objects) {
-		print(String.format(Objects.requireNonNull(format, "format == null"), Objects.requireNonNull(objects, "objects == null")));
-	}
-	
-	/**
 	 * Sets a new height.
 	 * 
 	 * @param canvasHeight a new height
@@ -545,10 +477,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	public final void start(final Stage stage) {
 		this.robot = doCreateRobot();
 		
-		final TextArea textArea = new TextArea();
-		
-		addPrintConsumer(string -> Platform.runLater(() -> textArea.appendText(string + "\n")));
-		
 		final
 		ImageView imageView = new ImageView();
 		imageView.setSmooth(true);
@@ -571,28 +499,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		this.canvas.setOnMouseReleased(this::doOnMouseReleased);
 		
 		final
-		TabPane tabPane = new TabPane();
-		tabPane.getTabs().add(doCreateTab(textArea, "Console"));
-		
-		final TreeItem<String> treeItem = new TreeItem<>("Scene");
-		
-		final
-		TreeView<String> treeView = new TreeView<>(treeItem);
-		treeView.setShowRoot(false);
-		
-		final
-		SplitPane splitPane0 = new SplitPane();
-		splitPane0.getItems().addAll(scrollPane, tabPane);
-		splitPane0.setOrientation(Orientation.VERTICAL);
-		splitPane0.setDividerPositions(0.7D);
-		
-		final
-		SplitPane splitPane1 = new SplitPane();
-		splitPane1.getItems().addAll(treeView, splitPane0);
-		splitPane1.setDividerPositions(0.3D);
-		splitPane1.setOrientation(Orientation.HORIZONTAL);
-		
-		final
 		MenuItem menuItemExit = new MenuItem("Exit");
 		menuItemExit.setOnAction(e -> Platform.exit());
 		
@@ -611,7 +517,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		final
 		BorderPane borderPane = new BorderPane();
 		borderPane.setTop(menuBar);
-		borderPane.setCenter(splitPane1);
+		borderPane.setCenter(scrollPane);
 		borderPane.setBottom(hBox);
 		
 		doConfigureUI(hBox);
@@ -766,16 +672,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		} catch(final AWTException e) {
 			throw new UnsupportedOperationException(e);
 		}
-	}
-	
-	private static Tab doCreateTab(final Node node, final String text) {
-		final
-		Tab tab = new Tab();
-		tab.setClosable(false);
-		tab.setContent(node);
-		tab.setText(text);
-		
-		return tab;
 	}
 	
 	private static void doUpdateTransform(final Canvas canvas, final ImageView imageView) {

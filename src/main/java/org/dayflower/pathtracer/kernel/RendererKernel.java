@@ -50,6 +50,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int MATERIAL_MIRROR = 3;
 	private static final int MATERIAL_PHONG_METAL = 4;
 	private static final int RELATIVE_OFFSET_INTERSECTION_DISTANCE = 0;
+	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_U = 10;
+	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_V = 13;
+	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_W = 16;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET = 1;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT = 2;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL = 5;
@@ -61,7 +64,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int RENDERER_RAY_MARCHER = 3;
 	private static final int SHADING_FLAT = 1;
 	private static final int SHADING_GOURAUD = 2;
-	private static final int SIZE_INTERSECTION = 10;
+	private static final int SIZE_INTERSECTION = 19;
 	private static final int SIZE_PIXEL = 4;
 	private static final int SIZE_RAY = 6;
 	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE = 1;
@@ -1774,13 +1777,44 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
 		
 //		Calculate some offsets:
+		final int offsetIntersectionOrthoNormalBasisU = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_U;
+		final int offsetIntersectionOrthoNormalBasisV = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_V;
+		final int offsetIntersectionOrthoNormalBasisW = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_W;
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
 		final int offsetIntersectionSurfaceNormal = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
 		final int offsetIntersectionUVCoordinates = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
 		
+//		Calculate Ortho Normal Basis W:
+		final float orthoNormalBasisWX = surfaceNormalX;
+		final float orthoNormalBasisWY = surfaceNormalY;
+		final float orthoNormalBasisWZ = surfaceNormalZ;
+		
+//		Calculate Ortho Normal Basis V:
+		final float orthoNormalBasisV0X = absSurfaceNormalX < absSurfaceNormalY && absSurfaceNormalX < absSurfaceNormalZ ? 0.0F : absSurfaceNormalY < absSurfaceNormalZ ? orthoNormalBasisWZ : orthoNormalBasisWY;
+		final float orthoNormalBasisV0Y = absSurfaceNormalX < absSurfaceNormalY && absSurfaceNormalX < absSurfaceNormalZ ? orthoNormalBasisWZ : absSurfaceNormalY < absSurfaceNormalZ ? 0.0F : -surfaceNormalX;
+		final float orthoNormalBasisV0Z = absSurfaceNormalX < absSurfaceNormalY && absSurfaceNormalX < absSurfaceNormalZ ? -orthoNormalBasisWY : absSurfaceNormalY < absSurfaceNormalZ ? -surfaceNormalX : 0.0F;
+		final float orthoNormalBasisV0LengthReciprocal = rsqrt(orthoNormalBasisV0X * orthoNormalBasisV0X + orthoNormalBasisV0Y * orthoNormalBasisV0Y + orthoNormalBasisV0Z * orthoNormalBasisV0Z);
+		final float orthoNormalBasisV1X = orthoNormalBasisV0X * orthoNormalBasisV0LengthReciprocal;
+		final float orthoNormalBasisV1Y = orthoNormalBasisV0Y * orthoNormalBasisV0LengthReciprocal;
+		final float orthoNormalBasisV1Z = orthoNormalBasisV0Z * orthoNormalBasisV0LengthReciprocal;
+		
+//		Calculate Ortho Normal Basis U:
+		final float orthoNormalBasisUX = orthoNormalBasisV1Y * orthoNormalBasisWZ - orthoNormalBasisV1Z * orthoNormalBasisWY;
+		final float orthoNormalBasisUY = orthoNormalBasisV1Z * orthoNormalBasisWX - orthoNormalBasisV1X * orthoNormalBasisWZ;
+		final float orthoNormalBasisUZ = orthoNormalBasisV1X * orthoNormalBasisWY - orthoNormalBasisV1Y * orthoNormalBasisWX;
+		
 //		Update the intersections array:
 		this.intersections[intersectionsOffset0] = distance;
 		this.intersections[intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = shapesOffset;
+		this.intersections[offsetIntersectionOrthoNormalBasisU] = orthoNormalBasisUX;
+		this.intersections[offsetIntersectionOrthoNormalBasisU + 1] = orthoNormalBasisUY;
+		this.intersections[offsetIntersectionOrthoNormalBasisU + 2] = orthoNormalBasisUZ;
+		this.intersections[offsetIntersectionOrthoNormalBasisV] = orthoNormalBasisV1X;
+		this.intersections[offsetIntersectionOrthoNormalBasisV + 1] = orthoNormalBasisV1Y;
+		this.intersections[offsetIntersectionOrthoNormalBasisV + 2] = orthoNormalBasisV1Z;
+		this.intersections[offsetIntersectionOrthoNormalBasisW] = orthoNormalBasisWX;
+		this.intersections[offsetIntersectionOrthoNormalBasisW + 1] = orthoNormalBasisWY;
+		this.intersections[offsetIntersectionOrthoNormalBasisW + 2] = orthoNormalBasisWZ;
 		this.intersections[offsetIntersectionSurfaceIntersectionPoint] = surfaceIntersectionPointX;
 		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointY;
 		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZ;
@@ -1983,6 +2017,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 			doCalculateTextureColorForImageTexture(texturesOffset);
 		} else if(textureType == CompiledScene.SOLID_TEXTURE_TYPE) {
 			doCalculateTextureColorForSolidTexture(texturesOffset);
+		} else if(textureType == CompiledScene.SURFACE_NORMAL_TEXTURE_TYPE) {
+			doCalculateTextureColorForSurfaceNormalTexture(texturesOffset);
 		}
 	}
 	
@@ -2079,19 +2115,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float sinAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN];
 		
 //		TODO: Write explanation!
-		final float x0 = (int)((u * cosAngle - v * sinAngle) * (width * scaleU));
-		final float y0 = (int)((v * cosAngle + u * sinAngle) * (height * scaleV));
+		final float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
+		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
 		
 //		TODO: Write explanation!
-		final float x1 = abs(x0);
-		final float y1 = abs(y0);
-		
-//		TODO: Write explanation!
-		final float x2 = remainder(x1, width);
-		final float y2 = remainder(y1, height);
-		
-//		TODO: Write explanation!
-		final int index = (int)((y2 * width + x2) * 3);
+		final int index = (int)((y * width + x) * 3);
 		
 //		TODO: Write explanation!
 		final float r = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index];
@@ -2108,21 +2136,39 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	private void doCalculateTextureColorForSolidTexture(final int texturesOffset) {
-//		Calculate the color offset:
-		final int offsetColor0 = texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR;
-		
 //		Retrieve the R-, G- and B-component values of the texture:
-		final float r = this.textures[offsetColor0];
-		final float g = this.textures[offsetColor0 + 1];
-		final float b = this.textures[offsetColor0 + 2];
+		final float r = this.textures[texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_R];
+		final float g = this.textures[texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_G];
+		final float b = this.textures[texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_B];
 		
 //		Calculate the pixel index:
-		final int pixelIndex0 = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * 3;
 		
 //		Update the temporaryColors array with the color of the texture:
-		this.temporaryColors[pixelIndex0] = r;
-		this.temporaryColors[pixelIndex0 + 1] = g;
-		this.temporaryColors[pixelIndex0 + 2] = b;
+		this.temporaryColors[pixelIndex] = r;
+		this.temporaryColors[pixelIndex + 1] = g;
+		this.temporaryColors[pixelIndex + 2] = b;
+	}
+	
+	@SuppressWarnings("unused")
+	private void doCalculateTextureColorForSurfaceNormalTexture(final int texturesOffset) {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		final int pixelIndex = getLocalId() * 3;
+		
+//		TODO: Add support for tangent space. This requires the Ortho Normal Basis (Tangent vectors). The Ortho Normal Basis probably requires object-spaces (at least for simplicity).
+//		final float isTangentSpace = this.textures[texturesOffset + CompiledScene.SURFACE_NORMAL_TEXTURE_RELATIVE_OFFSET_IS_TANGENT_SPACE];
+		
+		final float surfaceNormalX = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL];
+		final float surfaceNormalY = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1];
+		final float surfaceNormalZ = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2];
+		
+		final float r = (surfaceNormalX + 1.0F) * 0.5F;
+		final float g = (surfaceNormalY + 1.0F) * 0.5F;
+		final float b = (surfaceNormalZ + 1.0F) * 0.5F;
+		
+		this.temporaryColors[pixelIndex] = r;
+		this.temporaryColors[pixelIndex + 1] = g;
+		this.temporaryColors[pixelIndex + 2] = b;
 	}
 	
 	private void doFill(final int x, final int y, final Color color) {

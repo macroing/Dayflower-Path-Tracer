@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.0.20
+Dayflower - Path Tracer v.0.0.21
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
@@ -59,6 +59,7 @@ Supported Features
 * Checkerboard
 * Constant (Solid)
 * Image
+* Surface Normal
 
 #### Tone Mapping and Gamma Correction
 * Filmic Curve
@@ -126,6 +127,7 @@ In the ``settings.properties`` file you can change a few settings. The supported
 * ``width.scale`` - The width scale to use for the kernel. The width for the kernel is ``width / width.scale``.
 * ``height`` - The height of the canvas being rendered to.
 * ``height.scale`` - The height scale to use for the kernel. The height for the kernel is ``height / height.scale``.
+* ``scene.compile`` - If ``true``, scene compilation will be performed whether or not the scene already exists.
 * ``scene.name`` - The name of the scene to use.
 
 The following is a list of scene names that can be used.
