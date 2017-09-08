@@ -32,7 +32,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
@@ -40,9 +39,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
@@ -175,6 +172,11 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 */
 	protected final boolean enableSetting(final String name) {
 		return setSetting(name, true);
+	}
+	
+//	TODO: Add Javadocs!
+	protected final boolean hasEntered() {
+		return isCursorHidden() || isRecenteringMouse();
 	}
 	
 	/**
@@ -389,8 +391,21 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 * Called when UI-configuration can be performed at start.
 	 * 
 	 * @param hBox a {@code HBox} to add UI-controls to
+	 * @param menuBar a {@code MenuBar} to add UI-controls to
 	 */
-	protected abstract void doConfigureUI(final HBox hBox);
+	protected abstract void doConfigureUI(final HBox hBox, final MenuBar menuBar);
+	
+//	TODO: Add Javadocs!
+	protected final void enter() {
+		setCursorHidden(true);
+		setRecenteringMouse(true);
+	}
+	
+//	TODO: Add Javadocs!
+	protected final void leave() {
+		setCursorHidden(false);
+		setRecenteringMouse(false);
+	}
 	
 	/**
 	 * Called when the mouse is dragged.
@@ -498,17 +513,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		this.canvas.setOnMousePressed(this::doOnMousePressed);
 		this.canvas.setOnMouseReleased(this::doOnMouseReleased);
 		
-		final
-		MenuItem menuItemExit = new MenuItem("Exit");
-		menuItemExit.setOnAction(e -> Platform.exit());
-		
-		final
-		Menu menuFile = new Menu("File");
-		menuFile.getItems().addAll(menuItemExit);
-		
-		final
-		MenuBar menuBar = new MenuBar();
-		menuBar.getMenus().addAll(menuFile);
+		final MenuBar menuBar = new MenuBar();
 		
 		final
 		HBox hBox = new HBox();
@@ -520,7 +525,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		borderPane.setCenter(scrollPane);
 		borderPane.setBottom(hBox);
 		
-		doConfigureUI(hBox);
+		doConfigureUI(hBox, menuBar);
 		
 		final Scene scene = new Scene(borderPane, 1024.0D, 768.0D);
 		

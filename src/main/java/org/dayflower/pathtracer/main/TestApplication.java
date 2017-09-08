@@ -26,8 +26,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 
 import javafx.application.Platform;
-import javafx.geometry.Insets;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -35,6 +40,7 @@ import javafx.scene.layout.Region;
 import com.amd.aparapi.Range;
 
 import org.dayflower.pathtracer.application.AbstractApplication;
+import org.dayflower.pathtracer.application.JavaFX;
 import org.dayflower.pathtracer.filter.ConvolutionFilters;
 import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
@@ -62,6 +68,7 @@ public final class TestApplication extends AbstractApplication {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private final AtomicBoolean hasRequestedToExit = new AtomicBoolean();
 	private final AtomicBoolean hasInitialized = new AtomicBoolean();
 	private byte[] pixels;
 	private final Camera camera = new Camera();
@@ -117,45 +124,95 @@ public final class TestApplication extends AbstractApplication {
 	 * Called when UI-configuration can be performed at start.
 	 * 
 	 * @param hBox a {@code HBox} to add UI-controls to
+	 * @param menuBar a {@code MenuBar} to add UI-controls to
 	 */
 	@Override
-	protected void doConfigureUI(final HBox hBox) {
-		final
-		Region region0 = new Region();
-		region0.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+	protected void doConfigureUI(final HBox hBox, final MenuBar menuBar) {
+//		Create the "File" Menu:
+		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> this.hasRequestedToExit.set(true));
 		
-		final
-		Region region1 = new Region();
-		region1.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		final Menu menuFile = JavaFX.newMenu("File", menuItemExit);
 		
-		final
-		Region region2 = new Region();
-		region2.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		menuBar.getMenus().add(menuFile);
 		
-		final
-		Region region3 = new Region();
-		region3.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+//		Create the "Camera" Menu:
+		final ToggleGroup toggleGroupCameraLens = new ToggleGroup();
 		
-		final
-		Region region4 = new Region();
-		region4.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		final CheckMenuItem checkMenuItemWalkLock = JavaFX.newCheckMenuItem("Walk Lock", e -> this.camera.setWalkLockEnabled(!this.camera.isWalkLockEnabled()), this.camera.isWalkLockEnabled());
 		
-		final
-		Region region5 = new Region();
-		region5.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		final RadioMenuItem radioMenuItemFisheye = JavaFX.newRadioMenuItem("Fisheye Camera Lens", e -> this.camera.setFisheyeCameraLens(true), this.camera.isFisheyeCameraLens(), toggleGroupCameraLens);
+		final RadioMenuItem radioMenuItemThin = JavaFX.newRadioMenuItem("Thin Camera Lens", e -> this.camera.setThinCameraLens(true), this.camera.isThinCameraLens(), toggleGroupCameraLens);
 		
-		final
-		Region region6 = new Region();
-		region6.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		final Menu menuCamera = JavaFX.newMenu("Camera", checkMenuItemWalkLock, radioMenuItemFisheye, radioMenuItemThin);
 		
-		final
-		Region region7 = new Region();
-		region7.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		menuBar.getMenus().add(menuCamera);
+		
+//		Create the "Effect" Menu:
+		final CheckMenuItem checkMenuItemBlur = JavaFX.newCheckMenuItem("Blur", e -> toggleSetting(SETTING_NAME_FILTER_BLUR));
+		final CheckMenuItem checkMenuItemDetectEdges = JavaFX.newCheckMenuItem("Detect Edges", e -> toggleSetting(SETTING_NAME_FILTER_DETECT_EDGES));
+		final CheckMenuItem checkMenuItemEmboss = JavaFX.newCheckMenuItem("Emboss", e -> toggleSetting(SETTING_NAME_FILTER_EMBOSS));
+		final CheckMenuItem checkMenuItemGradientHorizontal = JavaFX.newCheckMenuItem("Gradient (Horizontal)", e -> toggleSetting(SETTING_NAME_FILTER_GRADIENT_HORIZONTAL));
+		final CheckMenuItem checkMenuItemGradientVertical = JavaFX.newCheckMenuItem("Gradient (Vertical)", e -> toggleSetting(SETTING_NAME_FILTER_GRADIENT_VERTICAL));
+		final CheckMenuItem checkMenuItemSharpen = JavaFX.newCheckMenuItem("Sharpen", e -> toggleSetting(SETTING_NAME_FILTER_SHARPEN));
+		final CheckMenuItem checkMenuItemGrayscale = JavaFX.newCheckMenuItem("Grayscale", e -> this.abstractRendererKernel.setEffectGrayScale(!this.abstractRendererKernel.isEffectGrayScale()));
+		final CheckMenuItem checkMenuItemSepiaTone = JavaFX.newCheckMenuItem("Sepia Tone", e -> this.abstractRendererKernel.setEffectSepiaTone(!this.abstractRendererKernel.isEffectSepiaTone()));
+		
+		final Menu menuEffect = JavaFX.newMenu("Effect", checkMenuItemBlur, checkMenuItemDetectEdges, checkMenuItemEmboss, checkMenuItemGradientHorizontal, checkMenuItemGradientVertical, checkMenuItemSharpen, checkMenuItemGrayscale, checkMenuItemSepiaTone);
+		
+		menuBar.getMenus().add(menuEffect);
+		
+//		Create the "Renderer" Menu:
+		final ToggleGroup toggleGroupRenderer = new ToggleGroup();
+		
+		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> this.abstractRendererKernel.setPathTracing(true), this.abstractRendererKernel.isPathTracing(), toggleGroupRenderer);
+		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> this.abstractRendererKernel.setRayCasting(true), this.abstractRendererKernel.isRayCasting(), toggleGroupRenderer);
+		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> this.abstractRendererKernel.setRayMarching(true), this.abstractRendererKernel.isRayMarching(), toggleGroupRenderer);
+		
+		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher);
+		
+		menuBar.getMenus().add(menuRenderer);
+		
+//		Create the "Scene" Menu:
+		final ToggleGroup toggleGroupShading = new ToggleGroup();
+		
+		final CheckMenuItem checkMenuItemNormalMapping = JavaFX.newCheckMenuItem("Normal Mapping", e -> this.abstractRendererKernel.setNormalMapping(!this.abstractRendererKernel.isNormalMapping()), this.abstractRendererKernel.isNormalMapping());
+		
+		final MenuItem menuItemEnterScene = JavaFX.newMenuItem("Enter Scene", e -> enter());
+		final MenuItem menuItemRandomSunAndSky = JavaFX.newMenuItem("Random Sun and Sky", e -> {
+			this.sky.set(new Vector3(ThreadLocalRandom.current().nextFloat(), ThreadLocalRandom.current().nextFloat(), -1.0F).normalize());
+			this.abstractRendererKernel.updateSky();
+		});
+		
+		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> this.abstractRendererKernel.setShadingFlat(), this.abstractRendererKernel.isShadingFlat(), toggleGroupShading);
+		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> this.abstractRendererKernel.setShadingGouraud(), this.abstractRendererKernel.isShadingGouraud(), toggleGroupShading);
+		
+		final Menu menuScene = JavaFX.newMenu("Scene", checkMenuItemNormalMapping, menuItemEnterScene, menuItemRandomSunAndSky, radioMenuItemFlatShading, radioMenuItemGouraudShading);
+		
+		menuBar.getMenus().add(menuScene);
+		
+//		Create the "Tone Mapper" Menu:
+		final ToggleGroup toggleGroupToneMapper = new ToggleGroup();
+		
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurve = JavaFX.newRadioMenuItem("Filmic Curve", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionFilmicCurve(), true, toggleGroupToneMapper);
+		final RadioMenuItem radioMenuItemToneMapperLinear = JavaFX.newRadioMenuItem("Linear", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionLinear(), false, toggleGroupToneMapper);
+		final RadioMenuItem radioMenuItemToneMapperReinhard1 = JavaFX.newRadioMenuItem("Reinhard v.1", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionReinhard1(), false, toggleGroupToneMapper);
+		final RadioMenuItem radioMenuItemToneMapperReinhard2 = JavaFX.newRadioMenuItem("Reinhard v.2", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionReinhard2(), false, toggleGroupToneMapper);
+		
+		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurve, radioMenuItemToneMapperLinear, radioMenuItemToneMapperReinhard1, radioMenuItemToneMapperReinhard2);
+		
+		menuBar.getMenus().add(menuToneMapper);
+		
+//		Create and add all sections to the bottom of the window:
+		final Region region0 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
+		final Region region1 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
+		final Region region2 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
+		final Region region3 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
+		final Region region4 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
+		final Region region5 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
+		final Region region6 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
+		final Region region7 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
 		
 		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime, region3, this.labelRenderMode, region4, this.labelRenderType, region5, this.labelApertureRadius, region6, this.labelFocalDistance, region7, this.labelFieldOfView);
-		
-		setCursorHidden(true);
-		setRecenteringMouse(true);
 	}
 	
 	/**
@@ -246,6 +303,20 @@ public final class TestApplication extends AbstractApplication {
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> abstractRendererKernel.dispose()));
 		
 		while(true) {
+			if(this.hasRequestedToExit.get()) {
+				if(hasEntered()) {
+					this.hasRequestedToExit.set(false);
+					
+					leave();
+				} else {
+					abstractRendererKernel.dispose();
+					
+					Platform.exit();
+					
+					break;
+				}
+			}
+			
 			final float velocity = abstractRendererKernel.isRayMarching() ? 1.0F : 250.0F;
 			final float movement = fPSCounter.getFrameTimeMillis() / 1000.0F * velocity;
 			
@@ -253,52 +324,8 @@ public final class TestApplication extends AbstractApplication {
 				camera.strafe(-movement);
 			}
 			
-			if(isKeyPressed(KeyCode.B, true)) {
-				abstractRendererKernel.setNormalMapping(!abstractRendererKernel.isNormalMapping());
-			}
-			
-			if(isKeyPressed(KeyCode.C, true)) {
-				camera.setThinCameraLens(!camera.isThinCameraLens());
-			}
-			
 			if(isKeyPressed(KeyCode.D)) {
 				camera.strafe(movement);
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT1, true)) {
-				toggleSetting(SETTING_NAME_FILTER_BLUR);
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT2, true)) {
-				toggleSetting(SETTING_NAME_FILTER_DETECT_EDGES);
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT3, true)) {
-				toggleSetting(SETTING_NAME_FILTER_EMBOSS);
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT4, true)) {
-				toggleSetting(SETTING_NAME_FILTER_GRADIENT_HORIZONTAL);
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT5, true)) {
-				toggleSetting(SETTING_NAME_FILTER_GRADIENT_VERTICAL);
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT6, true)) {
-				toggleSetting(SETTING_NAME_FILTER_SHARPEN);
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT7, true)) {
-				abstractRendererKernel.setEffectGrayScale(!abstractRendererKernel.isEffectGrayScale());
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT8, true)) {
-				abstractRendererKernel.setEffectSepiaTone(!abstractRendererKernel.isEffectSepiaTone());
-			}
-			
-			if(isKeyPressed(KeyCode.DIGIT9, true)) {
-				abstractRendererKernel.toggleShading();
 			}
 			
 			if(isKeyPressed(KeyCode.DOWN)) {
@@ -309,22 +336,12 @@ public final class TestApplication extends AbstractApplication {
 				camera.changeAltitude(0.5F);
 			}
 			
-			if(isKeyPressed(KeyCode.ESCAPE)) {
-				abstractRendererKernel.dispose();
-				
-				Platform.exit();
-				
-				break;
+			if(isKeyPressed(KeyCode.ENTER, true) && !hasEntered()) {
+				enter();
 			}
 			
-			if(isKeyPressed(KeyCode.G, true)) {
-				this.sky.set(new Vector3(ThreadLocalRandom.current().nextFloat(), ThreadLocalRandom.current().nextFloat(), -1.0F).normalize());
-				
-				abstractRendererKernel.updateSky();
-			}
-			
-			if(isKeyPressed(KeyCode.H, true)) {
-				abstractRendererKernel.toggleRenderer();
+			if(isKeyPressed(KeyCode.ESCAPE, true)) {
+				this.hasRequestedToExit.set(true);
 			}
 			
 			if(isKeyPressed(KeyCode.I)) {
@@ -338,15 +355,6 @@ public final class TestApplication extends AbstractApplication {
 				abstractRendererKernel.setGain(1.0F / abstractRendererKernel.getLacunarity());
 			}
 			
-			if(isKeyPressed(KeyCode.K, true)) {
-				camera.setWalkLockEnabled(!camera.isWalkLockEnabled());
-			}
-			
-			if(isKeyPressed(KeyCode.L, true)) {
-				setCursorHidden(!isCursorHidden());
-				setRecenteringMouse(!isRecenteringMouse());
-			}
-			
 			if(isKeyPressed(KeyCode.LEFT)) {
 				camera.changeYaw(0.02F);
 			}
@@ -357,22 +365,6 @@ public final class TestApplication extends AbstractApplication {
 			
 			if(isKeyPressed(KeyCode.N, true)) {
 				abstractRendererKernel.setDepthMaximum(Math.max(abstractRendererKernel.getDepthMaximum() - 1, 1));
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD0, true)) {
-				abstractRendererKernel.setToneMappingAndGammaCorrectionFilmicCurve();
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD1, true)) {
-				abstractRendererKernel.setToneMappingAndGammaCorrectionLinear();
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD2, true)) {
-				abstractRendererKernel.setToneMappingAndGammaCorrectionReinhard1();
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD3, true)) {
-				abstractRendererKernel.setToneMappingAndGammaCorrectionReinhard2();
 			}
 			
 			if(isKeyPressed(KeyCode.NUMPAD4, false)) {
@@ -439,7 +431,10 @@ public final class TestApplication extends AbstractApplication {
 				camera.changeApertureDiameter(-0.1F);
 			}
 			
-			if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || isPressingKey()) {
+			if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || isPressingKey() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
+				camera.resetUpdateStatus();
+				
+				abstractRendererKernel.updateResetStatus();
 				abstractRendererKernel.reset();
 				
 				renderPass.set(0);

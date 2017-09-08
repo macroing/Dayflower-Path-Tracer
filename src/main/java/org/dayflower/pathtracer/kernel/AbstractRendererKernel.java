@@ -170,6 +170,12 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 		return false;
 	}
 	
+//	TODO: Add Javadocs!
+	@SuppressWarnings("static-method")
+	public boolean isResetRequired() {
+		return false;
+	}
+	
 	/**
 	 * Returns {@code true} if, and only if, Flat Shading is used, {@code false} otherwise.
 	 * 
@@ -566,6 +572,11 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * Toggles to the next shading.
 	 */
 	public void toggleShading() {
+//		Do nothing.
+	}
+	
+//	TODO: Add Javadocs!
+	public void updateResetStatus() {
 //		Do nothing.
 	}
 }

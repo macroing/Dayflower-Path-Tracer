@@ -133,6 +133,7 @@ public final class Camera {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private boolean hasUpdated;
 	private boolean isWalkLockEnabled;
 	private CameraPredicate cameraPredicate;
 	private float centerX;
@@ -188,6 +189,11 @@ public final class Camera {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public boolean hasUpdated() {
+		return this.hasUpdated;
+	}
 	
 //	TODO: Add Javadocs.
 	public boolean isFisheyeCameraLens() {
@@ -470,6 +476,11 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
+	public void resetUpdateStatus() {
+		this.hasUpdated = false;
+	}
+	
+//	TODO: Add Javadocs.
 	public void rotateRight(final float distance) {
 		final float yaw = getYaw() + distance;
 		final float pitch = getPitch();
@@ -489,6 +500,7 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public void setCameraLens(final int cameraLens) {
 		this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] = cameraLens;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -529,6 +541,7 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public void setFisheyeCameraLens(final boolean isFisheyeCameraLens) {
 		this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] = isFisheyeCameraLens ? CAMERA_LENS_FISHEYE : CAMERA_LENS_THIN;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -566,6 +579,7 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public void setThinCameraLens(final boolean isThinCameraLens) {
 		this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] = isThinCameraLens ? CAMERA_LENS_THIN : CAMERA_LENS_FISHEYE;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.

@@ -67,9 +67,10 @@ Supported Features
 * Reinhard v.1
 * Reinhard v.2
 
-Supported Controls
-------------------
-* ESC: Exit
+Supported Keyboard Controls
+---------------------------
+* ESC: Exit or leave the Scene if it has been entered like an FPS-game
+* ENTER: Enter the Scene like an FPS-game
 * W: Walk Forward
 * A: Strafe Left
 * S: Walk Backward
@@ -82,12 +83,7 @@ Supported Controls
 * I: Decrease Focal Distance
 * O: Increase Field of View for the X-axis
 * P: Decrease Field of View for the X-axis
-* G: Randomly change Sun and Sky
-* H: Toggle between Path Tracing, Ray Casting and Ray Marching
-* K: Toggle Walk-Lock
-* L: Toggle Mouse Recentering and Cursor Visibility
-* C: Toggle between Thin Camera Lens and Fisheye Camera Lens
-* B: Toggle Normal Mapping
+* J: Reset Amplitude, Frequency, Lacunarity and Gain for Ray Marching
 * M: Increase Maximum Ray Depth
 * N: Decrease Maximum Ray Depth
 * DOWN ARROW: Increase Pitch
@@ -95,19 +91,38 @@ Supported Controls
 * LEFT ARROW: Increase Yaw
 * RIGHT ARROW: Decrease Yaw
 * MOVE MOUSE: Free Movement
-* 1: Toggle Blur Effect
-* 2: Toggle Edge Detection Effect
-* 3: Toggle Emboss Effect
-* 4: Toggle Horizontal Gradient Effect
-* 5: Toggle Vertical Gradient Effect
-* 6: Toggle Sharpen Effect
-* 7: Toggle Grayscale Effect
-* 8: Toggle Sepia Tone Effect
-* 9: Toggle between Flat Shading and Gouraud Shading
-* NUMPAD 0: Use Tone Mapping and Gamma Correction Filmic Curve
-* NUMPAD 1: Use Tone Mapping and Gamma Correction Linear
-* NUMPAD 2: Use Tone Mapping and Gamma Correction Reinhard v.1
-* NUMPAD 3: Use Tone Mapping and Gamma Correction Reinhard v.2
+* NUMPAD 4: Increase Amplitude for Ray Marching
+* NUMPAD 5: Increase Frequency for Ray Marching
+* NUMPAD 6: Increase Gain for Ray Marching
+* NUMPAD 7: Decrease Amplitude for Ray Marching
+* NUMPAD 8: Decrease Frequency for Ray Marching
+* NUMPAD 9: Decrease Gain for Ray Marching
+
+Supported Menu Controls
+-----------------------
+* File > Exit: Exit
+* Camera > Walk Lock: Toggle walk lock
+* Camera > Fisheye Camera Lens: Use a Fisheye camera lens
+* Camera > Thin Camera Lens: Use a Thin camera lens
+* Effect > Blur: Toggle the Blur effect
+* Effect > Detect Edges: Toggle the Detect Edges effect
+* Effect > Emboss: Toggle the Emboss effect
+* Effect > Gradient (Horizontal): Toggle the horizontal Gradient effect
+* Effect > Gradient (Vertical): Toggle the vertical Gradient effect
+* Effect > Sharpen: Toggle the Sharpen effect
+* Effect > Grayscale: Toggle the Grayscale effect
+* Effect > Sepia Tone: Toggle the Sepia Tone effect
+* Renderer > Path Tracer: Use the Path Tracer to render
+* Renderer > Ray Caster: Use the Ray Caster to render
+* Renderer > Ray Marcher: Use the Ray Marcher to render
+* Scene > Normal Mapping: Toggle Normal Mapping
+* Scene > Random Sun and Sky: Generate a new random Sun and Sky
+* Scene > Flat Shading: Use Flat Shading for Triangles
+* Scene > Gouraud Shading: Use Gouraud Shading for Triangles
+* Tone Mapper > Filmic Curve: Use the Filmic Curve Tone Mapper
+* Tone Mapper > Linear: Use the Linear Tone Mapper
+* Tone Mapper > Reinhard v.1: Use the Reindard v.1 Tone Mapper
+* Tone Mapper > Reinhard v.2: Use the Reinhard v.2 Tone Mapper
 
 Getting Started
 ---------------
