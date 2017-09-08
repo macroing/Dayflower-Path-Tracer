@@ -134,7 +134,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final float[] textures;
 	@Constant
 	private final float[] vector3s;
-	private int depthMaximum = 1;
+	private int depthMaximum = 5;
 	private int depthRussianRoulette = 5;
 	private int effectGrayScale;
 	private int effectSepiaTone;
