@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.0.21
+Dayflower - Path Tracer v.0.0.22
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
