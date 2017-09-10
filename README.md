@@ -2,7 +2,9 @@ Dayflower - Path Tracer v.0.0.22
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
-This project is mainly a test project for the real renderer, Dayflower.
+The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ray Casting and Ray Marching may be used.
+
+This early test implementation of Dayflower, uses a library called Aparapi. This library is responsible for decompiling the Java bytecode into OpenCL C99 on the fly. This OpenCL C99 is then compiled into binary code that is executable by your specific GPU.
 
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Scene-1.png "Dayflower Path Tracer")
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Scene-2.png "Dayflower Path Tracer")
@@ -69,60 +71,60 @@ Supported Features
 
 Supported Keyboard Controls
 ---------------------------
-* ESC: Exit or leave the Scene if it has been entered like an FPS-game
-* ENTER: Enter the Scene like an FPS-game
-* W: Walk Forward
-* A: Strafe Left
-* S: Walk Backward
-* D: Strafe Right
-* E: Increase Altitude
-* R: Decrease Altitude
-* T: Increase Aperture Diameter
-* Y: Decrease Aperture Diameter
-* U: Increase Focal Distance
-* I: Decrease Focal Distance
-* O: Increase Field of View for the X-axis
-* P: Decrease Field of View for the X-axis
-* J: Reset Amplitude, Frequency, Lacunarity and Gain for Ray Marching
-* M: Increase Maximum Ray Depth
-* N: Decrease Maximum Ray Depth
-* DOWN ARROW: Increase Pitch
-* UP ARROW: Decrease Pitch
-* LEFT ARROW: Increase Yaw
-* RIGHT ARROW: Decrease Yaw
-* MOVE MOUSE: Free Movement
-* NUMPAD 4: Increase Amplitude for Ray Marching
-* NUMPAD 5: Increase Frequency for Ray Marching
-* NUMPAD 6: Increase Gain for Ray Marching
-* NUMPAD 7: Decrease Amplitude for Ray Marching
-* NUMPAD 8: Decrease Frequency for Ray Marching
-* NUMPAD 9: Decrease Gain for Ray Marching
+* **ESC:** Exit or leave the Scene if it has been entered like an FPS-game
+* **ENTER:** Enter the Scene like an FPS-game
+* **W:** Walk Forward
+* **A:** Strafe Left
+* **S:** Walk Backward
+* **D:** Strafe Right
+* **E:** Increase Altitude
+* **R:** Decrease Altitude
+* **T:** Increase Aperture Diameter
+* **Y:** Decrease Aperture Diameter
+* **U:** Increase Focal Distance
+* **I:** Decrease Focal Distance
+* **O:** Increase Field of View for the X-axis
+* **P:** Decrease Field of View for the X-axis
+* **J:** Reset Amplitude, Frequency, Lacunarity and Gain for Ray Marching
+* **M:** Increase Maximum Ray Depth
+* **N:** Decrease Maximum Ray Depth
+* **DOWN ARROW:** Increase Pitch
+* **UP ARROW:** Decrease Pitch
+* **LEFT ARROW:** Increase Yaw
+* **RIGHT ARROW:** Decrease Yaw
+* **MOVE MOUSE:** Free Movement
+* **NUMPAD 4:** Increase Amplitude for Ray Marching
+* **NUMPAD 5:** Increase Frequency for Ray Marching
+* **NUMPAD 6:** Increase Gain for Ray Marching
+* **NUMPAD 7:** Decrease Amplitude for Ray Marching
+* **NUMPAD 8:** Decrease Frequency for Ray Marching
+* **NUMPAD 9:** Decrease Gain for Ray Marching
 
 Supported Menu Controls
 -----------------------
-* File > Exit: Exit
-* Camera > Walk Lock: Toggle walk lock
-* Camera > Fisheye Camera Lens: Use a Fisheye camera lens
-* Camera > Thin Camera Lens: Use a Thin camera lens
-* Effect > Blur: Toggle the Blur effect
-* Effect > Detect Edges: Toggle the Detect Edges effect
-* Effect > Emboss: Toggle the Emboss effect
-* Effect > Gradient (Horizontal): Toggle the horizontal Gradient effect
-* Effect > Gradient (Vertical): Toggle the vertical Gradient effect
-* Effect > Sharpen: Toggle the Sharpen effect
-* Effect > Grayscale: Toggle the Grayscale effect
-* Effect > Sepia Tone: Toggle the Sepia Tone effect
-* Renderer > Path Tracer: Use the Path Tracer to render
-* Renderer > Ray Caster: Use the Ray Caster to render
-* Renderer > Ray Marcher: Use the Ray Marcher to render
-* Scene > Normal Mapping: Toggle Normal Mapping
-* Scene > Random Sun and Sky: Generate a new random Sun and Sky
-* Scene > Flat Shading: Use Flat Shading for Triangles
-* Scene > Gouraud Shading: Use Gouraud Shading for Triangles
-* Tone Mapper > Filmic Curve: Use the Filmic Curve Tone Mapper
-* Tone Mapper > Linear: Use the Linear Tone Mapper
-* Tone Mapper > Reinhard v.1: Use the Reindard v.1 Tone Mapper
-* Tone Mapper > Reinhard v.2: Use the Reinhard v.2 Tone Mapper
+* **File > Exit:** Exit
+* **Camera > Walk Lock:** Toggle walk lock
+* **Camera > Fisheye Camera Lens:** Use a Fisheye camera lens
+* **Camera > Thin Camera Lens:** Use a Thin camera lens
+* **Effect > Blur:** Toggle the Blur effect
+* **Effect > Detect Edges:** Toggle the Detect Edges effect
+* **Effect > Emboss:** Toggle the Emboss effect
+* **Effect > Gradient (Horizontal):** Toggle the horizontal Gradient effect
+* **Effect > Gradient (Vertical):** Toggle the vertical Gradient effect
+* **Effect > Sharpen:** Toggle the Sharpen effect
+* **Effect > Grayscale:** Toggle the Grayscale effect
+* **Effect > Sepia Tone:** Toggle the Sepia Tone effect
+* **Renderer > Path Tracer:** Use the Path Tracer to render
+* **Renderer > Ray Caster:** Use the Ray Caster to render
+* **Renderer > Ray Marcher:** Use the Ray Marcher to render
+* **Scene > Normal Mapping:** Toggle Normal Mapping
+* **Scene > Random Sun and Sky:** Generate a new random Sun and Sky
+* **Scene > Flat Shading:** Use Flat Shading for Triangles
+* **Scene > Gouraud Shading:** Use Gouraud Shading for Triangles
+* **Tone Mapper > Filmic Curve:** Use the Filmic Curve Tone Mapper
+* **Tone Mapper > Linear:** Use the Linear Tone Mapper
+* **Tone Mapper > Reinhard v.1:** Use the Reindard v.1 Tone Mapper
+* **Tone Mapper > Reinhard v.2:** Use the Reinhard v.2 Tone Mapper
 
 Getting Started
 ---------------
@@ -146,14 +148,14 @@ In the ``settings.properties`` file you can change a few settings. The supported
 * ``scene.name`` - The name of the scene to use.
 
 The following is a list of scene names that can be used.
-* Car_Scene
-* Cornell_Box_Scene
-* Cornell_Box_Scene_2
-* Girl_Scene
-* House_Scene
-* Material_Showcase_Scene (Default)
-* Monkey_Scene
-* Terrain_Scene
+* **Car_Scene**
+* **Cornell_Box_Scene**
+* **Cornell_Box_Scene_2**
+* **Girl_Scene**
+* **House_Scene**
+* **Material_Showcase_Scene** (Default)
+* **Monkey_Scene**
+* **Terrain_Scene**
 
 Dependencies
 ------------
