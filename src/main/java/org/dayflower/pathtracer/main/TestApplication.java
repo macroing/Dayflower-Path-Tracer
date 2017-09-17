@@ -41,9 +41,9 @@ import com.amd.aparapi.Range;
 
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.application.JavaFX;
-import org.dayflower.pathtracer.filter.ConvolutionFilters;
 import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
+import org.dayflower.pathtracer.kernel.ConvolutionKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
 import org.dayflower.pathtracer.math.Vector3;
 import org.dayflower.pathtracer.scene.Camera;
@@ -72,8 +72,9 @@ public final class TestApplication extends AbstractApplication {
 	private final AtomicBoolean hasInitialized = new AtomicBoolean();
 	private byte[] pixels;
 	private final Camera camera = new Camera();
+	private ConvolutionKernel convolutionKernel;
 	private final Label labelApertureRadius = new Label("Aperture radius: N/A");
-	private final Label labelFieldOfView = new Label("FOV: N/A - N/A");
+	private final Label labelFieldOfView = new Label("FoV: N/A - N/A");
 	private final Label labelFocalDistance = new Label("Focal distance: N/A");
 	private final Label labelFPS = new Label("FPS: 0");
 	private final Label labelRenderMode = new Label("Mode: GPU");
@@ -103,6 +104,7 @@ public final class TestApplication extends AbstractApplication {
 	@Override
 	protected void doConfigurePixels(final byte[] pixels) {
 		this.pixels = pixels;
+		this.convolutionKernel = new ConvolutionKernel(pixels, getCanvasWidth(), getCanvasHeight());
 		
 		final
 		Camera camera = this.camera;
@@ -300,7 +302,13 @@ public final class TestApplication extends AbstractApplication {
 		abstractRendererKernel.updateLocalVariables(range.getLocalSize(0));
 		abstractRendererKernel.compile(this.pixels, getCanvasWidth(), getCanvasHeight());
 		
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> abstractRendererKernel.dispose()));
+		final ConvolutionKernel convolutionKernel = this.convolutionKernel;
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			abstractRendererKernel.dispose();
+			
+			convolutionKernel.dispose();
+		}));
 		
 		while(true) {
 			if(this.hasRequestedToExit.get()) {
@@ -310,6 +318,8 @@ public final class TestApplication extends AbstractApplication {
 					leave();
 				} else {
 					abstractRendererKernel.dispose();
+					
+					convolutionKernel.dispose();
 					
 					Platform.exit();
 					
@@ -454,27 +464,39 @@ public final class TestApplication extends AbstractApplication {
 				abstractRendererKernel.get(abstractRendererKernel.getPixels());
 				
 				if(isSettingEnabled(SETTING_NAME_FILTER_BLUR)) {
-					ConvolutionFilters.filterBlur(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
+					convolutionKernel.update();
+					convolutionKernel.enableBlur();
+					convolutionKernel.execute(range);
 				}
 				
 				if(isSettingEnabled(SETTING_NAME_FILTER_DETECT_EDGES)) {
-					ConvolutionFilters.filterDetectEdges(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
+					convolutionKernel.update();
+					convolutionKernel.enableDetectEdges();
+					convolutionKernel.execute(range);
 				}
 				
 				if(isSettingEnabled(SETTING_NAME_FILTER_EMBOSS)) {
-					ConvolutionFilters.filterEmboss(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
+					convolutionKernel.update();
+					convolutionKernel.enableEmboss();
+					convolutionKernel.execute(range);
 				}
 				
 				if(isSettingEnabled(SETTING_NAME_FILTER_GRADIENT_HORIZONTAL)) {
-					ConvolutionFilters.filterGradientHorizontal(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
+					convolutionKernel.update();
+					convolutionKernel.enableGradientHorizontal();
+					convolutionKernel.execute(range);
 				}
 				
 				if(isSettingEnabled(SETTING_NAME_FILTER_GRADIENT_VERTICAL)) {
-					ConvolutionFilters.filterGradientVertical(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
+					convolutionKernel.update();
+					convolutionKernel.enableGradientVertical();
+					convolutionKernel.execute(range);
 				}
 				
 				if(isSettingEnabled(SETTING_NAME_FILTER_SHARPEN)) {
-					ConvolutionFilters.filterSharpen(abstractRendererKernel.getPixels(), abstractRendererKernel.getWidth(), abstractRendererKernel.getHeight());
+					convolutionKernel.update();
+					convolutionKernel.enableSharpen();
+					convolutionKernel.execute(range);
 				}
 			} finally {
 				lock.unlock();
@@ -499,7 +521,7 @@ public final class TestApplication extends AbstractApplication {
 				final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 				
 				this.labelApertureRadius.setText(String.format("Aperture radius: %.2f", Float.valueOf(apertureRadius)));
-				this.labelFieldOfView.setText(String.format("FOV: %.2f - %.2f", Float.valueOf(fieldOfViewX), Float.valueOf(fieldOfViewY)));
+				this.labelFieldOfView.setText(String.format("FoV: %.2f - %.2f", Float.valueOf(fieldOfViewX), Float.valueOf(fieldOfViewY)));
 				this.labelFocalDistance.setText(String.format("Focal distance: %.2f", Float.valueOf(focalDistance)));
 				this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
 				this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass0)));
