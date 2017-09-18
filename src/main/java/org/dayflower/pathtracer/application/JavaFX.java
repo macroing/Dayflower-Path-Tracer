@@ -18,6 +18,7 @@
  */
 package org.dayflower.pathtracer.application;
 
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -25,6 +26,7 @@ import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Region;
 
@@ -80,5 +82,18 @@ public final class JavaFX {
 		region.setPadding(new Insets(top, right, bottom, left));
 		
 		return region;
+	}
+	
+	public static Slider newSlider(final double min, final double max, final double value, final double blockIncrement, final double majorTickUnit, final boolean showTickLabels, final boolean showTickMarks, final boolean snapToTicks, ChangeListener<? super Number> changeListener) {
+		final
+		Slider slider = new Slider(min, max, value);
+		slider.setBlockIncrement(blockIncrement);
+		slider.setMajorTickUnit(majorTickUnit);
+		slider.setShowTickLabels(showTickLabels);
+		slider.setShowTickMarks(showTickMarks);
+		slider.setSnapToTicks(snapToTicks);
+		slider.valueProperty().addListener(changeListener);
+		
+		return slider;
 	}
 }

@@ -803,6 +803,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Override
 	public void setDepthMaximum(final int depthMaximum) {
 		this.depthMaximum = depthMaximum;
+		this.isResetRequired = true;
 	}
 	
 	/**

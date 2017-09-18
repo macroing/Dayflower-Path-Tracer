@@ -437,7 +437,7 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void changeApertureDiameter(final float multiplier) {
+	public void changeApertureRadius(final float multiplier) {
 		setApertureRadius(getApertureRadius() + ((getApertureRadius() + 0.01F) * multiplier));
 	}
 	
@@ -495,6 +495,7 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public void setApertureRadius(final float apertureRadius) {
 		this.array[ABSOLUTE_OFFSET_OF_APERTURE_RADIUS] = max(min(apertureRadius, 25.0F), 0.0F);
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -536,6 +537,7 @@ public final class Camera {
 	public void setFieldOfViewX(final float fieldOfViewX) {
 		this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X] = fieldOfViewX;
 		this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y] = toDegrees(atan(tan(toRadians(fieldOfViewX) * 0.5F) * (getResolutionX() / getResolutionY())) * 2.0F);
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -547,6 +549,7 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public void setFocalDistance(final float focalDistance) {
 		this.array[ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE] = max(min(focalDistance, 100.0F), 0.2F);
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.

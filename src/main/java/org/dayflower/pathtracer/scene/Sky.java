@@ -240,6 +240,22 @@ public final class Sky {
 		this.jacobian = (2.0F * PI * PI) / (w * h);
 	}
 	
+	public void setTurbidity(final float turbidity) {
+		set(this.sunDirectionWorld, turbidity);
+	}
+	
+	public void setX(final float x) {
+		set(new Vector3(x, this.sunDirectionWorld.y, this.sunDirectionWorld.z), this.turbidity);
+	}
+	
+	public void setY(final float y) {
+		set(new Vector3(this.sunDirectionWorld.x, y, this.sunDirectionWorld.z), this.turbidity);
+	}
+	
+	public void setZ(final float z) {
+		set(new Vector3(this.sunDirectionWorld.x, this.sunDirectionWorld.y, z), this.turbidity);
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private Color doCalculateColor(final Vector3 direction) {

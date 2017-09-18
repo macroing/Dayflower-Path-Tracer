@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -46,7 +47,6 @@ import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.ConvolutionKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
-import org.dayflower.pathtracer.math.Vector3;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
@@ -74,9 +74,9 @@ public final class TestApplication extends AbstractApplication {
 	private byte[] pixels;
 	private final Camera camera = new Camera();
 	private ConvolutionKernel convolutionKernel;
-	private final Label labelApertureRadius = new Label("Aperture radius: N/A");
-	private final Label labelFieldOfView = new Label("FoV: N/A - N/A");
-	private final Label labelFocalDistance = new Label("Focal distance: N/A");
+	private final Label labelApertureRadius = new Label("Aperture Radius: N/A");
+	private final Label labelFieldOfView = new Label("Field of View: N/A - N/A");
+	private final Label labelFocalDistance = new Label("Focal Distance: N/A");
 	private final Label labelFPS = new Label("FPS: 0");
 	private final Label labelRenderMode = new Label("Mode: GPU");
 	private final Label labelRenderPass = new Label("Pass: 0");
@@ -106,7 +106,18 @@ public final class TestApplication extends AbstractApplication {
 	protected void doConfigurePixels(final byte[] pixels) {
 		this.pixels = pixels;
 		this.convolutionKernel = new ConvolutionKernel(pixels, getCanvasWidth(), getCanvasHeight());
-		
+		this.hasInitialized.set(true);
+	}
+	
+	/**
+	 * Called when UI-configuration can be performed at start.
+	 * 
+	 * @param hBox a {@code HBox} to add UI-controls to
+	 * @param menuBar a {@code MenuBar} to add UI-controls to
+	 * @param vBox a {@code VBox} to add UI-controls to
+	 */
+	@Override
+	protected void doConfigureUI(final HBox hBox, final MenuBar menuBar, final VBox vBox) {
 		final
 		Camera camera = this.camera;
 		camera.setApertureRadius(0.0F);
@@ -120,18 +131,6 @@ public final class TestApplication extends AbstractApplication {
 		camera.setYaw(0.0F);
 		camera.update();
 		
-		this.hasInitialized.set(true);
-	}
-	
-	/**
-	 * Called when UI-configuration can be performed at start.
-	 * 
-	 * @param hBox a {@code HBox} to add UI-controls to
-	 * @param menuBar a {@code MenuBar} to add UI-controls to
-	 * @param vBox a {@code VBox} to add UI-controls to
-	 */
-	@Override
-	protected void doConfigureUI(final HBox hBox, final MenuBar menuBar, final VBox vBox) {
 //		Create the "File" Menu:
 		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> this.hasRequestedToExit.set(true));
 		
@@ -202,7 +201,7 @@ public final class TestApplication extends AbstractApplication {
 		
 		menuBar.getMenus().add(menuToneMapper);
 		
-//		Create and add all sections to the bottom of the window:
+//		Create and add all sections to the bottom panel of the window:
 		final Region region0 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
 		final Region region1 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
 		final Region region2 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
@@ -214,60 +213,26 @@ public final class TestApplication extends AbstractApplication {
 		
 		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime, region3, this.labelRenderMode, region4, this.labelRenderType, region5, this.labelApertureRadius, region6, this.labelFocalDistance, region7, this.labelFieldOfView);
 		
+//		Create and add all sections to the left panel of the window:
+		final Label labelFieldOfView = new Label("Field of View:");
+		final Label labelApertureRadius = new Label("Aperture Radius:");
+		final Label labelFocalDistance = new Label("Focal Distance:");
+		final Label labelMaximumRayDepth = new Label("Maximum Ray Depth:");
 		final Label labelSunDirectionWorldX = new Label("Sun Direction X:");
 		final Label labelSunDirectionWorldY = new Label("Sun Direction Y:");
 		final Label labelSunDirectionWorldZ = new Label("Sun Direction Z:");
 		final Label labelTurbidity = new Label("Turbidity:");
 		
-		final
-		Slider sliderSunDirectionWorldX = new Slider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().x);
-		sliderSunDirectionWorldX.setShowTickMarks(true);
-		sliderSunDirectionWorldX.setShowTickLabels(true);
-		sliderSunDirectionWorldX.setMajorTickUnit(0.5D);
-		sliderSunDirectionWorldX.setBlockIncrement(0.1D);
+		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, this.camera.getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
+		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, this.camera.getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
+		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, this.camera.getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
+		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, this.abstractRendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
+		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
+		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 2.0D, this.sky.getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
+		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
+		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, this.sky.getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
-		final
-		Slider sliderSunDirectionWorldY = new Slider(0.0D, 2.0D, this.sky.getSunDirectionWorld().y);
-		sliderSunDirectionWorldY.setShowTickMarks(true);
-		sliderSunDirectionWorldY.setShowTickLabels(true);
-		sliderSunDirectionWorldY.setMajorTickUnit(0.5D);
-		sliderSunDirectionWorldY.setBlockIncrement(0.1D);
-		
-		final
-		Slider sliderSunDirectionWorldZ = new Slider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().z);
-		sliderSunDirectionWorldZ.setShowTickMarks(true);
-		sliderSunDirectionWorldZ.setShowTickLabels(true);
-		sliderSunDirectionWorldZ.setMajorTickUnit(0.5D);
-		sliderSunDirectionWorldZ.setBlockIncrement(0.1D);
-		
-		final
-		Slider sliderTurbidity = new Slider(2.0D, 8.0D, this.sky.getTurbidity());
-		sliderTurbidity.setShowTickMarks(true);
-		sliderTurbidity.setShowTickLabels(true);
-		sliderTurbidity.setMajorTickUnit(1.0D);
-		sliderTurbidity.setBlockIncrement(0.5D);
-		
-		sliderSunDirectionWorldX.valueProperty().addListener((observableValue, oldValue, newValue) -> {
-			this.sky.set(new Vector3(newValue.floatValue(), (float)(sliderSunDirectionWorldY.getValue()), (float)(sliderSunDirectionWorldZ.getValue())).normalize(), (float)(sliderTurbidity.getValue()));
-			this.abstractRendererKernel.updateSky();
-		});
-		
-		sliderSunDirectionWorldY.valueProperty().addListener((observableValue, oldValue, newValue) -> {
-			this.sky.set(new Vector3((float)(sliderSunDirectionWorldX.getValue()), newValue.floatValue(), (float)(sliderSunDirectionWorldZ.getValue())).normalize(), (float)(sliderTurbidity.getValue()));
-			this.abstractRendererKernel.updateSky();
-		});
-		
-		sliderSunDirectionWorldZ.valueProperty().addListener((observableValue, oldValue, newValue) -> {
-			this.sky.set(new Vector3((float)(sliderSunDirectionWorldX.getValue()), (float)(sliderSunDirectionWorldY.getValue()), newValue.floatValue()).normalize(), (float)(sliderTurbidity.getValue()));
-			this.abstractRendererKernel.updateSky();
-		});
-		
-		sliderTurbidity.valueProperty().addListener((observableValue, oldValue, newValue) -> {
-			this.sky.set(new Vector3((float)(sliderSunDirectionWorldX.getValue()), (float)(sliderSunDirectionWorldY.getValue()), (float)(sliderSunDirectionWorldZ.getValue())).normalize(), newValue.floatValue());
-			this.abstractRendererKernel.updateSky();
-		});
-		
-		vBox.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity);
+		vBox.getChildren().addAll(labelFieldOfView, sliderFieldOfView, labelApertureRadius, sliderApertureRadius, labelFocalDistance, sliderFocalDistance, labelMaximumRayDepth, sliderMaximumRayDepth, labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity);
 	}
 	
 	/**
@@ -407,10 +372,6 @@ public final class TestApplication extends AbstractApplication {
 				this.hasRequestedToExit.set(true);
 			}
 			
-			if(isKeyPressed(KeyCode.I)) {
-				camera.changeFocalDistance(-0.1F);
-			}
-			
 			if(isKeyPressed(KeyCode.J)) {
 				abstractRendererKernel.setAmplitude(0.5F);
 				abstractRendererKernel.setFrequency(0.2F);
@@ -420,14 +381,6 @@ public final class TestApplication extends AbstractApplication {
 			
 			if(isKeyPressed(KeyCode.LEFT)) {
 				camera.changeYaw(0.02F);
-			}
-			
-			if(isKeyPressed(KeyCode.M, true)) {
-				abstractRendererKernel.setDepthMaximum(abstractRendererKernel.getDepthMaximum() + 1);
-			}
-			
-			if(isKeyPressed(KeyCode.N, true)) {
-				abstractRendererKernel.setDepthMaximum(Math.max(abstractRendererKernel.getDepthMaximum() - 1, 1));
 			}
 			
 			if(isKeyPressed(KeyCode.NUMPAD4, false)) {
@@ -454,14 +407,6 @@ public final class TestApplication extends AbstractApplication {
 				abstractRendererKernel.setGain(abstractRendererKernel.getGain() - 0.005F);
 			}
 			
-			if(isKeyPressed(KeyCode.O)) {
-				camera.changeFieldOfViewX(0.1F);
-			}
-			
-			if(isKeyPressed(KeyCode.P)) {
-				camera.changeFieldOfViewX(-0.1F);
-			}
-			
 			if(isKeyPressed(KeyCode.R)) {
 				camera.changeAltitude(-0.5F);
 			}
@@ -474,24 +419,12 @@ public final class TestApplication extends AbstractApplication {
 				camera.forward(-movement);
 			}
 			
-			if(isKeyPressed(KeyCode.T)) {
-				camera.changeApertureDiameter(0.1F);
-			}
-			
-			if(isKeyPressed(KeyCode.U)) {
-				camera.changeFocalDistance(0.1F);
-			}
-			
 			if(isKeyPressed(KeyCode.UP)) {
 				camera.changePitch(-0.02F);
 			}
 			
 			if(isKeyPressed(KeyCode.W)) {
 				camera.forward(movement);
-			}
-			
-			if(isKeyPressed(KeyCode.Y)) {
-				camera.changeApertureDiameter(-0.1F);
 			}
 			
 			if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || isPressingKey() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
@@ -573,9 +506,9 @@ public final class TestApplication extends AbstractApplication {
 				final long minutes = (elapsedTimeMillis - (hours * 60L * 60L * 1000L)) / (60L * 1000L);
 				final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 				
-				this.labelApertureRadius.setText(String.format("Aperture radius: %.2f", Float.valueOf(apertureRadius)));
-				this.labelFieldOfView.setText(String.format("FoV: %.2f - %.2f", Float.valueOf(fieldOfViewX), Float.valueOf(fieldOfViewY)));
-				this.labelFocalDistance.setText(String.format("Focal distance: %.2f", Float.valueOf(focalDistance)));
+				this.labelApertureRadius.setText(String.format("Aperture Radius: %.2f", Float.valueOf(apertureRadius)));
+				this.labelFieldOfView.setText(String.format("Field of View: %.2f - %.2f", Float.valueOf(fieldOfViewX), Float.valueOf(fieldOfViewY)));
+				this.labelFocalDistance.setText(String.format("Focal Distance: %.2f", Float.valueOf(focalDistance)));
 				this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
 				this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass0)));
 				this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
@@ -600,5 +533,51 @@ public final class TestApplication extends AbstractApplication {
 	 */
 	public static void main(final String[] args) {
 		launch(args);
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderApertureRadius(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.camera.setApertureRadius(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderFieldOfView(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.camera.setFieldOfViewX(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderFocalDistance(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.camera.setFocalDistance(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderMaximumRayDepth(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.abstractRendererKernel.setDepthMaximum(newValue.intValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderSunDirectionWorldX(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.sky.setX(newValue.floatValue());
+		this.abstractRendererKernel.updateSky();
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderSunDirectionWorldY(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.sky.setY(newValue.floatValue());
+		this.abstractRendererKernel.updateSky();
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderSunDirectionWorldZ(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.sky.setZ(newValue.floatValue());
+		this.abstractRendererKernel.updateSky();
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderTurbidity(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.sky.setTurbidity(newValue.floatValue());
+		this.abstractRendererKernel.updateSky();
 	}
 }

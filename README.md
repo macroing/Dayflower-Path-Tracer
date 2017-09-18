@@ -79,15 +79,7 @@ Supported Keyboard Controls
 * ``D`` - Strafe Right
 * ``E`` - Increase Altitude
 * ``R`` - Decrease Altitude
-* ``T`` - Increase Aperture Diameter
-* ``Y`` - Decrease Aperture Diameter
-* ``U`` - Increase Focal Distance
-* ``I`` - Decrease Focal Distance
-* ``O`` - Increase Field of View for the X-axis
-* ``P`` - Decrease Field of View for the X-axis
 * ``J`` - Reset Amplitude, Frequency, Lacunarity and Gain for Ray Marching
-* ``M`` - Increase Maximum Ray Depth
-* ``N`` - Decrease Maximum Ray Depth
 * ``DOWN ARROW`` - Increase Pitch
 * ``UP ARROW`` - Decrease Pitch
 * ``LEFT ARROW`` - Increase Yaw
