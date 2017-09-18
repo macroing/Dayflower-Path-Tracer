@@ -38,6 +38,7 @@ import org.dayflower.pathtracer.color.RGBColorSpace;
 import org.dayflower.pathtracer.color.RegularSpectralCurve;
 import org.dayflower.pathtracer.color.SpectralCurve;
 import org.dayflower.pathtracer.math.OrthoNormalBasis;
+import org.dayflower.pathtracer.math.Point3;
 import org.dayflower.pathtracer.math.Vector3;
 
 //TODO: Add Javadocs!
@@ -57,10 +58,11 @@ public final class Sky {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	@SuppressWarnings("unused")
-	private Color color;
+	private Color sunColor;
 	@SuppressWarnings("unused")
 	private float jacobian;
 	private float theta;
+	private float turbidity;
 	private float zenithRelativeLuminance;
 	private float zenithX;
 	private float zenithY;
@@ -72,8 +74,10 @@ public final class Sky {
 	@SuppressWarnings("unused")
 	private final int samples = 4;
 	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y());
+	private Point3 sunOrigin;
 	private SpectralCurve radiance;
 	private Vector3 sunDirection;
+	private Vector3 sunDirectionWorld;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -87,6 +91,11 @@ public final class Sky {
 //	TODO: Add Javadocs.
 	public float getTheta() {
 		return this.theta;
+	}
+	
+//	TODO: Add Javadocs.
+	public float getTurbidity() {
+		return this.turbidity;
 	}
 	
 //	TODO: Add Javadocs.
@@ -125,31 +134,44 @@ public final class Sky {
 	}
 	
 //	TODO: Add Javadocs.
+	public Point3 getSunOrigin() {
+		return this.sunOrigin;
+	}
+	
+//	TODO: Add Javadocs.
 	public Vector3 getSunDirection() {
 		return this.sunDirection;
 	}
 	
 //	TODO: Add Javadocs.
+	public Vector3 getSunDirectionWorld() {
+		return this.sunDirectionWorld;
+	}
+	
+//	TODO: Add Javadocs.
 	public void set() {
-		set(new Vector3(1.0F, 1.0F, -1.0F).normalize());
+		set(new Vector3(1.0F, 1.0F, 1.0F).normalize());
 	}
 	
 //	TODO: Add Javadocs.
 	public void set(final Vector3 sunDirectionWorld) {
-		set(sunDirectionWorld, 2.0F);
+		set(sunDirectionWorld, 6.0F);
 	}
 	
 //	TODO: Add Javadocs.
 	public void set(final Vector3 sunDirectionWorld, final float turbidity) {
-		this.sunDirection = sunDirectionWorld.transformReverse(this.orthoNormalBasis).normalize();
+		this.sunDirectionWorld = sunDirectionWorld.normalize();
+		this.turbidity = turbidity;
+		this.sunDirection = this.sunDirectionWorld.transformReverse(this.orthoNormalBasis).normalize();
+		this.sunOrigin = new Point3().pointAt(this.sunDirectionWorld, 10000.0F);
 		this.theta = acos(saturate(this.sunDirection.z, -1.0F, 1.0F));
 		
 		if(this.sunDirection.z > 0.0F) {
 			this.radiance = doCalculateAttenuatedSunlight(this.theta, turbidity);
-			this.color = RGBColorSpace.SRGB.convertXYZToRGB(this.radiance.toXYZ().multiply(1.0e-4F)).constrain();
+			this.sunColor = RGBColorSpace.SRGB.convertXYZToRGB(this.radiance.toXYZ().multiply(1.0e-4F)).constrain();
 		} else {
 			this.radiance = new ConstantSpectralCurve(0.0F);
-			this.color = Color.BLACK;
+			this.sunColor = Color.BLACK;
 		}
 		
 		final float theta = this.theta;
@@ -258,15 +280,15 @@ public final class Sky {
 		final float lozone = 0.35F;
 		final float w = 2.0F;
 		final float beta = 0.04608365822050F * turbidity - 0.04586025928522F;
-		final float m = 1.0F / (cos(theta) + 0.000940F * pow(1.6386F - theta, -1.253F));
+		final float relativeOpticalMass = 1.0F / (cos(theta) + 0.000940F * pow(1.6386F - theta, -1.253F));
 		
 		for(int i = 0, lambda = 350; lambda <= 800; i++, lambda += 5) {
-			final float tauR = exp(-m * 0.008735F * pow(lambda / 1000.0F, -4.08F));
-			final float tauA = exp(-m * beta * pow(lambda / 1000.0F, -alpha));
-			final float tauO = exp(-m * K_O_SPECTRAL_CURVE.sample(lambda) * lozone);
-			final float tauG = exp(-1.41F * K_G_SPECTRAL_CURVE.sample(lambda) * m / pow(1.0F + 118.93F * K_G_SPECTRAL_CURVE.sample(lambda) * m, 0.45F));
-			final float tauWA = exp(-0.2385F * K_WA_SPECTRAL_CURVE.sample(lambda) * w * m / pow(1.0F + 20.07F * K_WA_SPECTRAL_CURVE.sample(lambda) * w * m, 0.45F));
-			final float amplitude = SOL_SPECTRAL_CURVE.sample(lambda) * tauR * tauA * tauO * tauG * tauWA;
+			final float tauRayleighScattering = exp(-relativeOpticalMass * 0.008735F * pow(lambda / 1000.0F, -4.08F));
+			final float tauAerosolAttenuation = exp(-relativeOpticalMass * beta * pow(lambda / 1000.0F, -alpha));
+			final float tauOzoneAbsorptionAttenuation = exp(-relativeOpticalMass * K_O_SPECTRAL_CURVE.sample(lambda) * lozone);
+			final float tauGasAbsorptionAttenuation = exp(-1.41F * K_G_SPECTRAL_CURVE.sample(lambda) * relativeOpticalMass / pow(1.0F + 118.93F * K_G_SPECTRAL_CURVE.sample(lambda) * relativeOpticalMass, 0.45F));
+			final float tauWaterVaporAbsorptionAttenuation = exp(-0.2385F * K_WA_SPECTRAL_CURVE.sample(lambda) * w * relativeOpticalMass / pow(1.0F + 20.07F * K_WA_SPECTRAL_CURVE.sample(lambda) * w * relativeOpticalMass, 0.45F));
+			final float amplitude = SOL_SPECTRAL_CURVE.sample(lambda) * tauRayleighScattering * tauAerosolAttenuation * tauOzoneAbsorptionAttenuation * tauGasAbsorptionAttenuation * tauWaterVaporAbsorptionAttenuation;
 			
 			spectrum[i] = amplitude;
 		}

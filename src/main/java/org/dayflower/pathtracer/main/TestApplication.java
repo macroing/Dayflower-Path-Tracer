@@ -19,7 +19,6 @@
 package org.dayflower.pathtracer.main;
 
 import java.io.File;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,10 +31,12 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
 import com.amd.aparapi.Range;
 
@@ -127,9 +128,10 @@ public final class TestApplication extends AbstractApplication {
 	 * 
 	 * @param hBox a {@code HBox} to add UI-controls to
 	 * @param menuBar a {@code MenuBar} to add UI-controls to
+	 * @param vBox a {@code VBox} to add UI-controls to
 	 */
 	@Override
-	protected void doConfigureUI(final HBox hBox, final MenuBar menuBar) {
+	protected void doConfigureUI(final HBox hBox, final MenuBar menuBar, final VBox vBox) {
 //		Create the "File" Menu:
 		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> this.hasRequestedToExit.set(true));
 		
@@ -180,15 +182,11 @@ public final class TestApplication extends AbstractApplication {
 		final CheckMenuItem checkMenuItemNormalMapping = JavaFX.newCheckMenuItem("Normal Mapping", e -> this.abstractRendererKernel.setNormalMapping(!this.abstractRendererKernel.isNormalMapping()), this.abstractRendererKernel.isNormalMapping());
 		
 		final MenuItem menuItemEnterScene = JavaFX.newMenuItem("Enter Scene", e -> enter());
-		final MenuItem menuItemRandomSunAndSky = JavaFX.newMenuItem("Random Sun and Sky", e -> {
-			this.sky.set(new Vector3(ThreadLocalRandom.current().nextFloat(), ThreadLocalRandom.current().nextFloat(), -1.0F).normalize());
-			this.abstractRendererKernel.updateSky();
-		});
 		
 		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> this.abstractRendererKernel.setShadingFlat(), this.abstractRendererKernel.isShadingFlat(), toggleGroupShading);
 		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> this.abstractRendererKernel.setShadingGouraud(), this.abstractRendererKernel.isShadingGouraud(), toggleGroupShading);
 		
-		final Menu menuScene = JavaFX.newMenu("Scene", checkMenuItemNormalMapping, menuItemEnterScene, menuItemRandomSunAndSky, radioMenuItemFlatShading, radioMenuItemGouraudShading);
+		final Menu menuScene = JavaFX.newMenu("Scene", checkMenuItemNormalMapping, menuItemEnterScene, radioMenuItemFlatShading, radioMenuItemGouraudShading);
 		
 		menuBar.getMenus().add(menuScene);
 		
@@ -215,6 +213,61 @@ public final class TestApplication extends AbstractApplication {
 		final Region region7 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
 		
 		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime, region3, this.labelRenderMode, region4, this.labelRenderType, region5, this.labelApertureRadius, region6, this.labelFocalDistance, region7, this.labelFieldOfView);
+		
+		final Label labelSunDirectionWorldX = new Label("Sun Direction X:");
+		final Label labelSunDirectionWorldY = new Label("Sun Direction Y:");
+		final Label labelSunDirectionWorldZ = new Label("Sun Direction Z:");
+		final Label labelTurbidity = new Label("Turbidity:");
+		
+		final
+		Slider sliderSunDirectionWorldX = new Slider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().x);
+		sliderSunDirectionWorldX.setShowTickMarks(true);
+		sliderSunDirectionWorldX.setShowTickLabels(true);
+		sliderSunDirectionWorldX.setMajorTickUnit(0.5D);
+		sliderSunDirectionWorldX.setBlockIncrement(0.1D);
+		
+		final
+		Slider sliderSunDirectionWorldY = new Slider(0.0D, 2.0D, this.sky.getSunDirectionWorld().y);
+		sliderSunDirectionWorldY.setShowTickMarks(true);
+		sliderSunDirectionWorldY.setShowTickLabels(true);
+		sliderSunDirectionWorldY.setMajorTickUnit(0.5D);
+		sliderSunDirectionWorldY.setBlockIncrement(0.1D);
+		
+		final
+		Slider sliderSunDirectionWorldZ = new Slider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().z);
+		sliderSunDirectionWorldZ.setShowTickMarks(true);
+		sliderSunDirectionWorldZ.setShowTickLabels(true);
+		sliderSunDirectionWorldZ.setMajorTickUnit(0.5D);
+		sliderSunDirectionWorldZ.setBlockIncrement(0.1D);
+		
+		final
+		Slider sliderTurbidity = new Slider(2.0D, 8.0D, this.sky.getTurbidity());
+		sliderTurbidity.setShowTickMarks(true);
+		sliderTurbidity.setShowTickLabels(true);
+		sliderTurbidity.setMajorTickUnit(1.0D);
+		sliderTurbidity.setBlockIncrement(0.5D);
+		
+		sliderSunDirectionWorldX.valueProperty().addListener((observableValue, oldValue, newValue) -> {
+			this.sky.set(new Vector3(newValue.floatValue(), (float)(sliderSunDirectionWorldY.getValue()), (float)(sliderSunDirectionWorldZ.getValue())).normalize(), (float)(sliderTurbidity.getValue()));
+			this.abstractRendererKernel.updateSky();
+		});
+		
+		sliderSunDirectionWorldY.valueProperty().addListener((observableValue, oldValue, newValue) -> {
+			this.sky.set(new Vector3((float)(sliderSunDirectionWorldX.getValue()), newValue.floatValue(), (float)(sliderSunDirectionWorldZ.getValue())).normalize(), (float)(sliderTurbidity.getValue()));
+			this.abstractRendererKernel.updateSky();
+		});
+		
+		sliderSunDirectionWorldZ.valueProperty().addListener((observableValue, oldValue, newValue) -> {
+			this.sky.set(new Vector3((float)(sliderSunDirectionWorldX.getValue()), (float)(sliderSunDirectionWorldY.getValue()), newValue.floatValue()).normalize(), (float)(sliderTurbidity.getValue()));
+			this.abstractRendererKernel.updateSky();
+		});
+		
+		sliderTurbidity.valueProperty().addListener((observableValue, oldValue, newValue) -> {
+			this.sky.set(new Vector3((float)(sliderSunDirectionWorldX.getValue()), (float)(sliderSunDirectionWorldY.getValue()), (float)(sliderSunDirectionWorldZ.getValue())).normalize(), newValue.floatValue());
+			this.abstractRendererKernel.updateSky();
+		});
+		
+		vBox.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity);
 	}
 	
 	/**

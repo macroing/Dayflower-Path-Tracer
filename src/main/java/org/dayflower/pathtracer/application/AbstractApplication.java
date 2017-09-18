@@ -40,7 +40,6 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.MenuBar;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelWriter;
@@ -50,6 +49,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import org.dayflower.pathtracer.util.FPSCounter;
@@ -392,8 +392,9 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 * 
 	 * @param hBox a {@code HBox} to add UI-controls to
 	 * @param menuBar a {@code MenuBar} to add UI-controls to
+	 * @param vBox a {@code VBox} to add UI-controls to
 	 */
-	protected abstract void doConfigureUI(final HBox hBox, final MenuBar menuBar);
+	protected abstract void doConfigureUI(final HBox hBox, final MenuBar menuBar, final VBox vBox);
 	
 //	TODO: Add Javadocs!
 	protected final void enter() {
@@ -498,13 +499,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		
 		this.canvas = new Canvas(getCanvasWidth(), getCanvasHeight());
 		
-		final ScrollPane scrollPane = new ScrollPane(this.canvas);
-		
-		this.canvas.widthProperty().bind(scrollPane.widthProperty());
-		this.canvas.heightProperty().bind(scrollPane.heightProperty());
 		this.canvas.addEventFilter(MouseEvent.ANY, e -> this.canvas.requestFocus());
-		this.canvas.widthProperty().addListener(observable -> doUpdateTransform(this.canvas, imageView));
-		this.canvas.heightProperty().addListener(observable -> doUpdateTransform(this.canvas, imageView));
 		this.canvas.setFocusTraversable(true);
 		this.canvas.setOnKeyPressed(this::doOnKeyPressed);
 		this.canvas.setOnKeyReleased(this::doOnKeyReleased);
@@ -520,17 +515,24 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		hBox.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
 		
 		final
+		VBox vBox = new VBox();
+		vBox.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		
+		final
 		BorderPane borderPane = new BorderPane();
 		borderPane.setTop(menuBar);
-		borderPane.setCenter(scrollPane);
+		borderPane.setCenter(this.canvas);
 		borderPane.setBottom(hBox);
+		borderPane.setLeft(vBox);
 		
-		doConfigureUI(hBox, menuBar);
+		doConfigureUI(hBox, menuBar, vBox);
 		
-		final Scene scene = new Scene(borderPane, 1024.0D, 768.0D);
+		final Scene scene = new Scene(borderPane);
 		
+		stage.setResizable(false);
 		stage.setScene(scene);
 		stage.setTitle(this.title);
+		stage.sizeToScene();
 		stage.show();
 		
 		final PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraPreInstance();
@@ -677,10 +679,5 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		} catch(final AWTException e) {
 			throw new UnsupportedOperationException(e);
 		}
-	}
-	
-	private static void doUpdateTransform(final Canvas canvas, final ImageView imageView) {
-		imageView.setFitWidth(canvas.getWidth());
-		imageView.setFitHeight(canvas.getHeight());
 	}
 }

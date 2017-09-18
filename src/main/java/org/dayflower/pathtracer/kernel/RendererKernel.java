@@ -96,9 +96,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final float segmentOffset;
 	private final float slope;
 	private final float slopeMatch;
+	private float sunDirectionWorldX;
+	private float sunDirectionWorldY;
+	private float sunDirectionWorldZ;
 	private float sunDirectionX;
 	private float sunDirectionY;
 	private float sunDirectionZ;
+	private float sunOriginX;
+	private float sunOriginY;
+	private float sunOriginZ;
 	private float theta;
 	private float zenithRelativeLuminance;
 	private float zenithX;
@@ -209,9 +215,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.shapeOffsets = this.compiledScene.getShapeOffsets();
 		this.shapeOffsetsLength = this.shapeOffsets.length;
 		this.subSamples = new long[width * height];
+		this.sunDirectionWorldX = sky.getSunDirectionWorld().x;
+		this.sunDirectionWorldY = sky.getSunDirectionWorld().y;
+		this.sunDirectionWorldZ = sky.getSunDirectionWorld().z;
 		this.sunDirectionX = sky.getSunDirection().x;
 		this.sunDirectionY = sky.getSunDirection().y;
 		this.sunDirectionZ = sky.getSunDirection().z;
+		this.sunOriginX = sky.getSunOrigin().x;
+		this.sunOriginY = sky.getSunOrigin().y;
+		this.sunOriginZ = sky.getSunOrigin().z;
 		this.theta = sky.getTheta();
 		this.zenithRelativeLuminance = sky.getZenithRelativeLuminance();
 		this.zenithX = sky.getZenithX();
@@ -562,9 +574,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.orthoNormalBasisWX = this.sky.getOrthoNormalBasis().w.x;
 		this.orthoNormalBasisWY = this.sky.getOrthoNormalBasis().w.y;
 		this.orthoNormalBasisWZ = this.sky.getOrthoNormalBasis().w.z;
+		this.sunDirectionWorldX = this.sky.getSunDirectionWorld().x;
+		this.sunDirectionWorldY = this.sky.getSunDirectionWorld().y;
+		this.sunDirectionWorldZ = this.sky.getSunDirectionWorld().z;
 		this.sunDirectionX = this.sky.getSunDirection().x;
 		this.sunDirectionY = this.sky.getSunDirection().y;
 		this.sunDirectionZ = this.sky.getSunDirection().z;
+		this.sunOriginX = this.sky.getSunOrigin().x;
+		this.sunOriginY = this.sky.getSunOrigin().y;
+		this.sunOriginZ = this.sky.getSunOrigin().z;
 		this.theta = this.sky.getTheta();
 		this.zenithRelativeLuminance = this.sky.getZenithRelativeLuminance();
 		this.zenithX = this.sky.getZenithX();
@@ -1583,21 +1601,25 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private void doCalculateColorForSky(final float directionX, final float directionY, final float directionZ) {
 //		Calculate the direction vector:
-		final float direction0X = directionX * this.orthoNormalBasisUX + directionY * this.orthoNormalBasisUY + directionZ * this.orthoNormalBasisUZ;
-		final float direction0Y = directionX * this.orthoNormalBasisVX + directionY * this.orthoNormalBasisVY + directionZ * this.orthoNormalBasisVZ;
-		final float direction0Z = directionX * this.orthoNormalBasisWX + directionY * this.orthoNormalBasisWY + directionZ * this.orthoNormalBasisWZ;
+		float direction0X = directionX * this.orthoNormalBasisUX + directionY * this.orthoNormalBasisUY + directionZ * this.orthoNormalBasisUZ;
+		float direction0Y = directionX * this.orthoNormalBasisVX + directionY * this.orthoNormalBasisVY + directionZ * this.orthoNormalBasisVZ;
+		float direction0Z = directionX * this.orthoNormalBasisWX + directionY * this.orthoNormalBasisWY + directionZ * this.orthoNormalBasisWZ;
 		
-//		if(direction0Z < 0.0F) {
+		if(direction0Z < 0.0F) {
 //			Calculate the pixel index:
-//			final int pixelIndex0 = pixelIndex * 3;
+			final int pixelIndex0 = getLocalId() * 3;
 			
 //			Update the temporaryColors array with black:
-//			this.temporaryColors[pixelIndex0] = 0.0F;
-//			this.temporaryColors[pixelIndex0 + 1] = 0.0F;
-//			this.temporaryColors[pixelIndex0 + 2] = 0.0F;
+			this.temporaryColors[pixelIndex0] = 0.0F;
+			this.temporaryColors[pixelIndex0 + 1] = 0.0F;
+			this.temporaryColors[pixelIndex0 + 2] = 0.0F;
 			
-//			return;
-//		}
+			return;
+		}
+		
+		if(direction0Z < 0.001F) {
+			direction0Z = 0.001F;
+		}
 		
 //		Recalculate the direction vector:
 		final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
@@ -3278,11 +3300,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float albedoColorG = this.temporaryColors[pixelIndex0 + 1];
 		float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
 		
-//		Retrieve the sun direction:
-		final float lightDirectionX = -this.sunDirectionX;
-		final float lightDirectionY = -this.sunDirectionY;
-		final float lightDirectionZ = -this.sunDirectionZ;
-		
 //		Retrieve the offsets of the surface intersection point and the surface normal in the intersections array:
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
 		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
@@ -3302,8 +3319,22 @@ public final class RendererKernel extends AbstractRendererKernel {
 		pixelColorG = albedoColorG * 0.5F;
 		pixelColorB = albedoColorB * 0.5F;
 		
+//		Retrieve the sun origin:
+		final float sunOriginX = this.sunOriginX;
+		final float sunOriginY = this.sunOriginY;
+		final float sunOriginZ = this.sunOriginZ;
+		
+//		Retrieve the sun direction from the surface intersection point:
+		final float lightDirection0X = sunOriginX - surfaceIntersectionPointX;
+		final float lightDirection0Y = sunOriginY - surfaceIntersectionPointY;
+		final float lightDirection0Z = sunOriginZ - surfaceIntersectionPointZ;
+		final float lightDirection0LengthReciprocal = rsqrt(lightDirection0X * lightDirection0X + lightDirection0Y * lightDirection0Y + lightDirection0Z * lightDirection0Z);
+		final float lightDirection1X = lightDirection0X * lightDirection0LengthReciprocal;
+		final float lightDirection1Y = lightDirection0Y * lightDirection0LengthReciprocal;
+		final float lightDirection1Z = lightDirection0Z * lightDirection0LengthReciprocal;
+		
 //		Perform an intersection test:
-		doPerformIntersectionTestOnly(shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, lightDirectionX, lightDirectionY, lightDirectionZ);
+		doPerformIntersectionTestOnly(shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, lightDirection1X, lightDirection1Y, lightDirection1Z);
 		
 //		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
 		final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
@@ -3312,33 +3343,49 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int shapesOffset0 = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
 		
 		if(distance0 != INFINITY && shapesOffset0 != -1) {
-//			Initialize the intensity of the light:
-			final float lightIntensity = 1.0F;
+			final float wi0X = sunOriginX - surfaceNormalX;
+			final float wi0Y = sunOriginY - surfaceNormalY;
+			final float wi0Z = sunOriginZ - surfaceNormalZ;
+			final float wi0LengthReciprocal = rsqrt(wi0X * wi0X + wi0Y * wi0Y + wi0Z * wi0Z);
+			final float wi1X = wi0X * wi0LengthReciprocal;
+			final float wi1Y = wi0Y * wi0LengthReciprocal;
+			final float wi1Z = wi0Z * wi0LengthReciprocal;
 			
-//			Calculate the dot product between the surface normal and the sun direction:
-			final float dotProduct = surfaceNormalX * lightDirectionX + surfaceNormalY * lightDirectionY + surfaceNormalZ * lightDirectionZ;
-			final float dotProductOrZero = max(dotProduct, 0.0F);
+			final float woX = -directionX;
+			final float woY = -directionY;
+			final float woZ = -directionZ;
 			
-			final float diffuseColorR = albedoColorR * dotProductOrZero * lightIntensity;
-			final float diffuseColorG = albedoColorG * dotProductOrZero * lightIntensity;
-			final float diffuseColorB = albedoColorB * dotProductOrZero * lightIntensity;
+			final float surfaceNormalDotWi = surfaceNormalX * wi1X + surfaceNormalY * wi1Y + surfaceNormalZ * wi1Z;
 			
-			final float reflectionX = surfaceNormalX * 2.0F * dotProduct - lightDirectionX;
-			final float reflectionY = surfaceNormalY * 2.0F * dotProduct - lightDirectionY;
-			final float reflectionZ = surfaceNormalZ * 2.0F * dotProduct - lightDirectionZ;
-			
-			final float dotProduct0 = -directionX * reflectionX + -directionY * reflectionY + -directionZ * reflectionZ;
-			
-			final float specularPower = 25.0F;
-			final float specularAmount = dotProduct0 < 0.0F ? 0.0F : pow(dotProduct0, specularPower) * lightIntensity;
-			final float specularColorR = specularAmount;
-			final float specularColorG = specularAmount;
-			final float specularColorB = specularAmount;
-			
-//			Calculate the lighting and add to the pixel color:
-			pixelColorR += diffuseColorR + specularColorR;
-			pixelColorG += diffuseColorG + specularColorG;
-			pixelColorB += diffuseColorB + specularColorB;
+			if(surfaceNormalDotWi > 0.0F) {
+				final float reflectionX = -wi1X + (2.0F * surfaceNormalX * surfaceNormalDotWi);
+				final float reflectionY = -wi1Y + (2.0F * surfaceNormalY * surfaceNormalDotWi);
+				final float reflectionZ = -wi1Z + (2.0F * surfaceNormalZ * surfaceNormalDotWi);
+				
+				final float reflectionDotWo = reflectionX * woX + reflectionY * woY + reflectionZ * woZ;
+				
+				final float diffuseIntensity = 1.0F;
+				final float diffuseColorR = albedoColorR * diffuseIntensity * PI_RECIPROCAL;
+				final float diffuseColorG = albedoColorG * diffuseIntensity * PI_RECIPROCAL;
+				final float diffuseColorB = albedoColorB * diffuseIntensity * PI_RECIPROCAL;
+				
+				if(reflectionDotWo > 0.0F) {
+					final float specularIntensity = 1.0F;
+					final float specularPower = 25.0F;
+					final float specularComponent = pow(reflectionDotWo, specularPower) * specularIntensity;
+					final float specularColorR = 1.0F * specularComponent;
+					final float specularColorG = 1.0F * specularComponent;
+					final float specularColorB = 1.0F * specularComponent;
+					
+					pixelColorR += (diffuseColorR + specularColorR) * surfaceNormalDotWi;
+					pixelColorG += (diffuseColorG + specularColorG) * surfaceNormalDotWi;
+					pixelColorB += (diffuseColorB + specularColorB) * surfaceNormalDotWi;
+				} else {
+					pixelColorR += diffuseColorR * surfaceNormalDotWi;
+					pixelColorG += diffuseColorG * surfaceNormalDotWi;
+					pixelColorB += diffuseColorB * surfaceNormalDotWi;
+				}
+			}
 		}
 		
 //		Update the current pixel color:
@@ -3376,9 +3423,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float pixelColorG = this.temporaryColors[pixelIndex0 + 1];
 		float pixelColorB = this.temporaryColors[pixelIndex0 + 2];
 		
-		final float sunDirectionX = this.sunDirectionX;
-		final float sunDirectionY = this.sunDirectionY;
-		final float sunDirectionZ = this.sunDirectionZ;
+		final float sunDirectionX = this.sunDirectionWorldX;
+		final float sunDirectionY = this.sunDirectionWorldY;
+		final float sunDirectionZ = this.sunDirectionWorldZ;
 		
 		final float sunDistance = 1000.0F;
 		
