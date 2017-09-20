@@ -497,7 +497,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		ImageView imageView = new ImageView();
 		imageView.setSmooth(true);
 		
-		this.canvas = new Canvas(getCanvasWidth(), getCanvasHeight());
+		this.canvas = new Canvas(getCanvasWidth() * getCanvasWidthScale(), getCanvasHeight() * getCanvasHeightScale());
 		
 		this.canvas.addEventFilter(MouseEvent.ANY, e -> this.canvas.requestFocus());
 		this.canvas.setFocusTraversable(true);
@@ -585,7 +585,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 					
 					final
 					GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-					graphicsContext.drawImage(writableImage, 0.0D, 0.0D);
+					graphicsContext.drawImage(writableImage, 0.0D, 0.0D, getCanvasWidth() * getCanvasWidthScale(), getCanvasHeight() * getCanvasHeightScale());
 				} finally {
 					lock.unlock();
 				}
