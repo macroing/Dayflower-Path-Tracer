@@ -19,6 +19,7 @@
 package org.dayflower.pathtracer.kernel;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
@@ -147,6 +148,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int isNormalMapping = 1;
 	private int octaves;
 	private int renderer = RENDERER_PATH_TRACER;
+	private int selectedShapeIndex = -1;
 	private int shading = SHADING_GOURAUD;
 	private int shapeOffsetsLength;
 	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE;
@@ -157,6 +159,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final int[] permutations1 = new int[512];
 	@Constant
 	private final int[] shapeOffsets;
+	private int[] shapeOffsetsForPrimaryRay;
 	private final long[] subSamples;
 	private final Sky sky;
 	
@@ -458,6 +461,20 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return this.octaves;
 	}
 	
+//	TODO: Add Javadocs!
+	@Override
+	public int getSelectedShapeIndex() {
+		return this.selectedShapeIndex;
+	}
+	
+//	TODO: Add Javadocs!
+	@Override
+	public int[] getShapeOffsetsForPrimaryRay() {
+		get(this.shapeOffsetsForPrimaryRay);
+		
+		return this.shapeOffsetsForPrimaryRay;
+	}
+	
 	/**
 	 * Compiles this {@code RendererKernel} instance.
 	 * <p>
@@ -474,6 +491,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Override
 	public RendererKernel compile(final byte[] pixels, final int width, final int height) {
 		this.pixels = Objects.requireNonNull(pixels, "pixels == null");
+		this.shapeOffsetsForPrimaryRay = new int[width * height];
+		
+		Arrays.fill(this.shapeOffsetsForPrimaryRay, -1);
 		
 		setExplicit(true);
 		setSeed(System.nanoTime(), width * height);
@@ -496,6 +516,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		put(this.permutations0);
 		put(this.permutations1);
 		put(this.shapeOffsets);
+		put(this.shapeOffsetsForPrimaryRay);
 		put(this.subSamples);
 		
 		return this;
@@ -925,6 +946,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 	public void setRayMarching(final boolean isRayMarching) {
 		this.renderer = isRayMarching ? RENDERER_RAY_MARCHER : RENDERER_PATH_TRACER;
 		this.isResetRequired = true;
+	}
+	
+//	TODO: Add Javadocs!
+	@Override
+	public void setSelectedShapeIndex(final int selectedShapeIndex) {
+		this.selectedShapeIndex = selectedShapeIndex;
 	}
 	
 	/**
@@ -1570,6 +1597,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			r = r1;
 			g = g1;
 			b = b1;
+		}
+		
+		final int shapeOffsetFromPrimaryRay = this.shapeOffsetsForPrimaryRay[pixelIndex];
+		
+		if(shapeOffsetFromPrimaryRay > -1 && shapeOffsetFromPrimaryRay == this.selectedShapeIndex) {
+			g += 1.0F;
 		}
 		
 		if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE) {
@@ -2290,6 +2323,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 			
 //			Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
 			final int shapesOffset = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+			
+			if(depthCurrent == 0) {
+				this.shapeOffsetsForPrimaryRay[getGlobalId()] = shapesOffset;
+			}
 			
 //			Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 			if(distance == INFINITY || shapesOffset == -1) {
@@ -3275,6 +3312,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 //		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
 		final int shapesOffset = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+		
+		this.shapeOffsetsForPrimaryRay[getGlobalId()] = shapesOffset;
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 		if(distance == INFINITY || shapesOffset == -1) {

@@ -450,10 +450,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 				camera.strafe(movement);
 			}
 			
-//			if(isKeyPressed(KeyCode.DOWN)) {
-//				camera.changePitch(0.02F);
-//			}
-			
 			if(isKeyPressed(KeyCode.E)) {
 				camera.changeAltitude(-0.5F);
 			}
@@ -466,25 +462,31 @@ public final class TestApplication extends AbstractApplication implements Camera
 				this.hasRequestedToExit.set(true);
 			}
 			
-//			if(isKeyPressed(KeyCode.LEFT)) {
-//				camera.changeYaw(0.02F);
-//			}
-			
 			if(isKeyPressed(KeyCode.Q)) {
 				camera.changeAltitude(0.5F);
 			}
 			
-//			if(isKeyPressed(KeyCode.RIGHT)) {
-//				camera.changeYaw(-0.02F);
-//			}
+			if(isKeyPressed(KeyCode.R, true)) {
+				final int mouseX = getMouseX();
+				final int mouseY = getMouseY();
+				final int index = mouseY * getKernelWidth() + mouseX;
+				
+				final int[] shapeOffsetsForPrimaryRay = abstractRendererKernel.getShapeOffsetsForPrimaryRay();
+				
+				if(index >= 0 && index < shapeOffsetsForPrimaryRay.length) {
+					final int selectedShapeIndex = shapeOffsetsForPrimaryRay[index];
+					
+					if(selectedShapeIndex == abstractRendererKernel.getSelectedShapeIndex()) {
+						abstractRendererKernel.setSelectedShapeIndex(-1);
+					} else {
+						abstractRendererKernel.setSelectedShapeIndex(selectedShapeIndex);
+					}
+				}
+			}
 			
 			if(isKeyPressed(KeyCode.S)) {
 				camera.forward(-movement);
 			}
-			
-//			if(isKeyPressed(KeyCode.UP)) {
-//				camera.changePitch(-0.02F);
-//			}
 			
 			if(isKeyPressed(KeyCode.W)) {
 				camera.forward(movement);

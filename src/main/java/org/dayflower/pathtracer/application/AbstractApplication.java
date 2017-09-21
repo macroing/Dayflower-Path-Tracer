@@ -93,15 +93,17 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	private final AtomicInteger canvasWidth = new AtomicInteger(CANVAS_WIDTH);
 	private final AtomicInteger kernelHeight = new AtomicInteger(KERNEL_HEIGHT);
 	private final AtomicInteger kernelWidth = new AtomicInteger(KERNEL_WIDTH);
+	private final AtomicInteger keysPressed = new AtomicInteger();
 	private final AtomicInteger mouseDraggedDeltaX = new AtomicInteger();
 	private final AtomicInteger mouseDraggedDeltaY = new AtomicInteger();
 	private final AtomicInteger mouseMovedDeltaX = new AtomicInteger();
 	private final AtomicInteger mouseMovedDeltaY = new AtomicInteger();
-	private final AtomicInteger keysPressed = new AtomicInteger();
 	private final AtomicInteger mouseDraggedX = new AtomicInteger();
 	private final AtomicInteger mouseDraggedY = new AtomicInteger();
 	private final AtomicInteger mouseMovedX = new AtomicInteger();
 	private final AtomicInteger mouseMovedY = new AtomicInteger();
+	private final AtomicInteger mouseX = new AtomicInteger();
+	private final AtomicInteger mouseY = new AtomicInteger();
 	private final AtomicLong mouseMovementTime = new AtomicLong();
 	private final boolean[] isKeyPressed = new boolean[KeyCode.values().length];
 	private final boolean[] isKeyPressedOnce = new boolean[KeyCode.values().length];
@@ -274,6 +276,24 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 */
 	protected final int getKernelWidth() {
 		return this.kernelWidth.get();
+	}
+	
+	/**
+	 * Returns the X-coordinate of the mouse.
+	 * 
+	 * @return the X-coordinate of the mouse
+	 */
+	protected final int getMouseX() {
+		return this.mouseX.get();
+	}
+	
+	/**
+	 * Returns the Y-coordinate of the mouse.
+	 * 
+	 * @return the Y-coordinate of the mouse
+	 */
+	protected final int getMouseY() {
+		return this.mouseY.get();
 	}
 	
 	/**
@@ -670,6 +690,8 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		this.mouseMovedDeltaY.set(0);
 		this.mouseMovedX.set(0);
 		this.mouseMovedY.set(0);
+		this.mouseX.set((int)(e.getX()));
+		this.mouseY.set((int)(e.getY()));
 		
 		onMouseDragged(this.mouseDraggedX.getAndSet(0), this.mouseDraggedY.getAndSet(0));
 	}
@@ -684,6 +706,9 @@ public abstract class AbstractApplication extends Application implements Runnabl
 			this.mouseMovedX.addAndGet(this.mouseMovedDeltaX.get() - (int)(e.getScreenX()));
 			this.mouseMovedY.addAndGet(this.mouseMovedDeltaY.get() - (int)(e.getScreenY()));
 		}
+		
+		this.mouseX.set((int)(e.getX()));
+		this.mouseY.set((int)(e.getY()));
 		
 		onMouseMoved(this.mouseMovedX.getAndSet(0), this.mouseMovedY.getAndSet(0));
 		

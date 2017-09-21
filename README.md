@@ -66,6 +66,7 @@ Supported Keyboard Controls
 | D           | Strafe right                                                        |
 | Q           | Increase altitude                                                   |
 | E           | Decrease altitude                                                   |
+| R           | Toggle selection of shapes                                          |
 
 _____________________________________________________________________________________
 

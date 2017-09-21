@@ -281,6 +281,12 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 		return 1;
 	}
 	
+//	TODO: Add Javadocs!
+	@SuppressWarnings("static-method")
+	public int getSelectedShapeIndex() {
+		return -1;
+	}
+	
 	/**
 	 * Returns the width.
 	 * 
@@ -296,6 +302,9 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * @return the depth used for Russian Roulette path termination
 	 */
 	public abstract int getDepthRussianRoulette();
+	
+//	TODO: Add Javadocs!
+	public abstract int[] getShapeOffsetsForPrimaryRay();
 	
 	/**
 	 * Returns the optional {@link Camera} instance assigned to this {@code AbstractRendererKernel} instance.
@@ -516,6 +525,12 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * @param isRayMarching the Ray Marching state to set
 	 */
 	public void setRayMarching(final boolean isRayMarching) {
+//		Do nothing.
+	}
+	
+//	TODO: Add Javadocs!
+	@SuppressWarnings("unused")
+	public void setSelectedShapeIndex(final int selectedShapeIndex) {
 //		Do nothing.
 	}
 	
