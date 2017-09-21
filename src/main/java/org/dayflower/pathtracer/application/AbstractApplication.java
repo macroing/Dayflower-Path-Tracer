@@ -412,6 +412,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		
 		this.canvas = new Canvas(getCanvasWidth(), getCanvasHeight());
 		this.canvas.addEventFilter(MouseEvent.ANY, e -> this.canvas.requestFocus());
+		this.canvas.addEventFilter(KeyEvent.ANY, e -> this.canvas.requestFocus());
 		this.canvas.setFocusTraversable(true);
 		this.canvas.setOnKeyPressed(this::doOnKeyPressed);
 		this.canvas.setOnKeyReleased(this::doOnKeyReleased);

@@ -31,6 +31,8 @@ import static org.dayflower.pathtracer.math.Math2.toDegrees;
 import static org.dayflower.pathtracer.math.Math2.toRadians;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 //TODO: Add Javadocs.
@@ -149,6 +151,7 @@ public final class Camera {
 	private float walkDirectionZ;
 	private float yaw;
 	private final float[] array;
+	private final List<CameraObserver> cameraObservers;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -160,6 +163,7 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public Camera(final CameraPredicate cameraPredicate) {
 		this.array = new float[SIZE];
+		this.cameraObservers = new ArrayList<>();
 		
 		setApertureRadius(0.4F);
 		setCameraLens(CAMERA_LENS_THIN);
@@ -184,6 +188,7 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public Camera(final float[] array, final CameraPredicate cameraPredicate) {
 		this.array = array;
+		this.cameraObservers = new ArrayList<>();
 		
 		setCameraPredicate(cameraPredicate);
 	}
@@ -386,6 +391,11 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
+	public void addCameraObserver(final CameraObserver cameraObserver) {
+		this.cameraObservers.add(Objects.requireNonNull(cameraObserver, "cameraObserver == null"));
+	}
+	
+//	TODO: Add Javadocs.
 	public void calculateOrthoNormalBasisU() {
 		final float upX = getUpX();
 		final float upY = getUpY();
@@ -476,6 +486,11 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
+	public void removeCameraObserver(final CameraObserver cameraObserver) {
+		this.cameraObservers.remove(Objects.requireNonNull(cameraObserver, "cameraObserver == null"));
+	}
+	
+//	TODO: Add Javadocs.
 	public void resetUpdateStatus() {
 		this.hasUpdated = false;
 	}
@@ -524,6 +539,8 @@ public final class Camera {
 		if(test[2]) {
 			this.centerZ = centerZ;
 		}
+		
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -531,6 +548,7 @@ public final class Camera {
 		this.array[ABSOLUTE_OFFSET_OF_EYE_X] = eyeX;
 		this.array[ABSOLUTE_OFFSET_OF_EYE_Y] = eyeY;
 		this.array[ABSOLUTE_OFFSET_OF_EYE_Z] = eyeZ;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -559,22 +577,27 @@ public final class Camera {
 		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X] = orthoNormalBasisWX * orthoNormalBasisWLengthReciprocal;
 		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y] = orthoNormalBasisWY * orthoNormalBasisWLengthReciprocal;
 		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z] = orthoNormalBasisWZ * orthoNormalBasisWLengthReciprocal;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
 	public void setPitch(final float pitch) {
 		this.pitch = max(min(pitch, PI_DIVIDED_BY_TWO + 0.05F), -PI_DIVIDED_BY_TWO + 0.05F);
+		this.hasUpdated = true;
+		this.cameraObservers.forEach(cameraObserver -> cameraObserver.pitchChanged(this, this.pitch));
 	}
 	
 //	TODO: Add Javadocs.
 	public void setRadius(final float radius) {
 		this.radius = max(min(radius, 100.0F), 0.2F);
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
 	public void setResolution(final float resolutionX, final float resolutionY) {
 		this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_X] = resolutionX;
 		this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_Y] = resolutionY;
+		this.hasUpdated = true;
 		
 		setFieldOfViewX(getFieldOfViewX());
 	}
@@ -592,6 +615,7 @@ public final class Camera {
 		this.array[ABSOLUTE_OFFSET_OF_UP_X] = upX * upLengthReciprocal;
 		this.array[ABSOLUTE_OFFSET_OF_UP_Y] = upY * upLengthReciprocal;
 		this.array[ABSOLUTE_OFFSET_OF_UP_Z] = upZ * upLengthReciprocal;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -599,6 +623,7 @@ public final class Camera {
 		this.viewDirectionX = viewDirectionX;
 		this.viewDirectionY = viewDirectionY;
 		this.viewDirectionZ = viewDirectionZ;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -606,6 +631,7 @@ public final class Camera {
 		this.walkDirectionX = walkDirectionX;
 		this.walkDirectionY = walkDirectionY;
 		this.walkDirectionZ = walkDirectionZ;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -616,6 +642,8 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public void setYaw(final float yaw) {
 		this.yaw = yaw % PI_MULTIPLIED_BY_TWO;
+		this.hasUpdated = true;
+		this.cameraObservers.forEach(cameraObserver -> cameraObserver.yawChanged(this, this.yaw));
 	}
 	
 //	TODO: Add Javadocs.

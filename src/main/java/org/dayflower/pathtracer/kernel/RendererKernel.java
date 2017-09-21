@@ -525,6 +525,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		getCamera().ifPresent(camera -> {
 			camera.update();
+			camera.resetUpdateStatus();
 			
 			put(this.cameraArray);
 		});

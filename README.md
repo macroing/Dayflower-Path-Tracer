@@ -66,10 +66,6 @@ Supported Keyboard Controls
 | D           | Strafe right                                                        |
 | Q           | Increase altitude                                                   |
 | E           | Decrease altitude                                                   |
-| DOWN ARROW  | Increase pitch                                                      |
-| UP ARROW    | Decrease pitch                                                      |
-| LEFT ARROW  | Increase yaw                                                        |
-| RIGHT ARROW | Decrease yaw                                                        |
 
 _____________________________________________________________________________________
 
@@ -110,6 +106,8 @@ Supported Tab Controls
 | Camera > Field of View          | Change the Field of View                        |
 | Camera > Aperture Radius        | Change the Aperture Radius                      |
 | Camera > Focal Distance         | Change the Focal Distance                       |
+| Camera > Pitch                  | Change the Pitch angle                          |
+| Camera > Yaw                    | Change the Yaw angle                            |
 | Sun & Sky > Sun Direction X     | Change the X-axis of the sun direction          |
 | Sun & Sky > Sun Direction Y     | Change the Y-axis of the sun direction          |
 | Sun & Sky > Sun Direction Z     | Change the Z-axis of the sun direction          |

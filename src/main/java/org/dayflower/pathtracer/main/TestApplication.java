@@ -18,6 +18,9 @@
  */
 package org.dayflower.pathtracer.main;
 
+import static org.dayflower.pathtracer.math.Math2.PI_DIVIDED_BY_TWO;
+import static org.dayflower.pathtracer.math.Math2.PI_MULTIPLIED_BY_TWO;
+
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,6 +54,7 @@ import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.ConvolutionKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
 import org.dayflower.pathtracer.scene.Camera;
+import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.util.FPSCounter;
@@ -61,7 +65,7 @@ import org.dayflower.pathtracer.util.FPSCounter;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class TestApplication extends AbstractApplication {
+public final class TestApplication extends AbstractApplication implements CameraObserver {
 	private static final String ENGINE_NAME = "Dayflower - Path Tracer";
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +86,8 @@ public final class TestApplication extends AbstractApplication {
 	private final Setting settingFilterGradientVertical = new Setting("Filter.Gradient.Vertical");
 	private final Setting settingFilterSharpen = new Setting("Filter.Sharpen");
 	private final Sky sky = new Sky();
+	private Slider sliderPitch;
+	private Slider sliderYaw;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -209,15 +215,22 @@ public final class TestApplication extends AbstractApplication {
 		final Label labelFieldOfView = new Label("Field of View:");
 		final Label labelApertureRadius = new Label("Aperture Radius:");
 		final Label labelFocalDistance = new Label("Focal Distance:");
+		final Label labelPitch = new Label("Pitch:");
+		final Label labelYaw = new Label("Yaw:");
 		
 		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, this.camera.getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
 		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, this.camera.getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
 		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, this.camera.getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
+		final Slider sliderPitch = JavaFX.newSlider(-PI_DIVIDED_BY_TWO + 0.05F, PI_DIVIDED_BY_TWO + 0.05F, this.camera.getPitch(), 0.2D, 0.5D, true, true, false, this::doOnSliderPitch);
+		final Slider sliderYaw = JavaFX.newSlider(0.0D, PI_MULTIPLIED_BY_TWO, this.camera.getPitch(), 0.2D, 0.5D, true, true, false, this::doOnSliderYaw);
+		
+		this.sliderPitch = sliderPitch;
+		this.sliderYaw = sliderYaw;
 		
 		final
 		VBox vBoxCamera = new VBox();
 		vBoxCamera.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxCamera.getChildren().addAll(labelFieldOfView, sliderFieldOfView, labelApertureRadius, sliderApertureRadius, labelFocalDistance, sliderFocalDistance);
+		vBoxCamera.getChildren().addAll(labelFieldOfView, sliderFieldOfView, labelApertureRadius, sliderApertureRadius, labelFocalDistance, sliderFocalDistance, labelPitch, sliderPitch, labelYaw, sliderYaw);
 		
 		final
 		Tab tabCamera = new Tab();
@@ -339,6 +352,7 @@ public final class TestApplication extends AbstractApplication {
 		camera.setWalkLockEnabled(true);
 		camera.setYaw(0.0F);
 		camera.update();
+		camera.addCameraObserver(this);
 	}
 	
 	/**
@@ -364,6 +378,19 @@ public final class TestApplication extends AbstractApplication {
 		if(isRecenteringMouse()) {
 			this.camera.changeYaw(x * 0.005F);
 			this.camera.changePitch(-(y * 0.005F));
+		}
+	}
+	
+	@Override
+	public void pitchChanged(final Camera camera, final float pitch) {
+		final Slider sliderPitch = this.sliderPitch;
+		
+		if(sliderPitch != null) {
+			if(Platform.isFxApplicationThread()) {
+				sliderPitch.setValue(pitch);
+			} else {
+				Platform.runLater(() -> sliderPitch.setValue(pitch));
+			}
 		}
 	}
 	
@@ -423,9 +450,9 @@ public final class TestApplication extends AbstractApplication {
 				camera.strafe(movement);
 			}
 			
-			if(isKeyPressed(KeyCode.DOWN)) {
-				camera.changePitch(0.02F);
-			}
+//			if(isKeyPressed(KeyCode.DOWN)) {
+//				camera.changePitch(0.02F);
+//			}
 			
 			if(isKeyPressed(KeyCode.E)) {
 				camera.changeAltitude(-0.5F);
@@ -439,31 +466,31 @@ public final class TestApplication extends AbstractApplication {
 				this.hasRequestedToExit.set(true);
 			}
 			
-			if(isKeyPressed(KeyCode.LEFT)) {
-				camera.changeYaw(0.02F);
-			}
+//			if(isKeyPressed(KeyCode.LEFT)) {
+//				camera.changeYaw(0.02F);
+//			}
 			
 			if(isKeyPressed(KeyCode.Q)) {
 				camera.changeAltitude(0.5F);
 			}
 			
-			if(isKeyPressed(KeyCode.RIGHT)) {
-				camera.changeYaw(-0.02F);
-			}
+//			if(isKeyPressed(KeyCode.RIGHT)) {
+//				camera.changeYaw(-0.02F);
+//			}
 			
 			if(isKeyPressed(KeyCode.S)) {
 				camera.forward(-movement);
 			}
 			
-			if(isKeyPressed(KeyCode.UP)) {
-				camera.changePitch(-0.02F);
-			}
+//			if(isKeyPressed(KeyCode.UP)) {
+//				camera.changePitch(-0.02F);
+//			}
 			
 			if(isKeyPressed(KeyCode.W)) {
 				camera.forward(movement);
 			}
 			
-			if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || isPressingKey() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
+			if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
 				camera.resetUpdateStatus();
 				
 				abstractRendererKernel.updateResetStatus();
@@ -549,6 +576,19 @@ public final class TestApplication extends AbstractApplication {
 		}
 	}
 	
+	@Override
+	public void yawChanged(final Camera camera, final float yaw) {
+		final Slider sliderYaw = this.sliderYaw;
+		
+		if(sliderYaw != null) {
+			if(Platform.isFxApplicationThread()) {
+				sliderYaw.setValue(yaw);
+			} else {
+				Platform.runLater(() -> sliderYaw.setValue(yaw));
+			}
+		}
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
@@ -603,6 +643,11 @@ public final class TestApplication extends AbstractApplication {
 	}
 	
 	@SuppressWarnings("unused")
+	private void doOnSliderPitch(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.camera.setPitch(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldX(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.sky.setX(newValue.floatValue());
 		this.abstractRendererKernel.updateSky();
@@ -624,5 +669,10 @@ public final class TestApplication extends AbstractApplication {
 	private void doOnSliderTurbidity(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.sky.setTurbidity(newValue.floatValue());
 		this.abstractRendererKernel.updateSky();
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderYaw(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.camera.setYaw(newValue.floatValue());
 	}
 }
