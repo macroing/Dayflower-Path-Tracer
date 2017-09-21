@@ -428,7 +428,7 @@ public final class TestApplication extends AbstractApplication {
 			}
 			
 			if(isKeyPressed(KeyCode.E)) {
-				camera.changeAltitude(0.5F);
+				camera.changeAltitude(-0.5F);
 			}
 			
 			if(isKeyPressed(KeyCode.ENTER, true) && !hasEntered()) {
@@ -443,8 +443,8 @@ public final class TestApplication extends AbstractApplication {
 				camera.changeYaw(0.02F);
 			}
 			
-			if(isKeyPressed(KeyCode.R)) {
-				camera.changeAltitude(-0.5F);
+			if(isKeyPressed(KeyCode.Q)) {
+				camera.changeAltitude(0.5F);
 			}
 			
 			if(isKeyPressed(KeyCode.RIGHT)) {
