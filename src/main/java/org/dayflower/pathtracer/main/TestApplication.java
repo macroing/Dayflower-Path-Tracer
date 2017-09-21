@@ -209,17 +209,15 @@ public final class TestApplication extends AbstractApplication {
 		final Label labelFieldOfView = new Label("Field of View:");
 		final Label labelApertureRadius = new Label("Aperture Radius:");
 		final Label labelFocalDistance = new Label("Focal Distance:");
-		final Label labelMaximumRayDepth = new Label("Maximum Ray Depth:");
 		
 		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, this.camera.getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
 		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, this.camera.getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
 		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, this.camera.getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
-		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, this.abstractRendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
 		
 		final
 		VBox vBoxCamera = new VBox();
 		vBoxCamera.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxCamera.getChildren().addAll(labelFieldOfView, sliderFieldOfView, labelApertureRadius, sliderApertureRadius, labelFocalDistance, sliderFocalDistance, labelMaximumRayDepth, sliderMaximumRayDepth);
+		vBoxCamera.getChildren().addAll(labelFieldOfView, sliderFieldOfView, labelApertureRadius, sliderApertureRadius, labelFocalDistance, sliderFocalDistance);
 		
 		final
 		Tab tabCamera = new Tab();
@@ -252,6 +250,48 @@ public final class TestApplication extends AbstractApplication {
 		tabSunAndSky.setText("Sun & Sky");
 		
 		tabPane.getTabs().add(tabSunAndSky);
+		
+//		Create the Tab with the settings for the Path Tracer:
+		final Label labelMaximumRayDepth = new Label("Maximum Ray Depth:");
+		
+		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, this.abstractRendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
+		
+		final
+		VBox vBoxPathTracer = new VBox();
+		vBoxPathTracer.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		vBoxPathTracer.getChildren().addAll(labelMaximumRayDepth, sliderMaximumRayDepth);
+		
+		final
+		Tab tabPathTracer = new Tab();
+		tabPathTracer.setClosable(false);
+		tabPathTracer.setContent(vBoxPathTracer);
+		tabPathTracer.setText("Path Tracer");
+		
+		tabPane.getTabs().add(tabPathTracer);
+		
+//		Create the Tab with the settings for the Ray Marcher:
+		final Label labelAmplitude = new Label("Amplitude:");
+		final Label labelFrequency = new Label("Frequency:");
+		final Label labelGain = new Label("Gain:");
+		final Label labelLacunarity = new Label("Lacunarity:");
+		
+		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
+		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
+		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
+		final Slider sliderLacunarity = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getLacunarity(), 1.0D, 5.0D, true, true, false, this::doOnSliderLacunarity);
+		
+		final
+		VBox vBoxRayMarcher = new VBox();
+		vBoxRayMarcher.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		vBoxRayMarcher.getChildren().addAll(labelAmplitude, sliderAmplitude, labelFrequency, sliderFrequency, labelGain, sliderGain, labelLacunarity, sliderLacunarity);
+		
+		final
+		Tab tabRayMarcher = new Tab();
+		tabRayMarcher.setClosable(false);
+		tabRayMarcher.setContent(vBoxRayMarcher);
+		tabRayMarcher.setText("Ray Marcher");
+		
+		tabPane.getTabs().add(tabRayMarcher);
 		
 //		Select the default Tab:
 		tabPane.getSelectionModel().select(tabCamera);
@@ -399,39 +439,8 @@ public final class TestApplication extends AbstractApplication {
 				this.hasRequestedToExit.set(true);
 			}
 			
-			if(isKeyPressed(KeyCode.J)) {
-				abstractRendererKernel.setAmplitude(0.5F);
-				abstractRendererKernel.setFrequency(0.2F);
-				abstractRendererKernel.setLacunarity(10.0F);
-				abstractRendererKernel.setGain(1.0F / abstractRendererKernel.getLacunarity());
-			}
-			
 			if(isKeyPressed(KeyCode.LEFT)) {
 				camera.changeYaw(0.02F);
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD4, false)) {
-				abstractRendererKernel.setAmplitude(abstractRendererKernel.getAmplitude() + 0.005F);
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD5, true)) {
-				abstractRendererKernel.setFrequency(abstractRendererKernel.getFrequency() + 0.005F);
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD6, false)) {
-				abstractRendererKernel.setGain(abstractRendererKernel.getGain() + 0.005F);
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD7, false)) {
-				abstractRendererKernel.setAmplitude(abstractRendererKernel.getAmplitude() - 0.005F);
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD8, true)) {
-				abstractRendererKernel.setFrequency(abstractRendererKernel.getFrequency() - 0.005F);
-			}
-			
-			if(isKeyPressed(KeyCode.NUMPAD9, false)) {
-				abstractRendererKernel.setGain(abstractRendererKernel.getGain() - 0.005F);
 			}
 			
 			if(isKeyPressed(KeyCode.R)) {
@@ -554,6 +563,11 @@ public final class TestApplication extends AbstractApplication {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	@SuppressWarnings("unused")
+	private void doOnSliderAmplitude(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.abstractRendererKernel.setAmplitude(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
 	private void doOnSliderApertureRadius(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.camera.setApertureRadius(newValue.floatValue());
 	}
@@ -566,6 +580,21 @@ public final class TestApplication extends AbstractApplication {
 	@SuppressWarnings("unused")
 	private void doOnSliderFocalDistance(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.camera.setFocalDistance(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderFrequency(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.abstractRendererKernel.setFrequency(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderGain(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.abstractRendererKernel.setGain(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderLacunarity(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.abstractRendererKernel.setLacunarity(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")

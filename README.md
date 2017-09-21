@@ -77,18 +77,11 @@ Supported Keyboard Controls
 * ``D`` - Strafe Right
 * ``E`` - Increase Altitude
 * ``R`` - Decrease Altitude
-* ``J`` - Reset Amplitude, Frequency, Lacunarity and Gain for Ray Marching
 * ``DOWN ARROW`` - Increase Pitch
 * ``UP ARROW`` - Decrease Pitch
 * ``LEFT ARROW`` - Increase Yaw
 * ``RIGHT ARROW`` - Decrease Yaw
 * ``MOVE MOUSE`` - Free Movement
-* ``NUMPAD 4`` - Increase Amplitude for Ray Marching
-* ``NUMPAD 5`` - Increase Frequency for Ray Marching
-* ``NUMPAD 6`` - Increase Gain for Ray Marching
-* ``NUMPAD 7`` - Decrease Amplitude for Ray Marching
-* ``NUMPAD 8`` - Decrease Frequency for Ray Marching
-* ``NUMPAD 9`` - Decrease Gain for Ray Marching
 
 Supported Menu Controls
 -----------------------
@@ -153,4 +146,4 @@ Dependencies
 
 Note
 ----
-This library hasn't been released yet. So, even though it says it's version 1.0.0 in all Java source code files, it shouldn't be treated as such. When this library reaches version 1.0.0, it will be tagged and available on the "releases" page.
+This program hasn't been released yet. So, even though it says it's version 1.0.0 in all Java source code files, it shouldn't be treated as such. When this program reaches version 1.0.0, it will be tagged and available on the "releases" page.
