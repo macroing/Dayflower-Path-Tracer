@@ -10,103 +10,89 @@ This early test implementation of Dayflower, uses a library called Aparapi. This
 
 Supported Features
 ------------------
-#### Acceleration Structure
-* Bounding Volume Hierarchy (BVH)
-
-#### Camera
-* Depth of Field
-* Field of View
-* Free Movement
-* Fisheye Camera Lens
-* Thin Camera Lens
-
-#### Effect
-* Blur
-* Detect Edges
-* Emboss
-* Gradient - Horizontal
-* Gradient - Vertical
-* Grayscale - Luminosity
-* Sepia Tone
-* Sharpen
-
-#### Material
-* Diffuse using Lambertian reflection
-* Clear Coat
-* Glass
-* Metal using Phong
-* Specular (Mirror)
-
-#### Normal Mapping
-* Image Texture
-* Perlin Noise
-
-#### Rendering Algorithm
-* Path Tracing
-* Ray Casting
-* Ray Marching
-
-#### Shape
-* Plane
-* Sphere
-* Triangle
-* Triangle Mesh
-
-#### Sun and Sky Model
-* Perez
-
-#### Texture
-* Checkerboard
-* Constant (Solid)
-* Image
-* Surface Normal
-
-#### Tone Mapping and Gamma Correction
-* Filmic Curve
-* Linear
-* Reinhard v.1
-* Reinhard v.2
+| Category               | Name                                 |
+| ---------------------- | ------------------------------------ |
+| Acceleration Structure | Bounding Volume Hierarchy (BVH)      |
+| Camera                 | Depth of Field                       |
+| Camera                 | Field of View                        |
+| Camera                 | Free Movement                        |
+| Camera                 | Fisheye camera lens                  |
+| Camera                 | Thin camera lens                     |
+| Effect                 | Blur                                 |
+| Effect                 | Detect Edges                         |
+| Effect                 | Emboss                               |
+| Effect                 | Gradient - Horizontal                |
+| Effect                 | Gradient - Vertical                  |
+| Effect                 | Grayscale - Luminosity               |
+| Effect                 | Sepia Tone                           |
+| Effect                 | Sharpen                              |
+| Material               | Diffuse using Lambertian reflectance |
+| Material               | Clear Coat with Fresnel              |
+| Material               | Glass with Fresnel                   |
+| Material               | Metal using Phong                    |
+| Material               | Specular (Mirror)                    |
+| Normal Mapping         | Image Texture                        |
+| Normal Mapping         | Perlin Noise                         |
+| Rendering Algorithm    | Path Tracing                         |
+| Rendering Algorithm    | Ray Casting                          |
+| Rendering Algorithm    | Ray Marching                         |
+| Shape                  | Plane                                |
+| Shape                  | Sphere                               |
+| Shape                  | Triangle                             |
+| Shape                  | Triangle Mesh                        |
+| Sund and Sky Model     | Perez                                |
+| Texture                | Checkerboard                         |
+| Texture                | Constant (Solid)                     |
+| Texture                | Image                                |
+| Texture                | Surface Normal                       |
+| Tone Mapper            | Filmic Curve                         |
+| Tone Mapper            | Linear                               |
+| Tone Mapper            | Reinhard v.1                         |
+| Tone Mapper            | Reinhard v.2                         |
 
 Supported Keyboard Controls
 ---------------------------
-* ``ESCAPE`` - Exit or leave the Scene if it has been entered like an FPS-game
-* ``ENTER`` - Enter the Scene like an FPS-game
-* ``W`` - Walk Forward
-* ``A`` - Strafe Left
-* ``S`` - Walk Backward
-* ``D`` - Strafe Right
-* ``E`` - Increase Altitude
-* ``R`` - Decrease Altitude
-* ``DOWN ARROW`` - Increase Pitch
-* ``UP ARROW`` - Decrease Pitch
-* ``LEFT ARROW`` - Increase Yaw
-* ``RIGHT ARROW`` - Decrease Yaw
-* ``MOVE MOUSE`` - Free Movement
+| Key         | Description                                                     |
+| ----------- | --------------------------------------------------------------- |
+| ESCAPE      | Exit or leave the scene if it has been entered like an FPS-game |
+| ENTER       | Enter the scene like an FPS-game                                |
+| W           | Walk forward                                                    |
+| A           | Strafe left                                                     |
+| S           | Walk backward                                                   |
+| D           | Strafe right                                                    |
+| E           | Increase altitude                                               |
+| R           | Decrease altitude                                               |
+| DOWN ARROW  | Increase pitch                                                  |
+| UP ARROW    | Decrease pitch                                                  |
+| LEFT ARROW  | Increase yaw                                                    |
+| RIGHT ARROW | Decrease yaw                                                    |
 
 Supported Menu Controls
 -----------------------
-* ``File > Exit`` - Exit
-* ``Camera > Walk Lock`` - Toggle walk lock
-* ``Camera > Fisheye Camera Lens`` - Use a Fisheye camera lens
-* ``Camera > Thin Camera Lens`` - Use a Thin camera lens
-* ``Effect > Blur`` - Toggle the Blur effect
-* ``Effect > Detect Edges`` - Toggle the Detect Edges effect
-* ``Effect > Emboss`` - Toggle the Emboss effect
-* ``Effect > Gradient (Horizontal)`` - Toggle the horizontal Gradient effect
-* ``Effect > Gradient (Vertical)`` - Toggle the vertical Gradient effect
-* ``Effect > Sharpen`` - Toggle the Sharpen effect
-* ``Effect > Grayscale`` - Toggle the Grayscale effect
-* ``Effect > Sepia Tone`` - Toggle the Sepia Tone effect
-* ``Renderer > Path Tracer`` - Use the Path Tracer to render
-* ``Renderer > Ray Caster`` - Use the Ray Caster to render
-* ``Renderer > Ray Marcher`` - Use the Ray Marcher to render
-* ``Scene > Normal Mapping`` - Toggle Normal Mapping
-* ``Scene > Flat Shading`` - Use Flat Shading for Triangles
-* ``Scene > Gouraud Shading`` - Use Gouraud Shading for Triangles
-* ``Tone Mapper > Filmic Curve`` - Use the Filmic Curve Tone Mapper
-* ``Tone Mapper > Linear`` - Use the Linear Tone Mapper
-* ``Tone Mapper > Reinhard v.1`` -  Use the Reindard v.1 Tone Mapper
-* ``Tone Mapper > Reinhard v.2`` - Use the Reinhard v.2 Tone Mapper
+| Menu Item                      | Description                           |
+| ------------------------------ | ------------------------------------- |
+| File > Exit                    | Exit                                  |
+| Camera > Walk Lock             | Toggle walk lock                      |
+| Camera > Fisheye Camera Lens   | Use a Fisheye camera lens             |
+| Camera > Thin Camera Lens      | Use a Thin camera lens                |
+| Effect > Blur                  | Toggle the Blur effect                |
+| Effect > Detect Edges          | Toggle the Detect Edges effect        |
+| Effect > Emboss                | Toggle the Emboss effect              |
+| Effect > Gradient (Horizontal) | Toggle the horizontal Gradient effect |
+| Effect > Gradient (Vertical)   | Toggle the vertical Gradient effect   |
+| Effect > Sharpen               | Toggle the Sharpen effect             |
+| Effect > Grayscale             | Toggle the Grayscale effect           |
+| Effect > Sepia Tone            | Toggle the Sepia Tone effect          |
+| Renderer > Path Tracer         | Use the Path Tracer to render         |
+| Renderer > Ray Caster          | Use the Ray Caster to render          |
+| Renderer > Ray Marcher         | Use the Ray Marcher to render         |
+| Scene > Normal Mapping         | Toggle Normal Mapping                 |
+| Scene > Flat Shading           | Use Flat Shading for Triangles        |
+| Scene > Gouraud Shading        | Use Gouraud Shading for Triangles     |
+| Tone Mapper > Filmic Curve     | Use the Filmic Curve Tone Mapper      |
+| Tone Mapper > Linear           | Use the Linear Tone Mapper            |
+| Tone Mapper > Reinhard v.1     | Use the Reindard v.1 Tone Mapper      |
+| Tone Mapper > Reinhard v.2     | Use the Reinhard v.2 Tone Mapper      |
 
 Getting Started
 ---------------
