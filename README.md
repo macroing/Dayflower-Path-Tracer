@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.0.23
+Dayflower - Path Tracer v.0.0.24
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
@@ -6,6 +6,7 @@ The engine primarily uses a rendering technique called Path Tracing, which is in
 
 This early test implementation of Dayflower, uses a library called Aparapi. This library is responsible for decompiling the Java bytecode into OpenCL C99 on the fly. This OpenCL C99 is then compiled into binary code that is executable by your specific GPU.
 
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Engine.png "Dayflower Path Tracer")
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Scene-1.png "Dayflower Path Tracer")
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Scene-2.png "Dayflower Path Tracer")
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Material-Showcase.png "Dayflower Path Tracer")
@@ -131,10 +132,10 @@ java -Djava.library.path=lib -jar org.dayflower.pathtracer.jar
 Settings
 --------
 In the ``settings.properties`` file you can change a few settings. The supported settings are the following.
-* ``width`` - The width of the canvas being rendered to.
-* ``width.scale`` - The width scale to use for the kernel. The width for the kernel is ``width / width.scale``.
-* ``height`` - The height of the canvas being rendered to.
-* ``height.scale`` - The height scale to use for the kernel. The height for the kernel is ``height / height.scale``.
+* ``canvas.width`` - The width of the canvas being rendered to.
+* ``canvas.height`` - The height of the canvas being rendered to.
+* ``kernel.width`` - The width of the kernel being processed.
+* ``kernel.height`` - The height of the kernel being processed.
 * ``scene.compile`` - If ``true``, scene compilation will be performed whether or not the scene already exists.
 * ``scene.name`` - The name of the scene to use.
 

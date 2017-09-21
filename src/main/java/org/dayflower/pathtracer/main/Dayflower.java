@@ -39,20 +39,20 @@ final class Dayflower {
 		return doReadSettingAsBoolean("scene.compile", false);
 	}
 	
-	public static int getHeight() {
-		return doReadSettingAsInt("height", 768);
+	public static int getCanvasHeight() {
+		return doReadSettingAsInt("canvas.height", 800);
 	}
 	
-	public static int getHeightScale() {
-		return doReadSettingAsInt("height.scale", 1);
+	public static int getCanvasWidth() {
+		return doReadSettingAsInt("canvas.width", 800);
 	}
 	
-	public static int getWidth() {
-		return doReadSettingAsInt("width", 1024);
+	public static int getKernelHeight() {
+		return doReadSettingAsInt("kernel.height", 800);
 	}
 	
-	public static int getWidthScale() {
-		return doReadSettingAsInt("width.scale", 1);
+	public static int getKernelWidth() {
+		return doReadSettingAsInt("kernel.width", 800);
 	}
 	
 	public static String getModelFilename(final String name) {

@@ -26,6 +26,7 @@ import java.util.concurrent.locks.Lock;
 
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Insets;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -33,6 +34,8 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
@@ -60,30 +63,24 @@ import org.dayflower.pathtracer.util.FPSCounter;
  */
 public final class TestApplication extends AbstractApplication {
 	private static final String ENGINE_NAME = "Dayflower - Path Tracer";
-	private static final String SETTING_NAME_FILTER_BLUR = "Filter.Blur";
-	private static final String SETTING_NAME_FILTER_DETECT_EDGES = "Filter.DetectEdges";
-	private static final String SETTING_NAME_FILTER_EMBOSS = "Filter.Emboss";
-	private static final String SETTING_NAME_FILTER_GRADIENT_HORIZONTAL = "Filter.Gradient.Horizontal";
-	private static final String SETTING_NAME_FILTER_GRADIENT_VERTICAL = "Filter.Gradient.Vertical";
-	private static final String SETTING_NAME_FILTER_SHARPEN = "Filter.Sharpen";
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private final AtomicBoolean hasRequestedToExit = new AtomicBoolean();
-	private final AtomicBoolean hasInitialized = new AtomicBoolean();
 	private byte[] pixels;
 	private final Camera camera = new Camera();
 	private ConvolutionKernel convolutionKernel;
-	private final Label labelApertureRadius = new Label("Aperture Radius: N/A");
-	private final Label labelFieldOfView = new Label("Field of View: N/A - N/A");
-	private final Label labelFocalDistance = new Label("Focal Distance: N/A");
 	private final Label labelFPS = new Label("FPS: 0");
-	private final Label labelRenderMode = new Label("Mode: GPU");
 	private final Label labelRenderPass = new Label("Pass: 0");
 	private final Label labelRenderTime = new Label("Time: 00:00:00");
-	private final Label labelRenderType = new Label("Type: Path Tracer");
 	private final Label labelSPS = new Label("SPS: 00000000");
 	private AbstractRendererKernel abstractRendererKernel;
+	private final Setting settingFilterBlur = new Setting("Filter.Blur");
+	private final Setting settingFilterDetectEdges = new Setting("Filter.DetectEdges");
+	private final Setting settingFilterEmboss = new Setting("Filter.Emboss");
+	private final Setting settingFilterGradientHorizontal = new Setting("Filter.Gradient.Horizontal");
+	private final Setting settingFilterGradientVertical = new Setting("Filter.Gradient.Vertical");
+	private final Setting settingFilterSharpen = new Setting("Filter.Sharpen");
 	private final Sky sky = new Sky();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,39 +95,12 @@ public final class TestApplication extends AbstractApplication {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Called when pixels can be configured at start.
+	 * Called when the {@code MenuBar} can be configured.
 	 * 
-	 * @param pixels a {@code byte} array with pixel data
+	 * @param menuBar the {@code MenuBar} to configure
 	 */
 	@Override
-	protected void doConfigurePixels(final byte[] pixels) {
-		this.pixels = pixels;
-		this.convolutionKernel = new ConvolutionKernel(pixels, getCanvasWidth(), getCanvasHeight());
-		this.hasInitialized.set(true);
-	}
-	
-	/**
-	 * Called when UI-configuration can be performed at start.
-	 * 
-	 * @param hBox a {@code HBox} to add UI-controls to
-	 * @param menuBar a {@code MenuBar} to add UI-controls to
-	 * @param vBox a {@code VBox} to add UI-controls to
-	 */
-	@Override
-	protected void doConfigureUI(final HBox hBox, final MenuBar menuBar, final VBox vBox) {
-		final
-		Camera camera = this.camera;
-		camera.setApertureRadius(0.0F);
-		camera.setCenter(55.0F, 42.0F, 155.6F);
-		camera.setFieldOfViewX(70.0F);
-		camera.setFocalDistance(30.0F);
-		camera.setPitch(0.0F);
-		camera.setRadius(16.0F);
-		camera.setResolution(800.0F / getCanvasWidthScale(), 800.0F / getCanvasHeightScale());
-		camera.setWalkLockEnabled(true);
-		camera.setYaw(0.0F);
-		camera.update();
-		
+	protected void doConfigureMenuBar(final MenuBar menuBar) {
 //		Create the "File" Menu:
 		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> this.hasRequestedToExit.set(true));
 		
@@ -151,12 +121,12 @@ public final class TestApplication extends AbstractApplication {
 		menuBar.getMenus().add(menuCamera);
 		
 //		Create the "Effect" Menu:
-		final CheckMenuItem checkMenuItemBlur = JavaFX.newCheckMenuItem("Blur", e -> toggleSetting(SETTING_NAME_FILTER_BLUR));
-		final CheckMenuItem checkMenuItemDetectEdges = JavaFX.newCheckMenuItem("Detect Edges", e -> toggleSetting(SETTING_NAME_FILTER_DETECT_EDGES));
-		final CheckMenuItem checkMenuItemEmboss = JavaFX.newCheckMenuItem("Emboss", e -> toggleSetting(SETTING_NAME_FILTER_EMBOSS));
-		final CheckMenuItem checkMenuItemGradientHorizontal = JavaFX.newCheckMenuItem("Gradient (Horizontal)", e -> toggleSetting(SETTING_NAME_FILTER_GRADIENT_HORIZONTAL));
-		final CheckMenuItem checkMenuItemGradientVertical = JavaFX.newCheckMenuItem("Gradient (Vertical)", e -> toggleSetting(SETTING_NAME_FILTER_GRADIENT_VERTICAL));
-		final CheckMenuItem checkMenuItemSharpen = JavaFX.newCheckMenuItem("Sharpen", e -> toggleSetting(SETTING_NAME_FILTER_SHARPEN));
+		final CheckMenuItem checkMenuItemBlur = JavaFX.newCheckMenuItem("Blur", e -> this.settingFilterBlur.toggle());
+		final CheckMenuItem checkMenuItemDetectEdges = JavaFX.newCheckMenuItem("Detect Edges", e -> this.settingFilterDetectEdges.toggle());
+		final CheckMenuItem checkMenuItemEmboss = JavaFX.newCheckMenuItem("Emboss", e -> this.settingFilterEmboss.toggle());
+		final CheckMenuItem checkMenuItemGradientHorizontal = JavaFX.newCheckMenuItem("Gradient (Horizontal)", e -> this.settingFilterGradientHorizontal.toggle());
+		final CheckMenuItem checkMenuItemGradientVertical = JavaFX.newCheckMenuItem("Gradient (Vertical)", e -> this.settingFilterGradientVertical.toggle());
+		final CheckMenuItem checkMenuItemSharpen = JavaFX.newCheckMenuItem("Sharpen", e -> this.settingFilterSharpen.toggle());
 		final CheckMenuItem checkMenuItemGrayscale = JavaFX.newCheckMenuItem("Grayscale", e -> this.abstractRendererKernel.setEffectGrayScale(!this.abstractRendererKernel.isEffectGrayScale()));
 		final CheckMenuItem checkMenuItemSepiaTone = JavaFX.newCheckMenuItem("Sepia Tone", e -> this.abstractRendererKernel.setEffectSepiaTone(!this.abstractRendererKernel.isEffectSepiaTone()));
 		
@@ -200,39 +170,91 @@ public final class TestApplication extends AbstractApplication {
 		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurve, radioMenuItemToneMapperLinear, radioMenuItemToneMapperReinhard1, radioMenuItemToneMapperReinhard2);
 		
 		menuBar.getMenus().add(menuToneMapper);
-		
+	}
+	
+	/**
+	 * Called when pixels can be configured at start.
+	 * 
+	 * @param pixels a {@code byte} array with pixel data
+	 */
+	@Override
+	protected void doConfigurePixels(final byte[] pixels) {
+		this.pixels = pixels;
+		this.convolutionKernel = new ConvolutionKernel(pixels, getKernelWidth(), getKernelHeight());
+	}
+	
+	/**
+	 * Called when the status bar can be configured.
+	 * 
+	 * @param hBox a {@code HBox} that acts as a status bar
+	 */
+	@Override
+	protected void doConfigureStatusBar(final HBox hBox) {
 //		Create and add all sections to the bottom panel of the window:
 		final Region region0 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
 		final Region region1 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
 		final Region region2 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
-		final Region region3 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
-		final Region region4 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
-		final Region region5 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
-		final Region region6 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
-		final Region region7 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
 		
-		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime, region3, this.labelRenderMode, region4, this.labelRenderType, region5, this.labelApertureRadius, region6, this.labelFocalDistance, region7, this.labelFieldOfView);
-		
-//		Create and add all sections to the left panel of the window:
+		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime);
+	}
+	
+	/**
+	 * Called when the {@code TabPane} can be configured.
+	 * 
+	 * @param tabPane the {@code TabPane} to configure
+	 */
+	@Override
+	protected void doConfigureTabPane(final TabPane tabPane) {
+//		Create the Tab with the Camera settings:
 		final Label labelFieldOfView = new Label("Field of View:");
 		final Label labelApertureRadius = new Label("Aperture Radius:");
 		final Label labelFocalDistance = new Label("Focal Distance:");
 		final Label labelMaximumRayDepth = new Label("Maximum Ray Depth:");
-		final Label labelSunDirectionWorldX = new Label("Sun Direction X:");
-		final Label labelSunDirectionWorldY = new Label("Sun Direction Y:");
-		final Label labelSunDirectionWorldZ = new Label("Sun Direction Z:");
-		final Label labelTurbidity = new Label("Turbidity:");
 		
 		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, this.camera.getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
 		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, this.camera.getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
 		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, this.camera.getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
 		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, this.abstractRendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
+		
+		final
+		VBox vBoxCamera = new VBox();
+		vBoxCamera.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		vBoxCamera.getChildren().addAll(labelFieldOfView, sliderFieldOfView, labelApertureRadius, sliderApertureRadius, labelFocalDistance, sliderFocalDistance, labelMaximumRayDepth, sliderMaximumRayDepth);
+		
+		final
+		Tab tabCamera = new Tab();
+		tabCamera.setClosable(false);
+		tabCamera.setContent(vBoxCamera);
+		tabCamera.setText("Camera");
+		
+		tabPane.getTabs().add(tabCamera);
+		
+//		Create the Tab with the Sun and Sky settings:
+		final Label labelSunDirectionWorldX = new Label("Sun Direction X:");
+		final Label labelSunDirectionWorldY = new Label("Sun Direction Y:");
+		final Label labelSunDirectionWorldZ = new Label("Sun Direction Z:");
+		final Label labelTurbidity = new Label("Turbidity:");
+		
 		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
 		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 2.0D, this.sky.getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
 		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
 		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, this.sky.getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
-		vBox.getChildren().addAll(labelFieldOfView, sliderFieldOfView, labelApertureRadius, sliderApertureRadius, labelFocalDistance, sliderFocalDistance, labelMaximumRayDepth, sliderMaximumRayDepth, labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity);
+		final
+		VBox vBoxSunAndSky = new VBox();
+		vBoxSunAndSky.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity);
+		
+		final
+		Tab tabSunAndSky = new Tab();
+		tabSunAndSky.setClosable(false);
+		tabSunAndSky.setContent(vBoxSunAndSky);
+		tabSunAndSky.setText("Sun & Sky");
+		
+		tabPane.getTabs().add(tabSunAndSky);
+		
+//		Select the default Tab:
+		tabPane.getSelectionModel().select(tabCamera);
 	}
 	
 	/**
@@ -258,12 +280,25 @@ public final class TestApplication extends AbstractApplication {
 			}
 		}
 		
-		setCanvasWidthScale(Dayflower.getWidthScale());
-		setCanvasWidth(Dayflower.getWidth() / getCanvasWidthScale());
-		setCanvasHeightScale(Dayflower.getHeightScale());
-		setCanvasHeight(Dayflower.getHeight() / getCanvasHeightScale());
+		setCanvasWidth(Dayflower.getCanvasWidth());
+		setCanvasHeight(Dayflower.getCanvasHeight());
+		setKernelWidth(Dayflower.getKernelWidth());
+		setKernelHeight(Dayflower.getKernelHeight());
 		
-		this.abstractRendererKernel = new RendererKernel(false, getCanvasWidth(), getCanvasHeight(), this.camera, this.sky, sceneFilename, 1.0F);
+		this.abstractRendererKernel = new RendererKernel(false, getKernelWidth(), getKernelHeight(), this.camera, this.sky, sceneFilename, 1.0F);
+		
+		final
+		Camera camera = this.camera;
+		camera.setApertureRadius(0.0F);
+		camera.setCenter(55.0F, 42.0F, 155.6F);
+		camera.setFieldOfViewX(70.0F);
+		camera.setFocalDistance(30.0F);
+		camera.setPitch(0.0F);
+		camera.setRadius(16.0F);
+		camera.setResolution(getKernelWidth(), getKernelHeight());
+		camera.setWalkLockEnabled(true);
+		camera.setYaw(0.0F);
+		camera.update();
 	}
 	
 	/**
@@ -297,14 +332,6 @@ public final class TestApplication extends AbstractApplication {
 	 */
 	@Override
 	public void run() {
-		while(!this.hasInitialized.get()) {
-			try {
-				Thread.sleep(100L);
-			} catch(final InterruptedException e) {
-//				Do nothing.
-			}
-		}
-		
 		final AtomicInteger renderPass = new AtomicInteger();
 		
 		final AtomicLong currentTimeMillis = new AtomicLong(System.currentTimeMillis());
@@ -313,12 +340,12 @@ public final class TestApplication extends AbstractApplication {
 		
 		final FPSCounter fPSCounter = getFPSCounter();
 		
-		final Range range = Range.create(getCanvasWidth() * getCanvasHeight());
+		final Range range = Range.create(getKernelWidth() * getKernelHeight());
 		
 		final
 		AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
 		abstractRendererKernel.updateLocalVariables(range.getLocalSize(0));
-		abstractRendererKernel.compile(this.pixels, getCanvasWidth(), getCanvasHeight());
+		abstractRendererKernel.compile(this.pixels, getKernelWidth(), getKernelHeight());
 		
 		final ConvolutionKernel convolutionKernel = this.convolutionKernel;
 		
@@ -449,37 +476,37 @@ public final class TestApplication extends AbstractApplication {
 				
 				abstractRendererKernel.get(abstractRendererKernel.getPixels());
 				
-				if(isSettingEnabled(SETTING_NAME_FILTER_BLUR)) {
+				if(this.settingFilterBlur.isEnabled()) {
 					convolutionKernel.update();
 					convolutionKernel.enableBlur();
 					convolutionKernel.execute(range);
 				}
 				
-				if(isSettingEnabled(SETTING_NAME_FILTER_DETECT_EDGES)) {
+				if(this.settingFilterDetectEdges.isEnabled()) {
 					convolutionKernel.update();
 					convolutionKernel.enableDetectEdges();
 					convolutionKernel.execute(range);
 				}
 				
-				if(isSettingEnabled(SETTING_NAME_FILTER_EMBOSS)) {
+				if(this.settingFilterEmboss.isEnabled()) {
 					convolutionKernel.update();
 					convolutionKernel.enableEmboss();
 					convolutionKernel.execute(range);
 				}
 				
-				if(isSettingEnabled(SETTING_NAME_FILTER_GRADIENT_HORIZONTAL)) {
+				if(this.settingFilterGradientHorizontal.isEnabled()) {
 					convolutionKernel.update();
 					convolutionKernel.enableGradientHorizontal();
 					convolutionKernel.execute(range);
 				}
 				
-				if(isSettingEnabled(SETTING_NAME_FILTER_GRADIENT_VERTICAL)) {
+				if(this.settingFilterGradientVertical.isEnabled()) {
 					convolutionKernel.update();
 					convolutionKernel.enableGradientVertical();
 					convolutionKernel.execute(range);
 				}
 				
-				if(isSettingEnabled(SETTING_NAME_FILTER_SHARPEN)) {
+				if(this.settingFilterSharpen.isEnabled()) {
 					convolutionKernel.update();
 					convolutionKernel.enableSharpen();
 					convolutionKernel.execute(range);
@@ -492,27 +519,16 @@ public final class TestApplication extends AbstractApplication {
 			
 			final long elapsedTimeMillis = System.currentTimeMillis() - currentTimeMillis.get();
 			final long fPS = fPSCounter.getFPS();
-			final long sPS = fPS * getCanvasWidth() * getCanvasHeight();
-			
-			final float apertureRadius = camera.getApertureRadius();
-			final float fieldOfViewX = camera.getFieldOfViewX();
-			final float fieldOfViewY = camera.getFieldOfViewY();
-			final float focalDistance = camera.getFocalDistance();
-			
-			final String rendererType = abstractRendererKernel.isPathTracing() ? "Path Tracer" : abstractRendererKernel.isRayCasting() ? "Ray Caster" : "Ray Marcher";
+			final long sPS = fPS * getKernelWidth() * getKernelHeight();
 			
 			Platform.runLater(() -> {
 				final long hours = elapsedTimeMillis / (60L * 60L * 1000L);
 				final long minutes = (elapsedTimeMillis - (hours * 60L * 60L * 1000L)) / (60L * 1000L);
 				final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 				
-				this.labelApertureRadius.setText(String.format("Aperture Radius: %.2f", Float.valueOf(apertureRadius)));
-				this.labelFieldOfView.setText(String.format("Field of View: %.2f - %.2f", Float.valueOf(fieldOfViewX), Float.valueOf(fieldOfViewY)));
-				this.labelFocalDistance.setText(String.format("Focal Distance: %.2f", Float.valueOf(focalDistance)));
 				this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
 				this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass0)));
 				this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
-				this.labelRenderType.setText(String.format("Type: %s", rendererType));
 				this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));
 			});
 			

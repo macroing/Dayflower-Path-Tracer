@@ -21,8 +21,6 @@ package org.dayflower.pathtracer.application;
 import java.awt.AWTException;
 import java.awt.Robot;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,6 +38,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.TabPane;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelWriter;
@@ -62,24 +61,24 @@ import org.dayflower.pathtracer.util.FPSCounter;
  */
 public abstract class AbstractApplication extends Application implements Runnable {
 	/**
-	 * The default height scale.
+	 * The default canvas height.
 	 */
-	private static final int CANVAS_HEIGHT_SCALE = 1;
+	private static final int CANVAS_HEIGHT = 800;
 	
 	/**
-	 * The default height.
+	 * The default canvas width.
 	 */
-	private static final int CANVAS_HEIGHT = 768 / CANVAS_HEIGHT_SCALE;
+	private static final int CANVAS_WIDTH = 800;
 	
 	/**
-	 * The default width scale.
+	 * The default kernel height.
 	 */
-	private static final int CANVAS_WIDTH_SCALE = 1;
+	private static final int KERNEL_HEIGHT = 800;
 	
 	/**
-	 * The default width.
+	 * The default kernel width.
 	 */
-	private static final int CANVAS_WIDTH = 1024 / CANVAS_WIDTH_SCALE;
+	private static final int KERNEL_WIDTH = 800;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -88,14 +87,13 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private final AtomicBoolean hasUpdatedCursor = new AtomicBoolean();
-	private final AtomicBoolean hasUpdatedResolution = new AtomicBoolean(true);
 	private final AtomicBoolean isCursorHidden = new AtomicBoolean();
 	private final AtomicBoolean isDraggingMouse = new AtomicBoolean();
 	private final AtomicBoolean isRecenteringMouse = new AtomicBoolean();
 	private final AtomicInteger canvasHeight = new AtomicInteger(CANVAS_HEIGHT);
-	private final AtomicInteger canvasHeightScale = new AtomicInteger(CANVAS_HEIGHT_SCALE);
 	private final AtomicInteger canvasWidth = new AtomicInteger(CANVAS_WIDTH);
-	private final AtomicInteger canvasWidthScale = new AtomicInteger(CANVAS_WIDTH_SCALE);
+	private final AtomicInteger kernelHeight = new AtomicInteger(KERNEL_HEIGHT);
+	private final AtomicInteger kernelWidth = new AtomicInteger(KERNEL_WIDTH);
 	private final AtomicInteger mouseDraggedDeltaX = new AtomicInteger();
 	private final AtomicInteger mouseDraggedDeltaY = new AtomicInteger();
 	private final AtomicInteger mouseMovedDeltaX = new AtomicInteger();
@@ -111,7 +109,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	private Canvas canvas;
 	private final FPSCounter fPSCounter = new FPSCounter();
 	private final Lock lock = new ReentrantLock();
-	private final Map<String, Boolean> settings = new HashMap<>();
 	private Robot robot;
 	private final String title;
 	
@@ -139,40 +136,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Disables the setting with a name of {@code name}.
-	 * <p>
-	 * Returns the state of the setting, which should be {@code false} at all times.
-	 * <p>
-	 * Calling this method is equivalent to calling {@code set(name, false)}.
-	 * <p>
-	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param name the name of the setting
-	 * @return the state of the setting, which should be {@code false} at all times
-	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
-	 */
-	protected final boolean disableSetting(final String name) {
-		return setSetting(name, false);
-	}
-	
-	/**
-	 * Enables the setting with a name of {@code name}.
-	 * <p>
-	 * Returns the state of the setting, which should be {@code true} at all times.
-	 * <p>
-	 * Calling this method is equivalent to calling {@code set(name, true)}.
-	 * <p>
-	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param name the name of the setting
-	 * @return the state of the setting, which should be {@code true} at all times
-	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
-	 */
-	protected final boolean enableSetting(final String name) {
-		return setSetting(name, true);
-	}
 	
 //	TODO: Add Javadocs!
 	protected final boolean hasEntered() {
@@ -270,63 +233,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 	/**
-	 * Returns {@code true} if, and only if, the setting with a name of {@code name} is disabled, {@code false} otherwise.
-	 * <p>
-	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param name the name of the setting
-	 * @return {@code true} if, and only if, the setting with a name of {@code name} is disabled, {@code false} otherwise
-	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
-	 */
-	protected final boolean isSettingDisabled(final String name) {
-		return !isSettingEnabled(name);
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, the setting with a name of {@code name} is enabled, {@code false} otherwise.
-	 * <p>
-	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param name the name of the setting
-	 * @return {@code true} if, and only if, the setting with a name of {@code name} is enabled, {@code false} otherwise
-	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
-	 */
-	protected final boolean isSettingEnabled(final String name) {
-		return this.settings.computeIfAbsent(Objects.requireNonNull(name, "name == null"), key -> Boolean.FALSE).booleanValue();
-	}
-	
-	/**
-	 * Sets the setting with a name of {@code name} to the value of {@code isEnabled}.
-	 * <p>
-	 * Returns the state of the setting, which should be {@code isEnabled} at all times.
-	 * <p>
-	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param name the name of the setting
-	 * @param isEnabled {@code true} if, and only if, the setting should be enabled, {@code false} otherwise
-	 * @return the state of the setting, which should be {@code isEnabled} at all times
-	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
-	 */
-	protected final boolean setSetting(final String name, final boolean isEnabled) {
-		return this.settings.compute(Objects.requireNonNull(name, "name == null"), (key, value) -> Boolean.valueOf(isEnabled)).booleanValue();
-	}
-	
-	/**
-	 * Toggles the setting with a name of {@code name}.
-	 * <p>
-	 * Returns the state of the setting.
-	 * <p>
-	 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param name the name of the setting
-	 * @return the state of the setting
-	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
-	 */
-	protected final boolean toggleSetting(final String name) {
-		return this.settings.compute(Objects.requireNonNull(name, "name == null"), (key, value) -> value == null ? Boolean.TRUE : Boolean.valueOf(!value.booleanValue())).booleanValue();
-	}
-	
-	/**
 	 * Returns the {@link FPSCounter} associated with this {@code AbstractApplication}.
 	 * 
 	 * @return the {@code FPSCounter} associated with this {@code AbstractApplication}
@@ -336,39 +242,39 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 	/**
-	 * Returns the height.
+	 * Returns the canvas height.
 	 * 
-	 * @return the height
+	 * @return the canvas height
 	 */
 	protected final int getCanvasHeight() {
 		return this.canvasHeight.get();
 	}
 	
 	/**
-	 * Returns the height scale.
+	 * Returns the canvas width.
 	 * 
-	 * @return the height scale
-	 */
-	protected final int getCanvasHeightScale() {
-		return this.canvasHeightScale.get();
-	}
-	
-	/**
-	 * Returns the width.
-	 * 
-	 * @return the width
+	 * @return the canvas width
 	 */
 	protected final int getCanvasWidth() {
 		return this.canvasWidth.get();
 	}
 	
 	/**
-	 * Returns the width scale.
+	 * Returns the kernel height.
 	 * 
-	 * @return the width scale
+	 * @return the kernel height
 	 */
-	protected final int getCanvasWidthScale() {
-		return this.canvasWidthScale.get();
+	protected final int getKernelHeight() {
+		return this.kernelHeight.get();
+	}
+	
+	/**
+	 * Returns the kernel width.
+	 * 
+	 * @return the kernel width
+	 */
+	protected final int getKernelWidth() {
+		return this.kernelWidth.get();
 	}
 	
 	/**
@@ -381,6 +287,13 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	}
 	
 	/**
+	 * Called when the {@code MenuBar} can be configured.
+	 * 
+	 * @param menuBar the {@code MenuBar} to configure
+	 */
+	protected abstract void doConfigureMenuBar(final MenuBar menuBar);
+	
+	/**
 	 * Called when pixels can be configured at start.
 	 * 
 	 * @param pixels a {@code byte} array with pixel data
@@ -388,13 +301,18 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	protected abstract void doConfigurePixels(final byte[] pixels);
 	
 	/**
-	 * Called when UI-configuration can be performed at start.
+	 * Called when the status bar can be configured.
 	 * 
-	 * @param hBox a {@code HBox} to add UI-controls to
-	 * @param menuBar a {@code MenuBar} to add UI-controls to
-	 * @param vBox a {@code VBox} to add UI-controls to
+	 * @param hBox a {@code HBox} that acts as a status bar
 	 */
-	protected abstract void doConfigureUI(final HBox hBox, final MenuBar menuBar, final VBox vBox);
+	protected abstract void doConfigureStatusBar(final HBox hBox);
+	
+	/**
+	 * Called when the {@code TabPane} can be configured.
+	 * 
+	 * @param tabPane the {@code TabPane} to configure
+	 */
+	protected abstract void doConfigureTabPane(final TabPane tabPane);
 	
 //	TODO: Add Javadocs!
 	protected final void enter() {
@@ -425,43 +343,21 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	protected abstract void onMouseMoved(final float x, final float y);
 	
 	/**
-	 * Sets a new height.
+	 * Sets a new canvas height.
 	 * 
-	 * @param canvasHeight a new height
+	 * @param canvasHeight a new canvas height
 	 */
 	protected final void setCanvasHeight(final int canvasHeight) {
 		this.canvasHeight.set(canvasHeight);
-		this.hasUpdatedResolution.set(true);
 	}
 	
 	/**
-	 * Sets a new height scale.
+	 * Sets a new canvas width.
 	 * 
-	 * @param canvasHeightScale a new height scale
-	 */
-	protected final void setCanvasHeightScale(final int canvasHeightScale) {
-		this.canvasHeightScale.set(canvasHeightScale);
-		this.hasUpdatedResolution.set(true);
-	}
-	
-	/**
-	 * Sets a new width.
-	 * 
-	 * @param canvasWidth a new width
+	 * @param canvasWidth a new canvas width
 	 */
 	protected final void setCanvasWidth(final int canvasWidth) {
 		this.canvasWidth.set(canvasWidth);
-		this.hasUpdatedResolution.set(true);
-	}
-	
-	/**
-	 * Sets a new width scale.
-	 * 
-	 * @param canvasWidthScale a new width scale
-	 */
-	protected final void setCanvasWidthScale(final int canvasWidthScale) {
-		this.canvasWidthScale.set(canvasWidthScale);
-		this.hasUpdatedResolution.set(true);
 	}
 	
 	/**
@@ -473,6 +369,24 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		if(this.isCursorHidden.compareAndSet(!isCursorHidden, isCursorHidden)) {
 			this.hasUpdatedCursor.set(true);
 		}
+	}
+	
+	/**
+	 * Sets a new kernel height.
+	 * 
+	 * @param kernelHeight a new kernel height
+	 */
+	protected final void setKernelHeight(final int kernelHeight) {
+		this.kernelHeight.set(kernelHeight);
+	}
+	
+	/**
+	 * Sets a new kernel width.
+	 * 
+	 * @param kernelWidth a new kernel width
+	 */
+	protected final void setKernelWidth(final int kernelWidth) {
+		this.kernelWidth.set(kernelWidth);
 	}
 	
 	/**
@@ -497,8 +411,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		ImageView imageView = new ImageView();
 		imageView.setSmooth(true);
 		
-		this.canvas = new Canvas(getCanvasWidth() * getCanvasWidthScale(), getCanvasHeight() * getCanvasHeightScale());
-		
+		this.canvas = new Canvas(getCanvasWidth(), getCanvasHeight());
 		this.canvas.addEventFilter(MouseEvent.ANY, e -> this.canvas.requestFocus());
 		this.canvas.setFocusTraversable(true);
 		this.canvas.setOnKeyPressed(this::doOnKeyPressed);
@@ -514,18 +427,18 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		HBox hBox = new HBox();
 		hBox.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
 		
-		final
-		VBox vBox = new VBox();
-		vBox.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		final TabPane tabPane = new TabPane();
 		
 		final
 		BorderPane borderPane = new BorderPane();
 		borderPane.setTop(menuBar);
 		borderPane.setCenter(this.canvas);
 		borderPane.setBottom(hBox);
-		borderPane.setLeft(vBox);
+		borderPane.setLeft(tabPane);
 		
-		doConfigureUI(hBox, menuBar, vBox);
+		doConfigureMenuBar(menuBar);
+		doConfigureTabPane(tabPane);
+		doConfigureStatusBar(hBox);
 		
 		final Scene scene = new Scene(borderPane);
 		
@@ -538,32 +451,25 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		final PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraPreInstance();
 		
 		final AtomicBoolean hasUpdatedCursor = this.hasUpdatedCursor;
-		final AtomicBoolean hasUpdatedResolution = this.hasUpdatedResolution;
 		
-		final PixelWriter[] pixelWriter = new PixelWriter[1];
+		final WritableImage writableImage = new WritableImage(getKernelWidth(), getKernelHeight());
 		
-		final ByteBuffer[] byteBuffer = new ByteBuffer[1];
+		final PixelWriter pixelWriter = writableImage.getPixelWriter();
+		
+		final ByteBuffer byteBuffer = ByteBuffer.allocate(getKernelWidth() * getKernelHeight() * 4);
+		
+		final byte[] pixels = byteBuffer.array();
+		
+		imageView.setImage(writableImage);
+		imageView.setViewport(new Rectangle2D(0.0D, 0.0D, getKernelWidth(), getKernelHeight()));
+		
+		doConfigurePixels(pixels);
 		
 		final Canvas canvas = this.canvas;
 		
 		new AnimationTimer() {
 			@Override
 			public void handle(final long now) {
-				if(hasUpdatedResolution.compareAndSet(true, false)) {
-					final WritableImage writableImage = new WritableImage(getCanvasWidth(), getCanvasHeight());
-					
-					pixelWriter[0] = writableImage.getPixelWriter();
-					
-					byteBuffer[0] = ByteBuffer.allocate(getCanvasWidth() * getCanvasHeight() * 4);
-					
-					final byte[] pixels = byteBuffer[0].array();
-					
-					imageView.setImage(writableImage);
-					imageView.setViewport(new Rectangle2D(0.0D, 0.0D, getCanvasWidth(), getCanvasHeight()));
-					
-					doConfigurePixels(pixels);
-				}
-				
 				if(hasUpdatedCursor.compareAndSet(true, false)) {
 					scene.setCursor(isCursorHidden() ? Cursor.NONE : Cursor.DEFAULT);
 				}
@@ -573,19 +479,15 @@ public abstract class AbstractApplication extends Application implements Runnabl
 				lock.lock();
 				
 				try {
-					final PixelWriter pixelWriter0 = pixelWriter[0];
-					
-					final ByteBuffer byteBuffer0 = byteBuffer[0];
-					
-					if(pixelWriter0 != null && byteBuffer0 != null) {
-						pixelWriter0.setPixels(0, 0, getCanvasWidth(), getCanvasHeight(), pixelFormat, byteBuffer0, getCanvasWidth() * 4);
+					if(pixelWriter != null) {
+						pixelWriter.setPixels(0, 0, getKernelWidth(), getKernelHeight(), pixelFormat, byteBuffer, getKernelWidth() * 4);
 					}
 					
 					final WritableImage writableImage = imageView.snapshot(null, null);
 					
 					final
 					GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-					graphicsContext.drawImage(writableImage, 0.0D, 0.0D, getCanvasWidth() * getCanvasWidthScale(), getCanvasHeight() * getCanvasHeightScale());
+					graphicsContext.drawImage(writableImage, 0.0D, 0.0D, getCanvasWidth(), getCanvasHeight());
 				} finally {
 					lock.unlock();
 				}
@@ -593,6 +495,151 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		}.start();
 		
 		new Thread(this).start();
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * A {@code Setting} represents a setting that can be enabled or disabled.
+	 * 
+	 * @since 1.0.0
+	 * @author J&#246;rgen Lundgren
+	 */
+	public static final class Setting {
+		private final AtomicBoolean isEnabled;
+		private final String name;
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		/**
+		 * Constructs a new {@code Setting} instance.
+		 * <p>
+		 * Calling this constructor is equivalent to calling {@code new Setting(name, false)}.
+		 * <p>
+		 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param name the name to use
+		 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
+		 */
+		public Setting(final String name) {
+			this(name, false);
+		}
+		
+		/**
+		 * Constructs a new {@code Setting} instance.
+		 * <p>
+		 * If {@code name} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param name the name to use
+		 * @param isEnabled {@code true} if enabled, {@code false} otherwise
+		 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
+		 */
+		public Setting(final String name, final boolean isEnabled) {
+			this.name = Objects.requireNonNull(name, "name == null");
+			this.isEnabled = new AtomicBoolean(isEnabled);
+		}
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		/**
+		 * Compares {@code object} to this {@code Setting} instance for equality.
+		 * <p>
+		 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Setting}, and their respective values are equal, {@code false} otherwise.
+		 * 
+		 * @param object the {@code Object} to compare to this {@code Setting} instance for equality
+		 * @return {@code true} if, and only if, {@code object} is an instance of {@code Setting}, and their respective values are equal, {@code false} otherwise
+		 */
+		@Override
+		public boolean equals(final Object object) {
+			if(object == this) {
+				return true;
+			} else if(!(object instanceof Setting)) {
+				return false;
+			} else if(!Objects.equals(getName(), Setting.class.cast(object).getName())) {
+				return false;
+			} else if(isEnabled() != Setting.class.cast(object).isEnabled()) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+		/**
+		 * Returns {@code true} if, and only if, this {@code Setting} is disabled, {@code false} otherwise.
+		 * 
+		 * @return {@code true} if, and only if, this {@code Setting} is disabled, {@code false} otherwise
+		 */
+		public boolean isDisabled() {
+			return !isEnabled();
+		}
+		
+		/**
+		 * Returns {@code true} if, and only if, this {@code Setting} is enabled, {@code false} otherwise.
+		 * 
+		 * @return {@code true} if, and only if, this {@code Setting} is enabled, {@code false} otherwise
+		 */
+		public boolean isEnabled() {
+			return this.isEnabled.get();
+		}
+		
+		/**
+		 * Returns a hash code for this {@code Setting} instance.
+		 * 
+		 * @return a hash code for this {@code Setting} instance
+		 */
+		@Override
+		public int hashCode() {
+			return Objects.hash(getName(), Boolean.valueOf(isEnabled()));
+		}
+		
+		/**
+		 * Returns the name of this {@code Setting} instance.
+		 * 
+		 * @return the name of this {@code Setting} instance
+		 */
+		public String getName() {
+			return this.name;
+		}
+		
+		/**
+		 * Returns a {@code String} representation of this {@code Setting} instance.
+		 * 
+		 * @return a {@code String} representation of this {@code Setting} instance
+		 */
+		@Override
+		public String toString() {
+			return String.format("new Setting(\"%s\", %s)", getName(), Boolean.toString(isEnabled()));
+		}
+		
+		/**
+		 * Disables this {@code Setting} instance.
+		 */
+		public void disable() {
+			set(false);
+		}
+		
+		/**
+		 * Enables this {@code Setting} instance.
+		 */
+		public void enable() {
+			set(true);
+		}
+		
+		/**
+		 * Enables or disables this {@code Setting} instance.
+		 * 
+		 * @param isEnabled {@code true} if enabled, {@code false} otherwise
+		 */
+		public void set(final boolean isEnabled) {
+			this.isEnabled.set(isEnabled);
+		}
+		
+		/**
+		 * Toggles this {@code Setting} instance.
+		 */
+		public void toggle() {
+			set(!isEnabled());
+		}
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
