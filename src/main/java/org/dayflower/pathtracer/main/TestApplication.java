@@ -18,14 +18,9 @@
  */
 package org.dayflower.pathtracer.main;
 
-import static org.dayflower.pathtracer.math.Math2.PI_DIVIDED_BY_TWO;
-import static org.dayflower.pathtracer.math.Math2.PI_MULTIPLIED_BY_TWO;
-
 import java.io.File;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
 
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -53,11 +48,11 @@ import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.ConvolutionKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
+import org.dayflower.pathtracer.math.Angle;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
-import org.dayflower.pathtracer.util.FPSCounter;
 
 /**
  * An implementation of {@link AbstractApplication} that performs Path Tracing, Ray Casting or Ray Marching.
@@ -70,7 +65,9 @@ public final class TestApplication extends AbstractApplication implements Camera
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private final AtomicBoolean hasRequestedToExit = new AtomicBoolean();
+	private AbstractRendererKernel abstractRendererKernel;
+	private final AtomicInteger renderPass = new AtomicInteger();
+	private final AtomicLong currentTimeMillis = new AtomicLong(System.currentTimeMillis());
 	private byte[] pixels;
 	private final Camera camera = new Camera();
 	private ConvolutionKernel convolutionKernel;
@@ -78,7 +75,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	private final Label labelRenderPass = new Label("Pass: 0");
 	private final Label labelRenderTime = new Label("Time: 00:00:00");
 	private final Label labelSPS = new Label("SPS: 00000000");
-	private AbstractRendererKernel abstractRendererKernel;
+	private Range range;
 	private final Setting settingFilterBlur = new Setting("Filter.Blur");
 	private final Setting settingFilterDetectEdges = new Setting("Filter.DetectEdges");
 	private final Setting settingFilterEmboss = new Setting("Filter.Emboss");
@@ -108,7 +105,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	@Override
 	protected void doConfigureMenuBar(final MenuBar menuBar) {
 //		Create the "File" Menu:
-		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> this.hasRequestedToExit.set(true));
+		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> exit());
 		
 		final Menu menuFile = JavaFX.newMenu("File", menuItemExit);
 		
@@ -187,6 +184,11 @@ public final class TestApplication extends AbstractApplication implements Camera
 	protected void doConfigurePixels(final byte[] pixels) {
 		this.pixels = pixels;
 		this.convolutionKernel = new ConvolutionKernel(pixels, getKernelWidth(), getKernelHeight());
+		this.range = Range.create(getKernelWidth() * getKernelHeight());
+		this.abstractRendererKernel.updateLocalVariables(this.range.getLocalSize(0));
+		this.abstractRendererKernel.compile(this.pixels, getKernelWidth(), getKernelHeight());
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(this::onExit));
 	}
 	
 	/**
@@ -221,8 +223,8 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, this.camera.getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
 		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, this.camera.getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
 		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, this.camera.getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
-		final Slider sliderPitch = JavaFX.newSlider(-PI_DIVIDED_BY_TWO + 0.05F, PI_DIVIDED_BY_TWO + 0.05F, this.camera.getPitch(), 0.2D, 0.5D, true, true, false, this::doOnSliderPitch);
-		final Slider sliderYaw = JavaFX.newSlider(0.0D, PI_MULTIPLIED_BY_TWO, this.camera.getPitch(), 0.2D, 0.5D, true, true, false, this::doOnSliderYaw);
+		final Slider sliderPitch = JavaFX.newSlider(-90.0F, 90.0F, this.camera.getPitch().degrees, 10.0D, 20.0D, true, true, false, this::doOnSliderPitch);
+		final Slider sliderYaw = JavaFX.newSlider(0.0D, 360.0F, this.camera.getYaw().degrees, 20.0D, 40.0D, true, true, false, this::doOnSliderYaw);
 		
 		this.sliderPitch = sliderPitch;
 		this.sliderYaw = sliderYaw;
@@ -346,13 +348,27 @@ public final class TestApplication extends AbstractApplication implements Camera
 		camera.setCenter(55.0F, 42.0F, 155.6F);
 		camera.setFieldOfViewX(70.0F);
 		camera.setFocalDistance(30.0F);
-		camera.setPitch(0.0F);
+		camera.setPitch(Angle.DEGREES_0);
 		camera.setRadius(16.0F);
 		camera.setResolution(getKernelWidth(), getKernelHeight());
 		camera.setWalkLockEnabled(true);
-		camera.setYaw(0.0F);
+		camera.setYaw(Angle.DEGREES_0);
 		camera.update();
 		camera.addCameraObserver(this);
+	}
+	
+	@Override
+	protected void onExit() {
+		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
+		final ConvolutionKernel convolutionKernel = this.convolutionKernel;
+		
+		if(abstractRendererKernel != null) {
+			abstractRendererKernel.dispose();
+		}
+		
+		if(convolutionKernel != null) {
+			convolutionKernel.dispose();
+		}
 	}
 	
 	/**
@@ -363,8 +379,8 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void onMouseDragged(final float x, final float y) {
-		this.camera.changeYaw(x * 0.005F);
-		this.camera.changePitch(-(y * 0.005F));
+		this.camera.changeYaw(Angle.degrees(x * 0.5F));
+		this.camera.changePitch(Angle.degrees(-(y * 0.5F), -90.0F, 90.0F));
 	}
 	
 	/**
@@ -376,20 +392,20 @@ public final class TestApplication extends AbstractApplication implements Camera
 	@Override
 	protected void onMouseMoved(final float x, final float y) {
 		if(isRecenteringMouse()) {
-			this.camera.changeYaw(x * 0.005F);
-			this.camera.changePitch(-(y * 0.005F));
+			this.camera.changeYaw(Angle.degrees(x * 0.5F));
+			this.camera.changePitch(Angle.degrees(-(y * 0.5F), -90.0F, 90.0F));
 		}
 	}
 	
 	@Override
-	public void pitchChanged(final Camera camera, final float pitch) {
+	public void pitchChanged(final Camera camera, final Angle pitch) {
 		final Slider sliderPitch = this.sliderPitch;
 		
 		if(sliderPitch != null) {
 			if(Platform.isFxApplicationThread()) {
-				sliderPitch.setValue(pitch);
+				sliderPitch.setValue(pitch.degrees);
 			} else {
-				Platform.runLater(() -> sliderPitch.setValue(pitch));
+				Platform.runLater(() -> sliderPitch.setValue(pitch.degrees));
 			}
 		}
 	}
@@ -398,195 +414,154 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 * Called when rendering.
 	 */
 	@Override
-	public void run() {
-		final AtomicInteger renderPass = new AtomicInteger();
-		
-		final AtomicLong currentTimeMillis = new AtomicLong(System.currentTimeMillis());
-		
-		final Camera camera = this.camera;
-		
-		final FPSCounter fPSCounter = getFPSCounter();
-		
-		final Range range = Range.create(getKernelWidth() * getKernelHeight());
-		
-		final
-		AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
-		abstractRendererKernel.updateLocalVariables(range.getLocalSize(0));
-		abstractRendererKernel.compile(this.pixels, getKernelWidth(), getKernelHeight());
+	public void render() {
+		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
 		
 		final ConvolutionKernel convolutionKernel = this.convolutionKernel;
 		
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			abstractRendererKernel.dispose();
-			
-			convolutionKernel.dispose();
-		}));
+		final Range range = this.range;
 		
-		while(true) {
-			if(this.hasRequestedToExit.get()) {
-				if(hasEntered()) {
-					this.hasRequestedToExit.set(false);
-					
-					leave();
+		abstractRendererKernel.execute(range);
+		
+		getFPSCounter().update();
+		
+		abstractRendererKernel.get(abstractRendererKernel.getPixels());
+		
+		if(this.settingFilterBlur.isEnabled()) {
+			convolutionKernel.update();
+			convolutionKernel.enableBlur();
+			convolutionKernel.execute(range);
+		}
+		
+		if(this.settingFilterDetectEdges.isEnabled()) {
+			convolutionKernel.update();
+			convolutionKernel.enableDetectEdges();
+			convolutionKernel.execute(range);
+		}
+		
+		if(this.settingFilterEmboss.isEnabled()) {
+			convolutionKernel.update();
+			convolutionKernel.enableEmboss();
+			convolutionKernel.execute(range);
+		}
+		
+		if(this.settingFilterGradientHorizontal.isEnabled()) {
+			convolutionKernel.update();
+			convolutionKernel.enableGradientHorizontal();
+			convolutionKernel.execute(range);
+		}
+		
+		if(this.settingFilterGradientVertical.isEnabled()) {
+			convolutionKernel.update();
+			convolutionKernel.enableGradientVertical();
+			convolutionKernel.execute(range);
+		}
+		
+		if(this.settingFilterSharpen.isEnabled()) {
+			convolutionKernel.update();
+			convolutionKernel.enableSharpen();
+			convolutionKernel.execute(range);
+		}
+		
+		final int renderPass = this.renderPass.incrementAndGet();
+		
+		final long elapsedTimeMillis = System.currentTimeMillis() - this.currentTimeMillis.get();
+		final long fPS = getFPSCounter().getFPS();
+		final long sPS = fPS * getKernelWidth() * getKernelHeight();
+		
+		final long hours = elapsedTimeMillis / (60L * 60L * 1000L);
+		final long minutes = (elapsedTimeMillis - (hours * 60L * 60L * 1000L)) / (60L * 1000L);
+		final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
+		
+		this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
+		this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass)));
+		this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
+		this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));
+	}
+	
+	/**
+	 * Called when updating.
+	 */
+	@Override
+	protected void update() {
+		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
+		
+		final Camera camera = this.camera;
+		
+		final float velocity = abstractRendererKernel.isRayMarching() ? 1.0F : 250.0F;
+		final float movement = getFPSCounter().getFrameTimeMillis() / 1000.0F * velocity;
+		
+		if(isKeyPressed(KeyCode.A)) {
+			camera.strafe(-movement);
+		}
+		
+		if(isKeyPressed(KeyCode.D)) {
+			camera.strafe(movement);
+		}
+		
+		if(isKeyPressed(KeyCode.E)) {
+			camera.changeAltitude(-0.5F);
+		}
+		
+		if(isKeyPressed(KeyCode.ENTER, true) && !hasEntered()) {
+			enter();
+		}
+		
+		if(isKeyPressed(KeyCode.ESCAPE, true)) {
+			exit();
+		}
+		
+		if(isKeyPressed(KeyCode.Q)) {
+			camera.changeAltitude(0.5F);
+		}
+		
+		if(isKeyPressed(KeyCode.R, true)) {
+			final int mouseX = getMouseX();
+			final int mouseY = getMouseY();
+			final int index = mouseY * getKernelWidth() + mouseX;
+			
+			final int[] shapeOffsetsForPrimaryRay = abstractRendererKernel.getShapeOffsetsForPrimaryRay();
+			
+			if(index >= 0 && index < shapeOffsetsForPrimaryRay.length) {
+				final int selectedShapeIndex = shapeOffsetsForPrimaryRay[index];
+				
+				if(selectedShapeIndex == abstractRendererKernel.getSelectedShapeIndex()) {
+					abstractRendererKernel.setSelectedShapeIndex(-1);
 				} else {
-					abstractRendererKernel.dispose();
-					
-					convolutionKernel.dispose();
-					
-					Platform.exit();
-					
-					break;
+					abstractRendererKernel.setSelectedShapeIndex(selectedShapeIndex);
 				}
 			}
+		}
+		
+		if(isKeyPressed(KeyCode.S)) {
+			camera.forward(-movement);
+		}
+		
+		if(isKeyPressed(KeyCode.W)) {
+			camera.forward(movement);
+		}
+		
+		if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
+			camera.resetUpdateStatus();
 			
-			final float velocity = abstractRendererKernel.isRayMarching() ? 1.0F : 250.0F;
-			final float movement = fPSCounter.getFrameTimeMillis() / 1000.0F * velocity;
+			abstractRendererKernel.updateResetStatus();
+			abstractRendererKernel.reset();
 			
-			if(isKeyPressed(KeyCode.A)) {
-				camera.strafe(-movement);
-			}
+			this.renderPass.set(0);
 			
-			if(isKeyPressed(KeyCode.D)) {
-				camera.strafe(movement);
-			}
-			
-			if(isKeyPressed(KeyCode.E)) {
-				camera.changeAltitude(-0.5F);
-			}
-			
-			if(isKeyPressed(KeyCode.ENTER, true) && !hasEntered()) {
-				enter();
-			}
-			
-			if(isKeyPressed(KeyCode.ESCAPE, true)) {
-				this.hasRequestedToExit.set(true);
-			}
-			
-			if(isKeyPressed(KeyCode.Q)) {
-				camera.changeAltitude(0.5F);
-			}
-			
-			if(isKeyPressed(KeyCode.R, true)) {
-				final int mouseX = getMouseX();
-				final int mouseY = getMouseY();
-				final int index = mouseY * getKernelWidth() + mouseX;
-				
-				final int[] shapeOffsetsForPrimaryRay = abstractRendererKernel.getShapeOffsetsForPrimaryRay();
-				
-				if(index >= 0 && index < shapeOffsetsForPrimaryRay.length) {
-					final int selectedShapeIndex = shapeOffsetsForPrimaryRay[index];
-					
-					if(selectedShapeIndex == abstractRendererKernel.getSelectedShapeIndex()) {
-						abstractRendererKernel.setSelectedShapeIndex(-1);
-					} else {
-						abstractRendererKernel.setSelectedShapeIndex(selectedShapeIndex);
-					}
-				}
-			}
-			
-			if(isKeyPressed(KeyCode.S)) {
-				camera.forward(-movement);
-			}
-			
-			if(isKeyPressed(KeyCode.W)) {
-				camera.forward(movement);
-			}
-			
-			if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
-				camera.resetUpdateStatus();
-				
-				abstractRendererKernel.updateResetStatus();
-				abstractRendererKernel.reset();
-				
-				renderPass.set(0);
-				
-				currentTimeMillis.set(System.currentTimeMillis());
-			}
-			
-			final
-			Lock lock = getLock();
-			lock.lock();
-			
-			try {
-				abstractRendererKernel.execute(range);
-				
-				fPSCounter.update();
-				
-				abstractRendererKernel.get(abstractRendererKernel.getPixels());
-				
-				if(this.settingFilterBlur.isEnabled()) {
-					convolutionKernel.update();
-					convolutionKernel.enableBlur();
-					convolutionKernel.execute(range);
-				}
-				
-				if(this.settingFilterDetectEdges.isEnabled()) {
-					convolutionKernel.update();
-					convolutionKernel.enableDetectEdges();
-					convolutionKernel.execute(range);
-				}
-				
-				if(this.settingFilterEmboss.isEnabled()) {
-					convolutionKernel.update();
-					convolutionKernel.enableEmboss();
-					convolutionKernel.execute(range);
-				}
-				
-				if(this.settingFilterGradientHorizontal.isEnabled()) {
-					convolutionKernel.update();
-					convolutionKernel.enableGradientHorizontal();
-					convolutionKernel.execute(range);
-				}
-				
-				if(this.settingFilterGradientVertical.isEnabled()) {
-					convolutionKernel.update();
-					convolutionKernel.enableGradientVertical();
-					convolutionKernel.execute(range);
-				}
-				
-				if(this.settingFilterSharpen.isEnabled()) {
-					convolutionKernel.update();
-					convolutionKernel.enableSharpen();
-					convolutionKernel.execute(range);
-				}
-			} finally {
-				lock.unlock();
-			}
-			
-			final int renderPass0 = renderPass.incrementAndGet();
-			
-			final long elapsedTimeMillis = System.currentTimeMillis() - currentTimeMillis.get();
-			final long fPS = fPSCounter.getFPS();
-			final long sPS = fPS * getKernelWidth() * getKernelHeight();
-			
-			Platform.runLater(() -> {
-				final long hours = elapsedTimeMillis / (60L * 60L * 1000L);
-				final long minutes = (elapsedTimeMillis - (hours * 60L * 60L * 1000L)) / (60L * 1000L);
-				final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
-				
-				this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
-				this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass0)));
-				this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
-				this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));
-			});
-			
-			try {
-				Thread.sleep(1L);
-			} catch(final InterruptedException e) {
-//				Do nothing.
-			}
+			this.currentTimeMillis.set(System.currentTimeMillis());
 		}
 	}
 	
 	@Override
-	public void yawChanged(final Camera camera, final float yaw) {
+	public void yawChanged(final Camera camera, final Angle yaw) {
 		final Slider sliderYaw = this.sliderYaw;
 		
 		if(sliderYaw != null) {
 			if(Platform.isFxApplicationThread()) {
-				sliderYaw.setValue(yaw);
+				sliderYaw.setValue(yaw.degrees);
 			} else {
-				Platform.runLater(() -> sliderYaw.setValue(yaw));
+				Platform.runLater(() -> sliderYaw.setValue(yaw.degrees));
 			}
 		}
 	}
@@ -646,7 +621,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderPitch(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setPitch(newValue.floatValue());
+		this.camera.setPitch(Angle.degrees(newValue.floatValue(), -90.0F, 90.0F));
 	}
 	
 	@SuppressWarnings("unused")
@@ -675,6 +650,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderYaw(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setYaw(newValue.floatValue());
+		this.camera.setYaw(Angle.degrees(newValue.floatValue()));
 	}
 }

@@ -25,11 +25,10 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
@@ -58,7 +57,7 @@ import org.dayflower.pathtracer.util.FPSCounter;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public abstract class AbstractApplication extends Application implements Runnable {
+public abstract class AbstractApplication extends Application {
 	/**
 	 * The default canvas height.
 	 */
@@ -85,6 +84,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private final AtomicBoolean hasRequestedToExit = new AtomicBoolean();
 	private final AtomicBoolean hasUpdatedCursor = new AtomicBoolean();
 	private final AtomicBoolean isCursorHidden = new AtomicBoolean();
 	private final AtomicBoolean isDraggingMouse = new AtomicBoolean();
@@ -109,7 +109,6 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	private final boolean[] isKeyPressedOnce = new boolean[KeyCode.values().length];
 	private Canvas canvas;
 	private final FPSCounter fPSCounter = new FPSCounter();
-	private final Lock lock = new ReentrantLock();
 	private Robot robot;
 	private final String title;
 	
@@ -141,6 +140,11 @@ public abstract class AbstractApplication extends Application implements Runnabl
 //	TODO: Add Javadocs!
 	protected final boolean hasEntered() {
 		return isCursorHidden() || isRecenteringMouse();
+	}
+	
+//	TODO: Add Javadocs!
+	protected final boolean hasRequestedToExit() {
+		return this.hasRequestedToExit.get();
 	}
 	
 	/**
@@ -296,13 +300,9 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		return this.mouseY.get();
 	}
 	
-	/**
-	 * Returns the {@code Lock} associated with this {@code AbstractApplication}.
-	 * 
-	 * @return the {@code Lock} associated with this {@code AbstractApplication}
-	 */
-	protected final Lock getLock() {
-		return this.lock;
+//	TODO: Add Javadocs!
+	protected final void exit() {
+		this.hasRequestedToExit.set(true);
 	}
 	
 	/**
@@ -345,6 +345,9 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		setRecenteringMouse(false);
 	}
 	
+//	TODO: Add Javadocs!
+	protected abstract void onExit();
+	
 	/**
 	 * Called when the mouse is dragged.
 	 * 
@@ -360,6 +363,11 @@ public abstract class AbstractApplication extends Application implements Runnabl
 	 * @param y the new Y-coordinate
 	 */
 	protected abstract void onMouseMoved(final float x, final float y);
+	
+	/**
+	 * Called when rendering.
+	 */
+	protected abstract void render();
 	
 	/**
 	 * Sets a new canvas height.
@@ -470,6 +478,7 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		
 		final PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraPreInstance();
 		
+		final AtomicBoolean hasRequestedToExit = this.hasRequestedToExit;
 		final AtomicBoolean hasUpdatedCursor = this.hasUpdatedCursor;
 		
 		final WritableImage writableImage = new WritableImage(getKernelWidth(), getKernelHeight());
@@ -490,32 +499,44 @@ public abstract class AbstractApplication extends Application implements Runnabl
 		new AnimationTimer() {
 			@Override
 			public void handle(final long now) {
+				if(hasRequestedToExit()) {
+					if(hasEntered()) {
+						hasRequestedToExit.set(false);
+						
+						leave();
+					} else {
+						onExit();
+						
+						Platform.exit();
+						
+						return;
+					}
+				}
+				
+				update();
+				render();
+				
 				if(hasUpdatedCursor.compareAndSet(true, false)) {
 					scene.setCursor(isCursorHidden() ? Cursor.NONE : Cursor.DEFAULT);
 				}
 				
-				final
-				Lock lock = getLock();
-				lock.lock();
-				
-				try {
-					if(pixelWriter != null) {
-						pixelWriter.setPixels(0, 0, getKernelWidth(), getKernelHeight(), pixelFormat, byteBuffer, getKernelWidth() * 4);
-					}
-					
-					final WritableImage writableImage = imageView.snapshot(null, null);
-					
-					final
-					GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-					graphicsContext.drawImage(writableImage, 0.0D, 0.0D, getCanvasWidth(), getCanvasHeight());
-				} finally {
-					lock.unlock();
+				if(pixelWriter != null) {
+					pixelWriter.setPixels(0, 0, getKernelWidth(), getKernelHeight(), pixelFormat, byteBuffer, getKernelWidth() * 4);
 				}
+				
+				final WritableImage writableImage = imageView.snapshot(null, null);
+				
+				final
+				GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+				graphicsContext.drawImage(writableImage, 0.0D, 0.0D, getCanvasWidth(), getCanvasHeight());
 			}
 		}.start();
-		
-		new Thread(this).start();
 	}
+	
+	/**
+	 * Called when updating.
+	 */
+	protected abstract void update();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

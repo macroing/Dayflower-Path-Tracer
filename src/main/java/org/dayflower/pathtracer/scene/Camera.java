@@ -18,8 +18,6 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import static org.dayflower.pathtracer.math.Math2.PI_DIVIDED_BY_TWO;
-import static org.dayflower.pathtracer.math.Math2.PI_MULTIPLIED_BY_TWO;
 import static org.dayflower.pathtracer.math.Math2.atan;
 import static org.dayflower.pathtracer.math.Math2.cos;
 import static org.dayflower.pathtracer.math.Math2.max;
@@ -34,6 +32,8 @@ import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import org.dayflower.pathtracer.math.Angle;
 
 //TODO: Add Javadocs.
 public final class Camera {
@@ -135,13 +135,14 @@ public final class Camera {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private Angle pitch;
+	private Angle yaw;
 	private boolean hasUpdated;
 	private boolean isWalkLockEnabled;
 	private CameraPredicate cameraPredicate;
 	private float centerX;
 	private float centerY;
 	private float centerZ;
-	private float pitch;
 	private float radius;
 	private float viewDirectionX;
 	private float viewDirectionY;
@@ -149,7 +150,6 @@ public final class Camera {
 	private float walkDirectionX;
 	private float walkDirectionY;
 	private float walkDirectionZ;
-	private float yaw;
 	private final float[] array;
 	private final List<CameraObserver> cameraObservers;
 	
@@ -171,11 +171,11 @@ public final class Camera {
 		setCenter(55.0F, 42.0F, 155.6F);
 		setFieldOfViewX(40.0F);
 		setFocalDistance(30.0F);
-		setPitch(0.0F);
+		setPitch(Angle.DEGREES_0);
 		setRadius(4.0F);
 		setResolution(800.0F, 800.0F);
 		setWalkLockEnabled(true);
-		setYaw(0.0F);
+		setYaw(Angle.DEGREES_0);
 		
 		update();
 	}
@@ -194,6 +194,16 @@ public final class Camera {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public Angle getPitch() {
+		return this.pitch;
+	}
+	
+//	TODO: Add Javadocs.
+	public Angle getYaw() {
+		return this.yaw;
+	}
 	
 //	TODO: Add Javadocs.
 	public boolean hasUpdated() {
@@ -316,11 +326,6 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public float getPitch() {
-		return this.pitch;
-	}
-	
-//	TODO: Add Javadocs.
 	public float getRadius() {
 		return this.radius;
 	}
@@ -378,11 +383,6 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public float getWalkDirectionZ() {
 		return this.walkDirectionZ;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getYaw() {
-		return this.yaw;
 	}
 	
 //	TODO: Add Javadocs.
@@ -462,8 +462,12 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void changePitch(final float pitch) {
-		setPitch(getPitch() + pitch);
+	public void changePitch(final Angle pitch) {
+		final float degrees0 = this.pitch.degrees;
+		final float degrees1 = pitch.degrees;
+		final float degrees2 = degrees0 + degrees1 < -90.0F ? -90.0F : degrees0 + degrees1 > 90.0F ? 90.0F : degrees0 + degrees1;
+		
+		setPitch(Angle.degrees(degrees2, -90.0F, 90.0F));
 	}
 	
 //	TODO: Add Javadocs.
@@ -472,8 +476,8 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void changeYaw(final float yaw) {
-		setYaw(getYaw() + yaw);
+	public void changeYaw(final Angle yaw) {
+		setYaw(getYaw().add(yaw));
 	}
 	
 //	TODO: Add Javadocs.
@@ -497,8 +501,8 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public void rotateRight(final float distance) {
-		final float yaw = getYaw() + distance;
-		final float pitch = getPitch();
+		final float yaw = getYaw().radians + distance;
+		final float pitch = getPitch().radians;
 		final float x = sin(yaw) * cos(pitch);
 		final float y = sin(pitch);
 		final float z = cos(yaw) * cos(pitch);
@@ -581,8 +585,8 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void setPitch(final float pitch) {
-		this.pitch = max(min(pitch, PI_DIVIDED_BY_TWO + 0.05F), -PI_DIVIDED_BY_TWO + 0.05F);
+	public void setPitch(final Angle pitch) {
+		this.pitch = Angle.degrees(pitch.degrees < -90.0F ? -90.0F : pitch.degrees > 90.0F ? 90.0F : pitch.degrees, -90.0F, 90.0F);
 		this.hasUpdated = true;
 		this.cameraObservers.forEach(cameraObserver -> cameraObserver.pitchChanged(this, this.pitch));
 	}
@@ -640,8 +644,8 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void setYaw(final float yaw) {
-		this.yaw = yaw % PI_MULTIPLIED_BY_TWO;
+	public void setYaw(final Angle yaw) {
+		this.yaw = Objects.requireNonNull(yaw, "yaw == null");
 		this.hasUpdated = true;
 		this.cameraObservers.forEach(cameraObserver -> cameraObserver.yawChanged(this, this.yaw));
 	}
@@ -681,8 +685,8 @@ public final class Camera {
 		
 //		final float radius = getRadius();
 		
-		final float pitch = getPitch();
-		final float yaw = getYaw();
+		final float pitch = getPitch().radians;
+		final float yaw = getYaw().radians;
 		
 		final float direction0X = sin(yaw) * cos(pitch);
 		final float direction0Y = sin(pitch);

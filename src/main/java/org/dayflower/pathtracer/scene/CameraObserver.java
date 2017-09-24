@@ -18,11 +18,13 @@
  */
 package org.dayflower.pathtracer.scene;
 
+import org.dayflower.pathtracer.math.Angle;
+
 //TODO: Add Javadocs.
 public interface CameraObserver {
 //	TODO: Add Javadocs.
-	void pitchChanged(final Camera camera, final float pitch);
+	void pitchChanged(final Camera camera, final Angle pitch);
 	
 //	TODO: Add Javadocs.
-	void yawChanged(final Camera camera, final float yaw);
+	void yawChanged(final Camera camera, final Angle yaw);
 }
