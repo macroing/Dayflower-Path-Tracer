@@ -87,8 +87,8 @@ public abstract class AbstractApplication extends Application {
 	private final AtomicBoolean hasRequestedToExit = new AtomicBoolean();
 	private final AtomicBoolean hasUpdatedCursor = new AtomicBoolean();
 	private final AtomicBoolean isCursorHidden = new AtomicBoolean();
-	private final AtomicBoolean isDraggingMouse = new AtomicBoolean();
-	private final AtomicBoolean isRecenteringMouse = new AtomicBoolean();
+	private final AtomicBoolean isMouseDragging = new AtomicBoolean();
+	private final AtomicBoolean isMouseRecentering = new AtomicBoolean();
 	private final AtomicInteger canvasHeight = new AtomicInteger(CANVAS_HEIGHT);
 	private final AtomicInteger canvasWidth = new AtomicInteger(CANVAS_WIDTH);
 	private final AtomicInteger kernelHeight = new AtomicInteger(KERNEL_HEIGHT);
@@ -96,10 +96,10 @@ public abstract class AbstractApplication extends Application {
 	private final AtomicInteger keysPressed = new AtomicInteger();
 	private final AtomicInteger mouseDraggedDeltaX = new AtomicInteger();
 	private final AtomicInteger mouseDraggedDeltaY = new AtomicInteger();
-	private final AtomicInteger mouseMovedDeltaX = new AtomicInteger();
-	private final AtomicInteger mouseMovedDeltaY = new AtomicInteger();
 	private final AtomicInteger mouseDraggedX = new AtomicInteger();
 	private final AtomicInteger mouseDraggedY = new AtomicInteger();
+	private final AtomicInteger mouseMovedDeltaX = new AtomicInteger();
+	private final AtomicInteger mouseMovedDeltaY = new AtomicInteger();
 	private final AtomicInteger mouseMovedX = new AtomicInteger();
 	private final AtomicInteger mouseMovedY = new AtomicInteger();
 	private final AtomicInteger mouseX = new AtomicInteger();
@@ -110,320 +110,17 @@ public abstract class AbstractApplication extends Application {
 	private Canvas canvas;
 	private final FPSCounter fPSCounter = new FPSCounter();
 	private Robot robot;
-	private final String title;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
 	 * Constructs a new {@code AbstractApplication} with no title.
-	 * <p>
-	 * Calling this constructor is equivalent to calling {@code AbstractApplication("")}.
 	 */
 	protected AbstractApplication() {
-		this("");
-	}
-	
-	/**
-	 * Constructs a new {@code AbstractApplication} with a title of {@code title}.
-	 * <p>
-	 * If {@code title} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param title the title to use
-	 * @throws NullPointerException thrown if, and only if, {@code title} is {@code null}
-	 */
-	protected AbstractApplication(final String title) {
-		this.title = Objects.requireNonNull(title, "title == null");
+		
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-//	TODO: Add Javadocs!
-	protected final boolean hasEntered() {
-		return isCursorHidden() || isRecenteringMouse();
-	}
-	
-//	TODO: Add Javadocs!
-	protected final boolean hasRequestedToExit() {
-		return this.hasRequestedToExit.get();
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, the cursor is hidden, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, the cursor is hidden, {@code false} otherwise
-	 */
-	protected final boolean isCursorHidden() {
-		return this.isCursorHidden.get();
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, the mouse is being dragged, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, the mouse is being dragged, {@code false} otherwise
-	 */
-	protected final boolean isDraggingMouse() {
-		return this.isDraggingMouse.get();
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise.
-	 * <p>
-	 * Calling this method is equivalent to calling {@code isKeyPressed(keyCode, false)}.
-	 * <p>
-	 * If {@code keyCode} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param keyCode a {@code KeyCode}
-	 * @return {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise
-	 * @throws NullPointerException thrown if, and only if, {@code keyCode} is {@code null}
-	 */
-	protected final boolean isKeyPressed(final KeyCode keyCode) {
-		return isKeyPressed(keyCode, false);
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise.
-	 * <p>
-	 * If {@code isKeyPressedOnce} is {@code true}, only the first call to this method will return {@code true} per press-release cycle given a specific key.
-	 * <p>
-	 * If {@code keyCode} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param keyCode a {@code KeyCode}
-	 * @param isKeyPressedOnce {@code true} if, and only if, a key press should occur at most one time per press-release cycle, {@code false} otherwise
-	 * @return {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise
-	 * @throws NullPointerException thrown if, and only if, {@code keyCode} is {@code null}
-	 */
-	protected final boolean isKeyPressed(final KeyCode keyCode, final boolean isKeyPressedOnce) {
-		final boolean isKeyPressed = this.isKeyPressed[keyCode.ordinal()];
-		
-		if(isKeyPressedOnce) {
-			final boolean isKeyPressedOnce0 = this.isKeyPressedOnce[keyCode.ordinal()];
-			
-			if(isKeyPressed && !isKeyPressedOnce0) {
-				this.isKeyPressedOnce[keyCode.ordinal()] = true;
-				
-				return true;
-			}
-			
-			return false;
-		}
-		
-		return isKeyPressed;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, the mouse is being moved, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, the mouse is being moved, {@code false} otherwise
-	 */
-	protected final boolean isMovingMouse() {
-		return System.currentTimeMillis() - this.mouseMovementTime.get() <= MOUSE_MOVEMENT_TIMEOUT;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, at least one key is being pressed, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, at least one key is being pressed, {@code false} otherwise
-	 */
-	protected final boolean isPressingKey() {
-		return this.keysPressed.get() > 0;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, mouse re-centering is being performed, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, mouse re-centering is being performed, {@code false} otherwise
-	 */
-	protected final boolean isRecenteringMouse() {
-		return this.isRecenteringMouse.get();
-	}
-	
-	/**
-	 * Returns the {@link FPSCounter} associated with this {@code AbstractApplication}.
-	 * 
-	 * @return the {@code FPSCounter} associated with this {@code AbstractApplication}
-	 */
-	protected final FPSCounter getFPSCounter() {
-		return this.fPSCounter;
-	}
-	
-	/**
-	 * Returns the canvas height.
-	 * 
-	 * @return the canvas height
-	 */
-	protected final int getCanvasHeight() {
-		return this.canvasHeight.get();
-	}
-	
-	/**
-	 * Returns the canvas width.
-	 * 
-	 * @return the canvas width
-	 */
-	protected final int getCanvasWidth() {
-		return this.canvasWidth.get();
-	}
-	
-	/**
-	 * Returns the kernel height.
-	 * 
-	 * @return the kernel height
-	 */
-	protected final int getKernelHeight() {
-		return this.kernelHeight.get();
-	}
-	
-	/**
-	 * Returns the kernel width.
-	 * 
-	 * @return the kernel width
-	 */
-	protected final int getKernelWidth() {
-		return this.kernelWidth.get();
-	}
-	
-	/**
-	 * Returns the X-coordinate of the mouse.
-	 * 
-	 * @return the X-coordinate of the mouse
-	 */
-	protected final int getMouseX() {
-		return this.mouseX.get();
-	}
-	
-	/**
-	 * Returns the Y-coordinate of the mouse.
-	 * 
-	 * @return the Y-coordinate of the mouse
-	 */
-	protected final int getMouseY() {
-		return this.mouseY.get();
-	}
-	
-//	TODO: Add Javadocs!
-	protected final void exit() {
-		this.hasRequestedToExit.set(true);
-	}
-	
-	/**
-	 * Called when the {@code MenuBar} can be configured.
-	 * 
-	 * @param menuBar the {@code MenuBar} to configure
-	 */
-	protected abstract void doConfigureMenuBar(final MenuBar menuBar);
-	
-	/**
-	 * Called when pixels can be configured at start.
-	 * 
-	 * @param pixels a {@code byte} array with pixel data
-	 */
-	protected abstract void doConfigurePixels(final byte[] pixels);
-	
-	/**
-	 * Called when the status bar can be configured.
-	 * 
-	 * @param hBox a {@code HBox} that acts as a status bar
-	 */
-	protected abstract void doConfigureStatusBar(final HBox hBox);
-	
-	/**
-	 * Called when the {@code TabPane} can be configured.
-	 * 
-	 * @param tabPane the {@code TabPane} to configure
-	 */
-	protected abstract void doConfigureTabPane(final TabPane tabPane);
-	
-//	TODO: Add Javadocs!
-	protected final void enter() {
-		setCursorHidden(true);
-		setRecenteringMouse(true);
-	}
-	
-//	TODO: Add Javadocs!
-	protected final void leave() {
-		setCursorHidden(false);
-		setRecenteringMouse(false);
-	}
-	
-//	TODO: Add Javadocs!
-	protected abstract void onExit();
-	
-	/**
-	 * Called when the mouse is dragged.
-	 * 
-	 * @param x the new X-coordinate
-	 * @param y the new Y-coordinate
-	 */
-	protected abstract void onMouseDragged(final float x, final float y);
-	
-	/**
-	 * Called when the mouse is moved.
-	 * 
-	 * @param x the new X-coordinate
-	 * @param y the new Y-coordinate
-	 */
-	protected abstract void onMouseMoved(final float x, final float y);
-	
-	/**
-	 * Called when rendering.
-	 */
-	protected abstract void render();
-	
-	/**
-	 * Sets a new canvas height.
-	 * 
-	 * @param canvasHeight a new canvas height
-	 */
-	protected final void setCanvasHeight(final int canvasHeight) {
-		this.canvasHeight.set(canvasHeight);
-	}
-	
-	/**
-	 * Sets a new canvas width.
-	 * 
-	 * @param canvasWidth a new canvas width
-	 */
-	protected final void setCanvasWidth(final int canvasWidth) {
-		this.canvasWidth.set(canvasWidth);
-	}
-	
-	/**
-	 * Sets whether the cursor should be hidden or shown.
-	 * 
-	 * @param isCursorHidden {@code true} if, and only if, the cursor should be hidden, {@code false} otherwise
-	 */
-	protected final void setCursorHidden(final boolean isCursorHidden) {
-		if(this.isCursorHidden.compareAndSet(!isCursorHidden, isCursorHidden)) {
-			this.hasUpdatedCursor.set(true);
-		}
-	}
-	
-	/**
-	 * Sets a new kernel height.
-	 * 
-	 * @param kernelHeight a new kernel height
-	 */
-	protected final void setKernelHeight(final int kernelHeight) {
-		this.kernelHeight.set(kernelHeight);
-	}
-	
-	/**
-	 * Sets a new kernel width.
-	 * 
-	 * @param kernelWidth a new kernel width
-	 */
-	protected final void setKernelWidth(final int kernelWidth) {
-		this.kernelWidth.set(kernelWidth);
-	}
-	
-	/**
-	 * Sets the mouse re-centering.
-	 * 
-	 * @param isRecenteringMouse {@code true} if, and only if, mouse re-centering should be performed, {@code false} otherwise
-	 */
-	protected final void setRecenteringMouse(final boolean isRecenteringMouse) {
-		this.isRecenteringMouse.set(isRecenteringMouse);
-	}
 	
 	/**
 	 * Starts this {@code AbstractApplication} instance.
@@ -464,15 +161,15 @@ public abstract class AbstractApplication extends Application {
 		borderPane.setBottom(hBox);
 		borderPane.setLeft(tabPane);
 		
-		doConfigureMenuBar(menuBar);
-		doConfigureTabPane(tabPane);
-		doConfigureStatusBar(hBox);
+		configureMenuBar(menuBar);
+		configureTabPane(tabPane);
+		configureStatusBar(hBox);
+		configureStage(stage);
 		
 		final Scene scene = new Scene(borderPane);
 		
 		stage.setResizable(false);
 		stage.setScene(scene);
-		stage.setTitle(this.title);
 		stage.sizeToScene();
 		stage.show();
 		
@@ -492,7 +189,7 @@ public abstract class AbstractApplication extends Application {
 		imageView.setImage(writableImage);
 		imageView.setViewport(new Rectangle2D(0.0D, 0.0D, getKernelWidth(), getKernelHeight()));
 		
-		doConfigurePixels(pixels);
+		configurePixels(pixels);
 		
 		final Canvas canvas = this.canvas;
 		
@@ -532,11 +229,6 @@ public abstract class AbstractApplication extends Application {
 			}
 		}.start();
 	}
-	
-	/**
-	 * Called when updating.
-	 */
-	protected abstract void update();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -685,6 +377,340 @@ public abstract class AbstractApplication extends Application {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	/**
+	 * Returns {@code true} if, and only if, this {@code AbstractApplication} has been entered like an FPS-game, {@code false} otherwise.
+	 * <p>
+	 * To enter this {@code AbstractApplication} like an FPS-game, call {@link #enter()}.
+	 * <p>
+	 * If it has been entered like an FPS-game and you want to leave, call {@link #leave()}.
+	 * <p>
+	 * When it's been entered like an FPS-game, the cursor will be hidden and the mouse will be re-centering.
+	 * 
+	 * @return {@code true} if, and only if, this {@code AbstractApplication} has been entered like an FPS-game, {@code false} otherwise
+	 */
+	protected final boolean hasEntered() {
+		return isCursorHidden() || isMouseRecentering();
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, exit has been requested, {@code false} otherwise.
+	 * <p>
+	 * To request this {@code AbstractApplication} to exit, call {@link #exit}.
+	 * 
+	 * @return {@code true} if, and only if, exit has been requested, {@code false} otherwise
+	 */
+	protected final boolean hasRequestedToExit() {
+		return this.hasRequestedToExit.get();
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, the cursor is hidden, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the cursor is hidden, {@code false} otherwise
+	 */
+	protected final boolean isCursorHidden() {
+		return this.isCursorHidden.get();
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, at least one key is being pressed, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, at least one key is being pressed, {@code false} otherwise
+	 */
+	protected final boolean isKeyPressed() {
+		return this.keysPressed.get() > 0;
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code isKeyPressed(keyCode, false)}.
+	 * <p>
+	 * If {@code keyCode} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param keyCode a {@code KeyCode}
+	 * @return {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code keyCode} is {@code null}
+	 */
+	protected final boolean isKeyPressed(final KeyCode keyCode) {
+		return isKeyPressed(keyCode, false);
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise.
+	 * <p>
+	 * If {@code isKeyPressedOnce} is {@code true}, only the first call to this method will return {@code true} per press-release cycle given a specific key.
+	 * <p>
+	 * If {@code keyCode} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param keyCode a {@code KeyCode}
+	 * @param isKeyPressedOnce {@code true} if, and only if, a key press should occur at most one time per press-release cycle, {@code false} otherwise
+	 * @return {@code true} if, and only if, the key denoted by {@code keyCode} is being pressed, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code keyCode} is {@code null}
+	 */
+	protected final boolean isKeyPressed(final KeyCode keyCode, final boolean isKeyPressedOnce) {
+		final boolean isKeyPressed = this.isKeyPressed[keyCode.ordinal()];
+		
+		if(isKeyPressedOnce) {
+			final boolean isKeyPressedOnce0 = this.isKeyPressedOnce[keyCode.ordinal()];
+			
+			if(isKeyPressed && !isKeyPressedOnce0) {
+				this.isKeyPressedOnce[keyCode.ordinal()] = true;
+				
+				return true;
+			}
+			
+			return false;
+		}
+		
+		return isKeyPressed;
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, the mouse is being dragged, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the mouse is being dragged, {@code false} otherwise
+	 */
+	protected final boolean isMouseDragging() {
+		return this.isMouseDragging.get();
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, the mouse is being moved, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the mouse is being moved, {@code false} otherwise
+	 */
+	protected final boolean isMouseMoving() {
+		return System.currentTimeMillis() - this.mouseMovementTime.get() <= MOUSE_MOVEMENT_TIMEOUT;
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, mouse re-centering is being performed, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, mouse re-centering is being performed, {@code false} otherwise
+	 */
+	protected final boolean isMouseRecentering() {
+		return this.isMouseRecentering.get();
+	}
+	
+	/**
+	 * Returns the {@link FPSCounter} associated with this {@code AbstractApplication}.
+	 * 
+	 * @return the {@code FPSCounter} associated with this {@code AbstractApplication}
+	 */
+	protected final FPSCounter getFPSCounter() {
+		return this.fPSCounter;
+	}
+	
+	/**
+	 * Returns the canvas height.
+	 * 
+	 * @return the canvas height
+	 */
+	protected final int getCanvasHeight() {
+		return this.canvasHeight.get();
+	}
+	
+	/**
+	 * Returns the canvas width.
+	 * 
+	 * @return the canvas width
+	 */
+	protected final int getCanvasWidth() {
+		return this.canvasWidth.get();
+	}
+	
+	/**
+	 * Returns the kernel height.
+	 * 
+	 * @return the kernel height
+	 */
+	protected final int getKernelHeight() {
+		return this.kernelHeight.get();
+	}
+	
+	/**
+	 * Returns the kernel width.
+	 * 
+	 * @return the kernel width
+	 */
+	protected final int getKernelWidth() {
+		return this.kernelWidth.get();
+	}
+	
+	/**
+	 * Returns the X-coordinate of the mouse.
+	 * 
+	 * @return the X-coordinate of the mouse
+	 */
+	protected final int getMouseX() {
+		return this.mouseX.get();
+	}
+	
+	/**
+	 * Returns the Y-coordinate of the mouse.
+	 * 
+	 * @return the Y-coordinate of the mouse
+	 */
+	protected final int getMouseY() {
+		return this.mouseY.get();
+	}
+	
+	/**
+	 * Called when the {@code MenuBar} can be configured.
+	 * 
+	 * @param menuBar the {@code MenuBar} to configure
+	 */
+	protected abstract void configureMenuBar(final MenuBar menuBar);
+	
+	/**
+	 * Called when pixels can be configured at start.
+	 * 
+	 * @param pixels a {@code byte} array with pixel data
+	 */
+	protected abstract void configurePixels(final byte[] pixels);
+	
+	/**
+	 * Called when the primary {@code Stage} can be configured.
+	 * 
+	 * @param stage the primary {@code Stage} to configure
+	 */
+	protected abstract void configureStage(final Stage stage);
+	
+	/**
+	 * Called when the status bar can be configured.
+	 * 
+	 * @param hBox a {@code HBox} that acts as a status bar
+	 */
+	protected abstract void configureStatusBar(final HBox hBox);
+	
+	/**
+	 * Called when the {@code TabPane} can be configured.
+	 * 
+	 * @param tabPane the {@code TabPane} to configure
+	 */
+	protected abstract void configureTabPane(final TabPane tabPane);
+	
+	/**
+	 * Call this method when it's time to exit.
+	 * <p>
+	 * When this {@code AbstractApplication} is exiting, it will call {@link #onExit()} before finally exiting.
+	 * <p>
+	 * If this {@code AbstractApplication} has been entered like an FPS-game, it will leave this state instead of exiting. In this case you'll have to call this method twice in order to exit.
+	 */
+	protected final void exit() {
+		this.hasRequestedToExit.set(true);
+	}
+	
+	/**
+	 * Enters the FPS-game mode.
+	 * <p>
+	 * If you want to leave this FPS-game mode, call {@link #leave()}.
+	 */
+	protected final void enter() {
+		setCursorHidden(true);
+		setMouseRecentering(true);
+	}
+	
+	/**
+	 * Leaves the FPS-game mode.
+	 * <p>
+	 * If you want to enter this FPS-game mode, call {@link #enter()}.
+	 */
+	protected final void leave() {
+		setCursorHidden(false);
+		setMouseRecentering(false);
+	}
+	
+	/**
+	 * Called before this {@code AbstractApplication} is finally exiting.
+	 */
+	protected abstract void onExit();
+	
+	/**
+	 * Called when the mouse is dragged.
+	 * 
+	 * @param x the new X-coordinate
+	 * @param y the new Y-coordinate
+	 */
+	protected abstract void onMouseDragged(final float x, final float y);
+	
+	/**
+	 * Called when the mouse is moved.
+	 * 
+	 * @param x the new X-coordinate
+	 * @param y the new Y-coordinate
+	 */
+	protected abstract void onMouseMoved(final float x, final float y);
+	
+	/**
+	 * Called when rendering.
+	 */
+	protected abstract void render();
+	
+	/**
+	 * Sets a new canvas height.
+	 * 
+	 * @param canvasHeight a new canvas height
+	 */
+	protected final void setCanvasHeight(final int canvasHeight) {
+		this.canvasHeight.set(canvasHeight);
+	}
+	
+	/**
+	 * Sets a new canvas width.
+	 * 
+	 * @param canvasWidth a new canvas width
+	 */
+	protected final void setCanvasWidth(final int canvasWidth) {
+		this.canvasWidth.set(canvasWidth);
+	}
+	
+	/**
+	 * Sets whether the cursor should be hidden or shown.
+	 * 
+	 * @param isCursorHidden {@code true} if, and only if, the cursor should be hidden, {@code false} otherwise
+	 */
+	protected final void setCursorHidden(final boolean isCursorHidden) {
+		if(this.isCursorHidden.compareAndSet(!isCursorHidden, isCursorHidden)) {
+			this.hasUpdatedCursor.set(true);
+		}
+	}
+	
+	/**
+	 * Sets a new kernel height.
+	 * 
+	 * @param kernelHeight a new kernel height
+	 */
+	protected final void setKernelHeight(final int kernelHeight) {
+		this.kernelHeight.set(kernelHeight);
+	}
+	
+	/**
+	 * Sets a new kernel width.
+	 * 
+	 * @param kernelWidth a new kernel width
+	 */
+	protected final void setKernelWidth(final int kernelWidth) {
+		this.kernelWidth.set(kernelWidth);
+	}
+	
+	/**
+	 * Sets the mouse re-centering.
+	 * 
+	 * @param isMouseRecentering {@code true} if, and only if, mouse re-centering should be performed, {@code false} otherwise
+	 */
+	protected final void setMouseRecentering(final boolean isMouseRecentering) {
+		this.isMouseRecentering.set(isMouseRecentering);
+	}
+	
+	/**
+	 * Called when updating.
+	 */
+	protected abstract void update();
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private void doOnKeyPressed(final KeyEvent e) {
 		if(!this.isKeyPressed[e.getCode().ordinal()]) {
 			this.keysPressed.incrementAndGet();
@@ -733,7 +759,7 @@ public abstract class AbstractApplication extends Application {
 		
 		onMouseMoved(this.mouseMovedX.getAndSet(0), this.mouseMovedY.getAndSet(0));
 		
-		if(isRecenteringMouse()) {
+		if(isMouseRecentering()) {
 			final Bounds bounds = this.canvas.localToScreen(this.canvas.getBoundsInLocal());
 			
 			final int minX = (int)(bounds.getMinX());
@@ -754,14 +780,14 @@ public abstract class AbstractApplication extends Application {
 	}
 	
 	private void doOnMousePressed(final MouseEvent e) {
-		this.isDraggingMouse.set(true);
+		this.isMouseDragging.set(true);
 		this.mouseDraggedDeltaX.set((int)(e.getScreenX()));
 		this.mouseDraggedDeltaY.set((int)(e.getScreenY()));
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnMouseReleased(final MouseEvent e) {
-		this.isDraggingMouse.set(false);
+		this.isMouseDragging.set(false);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -39,6 +39,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import com.amd.aparapi.Range;
 
@@ -92,7 +93,93 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 * Constructs a new {@code TestApplication} instance.
 	 */
 	public TestApplication() {
-		super(String.format("%s %s", ENGINE_NAME, Dayflower.getVersion()));
+		
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Initializes this {@code TestApplication} instance.
+	 */
+	@Override
+	public void init() {
+		final Scene scene = Scenes.getSceneByName(Dayflower.getSceneName());
+		
+		final String sceneFilename = Dayflower.getSceneFilename(String.format("%s.scene", scene.getName()));
+		
+		final File sceneFile = new File(sceneFilename);
+		
+		if(!sceneFile.isFile() || Dayflower.getSceneCompile()) {
+			final
+			CompiledScene compiledScene = CompiledScene.compile(this.camera, scene);
+			compiledScene.write(sceneFile);
+			
+			try {
+				Thread.sleep(100L);
+			} catch(final InterruptedException e) {
+//				Do nothing.
+			}
+		}
+		
+		setCanvasWidth(Dayflower.getCanvasWidth());
+		setCanvasHeight(Dayflower.getCanvasHeight());
+		setKernelWidth(Dayflower.getKernelWidth());
+		setKernelHeight(Dayflower.getKernelHeight());
+		
+		this.abstractRendererKernel = new RendererKernel(false, getKernelWidth(), getKernelHeight(), this.camera, this.sky, sceneFilename, 1.0F);
+		
+		final
+		Camera camera = this.camera;
+		camera.setApertureRadius(0.0F);
+		camera.setCenter(55.0F, 42.0F, 155.6F);
+		camera.setFieldOfViewX(70.0F);
+		camera.setFocalDistance(30.0F);
+		camera.setPitch(Angle.DEGREES_0);
+		camera.setRadius(16.0F);
+		camera.setResolution(getKernelWidth(), getKernelHeight());
+		camera.setWalkLockEnabled(true);
+		camera.setYaw(Angle.DEGREES_0);
+		camera.update();
+		camera.addCameraObserver(this);
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(this::onExit));
+	}
+	
+	@Override
+	public void pitchChanged(final Camera camera, final Angle pitch) {
+		final Slider sliderPitch = this.sliderPitch;
+		
+		if(sliderPitch != null) {
+			if(Platform.isFxApplicationThread()) {
+				sliderPitch.setValue(pitch.degrees);
+			} else {
+				Platform.runLater(() -> sliderPitch.setValue(pitch.degrees));
+			}
+		}
+	}
+	
+	@Override
+	public void yawChanged(final Camera camera, final Angle yaw) {
+		final Slider sliderYaw = this.sliderYaw;
+		
+		if(sliderYaw != null) {
+			if(Platform.isFxApplicationThread()) {
+				sliderYaw.setValue(yaw.degrees);
+			} else {
+				Platform.runLater(() -> sliderYaw.setValue(yaw.degrees));
+			}
+		}
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Starts this program.
+	 * 
+	 * @param args the arguments to this program
+	 */
+	public static void main(final String[] args) {
+		launch(args);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +190,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 * @param menuBar the {@code MenuBar} to configure
 	 */
 	@Override
-	protected void doConfigureMenuBar(final MenuBar menuBar) {
+	protected void configureMenuBar(final MenuBar menuBar) {
 //		Create the "File" Menu:
 		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> exit());
 		
@@ -181,14 +268,22 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 * @param pixels a {@code byte} array with pixel data
 	 */
 	@Override
-	protected void doConfigurePixels(final byte[] pixels) {
+	protected void configurePixels(final byte[] pixels) {
 		this.pixels = pixels;
 		this.convolutionKernel = new ConvolutionKernel(pixels, getKernelWidth(), getKernelHeight());
 		this.range = Range.create(getKernelWidth() * getKernelHeight());
 		this.abstractRendererKernel.updateLocalVariables(this.range.getLocalSize(0));
 		this.abstractRendererKernel.compile(this.pixels, getKernelWidth(), getKernelHeight());
-		
-		Runtime.getRuntime().addShutdownHook(new Thread(this::onExit));
+	}
+	
+	/**
+	 * Called when the primary {@code Stage} can be configured.
+	 * 
+	 * @param stage the primary {@code Stage} to configure
+	 */
+	@Override
+	protected void configureStage(final Stage stage) {
+		stage.setTitle(String.format("%s %s", ENGINE_NAME, Dayflower.getVersion()));
 	}
 	
 	/**
@@ -197,7 +292,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 * @param hBox a {@code HBox} that acts as a status bar
 	 */
 	@Override
-	protected void doConfigureStatusBar(final HBox hBox) {
+	protected void configureStatusBar(final HBox hBox) {
 //		Create and add all sections to the bottom panel of the window:
 		final Region region0 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
 		final Region region1 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
@@ -212,7 +307,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 * @param tabPane the {@code TabPane} to configure
 	 */
 	@Override
-	protected void doConfigureTabPane(final TabPane tabPane) {
+	protected void configureTabPane(final TabPane tabPane) {
 //		Create the Tab with the Camera settings:
 		final Label labelFieldOfView = new Label("Field of View:");
 		final Label labelApertureRadius = new Label("Aperture Radius:");
@@ -312,51 +407,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 		tabPane.getSelectionModel().select(tabCamera);
 	}
 	
-	/**
-	 * Initializes this {@code TestApplication} instance.
-	 */
-	@Override
-	public void init() {
-		final Scene scene = Scenes.getSceneByName(Dayflower.getSceneName());
-		
-		final String sceneFilename = Dayflower.getSceneFilename(String.format("%s.scene", scene.getName()));
-		
-		final File sceneFile = new File(sceneFilename);
-		
-		if(!sceneFile.isFile() || Dayflower.getSceneCompile()) {
-			final
-			CompiledScene compiledScene = CompiledScene.compile(this.camera, scene);
-			compiledScene.write(sceneFile);
-			
-			try {
-				Thread.sleep(100L);
-			} catch(final InterruptedException e) {
-//				Do nothing.
-			}
-		}
-		
-		setCanvasWidth(Dayflower.getCanvasWidth());
-		setCanvasHeight(Dayflower.getCanvasHeight());
-		setKernelWidth(Dayflower.getKernelWidth());
-		setKernelHeight(Dayflower.getKernelHeight());
-		
-		this.abstractRendererKernel = new RendererKernel(false, getKernelWidth(), getKernelHeight(), this.camera, this.sky, sceneFilename, 1.0F);
-		
-		final
-		Camera camera = this.camera;
-		camera.setApertureRadius(0.0F);
-		camera.setCenter(55.0F, 42.0F, 155.6F);
-		camera.setFieldOfViewX(70.0F);
-		camera.setFocalDistance(30.0F);
-		camera.setPitch(Angle.DEGREES_0);
-		camera.setRadius(16.0F);
-		camera.setResolution(getKernelWidth(), getKernelHeight());
-		camera.setWalkLockEnabled(true);
-		camera.setYaw(Angle.DEGREES_0);
-		camera.update();
-		camera.addCameraObserver(this);
-	}
-	
 	@Override
 	protected void onExit() {
 		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
@@ -391,22 +441,9 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void onMouseMoved(final float x, final float y) {
-		if(isRecenteringMouse()) {
+		if(isMouseRecentering()) {
 			this.camera.changeYaw(Angle.degrees(x * 0.5F));
 			this.camera.changePitch(Angle.degrees(-(y * 0.5F), -90.0F, 90.0F));
-		}
-	}
-	
-	@Override
-	public void pitchChanged(final Camera camera, final Angle pitch) {
-		final Slider sliderPitch = this.sliderPitch;
-		
-		if(sliderPitch != null) {
-			if(Platform.isFxApplicationThread()) {
-				sliderPitch.setValue(pitch.degrees);
-			} else {
-				Platform.runLater(() -> sliderPitch.setValue(pitch.degrees));
-			}
 		}
 	}
 	
@@ -414,7 +451,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 * Called when rendering.
 	 */
 	@Override
-	public void render() {
+	protected void render() {
 		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
 		
 		final ConvolutionKernel convolutionKernel = this.convolutionKernel;
@@ -541,7 +578,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 			camera.forward(movement);
 		}
 		
-		if(isDraggingMouse() || isMovingMouse() && isRecenteringMouse() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
+		if(isMouseDragging() || isMouseMoving() && isMouseRecentering() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
 			camera.resetUpdateStatus();
 			
 			abstractRendererKernel.updateResetStatus();
@@ -551,30 +588,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 			
 			this.currentTimeMillis.set(System.currentTimeMillis());
 		}
-	}
-	
-	@Override
-	public void yawChanged(final Camera camera, final Angle yaw) {
-		final Slider sliderYaw = this.sliderYaw;
-		
-		if(sliderYaw != null) {
-			if(Platform.isFxApplicationThread()) {
-				sliderYaw.setValue(yaw.degrees);
-			} else {
-				Platform.runLater(() -> sliderYaw.setValue(yaw.degrees));
-			}
-		}
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Starts this program.
-	 * 
-	 * @param args the arguments to this program
-	 */
-	public static void main(final String[] args) {
-		launch(args);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
