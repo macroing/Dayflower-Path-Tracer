@@ -18,6 +18,9 @@
  */
 package org.dayflower.pathtracer.main;
 
+import static org.dayflower.pathtracer.math.Math2.max;
+import static org.dayflower.pathtracer.math.Math2.min;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +70,9 @@ final class Scenes {
 			case "House_Scene_2":
 			case "House_Scene_2.scene":
 				return newHouseScene2();
+			case "House_Scene_3":
+			case "House_Scene_3.scene":
+				return newHouseScene3();
 			case "Material_Showcase_Scene":
 			case "Material_Showcase_Scene.scene":
 				return newMaterialShowcaseScene();
@@ -360,6 +366,87 @@ final class Scenes {
 		return scene;
 	}
 	
+	public static Scene newHouseScene3() {
+		final Texture textureFloor = new CheckerboardTexture(Color.GRAY, Color.WHITE);
+		final Texture textureGround = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture textureNormal = new SolidTexture(Color.BLACK);
+		final Texture textureRoof = new SolidTexture(Color.WHITE);
+		final Texture textureWall = new SolidTexture(Color.WHITE);
+		
+		final Surface surfaceFloor = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureFloor, textureNormal);
+		final Surface surfaceRoof = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureRoof, textureNormal);
+		final Surface surfaceWall = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureWall, textureNormal);
+		
+		final Triangle[] trianglesWall0 = doCreateRectangleXY(surfaceWall, 0.0F, 0.0F, 500.0F, 50.0F, 0.0F);
+		final Triangle[] trianglesWall1 = doCreateRectangleXY(surfaceWall, 0.0F, 50.0F, 200.0F, 100.0F, 0.0F);
+		final Triangle[] trianglesWall2 = doCreateRectangleXY(surfaceWall, 300.0F, 50.0F, 500.0F, 100.0F, 0.0F);
+		final Triangle[] trianglesWall3 = doCreateRectangleXY(surfaceWall, 0.0F, 100.0F, 500.0F, 200.0F, 0.0F);
+		
+		final Triangle[] trianglesWall4 = doCreateRectangleXY(surfaceWall, 0.0F, 0.0F, 500.0F, 50.0F, 500.0F);
+		final Triangle[] trianglesWall5 = doCreateRectangleXY(surfaceWall, 0.0F, 50.0F, 200.0F, 100.0F, 500.0F);
+		final Triangle[] trianglesWall6 = doCreateRectangleXY(surfaceWall, 300.0F, 50.0F, 500.0F, 100.0F, 500.0F);
+		final Triangle[] trianglesWall7 = doCreateRectangleXY(surfaceWall, 0.0F, 100.0F, 500.0F, 200.0F, 500.0F);
+		
+		final Triangle[] trianglesWall8 = doCreateRectangleYZ(surfaceWall, 0.0F, 0.0F, 50.0F, 500.0F, 0.0F);
+		final Triangle[] trianglesWall9 = doCreateRectangleYZ(surfaceWall, 50.0F, 0.0F, 100.0F, 200.0F, 0.0F);
+		final Triangle[] trianglesWall10 = doCreateRectangleYZ(surfaceWall, 50.0F, 300.0F, 100.0F, 500.0F, 0.0F);
+		final Triangle[] trianglesWall11 = doCreateRectangleYZ(surfaceWall, 100.0F, 0.0F, 200.0F, 500.0F, 0.0F);
+		
+		final Triangle[] trianglesWall12 = doCreateRectangleYZ(surfaceWall, 0.0F, 0.0F, 50.0F, 500.0F, 500.0F);
+		final Triangle[] trianglesWall13 = doCreateRectangleYZ(surfaceWall, 50.0F, 0.0F, 100.0F, 200.0F, 500.0F);
+		final Triangle[] trianglesWall14 = doCreateRectangleYZ(surfaceWall, 50.0F, 300.0F, 100.0F, 500.0F, 500.0F);
+		final Triangle[] trianglesWall15 = doCreateRectangleYZ(surfaceWall, 100.0F, 0.0F, 200.0F, 500.0F, 500.0F);
+		
+		final Triangle[] triangleFloor = doCreateRectangleXZ(surfaceFloor, 0.0F, 0.0F, 500.0F, 500.0F, 0.2F);
+		final Triangle[] triangleRoof = doCreateRectangleXZ(surfaceRoof, 0.0F, 0.0F, 500.0F, 500.0F, 200.0F);
+		
+		final
+		Scene scene = new Scene("House_Scene_3");
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 1.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3(2.0F, 180.0F, 2.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 10.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3(2.0F, 180.0F, 498.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 1.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3(498.0F, 180.0F, 2.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 10.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3(498.0F, 180.0F, 498.0F)));
+		scene.addShape(trianglesWall0[0]);
+		scene.addShape(trianglesWall0[1]);
+		scene.addShape(trianglesWall1[0]);
+		scene.addShape(trianglesWall1[1]);
+		scene.addShape(trianglesWall2[0]);
+		scene.addShape(trianglesWall2[1]);
+		scene.addShape(trianglesWall3[0]);
+		scene.addShape(trianglesWall3[1]);
+		scene.addShape(trianglesWall4[0]);
+		scene.addShape(trianglesWall4[1]);
+		scene.addShape(trianglesWall5[0]);
+		scene.addShape(trianglesWall5[1]);
+		scene.addShape(trianglesWall6[0]);
+		scene.addShape(trianglesWall6[1]);
+		scene.addShape(trianglesWall7[0]);
+		scene.addShape(trianglesWall7[1]);
+		scene.addShape(trianglesWall8[0]);
+		scene.addShape(trianglesWall8[1]);
+		scene.addShape(trianglesWall9[0]);
+		scene.addShape(trianglesWall9[1]);
+		scene.addShape(trianglesWall10[0]);
+		scene.addShape(trianglesWall10[1]);
+		scene.addShape(trianglesWall11[0]);
+		scene.addShape(trianglesWall11[1]);
+		scene.addShape(trianglesWall12[0]);
+		scene.addShape(trianglesWall12[1]);
+		scene.addShape(trianglesWall13[0]);
+		scene.addShape(trianglesWall13[1]);
+		scene.addShape(trianglesWall14[0]);
+		scene.addShape(trianglesWall14[1]);
+		scene.addShape(trianglesWall15[0]);
+		scene.addShape(trianglesWall15[1]);
+		scene.addShape(triangleFloor[0]);
+		scene.addShape(triangleFloor[1]);
+		scene.addShape(triangleRoof[0]);
+		scene.addShape(triangleRoof[1]);
+		
+		return scene;
+	}
+	
 	public static Scene newMaterialShowcaseScene() {
 		final Texture texture0 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new SolidTexture(Color.WHITE);
@@ -459,5 +546,68 @@ final class Scenes {
 		final Vertex c = new Vertex(new Point2(textureCoordinateCX, textureCoordinateCY), new Point3(positionCX, positionCY, positionCZ), new Vector3(surfaceNormalCX, surfaceNormalCY, surfaceNormalCZ));
 		
 		return new Triangle(surface, a, b, c);
+	}
+	
+	private static Triangle[] doCreateRectangleXY(final Surface surface, final float x0, final float y0, final float x1, final float y1, final float z) {
+		final float minX = min(x0, x1);
+		final float minY = min(y0, y1);
+		
+		final float maxX = max(x0, x1);
+		final float maxY = max(y0, y1);
+		
+		final Point3 position0 = new Point3(minX, maxY, z);
+		final Point3 position1 = new Point3(minX, minY, z);
+		final Point3 position2 = new Point3(maxX, minY, z);
+		final Point3 position3 = new Point3(maxX, maxY, z);
+		
+		final Vector3 surfaceNormal0 = Vector3.normalNormalized(position0, position1, position2);
+		final Vector3 surfaceNormal1 = Vector3.normalNormalized(position2, position3, position0);
+		
+		final Triangle triangle0 = doCreateTriangle(surface, 0.0F, 0.0F, minX, maxY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, minX, minY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, maxX, minY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
+		final Triangle triangle1 = doCreateTriangle(surface, 1.0F, 1.0F, maxX, minY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, maxX, maxY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, minX, maxY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		
+		return new Triangle[] {triangle0, triangle1};
+	}
+	
+	private static Triangle[] doCreateRectangleXZ(final Surface surface, final float x0, final float z0, final float x1, final float z1, final float y) {
+		final float minX = min(x0, x1);
+		final float minZ = min(z0, z1);
+		
+		final float maxX = max(x0, x1);
+		final float maxZ = max(z0, z1);
+		
+		final Point3 position0 = new Point3(minX, y, maxZ);
+		final Point3 position1 = new Point3(minX, y, minZ);
+		final Point3 position2 = new Point3(maxX, y, minZ);
+		final Point3 position3 = new Point3(maxX, y, maxZ);
+		
+		final Vector3 surfaceNormal0 = Vector3.normalNormalized(position0, position1, position2);
+		final Vector3 surfaceNormal1 = Vector3.normalNormalized(position2, position3, position0);
+		
+		final Triangle triangle0 = doCreateTriangle(surface, 0.0F, 0.0F, minX, y, maxZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, minX, y, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, maxX, y, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
+		final Triangle triangle1 = doCreateTriangle(surface, 1.0F, 1.0F, maxX, y, minZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, maxX, y, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, minX, y, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		
+		return new Triangle[] {triangle0, triangle1};
+	}
+	
+	private static Triangle[] doCreateRectangleYZ(final Surface surface, final float y0, final float z0, final float y1, final float z1, final float x) {
+		final float minY = min(y0, y1);
+		final float minZ = min(z0, z1);
+		
+		final float maxY = max(y0, y1);
+		final float maxZ = max(z0, z1);
+		
+		final Point3 position0 = new Point3(x, minY, maxZ);
+		final Point3 position1 = new Point3(x, minY, minZ);
+		final Point3 position2 = new Point3(x, maxY, minZ);
+		final Point3 position3 = new Point3(x, maxY, maxZ);
+		
+		final Vector3 surfaceNormal0 = Vector3.normalNormalized(position0, position1, position2);
+		final Vector3 surfaceNormal1 = Vector3.normalNormalized(position2, position3, position0);
+		
+		final Triangle triangle0 = doCreateTriangle(surface, 0.0F, 0.0F, x, minY, maxZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, x, minY, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, x, maxY, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
+		final Triangle triangle1 = doCreateTriangle(surface, 1.0F, 1.0F, x, maxY, minZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, x, maxY, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, x, minY, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		
+		return new Triangle[] {triangle0, triangle1};
 	}
 }

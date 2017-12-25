@@ -1083,13 +1083,26 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float verticalY = vY * fieldOfViewY1;
 		final float verticalZ = vZ * fieldOfViewY1;
 		
-//		Calculate the pixel jitter:
-		final float jitterX = this.renderer == RENDERER_PATH_TRACER ? nextFloat() - 0.5F : 0.5F;
-		final float jitterY = this.renderer == RENDERER_PATH_TRACER ? nextFloat() - 0.5F : 0.5F;
+//		Calculate the pixel sample:
+		float sampleX = 0.5F;
+		float sampleY = 0.5F;
+		
+		if(this.renderer == RENDERER_PATH_TRACER) {
+			sampleX = nextFloat();
+			sampleY = nextFloat();
+			
+//			Box Filter:
+//			sampleX -= 0.5F;
+//			sampleY -= 0.5F;
+			
+//			Triangle Filter (Tent Filter):
+			sampleX = sampleX < 0.5F ? sqrt(2.0F * sampleX) - 1.0F : 1.0F - sqrt(2.0F - 2.0F * sampleX);
+			sampleY = sampleY < 0.5F ? sqrt(2.0F * sampleY) - 1.0F : 1.0F - sqrt(2.0F - 2.0F * sampleY);
+		}
 		
 //		Calculate the pixel sample point:
-		final float sx = (jitterX + x) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_X] - 1.0F);
-		final float sy = (jitterY + y) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_Y] - 1.0F);
+		final float sx = (sampleX + x) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_X] - 1.0F);
+		final float sy = (sampleY + y) / (this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_Y] - 1.0F);
 		final float sx0 = 2.0F * sx - 1.0F;
 		final float sy0 = 2.0F * sy - 1.0F;
 		
@@ -1326,7 +1339,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Initialize the distance to a value denoting no hit:
 		float t = INFINITY;
 		
-//		Check that the determinant is anything other than in the range of negative epsilon and posive epsilon:
+//		Check that the determinant is anything other than in the range of negative epsilon and positive epsilon:
 		if(determinant < -EPSILON || determinant > EPSILON) {
 //			Calculate the reciprocal of the determinant:
 			final float determinantReciprocal = 1.0F / determinant;
@@ -3235,7 +3248,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float scale = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE];
 		
 //		Check that the Perlin noise amount and Perlin noise scale are greater than 0.0:
-		if(this.isNormalMapping == 1 && amount > 0.0F && scale > 0.0F) {
+		if(/*this.isNormalMapping == 1 &&*/ amount > 0.0F && scale > 0.0F) {
 //			Retrieve the surface intersection point and the surface normal from the current shape:
 			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
 			final int offsetIntersectionSurfaceNormal = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;

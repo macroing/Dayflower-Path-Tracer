@@ -6,7 +6,7 @@ The engine primarily uses a rendering technique called Path Tracing, which is in
 
 This early test implementation of Dayflower, uses a library called Aparapi. Aparapi is responsible for decompiling the Java bytecode into OpenCL C99 on the fly. The OpenCL C99 is then compiled into binary code that is executable by the current GPU.
 
-![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Engine.png "Dayflower Path Tracer")
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Engine-2.png "Dayflower Path Tracer")
 
 _____________________________________________________________________________________
 
@@ -150,6 +150,8 @@ The following is a list of scene names that can be used.
 * ``Cornell_Box_Scene_2``
 * ``Girl_Scene``
 * ``House_Scene``
+* ``House_Scene_2``
+* ``House_Scene_3``
 * ``Material_Showcase_Scene`` (Default)
 * ``Monkey_Scene``
 * ``Terrain_Scene``
