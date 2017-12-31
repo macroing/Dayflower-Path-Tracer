@@ -8,7 +8,7 @@
 	<property name="project.directory.root" location="."/>
 	<property name="project.name" value="${ant.project.name}"/>
 	<property name="project.vendor" value="Dayflower.org"/>
-	<property name="project.version" value="0.0.25"/>
+	<property name="project.version" value="0.0.26"/>
 	
 	<!--The following properties are based on the above properties and don't really need to change.-->
 	<property name="project.directory.binary" location="bin"/>

@@ -78,40 +78,22 @@ public final class CompiledScene {
 	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0 = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0_B = CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0 + 2;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1 = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0_G = CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0 + 1;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_COS = 4;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0_R = CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0 + 0;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN = 5;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1 = 5;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U = 6;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1_B = CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1 + 2;
+	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_V = 7;
 	
 //	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1_G = CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1 + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1_R = CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1 + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_COS = 8;
-	
-//	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN = 9;
-	
-//	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U = 10;
-	
-//	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_V = 11;
-	
-//	TODO: Add Javadocs.
-	public static final int CHECKERBOARD_TEXTURE_SIZE = 12;
+	public static final int CHECKERBOARD_TEXTURE_SIZE = 8;
 	
 //	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_TYPE = 1;
@@ -168,16 +150,7 @@ public final class CompiledScene {
 	public static final int SOLID_TEXTURE_RELATIVE_OFFSET_COLOR = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_B = SOLID_TEXTURE_RELATIVE_OFFSET_COLOR + 2;
-	
-//	TODO: Add Javadocs.
-	public static final int SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_G = SOLID_TEXTURE_RELATIVE_OFFSET_COLOR + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_R = SOLID_TEXTURE_RELATIVE_OFFSET_COLOR + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int SOLID_TEXTURE_SIZE = 5;
+	public static final int SOLID_TEXTURE_SIZE = 3;
 	
 //	TODO: Add Javadocs.
 	public static final int SOLID_TEXTURE_TYPE = 2;
@@ -899,12 +872,8 @@ public final class CompiledScene {
 		return new float[] {
 			CHECKERBOARD_TEXTURE_TYPE,
 			CHECKERBOARD_TEXTURE_SIZE,
-			checkerboardTexture.getColor0().r,
-			checkerboardTexture.getColor0().g,
-			checkerboardTexture.getColor0().b,
-			checkerboardTexture.getColor1().r,
-			checkerboardTexture.getColor1().g,
-			checkerboardTexture.getColor1().b,
+			checkerboardTexture.getColor0().multiply(255.0F).toRGB(),
+			checkerboardTexture.getColor1().multiply(255.0F).toRGB(),
 			cos(toRadians(checkerboardTexture.getDegrees())),
 			sin(toRadians(checkerboardTexture.getDegrees())),
 			checkerboardTexture.getScaleU(),
@@ -926,7 +895,7 @@ public final class CompiledScene {
 		floatArray[6] = imageTexture.getScaleU();
 		floatArray[7] = imageTexture.getScaleV();
 		
-		final float[] data = imageTexture.getData();
+		final int[] data = imageTexture.getData();
 		
 		for(int i = 0; i < data.length; i++) {
 			floatArray[i + 8] = data[i];
@@ -950,9 +919,7 @@ public final class CompiledScene {
 		return new float[] {
 			SOLID_TEXTURE_TYPE,
 			SOLID_TEXTURE_SIZE,
-			solidTexture.getColor().r,
-			solidTexture.getColor().g,
-			solidTexture.getColor().b
+			solidTexture.getColor().multiply(255.0F).toRGB()
 		};
 	}
 	

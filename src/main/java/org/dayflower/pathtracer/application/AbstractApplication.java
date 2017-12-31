@@ -151,6 +151,7 @@ public abstract class AbstractApplication extends Application {
 		final
 		HBox hBox = new HBox();
 		hBox.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		hBox.setSpacing(20.0D);
 		
 		final TabPane tabPane = new TabPane();
 		

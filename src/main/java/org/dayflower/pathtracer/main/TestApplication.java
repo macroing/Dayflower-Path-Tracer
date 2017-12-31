@@ -73,6 +73,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	private final Camera camera = new Camera();
 	private ConvolutionKernel convolutionKernel;
 	private final Label labelFPS = new Label("FPS: 0");
+	private final Label labelKernelTime = new Label("Kernel Time: 0 ms");
 	private final Label labelRenderPass = new Label("Pass: 0");
 	private final Label labelRenderTime = new Label("Time: 00:00:00");
 	private final Label labelSPS = new Label("SPS: 00000000");
@@ -293,12 +294,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void configureStatusBar(final HBox hBox) {
-//		Create and add all sections to the bottom panel of the window:
-		final Region region0 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
-		final Region region1 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
-		final Region region2 = JavaFX.newRegion(10.0D, 10.0D, 10.0D, 10.0D);
-		
-		hBox.getChildren().addAll(this.labelRenderPass, region0, this.labelFPS, region1, this.labelSPS, region2, this.labelRenderTime);
+		hBox.getChildren().addAll(this.labelRenderPass, this.labelFPS, this.labelSPS, this.labelRenderTime, this.labelKernelTime);
 	}
 	
 	/**
@@ -458,7 +454,12 @@ public final class TestApplication extends AbstractApplication implements Camera
 		
 		final Range range = this.range;
 		
+		final long renderTimeMillis0 = System.currentTimeMillis();
+		
 		abstractRendererKernel.execute(range);
+		
+		final long renderTimeMillis1 = System.currentTimeMillis();
+		final long renderTimeMillis2 = renderTimeMillis1 - renderTimeMillis0;
 		
 		getFPSCounter().update();
 		
@@ -511,6 +512,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 		
 		this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
+		this.labelKernelTime.setText(String.format("Kernel Time: %s ms", Long.valueOf(renderTimeMillis2)));
 		this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass)));
 		this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
 		this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));

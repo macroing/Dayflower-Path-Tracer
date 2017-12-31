@@ -48,11 +48,11 @@ public final class ImageTexture implements Texture {
 	private final float scaleU;
 	private final float scaleV;
 	private final float width;
-	private final float[] data;
+	private final int[] data;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private ImageTexture(final float degrees, final float width, final float height, final float scaleU, final float scaleV, final float[] data) {
+	private ImageTexture(final float degrees, final float width, final float height, final float scaleU, final float scaleV, final int[] data) {
 		this.degrees = degrees;
 		this.width = width;
 		this.height = height;
@@ -140,13 +140,13 @@ public final class ImageTexture implements Texture {
 	}
 	
 	/**
-	 * Returns the data of the image as a {@code float} array.
+	 * Returns the data of the image as an {@code int} array.
 	 * <p>
 	 * Modifying the array will not affect this {@code ImageTexture} instance.
 	 * 
-	 * @return the data of the image as a {@code float} array
+	 * @return the data of the image as an {@code int} array
 	 */
-	public float[] getData() {
+	public int[] getData() {
 		return this.data.clone();
 	}
 	
@@ -245,23 +245,9 @@ public final class ImageTexture implements Texture {
 		final int width = bufferedImage.getWidth();
 		final int height = bufferedImage.getHeight();
 		
-		final int[] data0 = doGetDataFrom(bufferedImage);
+		final int[] data = doGetDataFrom(bufferedImage);
 		
-		final float[] data1 = new float[width * height * 3];
-		
-		for(int i = 0, j = 0; i < data0.length; i++, j += 3) {
-			final int rGB = data0[i];
-			
-			final float r = ((rGB >> 16) & 0xFF) / 255.0F;
-			final float g = ((rGB >> 8) & 0xFF) / 255.0F;
-			final float b = (rGB & 0xFF) / 255.0F;
-			
-			data1[j + 0] = r;
-			data1[j + 1] = g;
-			data1[j + 2] = b;
-		}
-		
-		return new ImageTexture(degrees, width, height, scaleU, scaleV, data1);
+		return new ImageTexture(degrees, width, height, scaleU, scaleV, data);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

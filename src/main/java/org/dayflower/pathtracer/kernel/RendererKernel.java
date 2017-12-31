@@ -145,7 +145,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int depthRussianRoulette = 5;
 	private int effectGrayScale;
 	private int effectSepiaTone;
-	private int isNormalMapping = 1;
+	private int isNormalMapping = 0;
 	private int octaves;
 	private int renderer = RENDERER_PATH_TRACER;
 	private int selectedShapeIndex = -1;
@@ -2131,14 +2131,22 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float v = this.intersections[offsetUVCoordinates + 1];
 		
 //		TODO: Write explanation!
-		final float color0R = this.textures[offsetColor0];
-		final float color0G = this.textures[offsetColor0 + 1];
-		final float color0B = this.textures[offsetColor0 + 2];
+		final float color0 = this.textures[offsetColor0];
+		
+		final int rGB0 = (int)(color0);
+		
+		final float color0R = ((rGB0 >> 16) & 0xFF) / 255.0F;
+		final float color0G = ((rGB0 >> 8) & 0xFF) / 255.0F;
+		final float color0B = (rGB0 & 0xFF) / 255.0F;
 		
 //		TODO: Write explanation!
-		final float color1R = this.textures[offsetColor1];
-		final float color1G = this.textures[offsetColor1 + 1];
-		final float color1B = this.textures[offsetColor1 + 2];
+		final float color1 = this.textures[offsetColor1];
+		
+		final int rGB1 = (int)(color1);
+		
+		final float color1R = ((rGB1 >> 16) & 0xFF) / 255.0F;
+		final float color1G = ((rGB1 >> 8) & 0xFF) / 255.0F;
+		final float color1B = (rGB1 & 0xFF) / 255.0F;
 		
 //		TODO: Write explanation!
 		final float sU = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U];
@@ -2214,12 +2222,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
 		
 //		TODO: Write explanation!
-		final int index = (int)((y * width + x) * 3);
+		final int index = (int)((y * width + x));// * 3);
 		
-//		TODO: Write explanation!
-		final float r = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index];
-		final float g = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index + 1];
-		final float b = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index + 2];
+		final float color = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index];
+		
+		final int rGB = (int)(color);
+		
+		final float r = ((rGB >> 16) & 0xFF) / 255.0F;
+		final float g = ((rGB >> 8) & 0xFF) / 255.0F;
+		final float b = (rGB & 0xFF) / 255.0F;
 		
 //		TODO: Write explanation!
 		final int pixelIndex0 = getLocalId() * 3;
@@ -2232,9 +2243,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private void doCalculateTextureColorForSolidTexture(final int texturesOffset) {
 //		Retrieve the R-, G- and B-component values of the texture:
-		final float r = this.textures[texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_R];
-		final float g = this.textures[texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_G];
-		final float b = this.textures[texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR_B];
+		final float color = this.textures[texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR];
+		
+		final int rGB = (int)(color);
+		
+		final float r = ((rGB >> 16) & 0xFF) / 255.0F;
+		final float g = ((rGB >> 8) & 0xFF) / 255.0F;
+		final float b = (rGB & 0xFF) / 255.0F;
 		
 //		Calculate the pixel index:
 		final int pixelIndex = getLocalId() * 3;
