@@ -2109,7 +2109,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		if(textureType == CompiledScene.CHECKERBOARD_TEXTURE_TYPE) {
 			doCalculateTextureColorForCheckerboardTexture(texturesOffset);
 		} else if(textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
-			doCalculateTextureColorForImageTexture(texturesOffset);
+//			doCalculateTextureColorForImageTexture(texturesOffset);
+			doCalculateTextureColorForImageTextureBilinearInterpolation(texturesOffset);
 		} else if(textureType == CompiledScene.SOLID_TEXTURE_TYPE) {
 			doCalculateTextureColorForSolidTexture(texturesOffset);
 		} else if(textureType == CompiledScene.SURFACE_NORMAL_TEXTURE_TYPE) {
@@ -2194,12 +2195,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void doCalculateTextureColorForImageTexture(final int texturesOffset) {
 //		Get the intersections offset:
-		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
 //		TODO: Write explanation!
-		final int offsetUVCoordinates = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
 		
 //		TODO: Write explanation!
 		final float u = this.intersections[offsetUVCoordinates];
@@ -2222,7 +2224,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
 		
 //		TODO: Write explanation!
-		final int index = (int)((y * width + x));// * 3);
+		final int index = (int)((y * width + x));
 		
 		final float color = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index];
 		
@@ -2239,6 +2241,91 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.temporaryColors[pixelIndex0] = r;
 		this.temporaryColors[pixelIndex0 + 1] = g;
 		this.temporaryColors[pixelIndex0 + 2] = b;
+	}
+	
+	private void doCalculateTextureColorForImageTextureBilinearInterpolation(final int texturesOffset) {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		
+		final float u = this.intersections[offsetUVCoordinates];
+		final float v = this.intersections[offsetUVCoordinates + 1];
+		final float width = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_WIDTH];
+		final float height = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_HEIGHT];
+		final float scaleU = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_U];
+		final float scaleV = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_V];
+//		final float cosAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_COS];
+//		final float sinAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN];
+		
+//		float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
+//		float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
+		float x = u * scaleU;
+		float y = v * scaleV;
+		
+		x = x - (int)(x);
+		y = y - (int)(y);
+		
+		if(x < 0.0F) {
+			x++;
+		}
+		
+		if(y < 0.0F) {
+			y++;
+		}
+		
+		final float dx = x * (width - 1.0F);
+		final float dy = y * (height - 1.0F);
+		
+		final int ix0 = (int)(dx);
+		final int iy0 = (int)(dy);
+		final int ix1 = (int)(remainder(ix0 + 1, width));
+		final int iy1 = (int)(remainder(iy0 + 1, height));
+		
+		float u0 = dx - ix0;
+		float v0 = dy - iy0;
+		
+		u0 = u0 * u0 * (3.0F - (2.0F * u0));
+		v0 = v0 * v0 * (3.0F - (2.0F * v0));
+		
+		final float k00 = (1.0F - u0) * (1.0F - v0);
+		final float k01 = (1.0F - u0) * v0;
+		final float k10 = u0 * (1.0F - v0);
+		final float k11 = u0 * v0;
+		
+		final int index00 = iy0 * (int)(width) + ix0;
+		final int index01 = iy1 * (int)(width) + ix0;
+		final int index10 = iy0 * (int)(width) + ix1;
+		final int index11 = iy1 * (int)(width) + ix1;
+		
+		final int rGB00 = (int)(this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index00]);
+		final int rGB01 = (int)(this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index01]);
+		final int rGB10 = (int)(this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index10]);
+		final int rGB11 = (int)(this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index11]);
+		
+		final float r00 = ((rGB00 >> 16) & 0xFF) / 255.0F;
+		final float g00 = ((rGB00 >> 8) & 0xFF) / 255.0F;
+		final float b00 = (rGB00 & 0xFF) / 255.0F;
+		
+		final float r01 = ((rGB01 >> 16) & 0xFF) / 255.0F;
+		final float g01 = ((rGB01 >> 8) & 0xFF) / 255.0F;
+		final float b01 = (rGB01 & 0xFF) / 255.0F;
+		
+		final float r10 = ((rGB10 >> 16) & 0xFF) / 255.0F;
+		final float g10 = ((rGB10 >> 8) & 0xFF) / 255.0F;
+		final float b10 = (rGB10 & 0xFF) / 255.0F;
+		
+		final float r11 = ((rGB11 >> 16) & 0xFF) / 255.0F;
+		final float g11 = ((rGB11 >> 8) & 0xFF) / 255.0F;
+		final float b11 = (rGB11 & 0xFF) / 255.0F;
+		
+		final float r = r00 * k00 + r01 * k01 + r10 * k10 + r11 * k11;
+		final float g = g00 * k00 + g01 * k01 + g10 * k10 + g11 * k11;
+		final float b = b00 * k00 + b01 * k01 + b10 * k10 + b11 * k11;
+		
+		final int pixelIndex = getLocalId() * 3;
+		
+		this.temporaryColors[pixelIndex] = r;
+		this.temporaryColors[pixelIndex + 1] = g;
+		this.temporaryColors[pixelIndex + 2] = b;
 	}
 	
 	private void doCalculateTextureColorForSolidTexture(final int texturesOffset) {
@@ -3152,7 +3239,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		if(this.isNormalMapping == 1 && textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
 //			Calculate the texture color:
-			doCalculateTextureColorForImageTexture(texturesOffset);
+			doCalculateTextureColorForImageTextureBilinearInterpolation(texturesOffset);
 			
 //			Calculate the index into the temporaryColors array:
 			final int pixelIndex0 = getLocalId() * 3;
