@@ -127,6 +127,11 @@ public abstract class AbstractKernel extends Kernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+//	If you're porting back to the original Aparapi, uncomment this code:
+//	public final float asinpi(final float a) {
+//		return asin(a) * PI_RECIPROCAL;
+//	}
+	
 	/**
 	 * Returns a {@code float} value based on four {@code byte}s.
 	 * 
