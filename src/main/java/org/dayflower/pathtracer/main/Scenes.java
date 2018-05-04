@@ -304,9 +304,9 @@ final class Scenes {
 		final Texture texture0 = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new CheckerboardTexture(Color.GRAY, Color.WHITE);
 		final Texture texture2 = new SolidTexture(Color.GRAY);
-		final Texture texture3 = new SolidTexture(Color.RED);
-		final Texture texture4 = new SolidTexture(Color.GREEN);
-		final Texture texture5 = new SolidTexture(Color.BLUE);
+		final Texture texture3 = new CheckerboardTexture(Color.RED, Color.WHITE);
+		final Texture texture4 = new CheckerboardTexture(Color.GREEN, Color.WHITE);
+		final Texture texture5 = new CheckerboardTexture(Color.BLUE, Color.WHITE);
 		final Texture texture6 = new SolidTexture(Color.GRAY);
 		final Texture texture7 = new SolidTexture(Color.ORANGE);
 		final Texture texture8 = new SolidTexture(Color.ORANGE);

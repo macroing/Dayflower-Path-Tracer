@@ -19,6 +19,8 @@
 package org.dayflower.pathtracer.main;
 
 import java.io.File;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -68,7 +70,8 @@ public final class TestApplication extends AbstractApplication implements Camera
 	private AbstractRendererKernel abstractRendererKernel;
 	private final AtomicInteger renderPass = new AtomicInteger();
 	private final AtomicLong currentTimeMillis = new AtomicLong(System.currentTimeMillis());
-	private byte[] pixels;
+	private byte[] pixels0;
+	private byte[] pixels1;
 	private final Camera camera = new Camera();
 	private ConvolutionKernel convolutionKernel;
 	private final Label labelFPS = new Label("FPS: 0");
@@ -77,6 +80,8 @@ public final class TestApplication extends AbstractApplication implements Camera
 	private final Label labelRenderTime = new Label("Time: 00:00:00");
 	private final Label labelSPS = new Label("SPS: 00000000");
 	private Range range;
+	private RendererRunnable rendererRunnable;
+	private final Setting settingFilterBloom = new Setting("Filter.Bloom");
 	private final Setting settingFilterBlur = new Setting("Filter.Blur");
 	private final Setting settingFilterDetectEdges = new Setting("Filter.DetectEdges");
 	private final Setting settingFilterEmboss = new Setting("Filter.Emboss");
@@ -211,6 +216,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		menuBar.getMenus().add(menuCamera);
 		
 //		Create the "Effect" Menu:
+		final CheckMenuItem checkMenuItemBloom = JavaFX.newCheckMenuItem("Bloom", e -> this.settingFilterBloom.toggle());
 		final CheckMenuItem checkMenuItemBlur = JavaFX.newCheckMenuItem("Blur", e -> this.settingFilterBlur.toggle());
 		final CheckMenuItem checkMenuItemDetectEdges = JavaFX.newCheckMenuItem("Detect Edges", e -> this.settingFilterDetectEdges.toggle());
 		final CheckMenuItem checkMenuItemEmboss = JavaFX.newCheckMenuItem("Emboss", e -> this.settingFilterEmboss.toggle());
@@ -220,7 +226,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final CheckMenuItem checkMenuItemGrayscale = JavaFX.newCheckMenuItem("Grayscale", e -> this.abstractRendererKernel.setEffectGrayScale(!this.abstractRendererKernel.isEffectGrayScale()));
 		final CheckMenuItem checkMenuItemSepiaTone = JavaFX.newCheckMenuItem("Sepia Tone", e -> this.abstractRendererKernel.setEffectSepiaTone(!this.abstractRendererKernel.isEffectSepiaTone()));
 		
-		final Menu menuEffect = JavaFX.newMenu("Effect", checkMenuItemBlur, checkMenuItemDetectEdges, checkMenuItemEmboss, checkMenuItemGradientHorizontal, checkMenuItemGradientVertical, checkMenuItemSharpen, checkMenuItemGrayscale, checkMenuItemSepiaTone);
+		final Menu menuEffect = JavaFX.newMenu("Effect", checkMenuItemBloom, checkMenuItemBlur, checkMenuItemDetectEdges, checkMenuItemEmboss, checkMenuItemGradientHorizontal, checkMenuItemGradientVertical, checkMenuItemSharpen, checkMenuItemGrayscale, checkMenuItemSepiaTone);
 		
 		menuBar.getMenus().add(menuEffect);
 		
@@ -269,11 +275,17 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void configurePixels(final byte[] pixels) {
-		this.pixels = pixels;
-		this.convolutionKernel = new ConvolutionKernel(pixels, getKernelWidth(), getKernelHeight());
+		this.pixels0 = pixels;
+		this.pixels1 = pixels.clone();
+		this.convolutionKernel = new ConvolutionKernel(this.pixels1, getKernelWidth(), getKernelHeight());
 		this.range = Range.create(getKernelWidth() * getKernelHeight());
 		this.abstractRendererKernel.updateLocalVariables(this.range.getLocalSize(0));
-		this.abstractRendererKernel.compile(this.pixels, getKernelWidth(), getKernelHeight());
+		this.abstractRendererKernel.compile(this.pixels1, getKernelWidth(), getKernelHeight());
+		this.rendererRunnable = new RendererRunnable(this.abstractRendererKernel, this.renderPass, this.convolutionKernel, this.range, this.settingFilterBloom, this.settingFilterBlur, this.settingFilterDetectEdges, this.settingFilterEmboss, this.settingFilterGradientHorizontal, this.settingFilterGradientVertical, this.settingFilterSharpen, this.pixels0, this.pixels1);
+		
+		final
+		Thread thread = new Thread(this.rendererRunnable);
+		thread.start();
 	}
 	
 	/**
@@ -406,6 +418,11 @@ public final class TestApplication extends AbstractApplication implements Camera
 	protected void onExit() {
 		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
 		final ConvolutionKernel convolutionKernel = this.convolutionKernel;
+		final RendererRunnable rendererRunnable = this.rendererRunnable;
+		
+		if(rendererRunnable != null) {
+			rendererRunnable.stop();
+		}
 		
 		if(abstractRendererKernel != null) {
 			abstractRendererKernel.dispose();
@@ -447,61 +464,11 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void render() {
-		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
-		
-		final ConvolutionKernel convolutionKernel = this.convolutionKernel;
-		
-		final Range range = this.range;
-		
-		final long renderTimeMillis0 = System.currentTimeMillis();
-		
-		abstractRendererKernel.execute(range);
-		
-		final long renderTimeMillis1 = System.currentTimeMillis();
-		final long renderTimeMillis2 = renderTimeMillis1 - renderTimeMillis0;
-		
 		getFPSCounter().update();
 		
-		abstractRendererKernel.get(abstractRendererKernel.getPixels());
+		final int renderPass = this.renderPass.get();
 		
-		if(this.settingFilterBlur.isEnabled()) {
-			convolutionKernel.update();
-			convolutionKernel.enableBlur();
-			convolutionKernel.execute(range);
-		}
-		
-		if(this.settingFilterDetectEdges.isEnabled()) {
-			convolutionKernel.update();
-			convolutionKernel.enableDetectEdges();
-			convolutionKernel.execute(range);
-		}
-		
-		if(this.settingFilterEmboss.isEnabled()) {
-			convolutionKernel.update();
-			convolutionKernel.enableEmboss();
-			convolutionKernel.execute(range);
-		}
-		
-		if(this.settingFilterGradientHorizontal.isEnabled()) {
-			convolutionKernel.update();
-			convolutionKernel.enableGradientHorizontal();
-			convolutionKernel.execute(range);
-		}
-		
-		if(this.settingFilterGradientVertical.isEnabled()) {
-			convolutionKernel.update();
-			convolutionKernel.enableGradientVertical();
-			convolutionKernel.execute(range);
-		}
-		
-		if(this.settingFilterSharpen.isEnabled()) {
-			convolutionKernel.update();
-			convolutionKernel.enableSharpen();
-			convolutionKernel.execute(range);
-		}
-		
-		final int renderPass = this.renderPass.incrementAndGet();
-		
+		final long renderTimeMillis = this.rendererRunnable.getRenderTimeMillis();
 		final long elapsedTimeMillis = System.currentTimeMillis() - this.currentTimeMillis.get();
 		final long fPS = getFPSCounter().getFPS();
 		final long sPS = fPS * getKernelWidth() * getKernelHeight();
@@ -511,7 +478,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 		
 		this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
-		this.labelKernelTime.setText(String.format("Kernel Time: %s ms", Long.valueOf(renderTimeMillis2)));
+		this.labelKernelTime.setText(String.format("Kernel Time: %s ms", Long.valueOf(renderTimeMillis)));
 		this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass)));
 		this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
 		this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));
@@ -665,5 +632,133 @@ public final class TestApplication extends AbstractApplication implements Camera
 	@SuppressWarnings("unused")
 	private void doOnSliderYaw(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.camera.setYaw(Angle.degrees(newValue.floatValue()));
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static final class RendererRunnable implements Runnable {
+		private final AbstractRendererKernel abstractRendererKernel;
+		private final AtomicBoolean isRunning;
+		private final AtomicInteger renderPass;
+		private final AtomicLong renderTimeMillis;
+		private final ConvolutionKernel convolutionKernel;
+		private final Range range;
+		private final Setting settingFilterBloom;
+		private final Setting settingFilterBlur;
+		private final Setting settingFilterDetectEdges;
+		private final Setting settingFilterEmboss;
+		private final Setting settingFilterGradientHorizontal;
+		private final Setting settingFilterGradientVertical;
+		private final Setting settingFilterSharpen;
+		private final byte[] pixels0;
+		private final byte[] pixels1;
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		public RendererRunnable(final AbstractRendererKernel abstractRendererKernel, final AtomicInteger renderPass, final ConvolutionKernel convolutionKernel, final Range range, final Setting settingFilterBloom, final Setting settingFilterBlur, final Setting settingFilterDetectEdges, final Setting settingFilterEmboss, final Setting settingFilterGradientHorizontal, final Setting settingFilterGradientVertical, final Setting settingFilterSharpen, final byte[] pixels0, final byte[] pixels1) {
+			this.abstractRendererKernel = Objects.requireNonNull(abstractRendererKernel, "abstractRendererKernel == null");
+			this.renderPass = Objects.requireNonNull(renderPass, "renderPass == null");
+			this.convolutionKernel = Objects.requireNonNull(convolutionKernel, "convolutionKernel == null");
+			this.range = Objects.requireNonNull(range, "range == null");
+			this.settingFilterBloom = Objects.requireNonNull(settingFilterBloom, "settingFilterBloom == null");
+			this.settingFilterBlur = Objects.requireNonNull(settingFilterBlur, "settingFilterBlur == null");
+			this.settingFilterDetectEdges = Objects.requireNonNull(settingFilterDetectEdges, "settingFilterDetectEdges == null");
+			this.settingFilterEmboss = Objects.requireNonNull(settingFilterEmboss, "settingFilterEmboss == null");
+			this.settingFilterGradientHorizontal = Objects.requireNonNull(settingFilterGradientHorizontal, "settingFilterGradientHorizontal == null");
+			this.settingFilterGradientVertical = Objects.requireNonNull(settingFilterGradientVertical, "settingFilterGradientVertical == null");
+			this.settingFilterSharpen = Objects.requireNonNull(settingFilterSharpen, "settingFilterSharpen == null");
+			this.pixels0 = Objects.requireNonNull(pixels0, "pixels0 == null");
+			this.pixels1 = Objects.requireNonNull(pixels1, "pixels1 == null");
+			this.isRunning = new AtomicBoolean(true);
+			this.renderTimeMillis = new AtomicLong();
+		}
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		public long getRenderTimeMillis() {
+			return this.renderTimeMillis.get();
+		}
+		
+		@Override
+		public void run() {
+			while(this.isRunning.get()) {
+				final long renderTimeMillis0 = System.currentTimeMillis();
+				
+				this.abstractRendererKernel.execute(this.range);
+				this.abstractRendererKernel.get(this.pixels1);
+				
+				if(this.settingFilterBloom.isEnabled()) {
+					this.convolutionKernel.update();
+					this.convolutionKernel.enableBloomPass1();
+					this.convolutionKernel.execute(this.range);
+					this.convolutionKernel.enableBloomPass2();
+					this.convolutionKernel.execute(this.range);
+					this.convolutionKernel.get();
+				}
+				
+				if(this.settingFilterBlur.isEnabled()) {
+					this.convolutionKernel.update();
+					this.convolutionKernel.enableBlur();
+					this.convolutionKernel.execute(this.range);
+					this.convolutionKernel.get();
+				}
+				
+				if(this.settingFilterDetectEdges.isEnabled()) {
+					this.convolutionKernel.update();
+					this.convolutionKernel.enableDetectEdges();
+					this.convolutionKernel.execute(this.range);
+					this.convolutionKernel.get();
+				}
+				
+				if(this.settingFilterEmboss.isEnabled()) {
+					this.convolutionKernel.update();
+					this.convolutionKernel.enableEmboss();
+					this.convolutionKernel.execute(this.range);
+					this.convolutionKernel.get();
+				}
+				
+				if(this.settingFilterGradientHorizontal.isEnabled()) {
+					this.convolutionKernel.update();
+					this.convolutionKernel.enableGradientHorizontal();
+					this.convolutionKernel.execute(this.range);
+					this.convolutionKernel.get();
+				}
+				
+				if(this.settingFilterGradientVertical.isEnabled()) {
+					this.convolutionKernel.update();
+					this.convolutionKernel.enableGradientVertical();
+					this.convolutionKernel.execute(this.range);
+					this.convolutionKernel.get();
+				}
+				
+				if(this.settingFilterSharpen.isEnabled()) {
+					this.convolutionKernel.update();
+					this.convolutionKernel.enableSharpen();
+					this.convolutionKernel.execute(this.range);
+					this.convolutionKernel.get();
+				}
+				
+				synchronized(this.pixels0) {
+					System.arraycopy(this.pixels1, 0, this.pixels0, 0, this.pixels0.length);
+				}
+				
+				this.renderPass.incrementAndGet();
+				
+				final long renderTimeMillis1 = System.currentTimeMillis();
+				final long renderTimeMillis2 = renderTimeMillis1 - renderTimeMillis0;
+				
+				this.renderTimeMillis.set(renderTimeMillis2);
+				
+				try {
+					Thread.sleep(1);
+				} catch(final InterruptedException e) {
+//					Do nothing!
+				}
+			}
+		}
+		
+		public void stop() {
+			this.isRunning.set(false);
+		}
 	}
 }

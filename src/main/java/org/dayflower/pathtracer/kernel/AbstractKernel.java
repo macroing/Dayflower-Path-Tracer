@@ -18,8 +18,6 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import org.dayflower.pathtracer.math.Math2;
 
 import com.amd.aparapi.Kernel;
@@ -269,7 +267,7 @@ public abstract class AbstractKernel extends Kernel {
 		this.seeds = new long[length];
 		
 		for(int i = 0; i < this.seeds.length; i++) {
-			this.seeds[i] = ((seed + ThreadLocalRandom.current().nextLong()) ^ MULTIPLIER) & MASK_1;
+			this.seeds[i] = ((seed + i) ^ MULTIPLIER) & MASK_1;
 		}
 		
 		put(this.seeds);

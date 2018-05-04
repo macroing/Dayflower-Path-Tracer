@@ -219,7 +219,9 @@ public abstract class AbstractApplication extends Application {
 				}
 				
 				if(pixelWriter != null) {
-					pixelWriter.setPixels(0, 0, getKernelWidth(), getKernelHeight(), pixelFormat, byteBuffer, getKernelWidth() * 4);
+					synchronized(pixels) {
+						pixelWriter.setPixels(0, 0, getKernelWidth(), getKernelHeight(), pixelFormat, byteBuffer, getKernelWidth() * 4);
+					}
 				}
 				
 				final WritableImage writableImage = imageView.snapshot(null, null);
