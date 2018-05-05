@@ -21,6 +21,7 @@ Supported Features
 | Camera                 | Free Movement                                            |
 | Camera                 | Fisheye camera lens                                      |
 | Camera                 | Thin camera lens                                         |
+| Effect                 | Bloom - WIP                                              |
 | Effect                 | Blur                                                     |
 | Effect                 | Detect Edges                                             |
 | Effect                 | Emboss                                                   |
@@ -43,7 +44,7 @@ Supported Features
 | Shape                  | Sphere                                                   |
 | Shape                  | Triangle                                                 |
 | Shape                  | Triangle Mesh                                            |
-| Sund and Sky Model     | Perez                                                    |
+| Sun and Sky Model      | Perez                                                    |
 | Texture                | Checkerboard                                             |
 | Texture                | Constant (Solid)                                         |
 | Texture                | Image                                                    |
@@ -79,6 +80,7 @@ Supported Menu Controls
 | Camera > Walk Lock             | Toggle walk lock                                 |
 | Camera > Fisheye Camera Lens   | Use a Fisheye camera lens                        |
 | Camera > Thin Camera Lens      | Use a Thin camera lens                           |
+| Effect > Bloom                 | Toggle the Bloom effect                          |
 | Effect > Blur                  | Toggle the Blur effect                           |
 | Effect > Detect Edges          | Toggle the Detect Edges effect                   |
 | Effect > Emboss                | Toggle the Emboss effect                         |
