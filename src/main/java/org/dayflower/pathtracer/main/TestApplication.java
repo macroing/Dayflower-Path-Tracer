@@ -521,19 +521,21 @@ public final class TestApplication extends AbstractApplication implements Camera
 		}
 		
 		if(isKeyPressed(KeyCode.R, true)) {
-			final int mouseX = getMouseX();
-			final int mouseY = getMouseY();
-			final int index = mouseY * getKernelWidth() + mouseX;
-			
-			final int[] shapeOffsetsForPrimaryRay = abstractRendererKernel.getShapeOffsetsForPrimaryRay();
-			
-			if(index >= 0 && index < shapeOffsetsForPrimaryRay.length) {
-				final int selectedShapeIndex = shapeOffsetsForPrimaryRay[index];
+			synchronized(this.pixels1) {
+				final int mouseX = getMouseX();
+				final int mouseY = getMouseY();
+				final int index = mouseY * getKernelWidth() + mouseX;
 				
-				if(selectedShapeIndex == abstractRendererKernel.getSelectedShapeIndex()) {
-					abstractRendererKernel.setSelectedShapeIndex(-1);
-				} else {
-					abstractRendererKernel.setSelectedShapeIndex(selectedShapeIndex);
+				final int[] shapeOffsetsForPrimaryRay = abstractRendererKernel.getShapeOffsetsForPrimaryRay();
+				
+				if(index >= 0 && index < shapeOffsetsForPrimaryRay.length) {
+					final int selectedShapeIndex = shapeOffsetsForPrimaryRay[index];
+					
+					if(selectedShapeIndex == abstractRendererKernel.getSelectedShapeIndex()) {
+						abstractRendererKernel.setSelectedShapeIndex(-1);
+					} else {
+						abstractRendererKernel.setSelectedShapeIndex(selectedShapeIndex);
+					}
 				}
 			}
 		}
@@ -684,58 +686,60 @@ public final class TestApplication extends AbstractApplication implements Camera
 			while(this.isRunning.get()) {
 				final long renderTimeMillis0 = System.currentTimeMillis();
 				
-				this.abstractRendererKernel.execute(this.range);
-				this.abstractRendererKernel.get(this.pixels1);
-				
-				if(this.settingFilterBloom.isEnabled()) {
-					this.convolutionKernel.update();
-					this.convolutionKernel.enableBloomPass1();
-					this.convolutionKernel.execute(this.range);
-					this.convolutionKernel.enableBloomPass2();
-					this.convolutionKernel.execute(this.range);
-					this.convolutionKernel.get();
-				}
-				
-				if(this.settingFilterBlur.isEnabled()) {
-					this.convolutionKernel.update();
-					this.convolutionKernel.enableBlur();
-					this.convolutionKernel.execute(this.range);
-					this.convolutionKernel.get();
-				}
-				
-				if(this.settingFilterDetectEdges.isEnabled()) {
-					this.convolutionKernel.update();
-					this.convolutionKernel.enableDetectEdges();
-					this.convolutionKernel.execute(this.range);
-					this.convolutionKernel.get();
-				}
-				
-				if(this.settingFilterEmboss.isEnabled()) {
-					this.convolutionKernel.update();
-					this.convolutionKernel.enableEmboss();
-					this.convolutionKernel.execute(this.range);
-					this.convolutionKernel.get();
-				}
-				
-				if(this.settingFilterGradientHorizontal.isEnabled()) {
-					this.convolutionKernel.update();
-					this.convolutionKernel.enableGradientHorizontal();
-					this.convolutionKernel.execute(this.range);
-					this.convolutionKernel.get();
-				}
-				
-				if(this.settingFilterGradientVertical.isEnabled()) {
-					this.convolutionKernel.update();
-					this.convolutionKernel.enableGradientVertical();
-					this.convolutionKernel.execute(this.range);
-					this.convolutionKernel.get();
-				}
-				
-				if(this.settingFilterSharpen.isEnabled()) {
-					this.convolutionKernel.update();
-					this.convolutionKernel.enableSharpen();
-					this.convolutionKernel.execute(this.range);
-					this.convolutionKernel.get();
+				synchronized(this.pixels1) {
+					this.abstractRendererKernel.execute(this.range);
+					this.abstractRendererKernel.get(this.pixels1);
+					
+					if(this.settingFilterBloom.isEnabled()) {
+						this.convolutionKernel.update();
+						this.convolutionKernel.enableBloomPass1();
+						this.convolutionKernel.execute(this.range);
+						this.convolutionKernel.enableBloomPass2();
+						this.convolutionKernel.execute(this.range);
+						this.convolutionKernel.get();
+					}
+					
+					if(this.settingFilterBlur.isEnabled()) {
+						this.convolutionKernel.update();
+						this.convolutionKernel.enableBlur();
+						this.convolutionKernel.execute(this.range);
+						this.convolutionKernel.get();
+					}
+					
+					if(this.settingFilterDetectEdges.isEnabled()) {
+						this.convolutionKernel.update();
+						this.convolutionKernel.enableDetectEdges();
+						this.convolutionKernel.execute(this.range);
+						this.convolutionKernel.get();
+					}
+					
+					if(this.settingFilterEmboss.isEnabled()) {
+						this.convolutionKernel.update();
+						this.convolutionKernel.enableEmboss();
+						this.convolutionKernel.execute(this.range);
+						this.convolutionKernel.get();
+					}
+					
+					if(this.settingFilterGradientHorizontal.isEnabled()) {
+						this.convolutionKernel.update();
+						this.convolutionKernel.enableGradientHorizontal();
+						this.convolutionKernel.execute(this.range);
+						this.convolutionKernel.get();
+					}
+					
+					if(this.settingFilterGradientVertical.isEnabled()) {
+						this.convolutionKernel.update();
+						this.convolutionKernel.enableGradientVertical();
+						this.convolutionKernel.execute(this.range);
+						this.convolutionKernel.get();
+					}
+					
+					if(this.settingFilterSharpen.isEnabled()) {
+						this.convolutionKernel.update();
+						this.convolutionKernel.enableSharpen();
+						this.convolutionKernel.execute(this.range);
+						this.convolutionKernel.get();
+					}
 				}
 				
 				synchronized(this.pixels0) {
