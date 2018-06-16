@@ -1520,6 +1520,27 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int pixelIndex1 = getLocalId() * 3;
 		
 		if(this.renderer == RENDERER_PATH_TRACER) {
+			final long oldSubSample = this.subSamples[pixelIndex];
+			final long newSubSample = oldSubSample + 1L;
+			
+			final float r = this.currentPixelColors[pixelIndex1 + 0];
+			final float g = this.currentPixelColors[pixelIndex1 + 1];
+			final float b = this.currentPixelColors[pixelIndex1 + 2];
+			
+			final float oldAverageR = this.accumulatedPixelColors[pixelIndex0 + 0];
+			final float oldAverageG = this.accumulatedPixelColors[pixelIndex0 + 1];
+			final float oldAverageB = this.accumulatedPixelColors[pixelIndex0 + 2];
+			
+			final float newAverageR = oldAverageR + ((r - oldAverageR) / newSubSample);
+			final float newAverageG = oldAverageG + ((g - oldAverageG) / newSubSample);
+			final float newAverageB = oldAverageB + ((b - oldAverageB) / newSubSample);
+			
+			this.subSamples[pixelIndex] = newSubSample;
+			this.accumulatedPixelColors[pixelIndex0 + 0] = newAverageR;
+			this.accumulatedPixelColors[pixelIndex0 + 1] = newAverageG;
+			this.accumulatedPixelColors[pixelIndex0 + 2] = newAverageB;
+			
+			/*
 //			Retrieve the current sub-sample:
 			final float subSample = this.subSamples[pixelIndex];
 			
@@ -1544,6 +1565,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			this.accumulatedPixelColors[pixelIndex0] *= currentSubSamplesReciprocal;
 			this.accumulatedPixelColors[pixelIndex0 + 1] *= currentSubSamplesReciprocal;
 			this.accumulatedPixelColors[pixelIndex0 + 2] *= currentSubSamplesReciprocal;
+			*/
 		} else {
 			this.accumulatedPixelColors[pixelIndex0] = this.currentPixelColors[pixelIndex1];
 			this.accumulatedPixelColors[pixelIndex0 + 1] = this.currentPixelColors[pixelIndex1 + 1];
