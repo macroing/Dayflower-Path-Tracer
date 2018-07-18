@@ -351,7 +351,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final Label labelTurbidity = new Label("Turbidity:");
 		
 		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
-		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 2.0D, this.sky.getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
+		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 1.0D, this.sky.getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
 		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
 		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, this.sky.getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
@@ -441,7 +441,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void onMouseDragged(final float x, final float y) {
-		this.camera.changeYaw(Angle.degrees(x * 0.5F));
+		this.camera.changeYaw(Angle.degrees(-x * 0.5F));
 		this.camera.changePitch(Angle.degrees(-(y * 0.5F), -90.0F, 90.0F));
 	}
 	
@@ -454,7 +454,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	@Override
 	protected void onMouseMoved(final float x, final float y) {
 		if(isMouseRecentering()) {
-			this.camera.changeYaw(Angle.degrees(x * 0.5F));
+			this.camera.changeYaw(Angle.degrees(-x * 0.5F));
 			this.camera.changePitch(Angle.degrees(-(y * 0.5F), -90.0F, 90.0F));
 		}
 	}

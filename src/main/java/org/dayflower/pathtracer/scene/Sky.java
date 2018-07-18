@@ -73,7 +73,7 @@ public final class Sky {
 	private float[][] imageHistogram;
 	@SuppressWarnings("unused")
 	private final int samples = 4;
-	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y());
+	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y(), Vector3.z());
 	private Point3 sunOrigin;
 	private SpectralCurve radiance;
 	private Vector3 sunDirection;
@@ -245,15 +245,15 @@ public final class Sky {
 	}
 	
 	public void setX(final float x) {
-		set(new Vector3(x, this.sunDirectionWorld.y, this.sunDirectionWorld.z), this.turbidity);
+		set(new Vector3(x, this.sunDirectionWorld.y, this.sunDirectionWorld.z).normalize(), this.turbidity);
 	}
 	
 	public void setY(final float y) {
-		set(new Vector3(this.sunDirectionWorld.x, y, this.sunDirectionWorld.z), this.turbidity);
+		set(new Vector3(this.sunDirectionWorld.x, y, this.sunDirectionWorld.z).normalize(), this.turbidity);
 	}
 	
 	public void setZ(final float z) {
-		set(new Vector3(this.sunDirectionWorld.x, this.sunDirectionWorld.y, z), this.turbidity);
+		set(new Vector3(this.sunDirectionWorld.x, this.sunDirectionWorld.y, z).normalize(), this.turbidity);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

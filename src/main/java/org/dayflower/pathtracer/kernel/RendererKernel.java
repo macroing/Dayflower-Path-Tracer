@@ -57,6 +57,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET = 1;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT = 2;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL = 5;
+	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING = 19;
 	private static final int RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES = 8;
 	private static final int RELATIVE_OFFSET_RAY_DIRECTION = 3;
 	private static final int RELATIVE_OFFSET_RAY_ORIGIN = 0;
@@ -65,7 +66,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int RENDERER_RAY_MARCHER = 3;
 	private static final int SHADING_FLAT = 1;
 	private static final int SHADING_GOURAUD = 2;
-	private static final int SIZE_INTERSECTION = 19;
+	private static final int SIZE_INTERSECTION = 22;
 	private static final int SIZE_PIXEL = 4;
 	private static final int SIZE_RAY = 6;
 	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE = 1;
@@ -1899,6 +1900,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int offsetIntersectionOrthoNormalBasisW = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_W;
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
 		final int offsetIntersectionSurfaceNormal = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 		final int offsetIntersectionUVCoordinates = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
 		
 //		Calculate Ortho Normal Basis W:
@@ -1938,6 +1940,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormalX;
 		this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormalY;
 		this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormalZ;
+		this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormalX;
+		this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormalY;
+		this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormalZ;
 		this.intersections[offsetIntersectionUVCoordinates] = u;
 		this.intersections[offsetIntersectionUVCoordinates + 1] = v;
 	}
@@ -1982,6 +1987,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Retrieve offsets for the surface intersection point, surface normal and UV-coordinates:
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
 		final int offsetIntersectionSurfaceNormal = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 		final int offsetIntersectionUVCoordinates = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
 		
 //		Update the intersections array:
@@ -1993,6 +1999,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
 		this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
 		this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
+		this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormal1X;
+		this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
+		this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 		this.intersections[offsetIntersectionUVCoordinates] = u;
 		this.intersections[offsetIntersectionUVCoordinates + 1] = v;
 	}
@@ -2061,6 +2070,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Calculate some offsets:
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
 		final int offsetIntersectionSurfaceNormal = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 		final int offsetIntersectionUVCoordinates = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
 		
 //		Update the intersections array:
@@ -2093,6 +2103,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal2X;
 			this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal2Y;
 			this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal2Z;
+			this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormal2X;
+			this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal2Y;
+			this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal2Z;
 		} else if(this.shading == SHADING_GOURAUD) {
 //			Calculate the surface normal for Gouraud Shading:
 			final float surfaceNormalAX = this.vector3s[offsetSurfaceNormalA];
@@ -2120,6 +2133,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal5X;
 			this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal5Y;
 			this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal5Z;
+			this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormal5X;
+			this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal5Y;
+			this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal5Z;
 		}
 	}
 	
@@ -2377,13 +2393,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		TODO: Add support for tangent space. This requires the Ortho Normal Basis (Tangent vectors). The Ortho Normal Basis probably requires object-spaces (at least for simplicity).
 //		final float isTangentSpace = this.textures[texturesOffset + CompiledScene.SURFACE_NORMAL_TEXTURE_RELATIVE_OFFSET_IS_TANGENT_SPACE];
 		
-		final float surfaceNormalX = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL];
-		final float surfaceNormalY = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 1];
-		final float surfaceNormalZ = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL + 2];
+		final float surfaceNormalShadingX = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING];
+		final float surfaceNormalShadingY = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 1];
+		final float surfaceNormalShadingZ = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 2];
 		
-		final float r = (surfaceNormalX + 1.0F) * 0.5F;
-		final float g = (surfaceNormalY + 1.0F) * 0.5F;
-		final float b = (surfaceNormalZ + 1.0F) * 0.5F;
+		final float r = (surfaceNormalShadingX + 1.0F) * 0.5F;
+		final float g = (surfaceNormalShadingY + 1.0F) * 0.5F;
+		final float b = (surfaceNormalShadingZ + 1.0F) * 0.5F;
 		
 		this.temporaryColors[pixelIndex] = r;
 		this.temporaryColors[pixelIndex + 1] = g;
@@ -2491,7 +2507,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 			
 //			Retrieve the offsets of the surface intersection point and the surface normal:
 			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-			final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+//			final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 			
 //			Retrieve the surface intersection point:
 			final float surfaceIntersectionPointX = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
@@ -2499,9 +2516,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float surfaceIntersectionPointZ = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
 			
 //			Retrieve the surface normal:
-			final float surfaceNormalX = this.intersections[offsetIntersectionSurfaceNormal];
-			final float surfaceNormalY = this.intersections[offsetIntersectionSurfaceNormal + 1];
-			final float surfaceNormalZ = this.intersections[offsetIntersectionSurfaceNormal + 2];
+//			final float surfaceNormalX = this.intersections[offsetIntersectionSurfaceNormal];
+//			final float surfaceNormalY = this.intersections[offsetIntersectionSurfaceNormal + 1];
+//			final float surfaceNormalZ = this.intersections[offsetIntersectionSurfaceNormal + 2];
+			
+//			Retrieve the surface normal for shading:
+			final float surfaceNormalShadingX = this.intersections[offsetIntersectionSurfaceNormalShading];
+			final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+			final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
 			
 //			Calculate the albedo texture color for the intersected shape:
 			doCalculateTextureColor(CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
@@ -2578,16 +2600,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final int material = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL]);
 			
 //			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
-			final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
+			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
 			final float dotProductMultipliedByTwo = dotProduct * 2.0F;
 			
 //			Check if the surface normal is correctly oriented:
 			final boolean isCorrectlyOriented = dotProduct < 0.0F;
 			
 //			Retrieve the correctly oriented surface normal:
-			final float w0X = isCorrectlyOriented ? surfaceNormalX : -surfaceNormalX;
-			final float w0Y = isCorrectlyOriented ? surfaceNormalY : -surfaceNormalY;
-			final float w0Z = isCorrectlyOriented ? surfaceNormalZ : -surfaceNormalZ;
+			final float w0X = isCorrectlyOriented ? surfaceNormalShadingX : -surfaceNormalShadingX;
+			final float w0Y = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
+			final float w0Z = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
 			
 //			Pre-compute the random values that will be used later:
 			final float randomA = nextFloat();
@@ -2605,9 +2627,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float totalInternalReflection = 1.0F - nnt * nnt * (1.0F - dotProductOfW0AndDirection * dotProductOfW0AndDirection);
 				
 //				Calculate the reflection direction:
-				final float reflectionDirectionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
-				final float reflectionDirectionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
-				final float reflectionDirectionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
+				final float reflectionDirectionX = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
+				final float reflectionDirectionY = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
+				final float reflectionDirectionZ = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
 				
 //				Initialize the specular color component values to be used:
 				final float specularColorR = 1.0F;
@@ -2793,9 +2815,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
 				
 //				Calculate the orthonormal basis W vector:
-				final float w1X = directionX - surfaceNormalX * dotProductMultipliedByTwo;
-				final float w1Y = directionY - surfaceNormalY * dotProductMultipliedByTwo;
-				final float w1Z = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
+				final float w1X = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
+				final float w1Y = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
+				final float w1Z = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
 				final float w1LengthReciprocal = rsqrt(w1X * w1X + w1Y * w1Y + w1Z * w1Z);
 				final float w2X = w1X * w1LengthReciprocal;
 				final float w2Y = w1Y * w1LengthReciprocal;
@@ -2842,7 +2864,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 				radianceMultiplierB *= albedoColorB;
 			} else if(material == MATERIAL_GLASS) {
 //				Check if the current ray is going in towards the same shape or out of it:
-				final boolean isGoingIn = surfaceNormalX * w0X + surfaceNormalY * w0Y + surfaceNormalZ * w0Z > 0.0F;
+				final boolean isGoingIn = surfaceNormalShadingX * w0X + surfaceNormalShadingY * w0Y + surfaceNormalShadingZ * w0Z > 0.0F;
 				
 //				TODO: Write explanation!
 				final float nnt = isGoingIn ? REFRACTIVE_INDEX_0_DIVIDED_BY_REFRACTIVE_INDEX_1 : REFRACTIVE_INDEX_1_DIVIDED_BY_REFRACTIVE_INDEX_0;
@@ -2854,9 +2876,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float totalInternalReflection = 1.0F - nnt * nnt * (1.0F - dotProductOfW0AndDirection * dotProductOfW0AndDirection);
 				
 //				Calculate the reflection direction:
-				final float reflectionDirectionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
-				final float reflectionDirectionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
-				final float reflectionDirectionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
+				final float reflectionDirectionX = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
+				final float reflectionDirectionY = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
+				final float reflectionDirectionZ = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
 				
 				if(totalInternalReflection < 0.0F) {
 //					Update the ray origin for the next iteration:
@@ -2874,16 +2896,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 					
 //					Calculate the transmission direction:
 					final float scalar = isGoingIn ? dotProductOfW0AndDirection * nnt + sqrtTotalInternalReflection : -(dotProductOfW0AndDirection * nnt + sqrtTotalInternalReflection);
-					final float direction0X = directionX * nnt - surfaceNormalX * scalar;
-					final float direction0Y = directionY * nnt - surfaceNormalY * scalar;
-					final float direction0Z = directionZ * nnt - surfaceNormalZ * scalar;
+					final float direction0X = directionX * nnt - surfaceNormalShadingX * scalar;
+					final float direction0Y = directionY * nnt - surfaceNormalShadingY * scalar;
+					final float direction0Z = directionZ * nnt - surfaceNormalShadingZ * scalar;
 					final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
 					final float transmissionDirectionX = direction0X * direction0LengthReciprocal;
 					final float transmissionDirectionY = direction0Y * direction0LengthReciprocal;
 					final float transmissionDirectionZ = direction0Z * direction0LengthReciprocal;
 					
 //					Calculate some angles:
-					final float angle1 = (isGoingIn ? -dotProductOfW0AndDirection : transmissionDirectionX * surfaceNormalX + transmissionDirectionY * surfaceNormalY + transmissionDirectionZ * surfaceNormalZ);
+					final float angle1 = (isGoingIn ? -dotProductOfW0AndDirection : transmissionDirectionX * surfaceNormalShadingX + transmissionDirectionY * surfaceNormalShadingY + transmissionDirectionZ * surfaceNormalShadingZ);
 					final float angle2 = 1.0F - angle1;
 					
 //					Calculate the reflectance:
@@ -2930,14 +2952,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 				depthCurrent = depthCurrent + 0;
 			} else if(material == MATERIAL_MIRROR) {
 //				Update the ray origin for the next iteration:
-				originX = surfaceIntersectionPointX + surfaceNormalX * 0.000001F;
-				originY = surfaceIntersectionPointY + surfaceNormalY * 0.000001F;
-				originZ = surfaceIntersectionPointZ + surfaceNormalZ * 0.000001F;
+				originX = surfaceIntersectionPointX + surfaceNormalShadingX * 0.000001F;
+				originY = surfaceIntersectionPointY + surfaceNormalShadingY * 0.000001F;
+				originZ = surfaceIntersectionPointZ + surfaceNormalShadingZ * 0.000001F;
 				
 //				Update the ray direction for the next iteration:
-				directionX = directionX - surfaceNormalX * dotProductMultipliedByTwo;
-				directionY = directionY - surfaceNormalY * dotProductMultipliedByTwo;
-				directionZ = directionZ - surfaceNormalZ * dotProductMultipliedByTwo;
+				directionX = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
+				directionY = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
+				directionZ = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
 				
 //				Multiply the current radiance multiplier with the albedo:
 				radianceMultiplierR *= albedoColorR;
@@ -3272,12 +3294,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float b = 2.0F * this.temporaryColors[pixelIndex0 + 2] - 1.0F;
 			
 //			Retrieve the offset of the surface normal in the intersections array:
-			final int offsetIntersectionSurfaceNormal = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 			
 //			Retrieve the orthonormal basis W-vector:
-			final float wX = this.intersections[offsetIntersectionSurfaceNormal];
-			final float wY = this.intersections[offsetIntersectionSurfaceNormal + 1];
-			final float wZ = this.intersections[offsetIntersectionSurfaceNormal + 2];
+			final float wX = this.intersections[offsetIntersectionSurfaceNormalShading];
+			final float wY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+			final float wZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
 			
 			final int type = (int)(this.shapes[shapesOffset]);
 			
@@ -3310,9 +3332,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
 				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
 				
-				this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
-				this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
-				this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
+				this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormal1X;
+				this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
+				this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 			} else {
 //				Calculate the absolute values of the orthonormal basis W-vector:
 				final float absWX = abs(wX);
@@ -3351,9 +3373,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
 				
 //				Update the intersections array:
-				this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
-				this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
-				this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
+				this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormal1X;
+				this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
+				this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 			}
 		}
 	}
@@ -3375,7 +3397,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		if(/*this.isNormalMapping == 1 &&*/ amount > 0.0F && scale > 0.0F) {
 //			Retrieve the surface intersection point and the surface normal from the current shape:
 			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-			final int offsetIntersectionSurfaceNormal = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 			
 //			Retrieve the X-, Y- and Z-component values from the surface intersection point:
 			final float x0 = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
@@ -3396,9 +3418,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float noiseZ = doPerlinNoise(z1, x1, y1);
 			
 //			Calculate the surface normal:
-			final float surfaceNormal0X = this.intersections[offsetIntersectionSurfaceNormal];
-			final float surfaceNormal0Y = this.intersections[offsetIntersectionSurfaceNormal + 1];
-			final float surfaceNormal0Z = this.intersections[offsetIntersectionSurfaceNormal + 2];
+			final float surfaceNormal0X = this.intersections[offsetIntersectionSurfaceNormalShading];
+			final float surfaceNormal0Y = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+			final float surfaceNormal0Z = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
 			final float surfaceNormal1X = surfaceNormal0X + noiseX * amount;
 			final float surfaceNormal1Y = surfaceNormal0Y + noiseY * amount;
 			final float surfaceNormal1Z = surfaceNormal0Z + noiseZ * amount;
@@ -3408,9 +3430,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float surfaceNormal2Z = surfaceNormal1Z * surfaceNormal1LengthReciprocal;
 			
 //			Update the intersections array with the new surface normal:
-			this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormal2X;
-			this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormal2Y;
-			this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormal2Z;
+			this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormal2X;
+			this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal2Y;
+			this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal2Z;
 		}
 	}
 	
@@ -3480,7 +3502,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 //		Retrieve the offsets of the surface intersection point and the surface normal in the intersections array:
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 		
 //		Retrieve the surface intersection point from the intersections array:
 		final float surfaceIntersectionPointX = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
@@ -3488,9 +3510,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float surfaceIntersectionPointZ = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
 		
 //		Retrieve the surface normal from the intersections array:
-		final float surfaceNormalX = this.intersections[offsetIntersectionSurfaceNormal];
-		final float surfaceNormalY = this.intersections[offsetIntersectionSurfaceNormal + 1];
-		final float surfaceNormalZ = this.intersections[offsetIntersectionSurfaceNormal + 2];
+		final float surfaceNormalShadingX = this.intersections[offsetIntersectionSurfaceNormalShading];
+		final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+		final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
 		
 //		Initialize the pixel color components with ambient lighting:
 		pixelColorR = albedoColorR * 0.5F;
@@ -3506,7 +3528,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float lightDirection0X = sunOriginX - surfaceIntersectionPointX;
 		final float lightDirection0Y = sunOriginY - surfaceIntersectionPointY;
 		final float lightDirection0Z = sunOriginZ - surfaceIntersectionPointZ;
-		final float lightDirection0LengthReciprocal = rsqrt(lightDirection0X * lightDirection0X + lightDirection0Y * lightDirection0Y + lightDirection0Z * lightDirection0Z);
+		final float lightDirection0Length = sqrt(lightDirection0X * lightDirection0X + lightDirection0Y * lightDirection0Y + lightDirection0Z * lightDirection0Z);
+		final float lightDirection0LengthReciprocal = 1.0F / lightDirection0Length;
 		final float lightDirection1X = lightDirection0X * lightDirection0LengthReciprocal;
 		final float lightDirection1Y = lightDirection0Y * lightDirection0LengthReciprocal;
 		final float lightDirection1Z = lightDirection0Z * lightDirection0LengthReciprocal;
@@ -3517,13 +3540,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
 		final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
 		
-//		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
-		final int shapesOffset0 = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
-		
-		if(distance0 != INFINITY && shapesOffset0 != -1) {
-			final float wi0X = sunOriginX - surfaceNormalX;
-			final float wi0Y = sunOriginY - surfaceNormalY;
-			final float wi0Z = sunOriginZ - surfaceNormalZ;
+		if(distance0 > lightDirection0Length) {
+			final float wi0X = sunOriginX - surfaceNormalShadingX;
+			final float wi0Y = sunOriginY - surfaceNormalShadingY;
+			final float wi0Z = sunOriginZ - surfaceNormalShadingZ;
 			final float wi0LengthReciprocal = rsqrt(wi0X * wi0X + wi0Y * wi0Y + wi0Z * wi0Z);
 			final float wi1X = wi0X * wi0LengthReciprocal;
 			final float wi1Y = wi0Y * wi0LengthReciprocal;
@@ -3533,12 +3553,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float woY = -directionY;
 			final float woZ = -directionZ;
 			
-			final float surfaceNormalDotWi = surfaceNormalX * wi1X + surfaceNormalY * wi1Y + surfaceNormalZ * wi1Z;
+			final float surfaceNormalDotWi = surfaceNormalShadingX * wi1X + surfaceNormalShadingY * wi1Y + surfaceNormalShadingZ * wi1Z;
 			
 			if(surfaceNormalDotWi > 0.0F) {
-				final float reflectionX = -wi1X + (2.0F * surfaceNormalX * surfaceNormalDotWi);
-				final float reflectionY = -wi1Y + (2.0F * surfaceNormalY * surfaceNormalDotWi);
-				final float reflectionZ = -wi1Z + (2.0F * surfaceNormalZ * surfaceNormalDotWi);
+				final float reflectionX = -wi1X + (2.0F * surfaceNormalShadingX * surfaceNormalDotWi);
+				final float reflectionY = -wi1Y + (2.0F * surfaceNormalShadingY * surfaceNormalDotWi);
+				final float reflectionZ = -wi1Z + (2.0F * surfaceNormalShadingZ * surfaceNormalDotWi);
 				
 				final float reflectionDotWo = reflectionX * woX + reflectionY * woY + reflectionZ * woZ;
 				

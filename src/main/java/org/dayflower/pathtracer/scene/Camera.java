@@ -405,9 +405,12 @@ public final class Camera {
 		final float wY = getOrthoNormalBasisWY();
 		final float wZ = getOrthoNormalBasisWZ();
 		
-		final float u0X = wY * upZ - wZ * upY;
-		final float u0Y = wZ * upX - wX * upZ;
-		final float u0Z = wX * upY - wY * upX;
+//		final float u0X = wY * upZ - wZ * upY;
+//		final float u0Y = wZ * upX - wX * upZ;
+//		final float u0Z = wX * upY - wY * upX;
+		final float u0X = upY * wZ - upZ * wY;
+		final float u0Y = upZ * wX - upX * wZ;
+		final float u0Z = upX * wY - upY * wX;
 		final float u0LengthReciprocal = 1.0F / sqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
 		final float u1X = u0X * u0LengthReciprocal;
 		final float u1Y = u0Y * u0LengthReciprocal;
@@ -428,9 +431,12 @@ public final class Camera {
 		final float wY = getOrthoNormalBasisWY();
 		final float wZ = getOrthoNormalBasisWZ();
 		
-		final float v0X = uY * wZ - uZ * wY;
-		final float v0Y = uZ * wX - uX * wZ;
-		final float v0Z = uX * wY - uY * wX;
+//		final float v0X = uY * wZ - uZ * wY;
+//		final float v0Y = uZ * wX - uX * wZ;
+//		final float v0Z = uX * wY - uY * wX;
+		final float v0X = wY * uZ - wZ * uY;
+		final float v0Y = wZ * uX - wX * uZ;
+		final float v0Z = wX * uY - wY * uX;
 		final float v0LengthReciprocal = 1.0F / sqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
 		final float v1X = v0X * v0LengthReciprocal;
 		final float v1Y = v0Y * v0LengthReciprocal;
@@ -507,8 +513,10 @@ public final class Camera {
 		final float y = sin(pitch);
 		final float z = cos(yaw) * cos(pitch);
 		
-		setViewDirection(-x, -y, -z);
-		setWalkDirection(-x, getWalkDirectionY(), -z);
+//		setViewDirection(-x, -y, -z);
+//		setWalkDirection(-x, getWalkDirectionY(), -z);
+		setViewDirection(x, y, z);
+		setWalkDirection(x, getWalkDirectionY(), z);
 	}
 	
 //	TODO: Add Javadocs.
@@ -672,7 +680,7 @@ public final class Camera {
 		final float y3 = y2 * lengthReciprocal;
 		final float z3 = z2 * lengthReciprocal;
 		
-		setCenter(getCenterX() + x3 * distance, getCenterY() + y3 * distance, getCenterZ() + z3 * distance);
+		setCenter(getCenterX() - x3 * distance, getCenterY() - y3 * distance, getCenterZ() - z3 * distance);
 	}
 	
 //	TODO: Add Javadocs.
