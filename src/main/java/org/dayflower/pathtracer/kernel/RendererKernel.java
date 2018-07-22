@@ -1548,58 +1548,26 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int pixelIndex0 = pixelIndex * 3;
 		final int pixelIndex1 = getLocalId() * 3;
 		
-		if(this.renderer == RENDERER_PATH_TRACER) {
-			final long oldSubSample = this.subSamples[pixelIndex];
-			final long newSubSample = oldSubSample + 1L;
-			
-			final float r = this.currentPixelColors[pixelIndex1 + 0];
-			final float g = this.currentPixelColors[pixelIndex1 + 1];
-			final float b = this.currentPixelColors[pixelIndex1 + 2];
-			
-			final float oldAverageR = this.accumulatedPixelColors[pixelIndex0 + 0];
-			final float oldAverageG = this.accumulatedPixelColors[pixelIndex0 + 1];
-			final float oldAverageB = this.accumulatedPixelColors[pixelIndex0 + 2];
-			
-			final float newAverageR = oldAverageR + ((r - oldAverageR) / newSubSample);
-			final float newAverageG = oldAverageG + ((g - oldAverageG) / newSubSample);
-			final float newAverageB = oldAverageB + ((b - oldAverageB) / newSubSample);
-			
-			this.subSamples[pixelIndex] = newSubSample;
-			this.accumulatedPixelColors[pixelIndex0 + 0] = newAverageR;
-			this.accumulatedPixelColors[pixelIndex0 + 1] = newAverageG;
-			this.accumulatedPixelColors[pixelIndex0 + 2] = newAverageB;
-			
-			/*
-//			Retrieve the current sub-sample:
-			final float subSample = this.subSamples[pixelIndex];
-			
-//			Multiply the 'normalized' accumulated pixel color component values with the current sub-sample count:
-			this.accumulatedPixelColors[pixelIndex0] *= subSample;
-			this.accumulatedPixelColors[pixelIndex0 + 1] *= subSample;
-			this.accumulatedPixelColors[pixelIndex0 + 2] *= subSample;
-			
-//			Add the current pixel color component values to the accumulated pixel color component values:
-			this.accumulatedPixelColors[pixelIndex0] += this.currentPixelColors[pixelIndex1];
-			this.accumulatedPixelColors[pixelIndex0 + 1] += this.currentPixelColors[pixelIndex1 + 1];
-			this.accumulatedPixelColors[pixelIndex0 + 2] += this.currentPixelColors[pixelIndex1 + 2];
-			
-//			Increment the current sub-sample count by one:
-			this.subSamples[pixelIndex] += 1;
-			
-//			Retrieve the current sub-sample count and calculate its reciprocal (inverse), such that no division is needed further on:
-			final float currentSubSamples = subSample + 1.0F;
-			final float currentSubSamplesReciprocal = 1.0F / currentSubSamples;
-			
-//			Multiply the accumulated pixel color component values with the reciprocal of the current sub-sample count to 'normalize' it:
-			this.accumulatedPixelColors[pixelIndex0] *= currentSubSamplesReciprocal;
-			this.accumulatedPixelColors[pixelIndex0 + 1] *= currentSubSamplesReciprocal;
-			this.accumulatedPixelColors[pixelIndex0 + 2] *= currentSubSamplesReciprocal;
-			*/
-		} else {
-			this.accumulatedPixelColors[pixelIndex0] = this.currentPixelColors[pixelIndex1];
-			this.accumulatedPixelColors[pixelIndex0 + 1] = this.currentPixelColors[pixelIndex1 + 1];
-			this.accumulatedPixelColors[pixelIndex0 + 2] = this.currentPixelColors[pixelIndex1 + 2];
-		}
+//		Perform the moving average algorithm to calculate the average pixel color:
+		final long oldSubSample = this.subSamples[pixelIndex];
+		final long newSubSample = oldSubSample + 1L;
+		
+		final float currentPixelR = this.currentPixelColors[pixelIndex1 + 0];
+		final float currentPixelG = this.currentPixelColors[pixelIndex1 + 1];
+		final float currentPixelB = this.currentPixelColors[pixelIndex1 + 2];
+		
+		final float oldAverageR = this.accumulatedPixelColors[pixelIndex0 + 0];
+		final float oldAverageG = this.accumulatedPixelColors[pixelIndex0 + 1];
+		final float oldAverageB = this.accumulatedPixelColors[pixelIndex0 + 2];
+		
+		final float newAverageR = oldAverageR + ((currentPixelR - oldAverageR) / newSubSample);
+		final float newAverageG = oldAverageG + ((currentPixelG - oldAverageG) / newSubSample);
+		final float newAverageB = oldAverageB + ((currentPixelB - oldAverageB) / newSubSample);
+		
+		this.subSamples[pixelIndex] = newSubSample;
+		this.accumulatedPixelColors[pixelIndex0 + 0] = newAverageR;
+		this.accumulatedPixelColors[pixelIndex0 + 1] = newAverageG;
+		this.accumulatedPixelColors[pixelIndex0 + 2] = newAverageB;
 		
 //		Retrieve the 'normalized' accumulated pixel color component values again:
 		float r = this.accumulatedPixelColors[pixelIndex0];
