@@ -11,6 +11,7 @@ This early test implementation of Dayflower, uses a library called Aparapi. Apar
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Engine-2.png "Dayflower Path Tracer")
 
 ### Images of the Ray Tracing algorithm
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Engine-6.png "Dayflower Path Tracer")
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Engine-5.png "Dayflower Path Tracer")
 
 _____________________________________________________________________________________
