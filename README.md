@@ -77,6 +77,15 @@ Supported Keyboard Controls
 
 _____________________________________________________________________________________
 
+Supported Mouse Controls
+------------------------
+| Type        | Description                                                         |
+| ----------- | ------------------------------------------------------------------- |
+| Drag mouse  | Drag mouse to look around                                           |
+| Move mouse  | Move mouse to look around when it has been entered like an FPS-game |
+
+_____________________________________________________________________________________
+
 Supported Menu Controls
 -----------------------
 | Menu Item                      | Description                                      |
@@ -97,6 +106,7 @@ Supported Menu Controls
 | Renderer > Path Tracer         | Use the Path Tracer to render                    |
 | Renderer > Ray Caster          | Use the Ray Caster to render                     |
 | Renderer > Ray Marcher         | Use the Ray Marcher to render                    |
+| Renderer > Ray Tracer          | Use the Ray Tracer to render                     |
 | Scene > Normal Mapping         | Toggle Normal Mapping                            |
 | Scene > Enter Scene            | Enter the scene like an FPS-game                 |
 | Scene > Flat Shading           | Use Flat Shading for Triangles                   |
