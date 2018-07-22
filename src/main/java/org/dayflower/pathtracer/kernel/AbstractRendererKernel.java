@@ -170,6 +170,16 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 		return false;
 	}
 	
+	/**
+	 * Returns {@code true} if, and only if, Ray Tracing is enabled, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, Ray Tracing is enabled, {@code false} otherwise
+	 */
+	@SuppressWarnings("static-method")
+	public boolean isRayTracing() {
+		return false;
+	}
+	
 //	TODO: Add Javadocs!
 	@SuppressWarnings("static-method")
 	public boolean isResetRequired() {
@@ -520,11 +530,22 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	/**
 	 * Sets whether Ray Marching should be enabled or disabled.
 	 * <p>
-	 * If {@code isRayMarching} is {@code false}, the renderer will be a Path Tracer.
+	 * If {@code isRayMarching} is {@code false}, the renderer will be a Ray Tracer.
 	 * 
 	 * @param isRayMarching the Ray Marching state to set
 	 */
 	public void setRayMarching(final boolean isRayMarching) {
+//		Do nothing.
+	}
+	
+	/**
+	 * Sets whether Ray Tracing should be enabled or disabled.
+	 * <p>
+	 * If {@code isRayTracing} is {@code false}, the renderer will be a Path Tracer.
+	 * 
+	 * @param isRayTracing the Ray Tracing state to set
+	 */
+	public void setRayTracing(final boolean isRayTracing) {
 //		Do nothing.
 	}
 	

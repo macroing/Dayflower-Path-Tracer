@@ -136,11 +136,10 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final
 		Camera camera = this.camera;
 		camera.setApertureRadius(0.0F);
-		camera.setCenter(55.0F, 42.0F, 155.6F);
+		camera.setEye(55.0F, 42.0F, 155.6F);
 		camera.setFieldOfViewX(70.0F);
 		camera.setFocalDistance(30.0F);
 		camera.setPitch(Angle.DEGREES_0);
-		camera.setRadius(16.0F);
 		camera.setResolution(getKernelWidth(), getKernelHeight());
 		camera.setWalkLockEnabled(true);
 		camera.setYaw(Angle.DEGREES_0);
@@ -236,8 +235,9 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> this.abstractRendererKernel.setPathTracing(true), this.abstractRendererKernel.isPathTracing(), toggleGroupRenderer);
 		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> this.abstractRendererKernel.setRayCasting(true), this.abstractRendererKernel.isRayCasting(), toggleGroupRenderer);
 		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> this.abstractRendererKernel.setRayMarching(true), this.abstractRendererKernel.isRayMarching(), toggleGroupRenderer);
+		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> this.abstractRendererKernel.setRayTracing(true), this.abstractRendererKernel.isRayTracing(), toggleGroupRenderer);
 		
-		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher);
+		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer);
 		
 		menuBar.getMenus().add(menuRenderer);
 		

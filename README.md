@@ -1,8 +1,8 @@
-Dayflower - Path Tracer v.0.0.26
+Dayflower - Path Tracer v.0.0.27
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
-The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ray Casting and Ray Marching may be used.
+The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ray Casting, Ray Marching and Ray Tracing may be used.
 
 This early test implementation of Dayflower, uses a library called Aparapi. Aparapi is responsible for decompiling the Java bytecode into OpenCL C99 on the fly. The OpenCL C99 is then compiled into binary code that is executable by the current GPU.
 
@@ -40,6 +40,7 @@ Supported Features
 | Rendering Algorithm    | Path Tracing                                             |
 | Rendering Algorithm    | Ray Casting                                              |
 | Rendering Algorithm    | Ray Marching                                             |
+| Rendering Algorithm    | Ray Tracing                                              |
 | Shape                  | Plane                                                    |
 | Shape                  | Sphere                                                   |
 | Shape                  | Triangle                                                 |

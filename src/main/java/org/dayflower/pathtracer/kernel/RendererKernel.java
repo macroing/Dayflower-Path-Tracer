@@ -64,6 +64,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int RENDERER_PATH_TRACER = 1;
 	private static final int RENDERER_RAY_CASTER = 2;
 	private static final int RENDERER_RAY_MARCHER = 3;
+	private static final int RENDERER_RAY_TRACER = 4;
 	private static final int SHADING_FLAT = 1;
 	private static final int SHADING_GOURAUD = 2;
 	private static final int SIZE_INTERSECTION = 22;
@@ -354,6 +355,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Override
 	public boolean isRayMarching() {
 		return this.renderer == RENDERER_RAY_MARCHER;
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, Ray Tracing is enabled, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, Ray Tracing is enabled, {@code false} otherwise
+	 */
+	@Override
+	public boolean isRayTracing() {
+		return this.renderer == RENDERER_RAY_TRACER;
 	}
 	
 //	TODO: Add Javadocs!
@@ -787,8 +798,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 				doPathTracing();
 			} else if(this.renderer == RENDERER_RAY_CASTER) {
 				doRayCasting();
-			} else {
+			} else if(this.renderer == RENDERER_RAY_MARCHER) {
 				doRayMarching();
+			} else {
+				doRayTracing();
 			}
 		} else {
 			final int pixelIndex0 = pixelIndex * 3;
@@ -939,13 +952,26 @@ public final class RendererKernel extends AbstractRendererKernel {
 	/**
 	 * Sets whether Ray Marching should be enabled or disabled.
 	 * <p>
-	 * If {@code isRayMarching} is {@code false}, the renderer will be a Path Tracer.
+	 * If {@code isRayMarching} is {@code false}, the renderer will be a Ray Tracer.
 	 * 
 	 * @param isRayMarching the Ray Marching state to set
 	 */
 	@Override
 	public void setRayMarching(final boolean isRayMarching) {
-		this.renderer = isRayMarching ? RENDERER_RAY_MARCHER : RENDERER_PATH_TRACER;
+		this.renderer = isRayMarching ? RENDERER_RAY_MARCHER : RENDERER_RAY_TRACER;
+		this.isResetRequired = true;
+	}
+	
+	/**
+	 * Sets whether Ray Tracing should be enabled or disabled.
+	 * <p>
+	 * If {@code isRayTracing} is {@code false}, the renderer will be a Path Tracer.
+	 * 
+	 * @param isRayTracing the Ray Tracing state to set
+	 */
+	@Override
+	public void setRayTracing(final boolean isRayTracing) {
+		this.renderer = isRayTracing ? RENDERER_RAY_TRACER : RENDERER_PATH_TRACER;
 		this.isResetRequired = true;
 	}
 	
@@ -1019,6 +1045,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		} else if(isRayCasting()) {
 			setRayMarching(true);
 		} else if(isRayMarching()) {
+			setRayTracing(true);
+		} else if(isRayTracing()) {
 			setPathTracing(true);
 		}
 	}
@@ -1641,27 +1669,17 @@ public final class RendererKernel extends AbstractRendererKernel {
 			g += 1.0F;
 		}
 		
-		if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE) {
-//			Clamp the 'normalized' accumulated pixel color components to the range [0.0, 1.0]:
-			r = min(max(r, 0.0F), 1.0F);
-			g = min(max(g, 0.0F), 1.0F);
-			b = min(max(b, 0.0F), 1.0F);
-			
-//			Multiply the 'normalized' accumulated pixel color components with 255.0, to lie in the range [0.0, 255.0], so they can be displayed:
-			r *= 255.0F;
-			g *= 255.0F;
-			b *= 255.0F;
-		} else {
-//			TODO: Write explanation!
+		if(this.toneMappingAndGammaCorrection != TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE) {
+//			Gamma correct the 'normalized' accumulated pixel color components using sRGB as color space:
 			r = r <= 0.0F ? 0.0F : r >= 1.0F ? 1.0F : r <= this.breakPoint ? r * this.slope : this.slopeMatch * pow(r, 1.0F / this.gamma) - this.segmentOffset;
 			g = g <= 0.0F ? 0.0F : g >= 1.0F ? 1.0F : g <= this.breakPoint ? g * this.slope : this.slopeMatch * pow(g, 1.0F / this.gamma) - this.segmentOffset;
 			b = b <= 0.0F ? 0.0F : b >= 1.0F ? 1.0F : b <= this.breakPoint ? b * this.slope : this.slopeMatch * pow(b, 1.0F / this.gamma) - this.segmentOffset;
-			
-//			TODO: Write explanation!
-			r = min(max(r * 255.0F + 0.5F, 0.0F), 255.0F);
-			g = min(max(g * 255.0F + 0.5F, 0.0F), 255.0F);
-			b = min(max(b * 255.0F + 0.5F, 0.0F), 255.0F);
 		}
+		
+//		Multiply the 'normalized' accumulated pixel color components with 255.0 and clamp them to the range [0.0, 255.0], so they can be displayed:
+		r = min(max(r * 255.0F + 0.5F, 0.0F), 255.0F);
+		g = min(max(g * 255.0F + 0.5F, 0.0F), 255.0F);
+		b = min(max(b * 255.0F + 0.5F, 0.0F), 255.0F);
 		
 //		Update the pixels array with the actual color to display it:
 		this.pixels[pixelsOffset + 0] = (byte)(b);
@@ -3719,6 +3737,170 @@ public final class RendererKernel extends AbstractRendererKernel {
 			delT = delTMultiplier * t;
 		}
 		
+		this.currentPixelColors[pixelIndex0] = pixelColorR;
+		this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
+		this.currentPixelColors[pixelIndex0 + 2] = pixelColorB;
+	}
+	
+	private void doRayTracing() {
+//		Retrieve the maximum depth allowed:
+		final int depthMaximum = 5;
+		
+//		Calculate the current offsets to the intersections and rays arrays:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		final int raysOffset = getLocalId() * SIZE_RAY;
+		
+//		Initialize the current depth:
+		int depthCurrent = 0;
+		
+//		Retrieve the offsets of the ray origin and the ray direction:
+		final int offsetOrigin = raysOffset + RELATIVE_OFFSET_RAY_ORIGIN;
+		final int offsetDirection = raysOffset + RELATIVE_OFFSET_RAY_DIRECTION;
+		
+//		Initialize the origin from the primary ray:
+		float originX = this.rays[offsetOrigin];
+		float originY = this.rays[offsetOrigin + 1];
+		float originZ = this.rays[offsetOrigin + 2];
+		
+//		Initialize the direction from the primary ray:
+		float directionX = this.rays[offsetDirection];
+		float directionY = this.rays[offsetDirection + 1];
+		float directionZ = this.rays[offsetDirection + 2];
+		
+//		Initialize the pixel color to black:
+		float pixelColorR = 0.0F;
+		float pixelColorG = 0.0F;
+		float pixelColorB = 0.0F;
+		
+//		Initialize the radiance multiplier to white:
+		float radianceMultiplierR = 1.0F;
+		float radianceMultiplierG = 1.0F;
+		float radianceMultiplierB = 1.0F;
+		
+//		Retrieve the pixel index:
+		final int pixelIndex0 = getLocalId() * 3;
+		
+//		Initialize the offset of the shape to skip to -1:
+		int shapesOffsetToSkip = -1;
+		
+//		Run the following do-while-loop as long as the current depth is less than the maximum depth and Russian Roulette does not terminate:
+		do {
+//			Perform an intersection test:
+			doPerformIntersectionTest(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
+			
+//			Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
+			final float distance = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+			
+//			Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
+			final int shapesOffset = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+			
+			if(depthCurrent == 0) {
+				this.shapeOffsetsForPrimaryRay[getGlobalId()] = shapesOffset;
+			}
+			
+//			Test that an intersection was actually made, and if not, return black color (or possibly the background color):
+			if(distance == INFINITY || shapesOffset == -1) {
+//				Calculate the color for the sky in the current direction:
+				doCalculateColorForSky(directionX, directionY, directionZ);
+				
+//				Add the color for the sky to the current pixel color:
+				pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
+				pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
+				pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
+				
+//				Update the current pixel color:
+				this.currentPixelColors[pixelIndex0] = pixelColorR;
+				this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
+				this.currentPixelColors[pixelIndex0 + 2] = pixelColorB;
+				
+				return;
+			}
+			
+//			Retrieve the offset to the surfaces array for the given shape:
+			final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+			
+//			Update the offset of the shape to skip to the current offset:
+			shapesOffsetToSkip = shapesOffset;
+			
+//			Retrieve the offsets of the surface intersection point and the surface normal:
+			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
+			
+//			Retrieve the surface intersection point:
+			final float surfaceIntersectionPointX = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
+			final float surfaceIntersectionPointY = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
+			final float surfaceIntersectionPointZ = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
+			
+//			Retrieve the surface normal for shading:
+			final float surfaceNormalShadingX = this.intersections[offsetIntersectionSurfaceNormalShading];
+			final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+			final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
+			
+//			Calculate the albedo texture color for the intersected shape:
+			doCalculateTextureColor(CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
+			
+//			Get the color of the shape from the albedo texture color that was looked up:
+			float albedoColorR = this.temporaryColors[pixelIndex0];
+			float albedoColorG = this.temporaryColors[pixelIndex0 + 1];
+			float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
+			
+//			Retrieve the offset of the emission:
+			final int offsetEmission = surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_EMISSION;
+			
+//			Retrieve the emission from the intersected shape:
+			final float emissionR = this.surfaces[offsetEmission];
+			final float emissionG = this.surfaces[offsetEmission + 1];
+			final float emissionB = this.surfaces[offsetEmission + 2];
+			
+//			Add the current radiance multiplied by the emission of the intersected shape to the current pixel color:
+			pixelColorR += radianceMultiplierR * emissionR;
+			pixelColorG += radianceMultiplierG * emissionG;
+			pixelColorB += radianceMultiplierB * emissionB;
+			
+//			Increment the current depth:
+			depthCurrent++;
+			
+//			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
+			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
+			final float dotProductMultipliedByTwo = dotProduct * 2.0F;
+			
+//			Update the ray origin for the next iteration:
+			originX = surfaceIntersectionPointX + surfaceNormalShadingX * 0.000001F;
+			originY = surfaceIntersectionPointY + surfaceNormalShadingY * 0.000001F;
+			originZ = surfaceIntersectionPointZ + surfaceNormalShadingZ * 0.000001F;
+			
+//			Update the ray direction for the next iteration:
+			directionX = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
+			directionY = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
+			directionZ = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
+			
+//			Multiply the current radiance multiplier with the albedo:
+			radianceMultiplierR *= albedoColorR;
+			radianceMultiplierG *= albedoColorG;
+			radianceMultiplierB *= albedoColorB;
+		} while(depthCurrent < depthMaximum);
+		
+//		Perform an intersection test:
+		doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
+		
+//		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
+		final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+		
+//		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
+		final int shapesOffset0 = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+		
+//		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
+		if(distance0 == INFINITY || shapesOffset0 == -1) {
+//			Calculate the color for the sky in the current direction:
+			doCalculateColorForSky(directionX, directionY, directionZ);
+			
+//			Add the color for the sky to the current pixel color:
+			pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
+			pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
+			pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
+		}
+		
+//		Update the current pixel color:
 		this.currentPixelColors[pixelIndex0] = pixelColorR;
 		this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
 		this.currentPixelColors[pixelIndex0 + 2] = pixelColorB;

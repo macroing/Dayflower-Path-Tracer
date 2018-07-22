@@ -41,7 +41,7 @@ public final class Camera {
 	public static final int ABSOLUTE_OFFSET_OF_APERTURE_RADIUS = 0;
 	
 //	TODO: Add Javadocs.
-	public static final int ABSOLUTE_OFFSET_OF_CAMERA_LENS = 21;
+	public static final int ABSOLUTE_OFFSET_OF_CAMERA_LENS = 18;
 	
 //	TODO: Add Javadocs.
 	public static final int ABSOLUTE_OFFSET_OF_EYE = 1;
@@ -113,25 +113,13 @@ public final class Camera {
 	public static final int ABSOLUTE_OFFSET_OF_RESOLUTION_Y = ABSOLUTE_OFFSET_OF_RESOLUTION + 1;
 	
 //	TODO: Add Javadocs.
-	public static final int ABSOLUTE_OFFSET_OF_UP = 18;
-	
-//	TODO: Add Javadocs.
-	public static final int ABSOLUTE_OFFSET_OF_UP_X = ABSOLUTE_OFFSET_OF_UP + 0;
-	
-//	TODO: Add Javadocs.
-	public static final int ABSOLUTE_OFFSET_OF_UP_Y = ABSOLUTE_OFFSET_OF_UP + 1;
-	
-//	TODO: Add Javadocs.
-	public static final int ABSOLUTE_OFFSET_OF_UP_Z = ABSOLUTE_OFFSET_OF_UP + 2;
-	
-//	TODO: Add Javadocs.
 	public static final int CAMERA_LENS_FISHEYE = 2;
 	
 //	TODO: Add Javadocs.
 	public static final int CAMERA_LENS_THIN = 1;
 	
 //	TODO: Add Javadocs.
-	public static final int SIZE = 1 + 3 + 2 + 1 + 3 + 3 + 3 + 2 + 3 + 1;
+	public static final int SIZE = 1 + 3 + 2 + 1 + 3 + 3 + 3 + 2 + 1;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -140,16 +128,6 @@ public final class Camera {
 	private boolean hasUpdated;
 	private boolean isWalkLockEnabled;
 	private CameraPredicate cameraPredicate;
-	private float centerX;
-	private float centerY;
-	private float centerZ;
-	private float radius;
-	private float viewDirectionX;
-	private float viewDirectionY;
-	private float viewDirectionZ;
-	private float walkDirectionX;
-	private float walkDirectionY;
-	private float walkDirectionZ;
 	private final float[] array;
 	private final List<CameraObserver> cameraObservers;
 	
@@ -168,11 +146,10 @@ public final class Camera {
 		setApertureRadius(0.4F);
 		setCameraLens(CAMERA_LENS_THIN);
 		setCameraPredicate(cameraPredicate);
-		setCenter(55.0F, 42.0F, 155.6F);
+		setEye(55.0F, 42.0F, 155.6F);
 		setFieldOfViewX(40.0F);
 		setFocalDistance(30.0F);
 		setPitch(Angle.DEGREES_0);
-		setRadius(4.0F);
 		setResolution(800.0F, 800.0F);
 		setWalkLockEnabled(true);
 		setYaw(Angle.DEGREES_0);
@@ -233,21 +210,6 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public float getApertureRadius() {
 		return this.array[ABSOLUTE_OFFSET_OF_APERTURE_RADIUS];
-	}
-	
-//	TODO: Add Javadocs.
-	public float getCenterX() {
-		return this.centerX;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getCenterY() {
-		return this.centerY;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getCenterZ() {
-		return this.centerZ;
 	}
 	
 //	TODO: Add Javadocs.
@@ -326,11 +288,6 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public float getRadius() {
-		return this.radius;
-	}
-	
-//	TODO: Add Javadocs.
 	public float getResolutionX() {
 		return this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_X];
 	}
@@ -338,51 +295,6 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public float getResolutionY() {
 		return this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_Y];
-	}
-	
-//	TODO: Add Javadocs.
-	public float getUpX() {
-		return this.array[ABSOLUTE_OFFSET_OF_UP_X];
-	}
-	
-//	TODO: Add Javadocs.
-	public float getUpY() {
-		return this.array[ABSOLUTE_OFFSET_OF_UP_Y];
-	}
-	
-//	TODO: Add Javadocs.
-	public float getUpZ() {
-		return this.array[ABSOLUTE_OFFSET_OF_UP_Z];
-	}
-	
-//	TODO: Add Javadocs.
-	public float getViewDirectionX() {
-		return this.viewDirectionX;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getViewDirectionY() {
-		return this.viewDirectionY;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getViewDirectionZ() {
-		return this.viewDirectionZ;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getWalkDirectionX() {
-		return this.walkDirectionX;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getWalkDirectionY() {
-		return this.walkDirectionY;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getWalkDirectionZ() {
-		return this.walkDirectionZ;
 	}
 	
 //	TODO: Add Javadocs.
@@ -396,75 +308,8 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void calculateOrthoNormalBasisU() {
-		final float upX = getUpX();
-		final float upY = getUpY();
-		final float upZ = getUpZ();
-		
-		final float wX = getOrthoNormalBasisWX();
-		final float wY = getOrthoNormalBasisWY();
-		final float wZ = getOrthoNormalBasisWZ();
-		
-//		final float u0X = wY * upZ - wZ * upY;
-//		final float u0Y = wZ * upX - wX * upZ;
-//		final float u0Z = wX * upY - wY * upX;
-		final float u0X = upY * wZ - upZ * wY;
-		final float u0Y = upZ * wX - upX * wZ;
-		final float u0Z = upX * wY - upY * wX;
-		final float u0LengthReciprocal = 1.0F / sqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
-		final float u1X = u0X * u0LengthReciprocal;
-		final float u1Y = u0Y * u0LengthReciprocal;
-		final float u1Z = u0Z * u0LengthReciprocal;
-		
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X] = u1X;
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y] = u1Y;
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z] = u1Z;
-	}
-	
-//	TODO: Add Javadocs.
-	public void calculateOrthoNormalBasisV() {
-		final float uX = getOrthoNormalBasisUX();
-		final float uY = getOrthoNormalBasisUY();
-		final float uZ = getOrthoNormalBasisUZ();
-		
-		final float wX = getOrthoNormalBasisWX();
-		final float wY = getOrthoNormalBasisWY();
-		final float wZ = getOrthoNormalBasisWZ();
-		
-//		final float v0X = uY * wZ - uZ * wY;
-//		final float v0Y = uZ * wX - uX * wZ;
-//		final float v0Z = uX * wY - uY * wX;
-		final float v0X = wY * uZ - wZ * uY;
-		final float v0Y = wZ * uX - wX * uZ;
-		final float v0Z = wX * uY - wY * uX;
-		final float v0LengthReciprocal = 1.0F / sqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
-		final float v1X = v0X * v0LengthReciprocal;
-		final float v1Y = v0Y * v0LengthReciprocal;
-		final float v1Z = v0Z * v0LengthReciprocal;
-		
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X] = v1X;
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y] = v1Y;
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z] = v1Z;
-	}
-	
-//	TODO: Add Javadocs.
 	public void changeAltitude(final float y) {
-		setCenter(getCenterX(), getCenterY() + y, getCenterZ());
-	}
-	
-//	TODO: Add Javadocs.
-	public void changeApertureRadius(final float multiplier) {
-		setApertureRadius(getApertureRadius() + ((getApertureRadius() + 0.01F) * multiplier));
-	}
-	
-//	TODO: Add Javadocs.
-	public void changeFieldOfViewX(final float fieldOfViewX) {
-		setFieldOfViewX(getFieldOfViewX() + fieldOfViewX);
-	}
-	
-//	TODO: Add Javadocs.
-	public void changeFocalDistance(final float focalDistance) {
-		setFocalDistance(getFocalDistance() + focalDistance);
+		setEye(getEyeX(), getEyeY() + y, getEyeZ());
 	}
 	
 //	TODO: Add Javadocs.
@@ -477,11 +322,6 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void changeRadius(final float multiplier) {
-		setRadius(getRadius() * multiplier);
-	}
-	
-//	TODO: Add Javadocs.
 	public void changeYaw(final Angle yaw) {
 		setYaw(getYaw().add(yaw));
 	}
@@ -489,9 +329,9 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public void forward(final float distance) {
 		if(isWalkLockEnabled()) {
-			setCenter(getCenterX() + getWalkDirectionX() * distance, getCenterY() + getWalkDirectionY() * distance, getCenterZ() + getWalkDirectionZ() * distance);
+			setEye(getEyeX() + getOrthoNormalBasisWX() * distance, getEyeY(), getEyeZ() + getOrthoNormalBasisWZ() * distance);
 		} else {
-			setCenter(getCenterX() + getViewDirectionX() * distance, getCenterY() + getViewDirectionY() * distance, getCenterZ() + getViewDirectionZ() * distance);
+			setEye(getEyeX() + getOrthoNormalBasisWX() * distance, getEyeY() + getOrthoNormalBasisWY() * distance, getEyeZ() + getOrthoNormalBasisWZ() * distance);
 		}
 	}
 	
@@ -503,20 +343,6 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public void resetUpdateStatus() {
 		this.hasUpdated = false;
-	}
-	
-//	TODO: Add Javadocs.
-	public void rotateRight(final float distance) {
-		final float yaw = getYaw().radians + distance;
-		final float pitch = getPitch().radians;
-		final float x = sin(yaw) * cos(pitch);
-		final float y = sin(pitch);
-		final float z = cos(yaw) * cos(pitch);
-		
-//		setViewDirection(-x, -y, -z);
-//		setWalkDirection(-x, getWalkDirectionY(), -z);
-		setViewDirection(x, y, z);
-		setWalkDirection(x, getWalkDirectionY(), z);
 	}
 	
 //	TODO: Add Javadocs.
@@ -537,30 +363,23 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void setCenter(final float centerX, final float centerY, final float centerZ) {
-		final boolean[] test = this.cameraPredicate.test(this.centerX, this.centerY, this.centerZ, centerX, centerY, centerZ);
+	public void setEye(final float eyeX, final float eyeY, final float eyeZ) {
+		final boolean[] test = this.cameraPredicate.test(getEyeX(), getEyeY(), getEyeZ(), eyeX, eyeY, eyeZ);
 		
 		if(test[0]) {
-			this.centerX = centerX;
+			this.array[ABSOLUTE_OFFSET_OF_EYE_X] = eyeX;
+			this.hasUpdated = true;
 		}
 		
 		if(test[1]) {
-			this.centerY = centerY;
+			this.array[ABSOLUTE_OFFSET_OF_EYE_Y] = eyeY;
+			this.hasUpdated = true;
 		}
 		
 		if(test[2]) {
-			this.centerZ = centerZ;
+			this.array[ABSOLUTE_OFFSET_OF_EYE_Z] = eyeZ;
+			this.hasUpdated = true;
 		}
-		
-		this.hasUpdated = true;
-	}
-	
-//	TODO: Add Javadocs.
-	public void setEye(final float eyeX, final float eyeY, final float eyeZ) {
-		this.array[ABSOLUTE_OFFSET_OF_EYE_X] = eyeX;
-		this.array[ABSOLUTE_OFFSET_OF_EYE_Y] = eyeY;
-		this.array[ABSOLUTE_OFFSET_OF_EYE_Z] = eyeZ;
-		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -583,26 +402,10 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void setOrthoNormalBasisW(final float orthoNormalBasisWX, final float orthoNormalBasisWY, final float orthoNormalBasisWZ) {
-		final float orthoNormalBasisWLengthReciprocal = 1.0F / sqrt(orthoNormalBasisWX * orthoNormalBasisWX + orthoNormalBasisWY * orthoNormalBasisWY + orthoNormalBasisWZ * orthoNormalBasisWZ);
-		
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X] = orthoNormalBasisWX * orthoNormalBasisWLengthReciprocal;
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y] = orthoNormalBasisWY * orthoNormalBasisWLengthReciprocal;
-		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z] = orthoNormalBasisWZ * orthoNormalBasisWLengthReciprocal;
-		this.hasUpdated = true;
-	}
-	
-//	TODO: Add Javadocs.
 	public void setPitch(final Angle pitch) {
 		this.pitch = Angle.degrees(pitch.degrees < -90.0F ? -90.0F : pitch.degrees > 90.0F ? 90.0F : pitch.degrees, -90.0F, 90.0F);
 		this.hasUpdated = true;
 		this.cameraObservers.forEach(cameraObserver -> cameraObserver.pitchChanged(this, this.pitch));
-	}
-	
-//	TODO: Add Javadocs.
-	public void setRadius(final float radius) {
-		this.radius = max(min(radius, 100.0F), 0.2F);
-		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
@@ -621,32 +424,6 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void setUp(final float upX, final float upY, final float upZ) {
-		final float upLengthReciprocal = 1.0F / sqrt(upX * upX + upY * upY + upZ * upZ);
-		
-		this.array[ABSOLUTE_OFFSET_OF_UP_X] = upX * upLengthReciprocal;
-		this.array[ABSOLUTE_OFFSET_OF_UP_Y] = upY * upLengthReciprocal;
-		this.array[ABSOLUTE_OFFSET_OF_UP_Z] = upZ * upLengthReciprocal;
-		this.hasUpdated = true;
-	}
-	
-//	TODO: Add Javadocs.
-	public void setViewDirection(final float viewDirectionX, final float viewDirectionY, final float viewDirectionZ) {
-		this.viewDirectionX = viewDirectionX;
-		this.viewDirectionY = viewDirectionY;
-		this.viewDirectionZ = viewDirectionZ;
-		this.hasUpdated = true;
-	}
-	
-//	TODO: Add Javadocs.
-	public void setWalkDirection(final float walkDirectionX, final float walkDirectionY, final float walkDirectionZ) {
-		this.walkDirectionX = walkDirectionX;
-		this.walkDirectionY = walkDirectionY;
-		this.walkDirectionZ = walkDirectionZ;
-		this.hasUpdated = true;
-	}
-	
-//	TODO: Add Javadocs.
 	public void setWalkLockEnabled(final boolean isWalkLockEnabled) {
 		this.isWalkLockEnabled = isWalkLockEnabled;
 	}
@@ -660,58 +437,83 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public void strafe(final float distance) {
-		final boolean isWalkLockEnabled = isWalkLockEnabled();
+		final float uX = getOrthoNormalBasisUX();
+		final float uY = getOrthoNormalBasisUY();
+		final float uZ = getOrthoNormalBasisUZ();
 		
-		final float x0 = isWalkLockEnabled ? getWalkDirectionX() : getViewDirectionX();
-		final float y0 = isWalkLockEnabled ? getWalkDirectionY() : getViewDirectionY();
-		final float z0 = isWalkLockEnabled ? getWalkDirectionZ() : getViewDirectionZ();
-		
-		final float x1 = 0.0F;
-		final float y1 = 1.0F;
-		final float z1 = 0.0F;
-		
-		final float x2 = y0 * z1 - z0 * y1;
-		final float y2 = z0 * x1 - x0 * z1;
-		final float z2 = x0 * y1 - y0 * x1;
-		
-		final float lengthReciprocal = 1.0F / sqrt(x2 * x2 + y2 * y2 + z2 * z2);
-		
-		final float x3 = x2 * lengthReciprocal;
-		final float y3 = y2 * lengthReciprocal;
-		final float z3 = z2 * lengthReciprocal;
-		
-		setCenter(getCenterX() - x3 * distance, getCenterY() - y3 * distance, getCenterZ() - z3 * distance);
+		if(isWalkLockEnabled()) {
+			setEye(getEyeX() + uX * distance, getEyeY(), getEyeZ() + uZ * distance);
+		} else {
+			setEye(getEyeX() + uX * distance, getEyeY() + uY * distance, getEyeZ() + uZ * distance);
+		}
 	}
 	
 //	TODO: Add Javadocs.
 	public void update() {
-//		final boolean isWalkLockEnabled = isWalkLockEnabled();
-		
-		final float centerX = getCenterX();
-		final float centerY = getCenterY();
-		final float centerZ = getCenterZ();
-		
-//		final float radius = getRadius();
-		
 		final float pitch = getPitch().radians;
 		final float yaw = getYaw().radians;
 		
-		final float direction0X = sin(yaw) * cos(pitch);
-		final float direction0Y = sin(pitch);
-		final float direction0Z = cos(yaw) * cos(pitch);
+		final float orthoNormalBasisWX = -(sin(yaw) * cos(pitch));
+		final float orthoNormalBasisWY = -sin(pitch);
+		final float orthoNormalBasisWZ = -(cos(yaw) * cos(pitch));
 		
-		final float direction1X = -direction0X;
-		final float direction1Y = -direction0Y;
-		final float direction1Z = -direction0Z;
+		doSetOrthoNormalBasisW(orthoNormalBasisWX, orthoNormalBasisWY, orthoNormalBasisWZ);
+		doCalculateOrthoNormalBasisU();
+		doCalculateOrthoNormalBasisV();
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private void doCalculateOrthoNormalBasisU() {
+		final float upX = 0.0F;
+		final float upY = 1.0F;
+		final float upZ = 0.0F;
 		
-//		setEye(centerX + direction1X * radius, centerY + (isWalkLockEnabled ? 0.0F : direction1Y * radius), centerZ + direction1Z * radius);
-		setEye(centerX, centerY, centerZ);
-		setOrthoNormalBasisW(direction1X, direction1Y, direction1Z);
-		setUp(0.0F, 1.0F, 0.0F);
-		setViewDirection(direction1X, direction1Y, direction1Z);
-		setWalkDirection(direction1X, getWalkDirectionY(), direction1Z);
+		final float wX = getOrthoNormalBasisWX();
+		final float wY = getOrthoNormalBasisWY();
+		final float wZ = getOrthoNormalBasisWZ();
 		
-		calculateOrthoNormalBasisU();
-		calculateOrthoNormalBasisV();
+		final float u0X = upY * wZ - upZ * wY;
+		final float u0Y = upZ * wX - upX * wZ;
+		final float u0Z = upX * wY - upY * wX;
+		final float u0LengthReciprocal = 1.0F / sqrt(u0X * u0X + u0Y * u0Y + u0Z * u0Z);
+		final float u1X = u0X * u0LengthReciprocal;
+		final float u1Y = u0Y * u0LengthReciprocal;
+		final float u1Z = u0Z * u0LengthReciprocal;
+		
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X] = u1X;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y] = u1Y;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z] = u1Z;
+	}
+	
+	private void doCalculateOrthoNormalBasisV() {
+		final float uX = getOrthoNormalBasisUX();
+		final float uY = getOrthoNormalBasisUY();
+		final float uZ = getOrthoNormalBasisUZ();
+		
+		final float wX = getOrthoNormalBasisWX();
+		final float wY = getOrthoNormalBasisWY();
+		final float wZ = getOrthoNormalBasisWZ();
+		
+		final float v0X = wY * uZ - wZ * uY;
+		final float v0Y = wZ * uX - wX * uZ;
+		final float v0Z = wX * uY - wY * uX;
+		final float v0LengthReciprocal = 1.0F / sqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
+		final float v1X = v0X * v0LengthReciprocal;
+		final float v1Y = v0Y * v0LengthReciprocal;
+		final float v1Z = v0Z * v0LengthReciprocal;
+		
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X] = v1X;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y] = v1Y;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z] = v1Z;
+	}
+	
+	private void doSetOrthoNormalBasisW(final float orthoNormalBasisWX, final float orthoNormalBasisWY, final float orthoNormalBasisWZ) {
+		final float orthoNormalBasisWLengthReciprocal = 1.0F / sqrt(orthoNormalBasisWX * orthoNormalBasisWX + orthoNormalBasisWY * orthoNormalBasisWY + orthoNormalBasisWZ * orthoNormalBasisWZ);
+		
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X] = orthoNormalBasisWX * orthoNormalBasisWLengthReciprocal;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y] = orthoNormalBasisWY * orthoNormalBasisWLengthReciprocal;
+		this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z] = orthoNormalBasisWZ * orthoNormalBasisWLengthReciprocal;
+		this.hasUpdated = true;
 	}
 }
