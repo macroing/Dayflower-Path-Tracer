@@ -516,6 +516,14 @@ public final class TestApplication extends AbstractApplication implements Camera
 			exit();
 		}
 		
+		if(isKeyPressed(KeyCode.M, true)) {
+			synchronized(this.pixels1) {
+				abstractRendererKernel.toggleMaterial();
+				abstractRendererKernel.updateResetStatus();
+				abstractRendererKernel.reset();
+			}
+		}
+		
 		if(isKeyPressed(KeyCode.Q)) {
 			camera.changeAltitude(0.5F);
 		}
@@ -740,10 +748,10 @@ public final class TestApplication extends AbstractApplication implements Camera
 						this.convolutionKernel.execute(this.range);
 						this.convolutionKernel.get();
 					}
-				}
-				
-				synchronized(this.pixels0) {
-					System.arraycopy(this.pixels1, 0, this.pixels0, 0, this.pixels0.length);
+					
+					synchronized(this.pixels0) {
+						System.arraycopy(this.pixels1, 0, this.pixels0, 0, this.pixels0.length);
+					}
 				}
 				
 				this.renderPass.incrementAndGet();

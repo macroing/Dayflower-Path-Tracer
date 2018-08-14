@@ -75,6 +75,7 @@ Supported Keyboard Controls
 | Q           | Increase altitude                                                   |
 | E           | Decrease altitude                                                   |
 | R           | Toggle selection of shapes                                          |
+| M           | Toggle the material for the surface instance of the selected shape  |
 
 _____________________________________________________________________________________
 

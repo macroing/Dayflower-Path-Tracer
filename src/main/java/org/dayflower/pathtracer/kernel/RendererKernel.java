@@ -26,6 +26,7 @@ import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.color.RGBColorSpace;
 import org.dayflower.pathtracer.math.Math2;
 import org.dayflower.pathtracer.scene.Camera;
+import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 
@@ -1033,6 +1034,30 @@ public final class RendererKernel extends AbstractRendererKernel {
 	public void setToneMappingAndGammaCorrectionReinhard2() {
 		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_2;
 		this.isResetRequired = true;
+	}
+	
+	/**
+	 * Toggles the material for the selected shape.
+	 */
+	@Override
+	public void toggleMaterial() {
+		final int selectedShapeIndex = getSelectedShapeIndex();
+		
+		if(selectedShapeIndex != -1) {
+			final int surfacesOffset = (int)(this.shapes[selectedShapeIndex + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+			
+			final int oldMaterialOrdinal = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL]);
+			
+			final Material[] materials = Material.values();
+			
+			if(oldMaterialOrdinal >= 0 && oldMaterialOrdinal < materials.length) {
+				final int newMaterialOrdinal = (oldMaterialOrdinal + 1) % materials.length;
+				
+				this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL] = newMaterialOrdinal;
+				
+				put(this.surfaces);
+			}
+		}
 	}
 	
 	/**

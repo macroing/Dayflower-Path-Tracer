@@ -598,6 +598,13 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Toggles the material for the selected shape.
+	 */
+	public void toggleMaterial() {
+//		Do nothing.
+	}
+	
+	/**
 	 * Toggles to the next renderer.
 	 */
 	public void toggleRenderer() {
