@@ -204,10 +204,31 @@ public abstract class AbstractKernel extends Kernel {
 	 * @return the remainder of {@code x} and {@code y}
 	 */
 	@SuppressWarnings("static-method")
-	public float remainder(final float x, final float y) {
+	public final float remainder(final float x, final float y) {
 		final int n = (int)(x / y);
 		
 		return x - n * y;
+	}
+	
+	/**
+	 * Performs saturation arithmetic on {@code value}.
+	 * <p>
+	 * Returns {@code value} if, and only if, {@code min(a, b) <= value <= max(a, b)}, otherwise either {@code a} or {@code b}.
+	 * <p>
+	 * If {@code value} is less than {@code min(a, b)}, then {@code min(a, b)} will be returned.
+	 * <p>
+	 * If {@code value} is greater than {@code max(a, b)}, then {@code max(a, b)} will be returned.
+	 * 
+	 * @param value a {@code float} value
+	 * @param a either the minimum or the maximum value
+	 * @param b either the minimum or the maximum value
+	 * @return {@code value} if, and only if, {@code min(a, b) <= value <= max(a, b)}, otherwise either {@code a} or {@code b}
+	 */
+	public final float saturate(final float value, final float a, final float b) {
+		final float minimumValue = min(a, b);
+		final float maximumValue = max(a, b);
+		
+		return value < minimumValue ? minimumValue : value > maximumValue ? maximumValue : value;
 	}
 	
 	/**

@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.0.27
+Dayflower - Path Tracer v.0.0.28
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
@@ -8,6 +8,7 @@ This early test implementation of Dayflower, uses a library called Aparapi. Apar
 
 ### Images of the Path Tracing algorithm
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Engine-4.png "Dayflower Path Tracer")
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Water-2.png "Dayflower Path Tracer")
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Engine-2.png "Dayflower Path Tracer")
 
 ### Images of the Ray Tracing algorithm
@@ -41,7 +42,7 @@ Supported Features
 | Material               | Metal using Phong                                        |
 | Material               | Specular (Mirror)                                        |
 | Normal Mapping         | Image Texture                                            |
-| Normal Mapping         | Perlin Noise                                             |
+| Normal Mapping         | Noise                                                    |
 | Rendering Algorithm    | Path Tracing                                             |
 | Rendering Algorithm    | Ray Casting                                              |
 | Rendering Algorithm    | Ray Marching                                             |
@@ -53,6 +54,7 @@ Supported Features
 | Sun and Sky Model      | Perez                                                    |
 | Texture                | Checkerboard                                             |
 | Texture                | Constant (Solid)                                         |
+| Texture                | Fractional Brownian Motion                               |
 | Texture                | Image                                                    |
 | Texture                | Surface Normal                                           |
 | Tone Mapper            | Filmic Curve                                             |

@@ -52,7 +52,12 @@ public enum Material {
 	/**
 	 * A {@code Material} that represents a Phong metal material.
 	 */
-	PHONG_METAL;
+	PHONG_METAL,
+	
+	/**
+	 * A {@code Material} that represents water.
+	 */
+	WATER;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

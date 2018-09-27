@@ -58,6 +58,7 @@ import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
+import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SolidTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
@@ -97,6 +98,27 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_TYPE = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_ADDEND = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_MULTIPLIER = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_OCTAVES = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_PERSISTENCE = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_SCALE = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int FRACTIONAL_BROWNIAN_MOTION_TEXTURE_SIZE = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int FRACTIONAL_BROWNIAN_MOTION_TEXTURE_TYPE = 5;
 	
 //	TODO: Add Javadocs.
 	public static final int IMAGE_TEXTURE_RELATIVE_OFFSET_DATA = 8;
@@ -857,6 +879,8 @@ public final class CompiledScene {
 	private static float[] doToFloatArray(final Texture texture) {
 		if(texture instanceof CheckerboardTexture) {
 			return doToFloatArrayCheckerboardTexture(CheckerboardTexture.class.cast(texture));
+		} else if(texture instanceof FractionalBrownianMotionTexture) {
+			return doToFloatArrayFractionalBrownianMotionTexture(FractionalBrownianMotionTexture.class.cast(texture));
 		} else if(texture instanceof ImageTexture) {
 			return doToFloatArrayImageTexture(ImageTexture.class.cast(texture));
 		} else if(texture instanceof SolidTexture) {
@@ -878,6 +902,18 @@ public final class CompiledScene {
 			sin(toRadians(checkerboardTexture.getDegrees())),
 			checkerboardTexture.getScaleU(),
 			checkerboardTexture.getScaleV()
+		};
+	}
+	
+	private static float[] doToFloatArrayFractionalBrownianMotionTexture(final FractionalBrownianMotionTexture fractionalBrownianMotionTexture) {
+		return new float[] {
+			FRACTIONAL_BROWNIAN_MOTION_TEXTURE_TYPE,
+			FRACTIONAL_BROWNIAN_MOTION_TEXTURE_SIZE,
+			fractionalBrownianMotionTexture.getAddend().multiply(255.0F).toRGB(),
+			fractionalBrownianMotionTexture.getMultiplier().multiply(255.0F).toRGB(),
+			fractionalBrownianMotionTexture.getPersistence(),
+			fractionalBrownianMotionTexture.getScale(),
+			fractionalBrownianMotionTexture.getOctaves()
 		};
 	}
 	
@@ -1049,6 +1085,8 @@ public final class CompiledScene {
 	private static int doSize(final Texture texture) {
 		if(texture instanceof CheckerboardTexture) {
 			return CHECKERBOARD_TEXTURE_SIZE;
+		} else if(texture instanceof FractionalBrownianMotionTexture) {
+			return FRACTIONAL_BROWNIAN_MOTION_TEXTURE_SIZE;
 		} else if(texture instanceof ImageTexture) {
 			return 8 + ImageTexture.class.cast(texture).getData().length;
 		} else if(texture instanceof SolidTexture) {

@@ -39,18 +39,21 @@ import org.dayflower.pathtracer.scene.Sky;
 public final class RendererKernel extends AbstractRendererKernel {
 	private static final float PHONG_EXPONENT = 20.0F;
 	private static final float PHONE_EXPONENT_PLUS_ONE_RECIPROCAL = 1.0F / (PHONG_EXPONENT + 1.0F);
-	private static final float REFRACTIVE_INDEX_0 = 1.0F;
-	private static final float REFRACTIVE_INDEX_1 = 1.5F;
-	private static final float REFRACTIVE_INDEX_A = REFRACTIVE_INDEX_1 - REFRACTIVE_INDEX_0;
-	private static final float REFRACTIVE_INDEX_B = REFRACTIVE_INDEX_1 + REFRACTIVE_INDEX_0;
-	private static final float REFRACTIVE_INDEX_0_DIVIDED_BY_REFRACTIVE_INDEX_1 = REFRACTIVE_INDEX_0 / REFRACTIVE_INDEX_1;
-	private static final float REFRACTIVE_INDEX_1_DIVIDED_BY_REFRACTIVE_INDEX_0 = REFRACTIVE_INDEX_1 / REFRACTIVE_INDEX_0;
-	private static final float REFRACTIVE_INDEX_R0 = (REFRACTIVE_INDEX_A * REFRACTIVE_INDEX_A) / (REFRACTIVE_INDEX_B * REFRACTIVE_INDEX_B);
+	private static final float REFRACTIVE_INDEX_AIR = 1.0F;
+	private static final float REFRACTIVE_INDEX_GLASS = 1.5F;
+	private static final float REFRACTIVE_INDEX_WATER = 1.33F;
+	private static final float SIMPLEX_F2 = 0.3660254037844386F;
+	private static final float SIMPLEX_F3 = 1.0F / 3.0F;
+	private static final float SIMPLEX_F4 = 0.30901699437494745F;
+	private static final float SIMPLEX_G2 = 0.21132486540518713F;
+	private static final float SIMPLEX_G3 = 1.0F / 6.0F;
+	private static final float SIMPLEX_G4 = 0.1381966011250105F;
 	private static final int MATERIAL_CLEAR_COAT = 0;
 	private static final int MATERIAL_GLASS = 1;
 	private static final int MATERIAL_LAMBERTIAN_DIFFUSE = 2;
 	private static final int MATERIAL_MIRROR = 3;
 	private static final int MATERIAL_PHONG_METAL = 4;
+	private static final int MATERIAL_WATER = 5;
 	private static final int RELATIVE_OFFSET_INTERSECTION_DISTANCE = 0;
 	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_U = 10;
 	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_V = 13;
@@ -137,6 +140,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Constant
 	private final float[] shapes;
 	@Constant
+	private final float[] simplexGrad3 = new float[] {1.0F, 1.0F, 0.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 0.0F, 1.0F, 0.0F, 1.0F, -1.0F, 0.0F, 1.0F, 1.0F, 0.0F, -1.0F, -1.0F, 0.0F, -1.0F, 0.0F, 1.0F, 1.0F, 0.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F};
+	@Constant
+	private final float[] simplexGrad4 = new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, -1.0F, 0.0F, 1.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, -1.0F, 0.0F, -1.0F, 1.0F, 1.0F, 0.0F, -1.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 1.0F, 0.0F, -1.0F, -1.0F, -1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F, 1.0F, -1.0F, 1.0F, 0.0F, -1.0F, 1.0F, 1.0F, 0.0F, -1.0F, -1.0F, -1.0F, 0.0F, 1.0F, 1.0F, -1.0F, 0.0F, 1.0F, -1.0F, -1.0F, 0.0F, -1.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F, -1.0F, 1.0F, -1.0F, 0.0F, 1.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, 1.0F, 0.0F, -1.0F, -1.0F, -1.0F, 0.0F, 1.0F, -1.0F, -1.0F, 0.0F, -1.0F, 1.0F, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, -1.0F, 0.0F, 1.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, -1.0F, 0.0F, -1.0F, 1.0F, 1.0F, 0.0F, -1.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 1.0F, 0.0F, -1.0F, -1.0F, -1.0F, 0.0F};
+	@Constant
 	private final float[] surfaces;
 	@Local
 	private float[] temporaryColors;
@@ -157,9 +164,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE;
 	private final int width;
 	@Constant
-	private final int[] permutations0 = {151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180};
+	private final int[] permutations = {
+		151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180,
+		151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180
+	};
 	@Constant
-	private final int[] permutations1 = new int[512];
+	private final int[] permutationsMod12 = new int[512];
 	@Constant
 	private final int[] shapeOffsets;
 	private int[] shapeOffsetsForPrimaryRay;
@@ -238,9 +248,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.perezX = sky.getPerezX();
 		this.perezY = sky.getPerezY();
 		
-		for(int i = 0; i < this.permutations0.length; i++) {
-			this.permutations1[i] = this.permutations0[i];
-			this.permutations1[i + this.permutations0.length] = this.permutations0[i];
+		for(int i = 0; i < this.permutations.length; i++) {
+			this.permutationsMod12[i] = this.permutations[i] % 12;
 		}
 	}
 	
@@ -523,11 +532,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 		put(this.perezX);
 		put(this.perezY);
 		put(this.shapes);
+		put(this.simplexGrad3);
+		put(this.simplexGrad4);
 		put(this.surfaces);
 		put(this.textures);
 		put(this.vector3s);
-		put(this.permutations0);
-		put(this.permutations1);
+		put(this.permutations);
+		put(this.permutationsMod12);
 		put(this.shapeOffsets);
 		put(this.shapeOffsetsForPrimaryRay);
 		put(this.subSamples);
@@ -1249,6 +1260,77 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return true;
 	}
 	
+	@SuppressWarnings("unused")
+	private float doFractionalBrownianMotionXY(final float persistence, final float scale, final float minimum, final float maximum, final int octaves, final float x, final float y) {
+		float currentAmplitude = 1.0F;
+		float maximumAmplitude = 0.0F;
+		
+		float currentFrequency = scale;
+		
+		float noise = 0.0F;
+		
+		for(int i = 0; i < octaves; i++) {
+			noise += doNoiseXY(x * currentFrequency, y * currentFrequency) * currentAmplitude;
+			
+			maximumAmplitude += currentAmplitude;
+			currentAmplitude *= persistence;
+			
+			currentFrequency *= 2.0F;
+		}
+		
+		noise /= maximumAmplitude;
+		noise = noise * (maximum - minimum) / 2.0F + (maximum + minimum) / 2.0F;
+		
+		return noise;
+	}
+	
+	private float doFractionalBrownianMotionXYZ(final float persistence, final float scale, final float minimum, final float maximum, final int octaves, final float x, final float y, final float z) {
+		float currentAmplitude = 1.0F;
+		float maximumAmplitude = 0.0F;
+		
+		float currentFrequency = scale;
+		
+		float noise = 0.0F;
+		
+		for(int i = 0; i < octaves; i++) {
+			noise += doNoiseXYZ(x * currentFrequency, y * currentFrequency, z * currentFrequency) * currentAmplitude;
+			
+			maximumAmplitude += currentAmplitude;
+			currentAmplitude *= persistence;
+			
+			currentFrequency *= 2.0F;
+		}
+		
+		noise /= maximumAmplitude;
+		noise = noise * (maximum - minimum) / 2.0F + (maximum + minimum) / 2.0F;
+		
+		return noise;
+	}
+	
+	@SuppressWarnings("unused")
+	private float doFractionalBrownianMotionXYZW(final float persistence, final float scale, final float minimum, final float maximum, final int octaves, final float x, final float y, final float z, final float w) {
+		float currentAmplitude = 1.0F;
+		float maximumAmplitude = 0.0F;
+		
+		float currentFrequency = scale;
+		
+		float noise = 0.0F;
+		
+		for(int i = 0; i < octaves; i++) {
+			noise += doNoiseXYZW(x * currentFrequency, y * currentFrequency, z * currentFrequency, w * currentFrequency) * currentAmplitude;
+			
+			maximumAmplitude += currentAmplitude;
+			currentAmplitude *= persistence;
+			
+			currentFrequency *= 2.0F;
+		}
+		
+		noise /= maximumAmplitude;
+		noise = noise * (maximum - minimum) / 2.0F + (maximum + minimum) / 2.0F;
+		
+		return noise;
+	}
+	
 	private float doGetY(final float x, final float z) {
 		return doSimplexFractalXY(2, x, z);
 	}
@@ -1426,6 +1508,261 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return t;
 	}
 	
+	private float doNoiseXY(final float x, final float y) {
+		final float s = (x + y) * SIMPLEX_F2;
+		
+		final int i = doFastFloor(x + s);
+		final int j = doFastFloor(y + s);
+		
+		final float t = (i + j) * SIMPLEX_G2;
+		
+		final float x0 = x - (i - t);
+		final float y0 = y - (j - t);
+		
+		final int i1 = x0 > y0 ? 1 : 0;
+		final int j1 = x0 > y0 ? 0 : 1;
+		
+		final float x1 = x0 - i1 + SIMPLEX_G2;
+		final float y1 = y0 - j1 + SIMPLEX_G2;
+		final float x2 = x0 - 1.0F + 2.0F * SIMPLEX_G2;
+		final float y2 = y0 - 1.0F + 2.0F * SIMPLEX_G2;
+		
+		final int ii = i & 0xFF;
+		final int jj = j & 0xFF;
+		
+		final int gi0 = this.permutationsMod12[ii + this.permutations[jj]];
+		final int gi1 = this.permutationsMod12[ii + i1 + this.permutations[jj + j1]];
+		final int gi2 = this.permutationsMod12[ii + 1 + this.permutations[jj + 1]];
+		
+		final float t0 = 0.5F - x0 * x0 - y0 * y0;
+		final float n0 = t0 < 0.0F ? 0.0F : (t0 * t0) * (t0 * t0) * doDotXY(this.simplexGrad3[gi0 * 3 + 0], this.simplexGrad3[gi0 * 3 + 1], x0, y0);
+		
+		final float t1 = 0.5F - x1 * x1 - y1 * y1;
+		final float n1 = t1 < 0.0F ? 0.0F : (t1 * t1) * (t1 * t1) * doDotXY(this.simplexGrad3[gi1 * 3 + 0], this.simplexGrad3[gi1 * 3 + 1], x1, y1);
+		
+		final float t2 = 0.5F - x2 * x2 - y2 * y2;
+		final float n2 = t2 < 0.0F ? 0.0F : (t2 * t2) * (t2 * t2) * doDotXY(this.simplexGrad3[gi2 * 3 + 0], this.simplexGrad3[gi2 * 3 + 1], x2, y2);
+		
+		return 70.0F * (n0 + n1 + n2);
+	}
+	
+	private float doNoiseXYZ(final float x, final float y, final float z) {
+		final float s = (x + y + z) * SIMPLEX_F3;
+		
+		final int i = doFastFloor(x + s);
+		final int j = doFastFloor(y + s);
+		final int k = doFastFloor(z + s);
+		
+		final float t = (i + j + k) * SIMPLEX_G3;
+		
+		final float x0 = x - (i - t);
+		final float y0 = y - (j - t);
+		final float z0 = z - (k - t);
+		
+		int i1 = 0;
+		int j1 = 0;
+		int k1 = 0;
+		int i2 = 0;
+		int j2 = 0;
+		int k2 = 0;
+		
+		if(x0 >= y0) {
+			if(y0 >= z0) {
+				i1 = 1;
+				j1 = 0;
+				k1 = 0;
+				i2 = 1;
+				j2 = 1;
+				k2 = 0;
+			} else if(x0 >= z0) {
+				i1 = 1;
+				j1 = 0;
+				k1 = 0;
+				i2 = 1;
+				j2 = 0;
+				k2 = 1;
+			} else {
+				i1 = 0;
+				j1 = 0;
+				k1 = 1;
+				i2 = 1;
+				j2 = 0;
+				k2 = 1;
+			}
+		} else {
+			if(y0 < z0) {
+				i1 = 0;
+				j1 = 0;
+				k1 = 1;
+				i2 = 0;
+				j2 = 1;
+				k2 = 1;
+			} else if(x0 < z0) {
+				i1 = 0;
+				j1 = 1;
+				k1 = 0;
+				i2 = 0;
+				j2 = 1;
+				k2 = 1;
+			} else {
+				i1 = 0;
+				j1 = 1;
+				k1 = 0;
+				i2 = 1;
+				j2 = 1;
+				k2 = 0;
+			}
+		}
+		
+		final float x1 = x0 - i1 + SIMPLEX_G3;
+		final float y1 = y0 - j1 + SIMPLEX_G3;
+		final float z1 = z0 - k1 + SIMPLEX_G3;
+		final float x2 = x0 - i2 + 2.0F * SIMPLEX_G3;
+		final float y2 = y0 - j2 + 2.0F * SIMPLEX_G3;
+		final float z2 = z0 - k2 + 2.0F * SIMPLEX_G3;
+		final float x3 = x0 - 1.0F + 3.0F * SIMPLEX_G3;
+		final float y3 = y0 - 1.0F + 3.0F * SIMPLEX_G3;
+		final float z3 = z0 - 1.0F + 3.0F * SIMPLEX_G3;
+		
+		final int ii = i & 0xFF;
+		final int jj = j & 0xFF;
+		final int kk = k & 0xFF;
+		
+		final int gi0 = this.permutationsMod12[ii + this.permutations[jj + this.permutations[kk]]];
+		final int gi1 = this.permutationsMod12[ii + i1 + this.permutations[jj + j1 + this.permutations[kk + k1]]];
+		final int gi2 = this.permutationsMod12[ii + i2 + this.permutations[jj + j2 + this.permutations[kk + k2]]];
+		final int gi3 = this.permutationsMod12[ii + 1 + this.permutations[jj + 1 + this.permutations[kk + 1]]];
+		
+		final float t0 = 0.6F - x0 * x0 - y0 * y0 - z0 * z0;
+		final float n0 = t0 < 0.0F ? 0.0F : (t0 * t0) * (t0 * t0) * doDotXYZ(this.simplexGrad3[gi0 * 3 + 0], this.simplexGrad3[gi0 * 3 + 1], this.simplexGrad3[gi0 * 3 + 2], x0, y0, z0);
+		
+		final float t1 = 0.6F - x1 * x1 - y1 * y1 - z1 * z1;
+		final float n1 = t1 < 0.0F ? 0.0F : (t1 * t1) * (t1 * t1) * doDotXYZ(this.simplexGrad3[gi1 * 3 + 0], this.simplexGrad3[gi1 * 3 + 1], this.simplexGrad3[gi1 * 3 + 2], x1, y1, z1);
+		
+		final float t2 = 0.6F - x2 * x2 - y2 * y2 - z2 * z2;
+		final float n2 = t2 < 0.0F ? 0.0F : (t2 * t2) * (t2 * t2) * doDotXYZ(this.simplexGrad3[gi2 * 3 + 0], this.simplexGrad3[gi2 * 3 + 1], this.simplexGrad3[gi2 * 3 + 2], x2, y2, z2);
+		
+		final float t3 = 0.6F - x3 * x3 - y3 * y3 - z3 * z3;
+		final float n3 = t3 < 0.0F ? 0.0F : (t3 * t3) * (t3 * t3) * doDotXYZ(this.simplexGrad3[gi3 * 3 + 0], this.simplexGrad3[gi3 * 3 + 1], this.simplexGrad3[gi3 * 3 + 2], x3, y3, z3);
+		
+		return 32.0F * (n0 + n1 + n2 + n3);
+	}
+	
+	private float doNoiseXYZW(final float x, final float y, final float z, final float w) {
+		final float s = (x + y + z + w) * SIMPLEX_F4;
+		
+		final int i = doFastFloor(x + s);
+		final int j = doFastFloor(y + s);
+		final int k = doFastFloor(z + s);
+		final int l = doFastFloor(w + s);
+		
+		final float t = (i + j + k + l) * SIMPLEX_G4;
+		
+		final float x0 = x - (i - t);
+		final float y0 = y - (j - t);
+		final float z0 = z - (k - t);
+		final float w0 = w - (l - t);
+		
+		int rankX = 0;
+		int rankY = 0;
+		int rankZ = 0;
+		int rankW = 0;
+		
+		if(x0 > y0) {
+			rankX++;
+		} else {
+			rankY++;
+		}
+		
+		if(x0 > z0) {
+			rankX++;
+		} else {
+			rankZ++;
+		}
+		
+		if(x0 > w0) {
+			rankX++;
+		} else {
+			rankW++;
+		}
+		
+		if(y0 > z0) {
+			rankY++;
+		} else {
+			rankZ++;
+		}
+		
+		if(y0 > w0) {
+			rankY++;
+		} else {
+			rankW++;
+		}
+		
+		if(z0 > w0) {
+			rankZ++;
+		} else {
+			rankW++;
+		}
+		
+		final int i1 = rankX >= 3 ? 1 : 0;
+		final int j1 = rankY >= 3 ? 1 : 0;
+		final int k1 = rankZ >= 3 ? 1 : 0;
+		final int l1 = rankW >= 3 ? 1 : 0;
+		final int i2 = rankX >= 2 ? 1 : 0;
+		final int j2 = rankY >= 2 ? 1 : 0;
+		final int k2 = rankZ >= 2 ? 1 : 0;
+		final int l2 = rankW >= 2 ? 1 : 0;
+		final int i3 = rankX >= 1 ? 1 : 0;
+		final int j3 = rankY >= 1 ? 1 : 0;
+		final int k3 = rankZ >= 1 ? 1 : 0;
+		final int l3 = rankW >= 1 ? 1 : 0;
+		
+		final float x1 = x0 - i1 + SIMPLEX_G4;
+		final float y1 = y0 - j1 + SIMPLEX_G4;
+		final float z1 = z0 - k1 + SIMPLEX_G4;
+		final float w1 = w0 - l1 + SIMPLEX_G4;
+		final float x2 = x0 - i2 + 2.0F * SIMPLEX_G4;
+		final float y2 = y0 - j2 + 2.0F * SIMPLEX_G4;
+		final float z2 = z0 - k2 + 2.0F * SIMPLEX_G4;
+		final float w2 = w0 - l2 + 2.0F * SIMPLEX_G4;
+		final float x3 = x0 - i3 + 3.0F * SIMPLEX_G4;
+		final float y3 = y0 - j3 + 3.0F * SIMPLEX_G4;
+		final float z3 = z0 - k3 + 3.0F * SIMPLEX_G4;
+		final float w3 = w0 - l3 + 3.0F * SIMPLEX_G4;
+		final float x4 = x0 - 1.0F + 4.0F * SIMPLEX_G4;
+		final float y4 = y0 - 1.0F + 4.0F * SIMPLEX_G4;
+		final float z4 = z0 - 1.0F + 4.0F * SIMPLEX_G4;
+		final float w4 = w0 - 1.0F + 4.0F * SIMPLEX_G4;
+		
+		final int ii = i & 0xFF;
+		final int jj = j & 0xFF;
+		final int kk = k & 0xFF;
+		final int ll = l & 0xFF;
+		
+		final int gi0 = this.permutations[ii + this.permutations[jj + this.permutations[kk + this.permutations[ll]]]] % 32;
+		final int gi1 = this.permutations[ii + i1 + this.permutations[jj + j1 + this.permutations[kk + k1 + this.permutations[ll + l1]]]] % 32;
+		final int gi2 = this.permutations[ii + i2 + this.permutations[jj + j2 + this.permutations[kk + k2 + this.permutations[ll + l2]]]] % 32;
+		final int gi3 = this.permutations[ii + i3 + this.permutations[jj + j3 + this.permutations[kk + k3 + this.permutations[ll + l3]]]] % 32;
+		final int gi4 = this.permutations[ii + 1 + this.permutations[jj + 1 + this.permutations[kk + 1 + this.permutations[ll + 1]]]] % 32;
+		
+		final float t0 = 0.6F - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
+		final float n0 = t0 < 0.0F ? 0.0F : (t0 * t0) * (t0 * t0) * doDotXYZW(this.simplexGrad4[gi0 * 4 + 0], this.simplexGrad4[gi0 * 4 + 1], this.simplexGrad4[gi0 * 4 + 2], this.simplexGrad4[gi0 * 4 + 3], x0, y0, z0, w0);
+		
+		final float t1 = 0.6F - x1 * x1 - y1 * y1 - z1 * z1 - w1 * w1;
+		final float n1 = t1 < 0.0F ? 0.0F : (t1 * t1) * (t1 * t1) * doDotXYZW(this.simplexGrad4[gi1 * 4 + 0], this.simplexGrad4[gi1 * 4 + 1], this.simplexGrad4[gi1 * 4 + 2], this.simplexGrad4[gi1 * 4 + 3], x1, y1, z1, w1);
+		
+		final float t2 = 0.6F - x2 * x2 - y2 * y2 - z2 * z2 - w2 * w2;
+		final float n2 = t2 < 0.0F ? 0.0F : (t2 * t2) * (t2 * t2) * doDotXYZW(this.simplexGrad4[gi2 * 4 + 0], this.simplexGrad4[gi2 * 4 + 1], this.simplexGrad4[gi2 * 4 + 2], this.simplexGrad4[gi2 * 4 + 3], x2, y2, z2, w2);
+		
+		final float t3 = 0.6F - x3 * x3 - y3 * y3 - z3 * z3 - w3 * w3;
+		final float n3 = t3 < 0.0F ? 0.0F : (t3 * t3) * (t3 * t3) * doDotXYZW(this.simplexGrad4[gi3 * 4 + 0], this.simplexGrad4[gi3 * 4 + 1], this.simplexGrad4[gi3 * 4 + 2], this.simplexGrad4[gi3 * 4 + 3], x3, y3, z3, w3);
+		
+		final float t4 = 0.6F - x4 * x4 - y4 * y4 - z4 * z4 - w4 * w4;
+		final float n4 = t4 < 0.0F ? 0.0F : (t4 * t4) * (t4 * t4) * doDotXYZW(this.simplexGrad4[gi4 * 4 + 0], this.simplexGrad4[gi4 * 4 + 1], this.simplexGrad4[gi4 * 4 + 2], this.simplexGrad4[gi4 * 4 + 3], x4, y4, z4, w4);
+		
+		return 27.0F * (n0 + n1 + n2 + n3 + n4);
+	}
+	
 	private float doPerlinNoise(final float x, final float y, final float z) {
 //		Calculate the floor of the X-, Y- and Z-coordinates:
 		final float floorX = floor(x);
@@ -1448,20 +1785,20 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float w = z1 * z1 * z1 * (z1 * (z1 * 6.0F - 15.0F) + 10.0F);
 		
 //		Calculate some hash values:
-		final int a0 = this.permutations1[x0] + y0;
-		final int a1 = this.permutations1[a0] + z0;
-		final int a2 = this.permutations1[a0 + 1] + z0;
-		final int b0 = this.permutations1[x0 + 1] + y0;
-		final int b1 = this.permutations1[b0] + z0;
-		final int b2 = this.permutations1[b0 + 1] + z0;
-		final int hash0 = this.permutations1[a1] & 15;
-		final int hash1 = this.permutations1[b1] & 15;
-		final int hash2 = this.permutations1[a2] & 15;
-		final int hash3 = this.permutations1[b2] & 15;
-		final int hash4 = this.permutations1[a1 + 1] & 15;
-		final int hash5 = this.permutations1[b1 + 1] & 15;
-		final int hash6 = this.permutations1[a2 + 1] & 15;
-		final int hash7 = this.permutations1[b2 + 1] & 15;
+		final int a0 = this.permutations[x0] + y0;
+		final int a1 = this.permutations[a0] + z0;
+		final int a2 = this.permutations[a0 + 1] + z0;
+		final int b0 = this.permutations[x0 + 1] + y0;
+		final int b1 = this.permutations[b0] + z0;
+		final int b2 = this.permutations[b0 + 1] + z0;
+		final int hash0 = this.permutations[a1] & 15;
+		final int hash1 = this.permutations[b1] & 15;
+		final int hash2 = this.permutations[a2] & 15;
+		final int hash3 = this.permutations[b2] & 15;
+		final int hash4 = this.permutations[a1 + 1] & 15;
+		final int hash5 = this.permutations[b1 + 1] & 15;
+		final int hash6 = this.permutations[a2 + 1] & 15;
+		final int hash7 = this.permutations[b2 + 1] & 15;
 		
 //		Calculate the gradients:
 		final float gradient0U = hash0 < 8 || hash0 == 12 || hash0 == 13 ? x1 : y1;
@@ -1562,7 +1899,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	private int doHash(final int index) {
-		return this.permutations1[index % this.permutations1.length];
+		return this.permutations[index % this.permutations.length];
 	}
 	
 	private void doCalculateColor(final int pixelIndex) {
@@ -2157,6 +2494,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		if(textureType == CompiledScene.CHECKERBOARD_TEXTURE_TYPE) {
 			doCalculateTextureColorForCheckerboardTexture(texturesOffset);
+		} else if(textureType == CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_TYPE) {
+			doCalculateTextureColorForFractionalBrownianMotionTexture(texturesOffset);
 		} else if(textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
 //			doCalculateTextureColorForImageTexture(texturesOffset);
 			doCalculateTextureColorForImageTextureBilinearInterpolation(texturesOffset);
@@ -2242,6 +2581,53 @@ public final class RendererKernel extends AbstractRendererKernel {
 			this.temporaryColors[pixelIndex0 + 1] = g;
 			this.temporaryColors[pixelIndex0 + 2] = b;
 		}
+	}
+	
+	private void doCalculateTextureColorForFractionalBrownianMotionTexture(final int texturesOffset) {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+		final int offsetSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+//		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		final int offsetAddend = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_ADDEND;
+		final int offsetMultiplier = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_MULTIPLIER;
+		final int offsetPersistence = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_PERSISTENCE;
+		final int offsetScale = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_SCALE;
+		final int offsetOctaves = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_OCTAVES;
+		
+		final float x = this.intersections[offsetSurfaceIntersectionPoint];
+		final float y = this.intersections[offsetSurfaceIntersectionPoint + 1];
+		final float z = this.intersections[offsetSurfaceIntersectionPoint + 2];
+//		final float u = this.intersections[offsetUVCoordinates];
+//		final float v = this.intersections[offsetUVCoordinates + 1];
+		
+		final int addendRGB = (int)(this.textures[offsetAddend]);
+		final int multiplierRGB = (int)(this.textures[offsetMultiplier]);
+		
+		final float addendR = ((addendRGB >> 16) & 0xFF) / 255.0F;
+		final float addendG = ((addendRGB >> 8) & 0xFF) / 255.0F;
+		final float addendB = (addendRGB & 0xFF) / 255.0F;
+		
+		final float multiplierR = ((multiplierRGB >> 16) & 0xFF) / 255.0F;
+		final float multiplierG = ((multiplierRGB >> 8) & 0xFF) / 255.0F;
+		final float multiplierB = (multiplierRGB & 0xFF) / 255.0F;
+		
+		final float persistence = this.textures[offsetPersistence];
+		final float scale = this.textures[offsetScale];
+		
+		final int octaves = (int)(this.textures[offsetOctaves]);
+		
+		final float noise = doFractionalBrownianMotionXYZ(persistence, scale, 0.0F, 1.0F, octaves, x, y, z);
+//		final float noise = doFractionalBrownianMotionXY(persistence, scale, 0.0F, 1.0F, octaves, u, v);
+		
+		final float r = saturate(noise * multiplierR + addendR, 0.0F, 1.0F);
+		final float g = saturate(noise * multiplierG + addendG, 0.0F, 1.0F);
+		final float b = saturate(noise * multiplierB + addendB, 0.0F, 1.0F);
+		
+		final int pixelIndex = getLocalId() * 3;
+		
+		this.temporaryColors[pixelIndex] = r;
+		this.temporaryColors[pixelIndex + 1] = g;
+		this.temporaryColors[pixelIndex + 2] = b;
 	}
 	
 	@SuppressWarnings("unused")
@@ -2628,8 +3014,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float randomC = nextFloat();
 			
 			if(material == MATERIAL_CLEAR_COAT) {
+				final float a = REFRACTIVE_INDEX_GLASS - REFRACTIVE_INDEX_AIR;
+				final float b = REFRACTIVE_INDEX_GLASS + REFRACTIVE_INDEX_AIR;
+				final float c = REFRACTIVE_INDEX_AIR / REFRACTIVE_INDEX_GLASS;
+				final float e = (a * a) / (b * b);
+				
 //				TODO: Write explanation!
-				final float nnt = REFRACTIVE_INDEX_0_DIVIDED_BY_REFRACTIVE_INDEX_1;
+				final float nnt = c;
 				
 //				Calculate the dot product between the W direction and the current ray direction:
 				final float dotProductOfW0AndDirection = w0X * directionX + w0Y * directionY + w0Z * directionZ;
@@ -2668,7 +3059,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 					final float angle2 = 1.0F - angle1;
 					
 //					Calculate the reflectance:
-					final float reflectance = REFRACTIVE_INDEX_R0 + (1.0F - REFRACTIVE_INDEX_R0) * angle2 * angle2 * angle2 * angle2 * angle2;
+					final float reflectance = e + (1.0F - e) * angle2 * angle2 * angle2 * angle2 * angle2;
 					
 //					Calculate the transmittance:
 					final float transmittance = 1.0F - reflectance;
@@ -2874,11 +3265,17 @@ public final class RendererKernel extends AbstractRendererKernel {
 				radianceMultiplierG *= albedoColorG;
 				radianceMultiplierB *= albedoColorB;
 			} else if(material == MATERIAL_GLASS) {
+				final float a = REFRACTIVE_INDEX_GLASS - REFRACTIVE_INDEX_AIR;
+				final float b = REFRACTIVE_INDEX_GLASS + REFRACTIVE_INDEX_AIR;
+				final float c = REFRACTIVE_INDEX_AIR / REFRACTIVE_INDEX_GLASS;
+				final float d = REFRACTIVE_INDEX_GLASS / REFRACTIVE_INDEX_AIR;
+				final float e = (a * a) / (b * b);
+				
 //				Check if the current ray is going in towards the same shape or out of it:
 				final boolean isGoingIn = surfaceNormalShadingX * w0X + surfaceNormalShadingY * w0Y + surfaceNormalShadingZ * w0Z > 0.0F;
 				
 //				TODO: Write explanation!
-				final float nnt = isGoingIn ? REFRACTIVE_INDEX_0_DIVIDED_BY_REFRACTIVE_INDEX_1 : REFRACTIVE_INDEX_1_DIVIDED_BY_REFRACTIVE_INDEX_0;
+				final float nnt = isGoingIn ? c : d;
 				
 //				Calculate the dot product between the orthonormal basis W vector and the current direction vector:
 				final float dotProductOfW0AndDirection = w0X * directionX + w0Y * directionY + w0Z * directionZ;
@@ -2920,7 +3317,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 					final float angle2 = 1.0F - angle1;
 					
 //					Calculate the reflectance:
-					final float reflectance = REFRACTIVE_INDEX_R0 + (1.0F - REFRACTIVE_INDEX_R0) * angle2 * angle2 * angle2 * angle2 * angle2;
+					final float reflectance = e + (1.0F - e) * angle2 * angle2 * angle2 * angle2 * angle2;
 					
 //					Calculate the transmittance:
 					final float transmittance = 1.0F - reflectance;
@@ -2976,6 +3373,123 @@ public final class RendererKernel extends AbstractRendererKernel {
 				radianceMultiplierR *= albedoColorR;
 				radianceMultiplierG *= albedoColorG;
 				radianceMultiplierB *= albedoColorB;
+			} else if(material == MATERIAL_WATER) {
+				final float a = REFRACTIVE_INDEX_WATER - REFRACTIVE_INDEX_AIR;
+				final float b = REFRACTIVE_INDEX_WATER + REFRACTIVE_INDEX_AIR;
+				final float c = REFRACTIVE_INDEX_AIR / REFRACTIVE_INDEX_WATER;
+				final float d = REFRACTIVE_INDEX_WATER / REFRACTIVE_INDEX_AIR;
+				final float e = (a * a) / (b * b);
+				
+				final float amount = 1.0F;
+				final float scale = 16.0F;
+				final float scaleReciprocal = 1.0F / scale;
+				
+				final float x0 = surfaceIntersectionPointX * scaleReciprocal;
+				final float y0 = surfaceIntersectionPointY * scaleReciprocal;
+				final float z0 = surfaceIntersectionPointZ * scaleReciprocal;
+				
+				final float x1 = doSimplexFractalXY(8, x0, y0);
+				final float y1 = doSimplexFractalXY(4, y0, z0);
+				final float z1 = doSimplexFractalXY(2, z0, x0);
+				
+				final float surfaceNormalX = surfaceNormalShadingX + x1 * amount;
+				final float surfaceNormalY = surfaceNormalShadingY + y1 * amount;
+				final float surfaceNormalZ = surfaceNormalShadingZ + z1 * amount;
+				final float surfaceNormalLengthReciprocal = rsqrt(surfaceNormalX * surfaceNormalX + surfaceNormalY * surfaceNormalY + surfaceNormalZ * surfaceNormalZ);
+				final float surfaceNormalNormalizedX = surfaceNormalX * surfaceNormalLengthReciprocal;
+				final float surfaceNormalNormalizedY = surfaceNormalY * surfaceNormalLengthReciprocal;
+				final float surfaceNormalNormalizedZ = surfaceNormalZ * surfaceNormalLengthReciprocal;
+				
+				final float dotProduct0 = surfaceNormalNormalizedX * directionX + surfaceNormalNormalizedY * directionY + surfaceNormalNormalizedZ * directionZ;
+				final float dotProductMultipliedByTwo0 = dotProduct0 * 2.0F;
+				
+//				Check if the current ray is going in towards the same shape or out of it:
+				final boolean isGoingIn = surfaceNormalNormalizedX * w0X + surfaceNormalNormalizedY * w0Y + surfaceNormalNormalizedZ * w0Z > 0.0F;
+				
+//				TODO: Write explanation!
+				final float nnt = isGoingIn ? c : d;
+				
+//				Calculate the dot product between the orthonormal basis W vector and the current direction vector:
+				final float dotProductOfW0AndDirection = w0X * directionX + w0Y * directionY + w0Z * directionZ;
+				
+//				Calculate the total internal reflection:
+				final float totalInternalReflection = 1.0F - nnt * nnt * (1.0F - dotProductOfW0AndDirection * dotProductOfW0AndDirection);
+				
+//				Calculate the reflection direction:
+				final float reflectionDirectionX = directionX - surfaceNormalNormalizedX * dotProductMultipliedByTwo0;
+				final float reflectionDirectionY = directionY - surfaceNormalNormalizedY * dotProductMultipliedByTwo0;
+				final float reflectionDirectionZ = directionZ - surfaceNormalNormalizedZ * dotProductMultipliedByTwo0;
+				
+				if(totalInternalReflection < 0.0F) {
+//					Update the ray origin for the next iteration:
+					originX = surfaceIntersectionPointX + w0X * 0.02F;
+					originY = surfaceIntersectionPointY + w0Y * 0.02F;
+					originZ = surfaceIntersectionPointZ + w0Z * 0.02F;
+					
+//					Update the ray direction for the next iteration:
+					directionX = reflectionDirectionX;
+					directionY = reflectionDirectionY;
+					directionZ = reflectionDirectionZ;
+				} else {
+//					Calculate the square root of the total internal reflection:
+					final float sqrtTotalInternalReflection = sqrt(totalInternalReflection);
+					
+//					Calculate the transmission direction:
+					final float scalar = isGoingIn ? dotProductOfW0AndDirection * nnt + sqrtTotalInternalReflection : -(dotProductOfW0AndDirection * nnt + sqrtTotalInternalReflection);
+					final float direction0X = directionX * nnt - surfaceNormalNormalizedX * scalar;
+					final float direction0Y = directionY * nnt - surfaceNormalNormalizedY * scalar;
+					final float direction0Z = directionZ * nnt - surfaceNormalNormalizedZ * scalar;
+					final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+					final float transmissionDirectionX = direction0X * direction0LengthReciprocal;
+					final float transmissionDirectionY = direction0Y * direction0LengthReciprocal;
+					final float transmissionDirectionZ = direction0Z * direction0LengthReciprocal;
+					
+//					Calculate some angles:
+					final float angle1 = (isGoingIn ? -dotProductOfW0AndDirection : transmissionDirectionX * surfaceNormalNormalizedX + transmissionDirectionY * surfaceNormalNormalizedY + transmissionDirectionZ * surfaceNormalNormalizedZ);
+					final float angle2 = 1.0F - angle1;
+					
+//					Calculate the reflectance:
+					final float reflectance = e + (1.0F - e) * angle2 * angle2 * angle2 * angle2 * angle2;
+					
+//					Calculate the transmittance:
+					final float transmittance = 1.0F - reflectance;
+					
+//					Calculate a probability for the reflection- or the transmission direction:
+					final float probability = 0.25F + 0.5F * reflectance;
+					
+//					Calculate the probability that the direction for the next iteration will be the reflection direction:
+					final float reflectanceProbability = reflectance / probability;
+					
+//					Calculate the probability that the direction for the next iteration will be the transmission direction:
+					final float transmittanceProbability = transmittance / (1.0F - probability);
+					
+//					Check if the direction for the next iteration is the reflection direction or the transmission direction:
+					final boolean isReflectionDirection = randomA < probability;
+					
+//					Retrieve the value to multiply the current radiance multiplier with:
+					final float multiplier = isReflectionDirection ? reflectanceProbability : transmittanceProbability;
+					
+//					Multiply the current radiance multiplier with either the reflectance probability or the transmittance probability:
+					radianceMultiplierR *= multiplier;
+					radianceMultiplierG *= multiplier;
+					radianceMultiplierB *= multiplier;
+					
+//					Retrieve the epsilon value that offsets the ray origin to mitigate self intersections:
+					final float epsilon = isReflectionDirection ? 0.01F : 0.000001F;
+					
+//					Update the ray origin for the next iteration:
+					originX = surfaceIntersectionPointX + w0X * epsilon;
+					originY = surfaceIntersectionPointY + w0Y * epsilon;
+					originZ = surfaceIntersectionPointZ + w0Z * epsilon;
+					
+//					Update the ray direction for the next iteration:
+					directionX = isReflectionDirection ? reflectionDirectionX : transmissionDirectionX;
+					directionY = isReflectionDirection ? reflectionDirectionY : transmissionDirectionY;
+					directionZ = isReflectionDirection ? reflectionDirectionZ : transmissionDirectionZ;
+				}
+				
+//				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
+				depthCurrent = depthCurrent + 0;
 			}
 		} while(depthCurrent < depthMaximum);
 		
@@ -3424,9 +3938,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float z1 = z0 * scaleReciprocal;
 			
 //			Compute the Perlin noise given the X-, Y- and Z-component values:
-			final float noiseX = doPerlinNoise(x1, y1, z1);
-			final float noiseY = doPerlinNoise(y1, z1, x1);
-			final float noiseZ = doPerlinNoise(z1, x1, y1);
+			final float noiseX = doFractionalBrownianMotionXYZ(0.5F, scale, -0.1F, 0.1F, 16, x1, y1, z1);//doPerlinNoise(x1, y1, z1);
+			final float noiseY = doFractionalBrownianMotionXYZ(0.5F, scale, -0.1F, 0.1F, 16, y1, z1, x1);//doPerlinNoise(y1, z1, x1);
+			final float noiseZ = doFractionalBrownianMotionXYZ(0.5F, scale, -0.1F, 0.1F, 16, z1, x1, y1);//doPerlinNoise(z1, x1, y1);
 			
 //			Calculate the surface normal:
 			final float surfaceNormal0X = this.intersections[offsetIntersectionSurfaceNormalShading];
@@ -3900,6 +4414,18 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static float doDotXY(final float x0, final float y0, final float x1, final float y1) {
+		return x0 * x1 + y0 * y1;
+	}
+	
+	private static float doDotXYZ(final float x0, final float y0, final float z0, final float x1, final float y1, final float z1) {
+		return x0 * x1 + y0 * y1 + z0 * z1;
+	}
+	
+	private static float doDotXYZW(final float x0, final float y0, final float z0, final float w0, final float x1, final float y1, final float z1, final float w1) {
+		return x0 * x1 + y0 * y1 + z0 * z1 + w0 * w1;
+	}
 	
 	private static float doGradientXY(final int hash, final float x, final float y) {
 		final int hash0 = hash & 0x3F;
