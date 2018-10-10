@@ -26,7 +26,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -40,6 +42,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import com.amd.aparapi.Range;
@@ -232,12 +235,13 @@ public final class TestApplication extends AbstractApplication implements Camera
 //		Create the "Renderer" Menu:
 		final ToggleGroup toggleGroupRenderer = new ToggleGroup();
 		
+		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> this.abstractRendererKernel.setAmbientOcclusion(true), this.abstractRendererKernel.isAmbientOcclusion(), toggleGroupRenderer);
 		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> this.abstractRendererKernel.setPathTracing(true), this.abstractRendererKernel.isPathTracing(), toggleGroupRenderer);
 		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> this.abstractRendererKernel.setRayCasting(true), this.abstractRendererKernel.isRayCasting(), toggleGroupRenderer);
 		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> this.abstractRendererKernel.setRayMarching(true), this.abstractRendererKernel.isRayMarching(), toggleGroupRenderer);
 		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> this.abstractRendererKernel.setRayTracing(true), this.abstractRendererKernel.isRayTracing(), toggleGroupRenderer);
 		
-		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer);
+		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemAmbientOcclusion, radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer);
 		
 		menuBar.getMenus().add(menuRenderer);
 		
@@ -349,16 +353,19 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final Label labelSunDirectionWorldY = new Label("Sun Direction Y:");
 		final Label labelSunDirectionWorldZ = new Label("Sun Direction Z:");
 		final Label labelTurbidity = new Label("Turbidity:");
+//		final Label labelToggleSunAndSky = new Label("Toggle Sun & Sky");
 		
 		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
 		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 1.0D, this.sky.getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
 		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
 		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, this.sky.getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
+		final CheckBox checkBoxToggleSunAndSky = JavaFX.newCheckBox("Toggle Sun & Sky", this::doOnCheckBoxToggleSunAndSky, true);
+		
 		final
 		VBox vBoxSunAndSky = new VBox();
 		vBoxSunAndSky.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity);
+		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity, checkBoxToggleSunAndSky);
 		
 		final
 		Tab tabSunAndSky = new Tab();
@@ -368,47 +375,38 @@ public final class TestApplication extends AbstractApplication implements Camera
 		
 		tabPane.getTabs().add(tabSunAndSky);
 		
-//		Create the Tab with the settings for the Path Tracer:
+//		Create the Tab with the settings for the renderers:
+		final Label labelPathTracer = new Label("Path Tracer");
 		final Label labelMaximumRayDepth = new Label("Maximum Ray Depth:");
-		
-		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, this.abstractRendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
-		
-		final
-		VBox vBoxPathTracer = new VBox();
-		vBoxPathTracer.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxPathTracer.getChildren().addAll(labelMaximumRayDepth, sliderMaximumRayDepth);
-		
-		final
-		Tab tabPathTracer = new Tab();
-		tabPathTracer.setClosable(false);
-		tabPathTracer.setContent(vBoxPathTracer);
-		tabPathTracer.setText("Path Tracer");
-		
-		tabPane.getTabs().add(tabPathTracer);
-		
-//		Create the Tab with the settings for the Ray Marcher:
+		final Label labelRayMarcher = new Label("Ray Marcher");
 		final Label labelAmplitude = new Label("Amplitude:");
 		final Label labelFrequency = new Label("Frequency:");
 		final Label labelGain = new Label("Gain:");
 		final Label labelLacunarity = new Label("Lacunarity:");
 		
+		labelPathTracer.setFont(Font.font(16.0D));
+		labelPathTracer.setPadding(new Insets(0.0D, 0.0D, 10.0D, 0.0D));
+		labelRayMarcher.setFont(Font.font(16.0D));
+		labelRayMarcher.setPadding(new Insets(10.0D, 0.0D, 0.0D, 0.0D));
+		
+		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, this.abstractRendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
 		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
 		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
 		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
 		final Slider sliderLacunarity = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getLacunarity(), 1.0D, 5.0D, true, true, false, this::doOnSliderLacunarity);
 		
 		final
-		VBox vBoxRayMarcher = new VBox();
-		vBoxRayMarcher.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxRayMarcher.getChildren().addAll(labelAmplitude, sliderAmplitude, labelFrequency, sliderFrequency, labelGain, sliderGain, labelLacunarity, sliderLacunarity);
+		VBox vBoxRenderer = new VBox();
+		vBoxRenderer.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		vBoxRenderer.getChildren().addAll(labelPathTracer, labelMaximumRayDepth, sliderMaximumRayDepth, labelRayMarcher, labelAmplitude, sliderAmplitude, labelFrequency, sliderFrequency, labelGain, sliderGain, labelLacunarity, sliderLacunarity);
 		
 		final
-		Tab tabRayMarcher = new Tab();
-		tabRayMarcher.setClosable(false);
-		tabRayMarcher.setContent(vBoxRayMarcher);
-		tabRayMarcher.setText("Ray Marcher");
+		Tab tabRenderer = new Tab();
+		tabRenderer.setClosable(false);
+		tabRenderer.setContent(vBoxRenderer);
+		tabRenderer.setText("Renderer");
 		
-		tabPane.getTabs().add(tabRayMarcher);
+		tabPane.getTabs().add(tabRenderer);
 		
 //		Select the default Tab:
 		tabPane.getSelectionModel().select(tabCamera);
@@ -569,6 +567,12 @@ public final class TestApplication extends AbstractApplication implements Camera
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@SuppressWarnings("unused")
+	private void doOnCheckBoxToggleSunAndSky(final ActionEvent e) {
+		this.abstractRendererKernel.toggleSunAndSky();
+		this.abstractRendererKernel.reset();
+	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderAmplitude(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {

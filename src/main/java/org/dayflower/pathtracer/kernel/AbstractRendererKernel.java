@@ -111,6 +111,16 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Returns {@code true} if, and only if, Ambient Occlusion is enabled, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, Ambient Occlusion is enabled, {@code false} otherwise
+	 */
+	@SuppressWarnings("static-method")
+	public boolean isAmbientOcclusion() {
+		return false;
+	}
+	
+	/**
 	 * Returns {@code true} if, and only if, the Grayscale effect is enabled, {@code false} otherwise.
 	 * 
 	 * @return {@code true} if, and only if, the Grayscale effect is enabled, {@code false} otherwise
@@ -416,6 +426,17 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Sets whether Ambient Occlusion should be enabled or disabled.
+	 * <p>
+	 * If {@code isAmbientOcclusion} is {@code false}, the renderer will be a Path Tracer.
+	 * 
+	 * @param isAmbientOcclusion the Ambient Occlusion state to set
+	 */
+	public void setAmbientOcclusion(final boolean isAmbientOcclusion) {
+//		Do nothing.
+	}
+	
+	/**
 	 * Sets the amplitude to use.
 	 * 
 	 * @param amplitude the new amplitude
@@ -541,7 +562,7 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	/**
 	 * Sets whether Ray Tracing should be enabled or disabled.
 	 * <p>
-	 * If {@code isRayTracing} is {@code false}, the renderer will be a Path Tracer.
+	 * If {@code isRayTracing} is {@code false}, the renderer will be Ambient Occlusion.
 	 * 
 	 * @param isRayTracing the Ray Tracing state to set
 	 */
@@ -615,6 +636,13 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * Toggles to the next shading.
 	 */
 	public void toggleShading() {
+//		Do nothing.
+	}
+	
+	/**
+	 * Toggles to the sun and sky.
+	 */
+	public void toggleSunAndSky() {
 //		Do nothing.
 	}
 	

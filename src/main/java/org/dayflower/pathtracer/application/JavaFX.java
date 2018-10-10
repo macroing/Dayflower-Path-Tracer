@@ -22,6 +22,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -36,6 +37,19 @@ public final class JavaFX {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	public static CheckBox newCheckBox(final String text, final EventHandler<ActionEvent> eventHandler) {
+		return newCheckBox(text, eventHandler, false);
+	}
+	
+	public static CheckBox newCheckBox(final String text, final EventHandler<ActionEvent> eventHandler, final boolean isSelected) {
+		final
+		CheckBox checkBox = new CheckBox(text);
+		checkBox.setOnAction(eventHandler);
+		checkBox.setSelected(isSelected);
+		
+		return checkBox;
+	}
 	
 	public static CheckMenuItem newCheckMenuItem(final String text, final EventHandler<ActionEvent> eventHandler) {
 		return newCheckMenuItem(text, eventHandler, false);

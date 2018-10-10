@@ -56,6 +56,7 @@ import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.TreeNode;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
+import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
@@ -229,6 +230,27 @@ public final class CompiledScene {
 	public static final int SURFACE_SIZE = 8;
 	
 //	TODO: Add Javadocs.
+	public static final int TERRAIN_RELATIVE_OFFSET_MAXIMUM = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int TERRAIN_RELATIVE_OFFSET_MINIMUM = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int TERRAIN_RELATIVE_OFFSET_OCTAVES = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int TERRAIN_RELATIVE_OFFSET_PERSISTENCE = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int TERRAIN_RELATIVE_OFFSET_SCALE = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int TERRAIN_SIZE = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int TERRAIN_TYPE = 4;
+	
+//	TODO: Add Javadocs.
 	public static final int TEXTURE_RELATIVE_OFFSET_SIZE = 1;
 	
 //	TODO: Add Javadocs.
@@ -349,6 +371,8 @@ public final class CompiledScene {
 				i += PLANE_SIZE;
 			} else if(shapeType0 == SPHERE_TYPE) {
 				i += SPHERE_SIZE;
+			} else if(shapeType0 == TERRAIN_TYPE) {
+				i += TERRAIN_SIZE;
 			} else if(shapeType0 == TRIANGLE_TYPE) {
 				i += TRIANGLE_SIZE;
 			}
@@ -856,6 +880,8 @@ public final class CompiledScene {
 			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces, point3s, vector3s);
 		} else if(shape instanceof Sphere) {
 			return doToFloatArraySphere(Sphere.class.cast(shape), surfaces, point3s);
+		} else if(shape instanceof Terrain) {
+			return doToFloatArrayTerrain(Terrain.class.cast(shape), surfaces);
 		} else if(shape instanceof Triangle) {
 			return doToFloatArrayTriangle(Triangle.class.cast(shape), surfaces, point2s, point3s, vector3s);
 		} else {
@@ -976,6 +1002,18 @@ public final class CompiledScene {
 		};
 	}
 	
+	private static float[] doToFloatArrayTerrain(final Terrain terrain, final List<Surface> surfaces) {
+		return new float[] {
+			TERRAIN_TYPE,
+			doGetOffset(terrain.getSurface(), surfaces),
+			terrain.getPersistence(),
+			terrain.getScale(),
+			terrain.getMinimum(),
+			terrain.getMaximum(),
+			terrain.getOctaves()
+		};
+	}
+	
 	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s) {
 		return new float[] {
 			TRIANGLE_TYPE,
@@ -1040,6 +1078,8 @@ public final class CompiledScene {
 				return PLANE_SIZE;
 			case SPHERE_TYPE:
 				return SPHERE_SIZE;
+			case TERRAIN_TYPE:
+				return TERRAIN_SIZE;
 			case TRIANGLE_TYPE:
 				return TRIANGLE_SIZE;
 			default:
@@ -1075,6 +1115,8 @@ public final class CompiledScene {
 			return PLANE_SIZE;
 		} else if(shape instanceof Sphere) {
 			return SPHERE_SIZE;
+		} else if(shape instanceof Terrain) {
+			return TERRAIN_SIZE;
 		} else if(shape instanceof Triangle) {
 			return TRIANGLE_SIZE;
 		} else {

@@ -1,8 +1,8 @@
-Dayflower - Path Tracer v.0.0.28
+Dayflower - Path Tracer v.0.0.29
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
-The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ray Casting, Ray Marching and Ray Tracing may be used.
+The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ambient Occlusion, Ray Casting, Ray Marching and Ray Tracing may be used.
 
 This early test implementation of Dayflower, uses a library called Aparapi. Aparapi is responsible for decompiling the Java bytecode into OpenCL C99 on the fly. The OpenCL C99 is then compiled into binary code that is executable by the current GPU.
 
@@ -43,6 +43,7 @@ Supported Features
 | Material               | Specular (Mirror)                                        |
 | Normal Mapping         | Image Texture                                            |
 | Normal Mapping         | Noise                                                    |
+| Rendering Algorithm    | Ambient Occlusion                                        |
 | Rendering Algorithm    | Path Tracing                                             |
 | Rendering Algorithm    | Ray Casting                                              |
 | Rendering Algorithm    | Ray Marching                                             |
@@ -107,6 +108,7 @@ Supported Menu Controls
 | Effect > Sharpen               | Toggle the Sharpen effect                        |
 | Effect > Grayscale             | Toggle the Grayscale effect                      |
 | Effect > Sepia Tone            | Toggle the Sepia Tone effect                     |
+| Renderer > Ambient Occlusion   | Use the Ambient Occlusion renderer to render     |
 | Renderer > Path Tracer         | Use the Path Tracer to render                    |
 | Renderer > Ray Caster          | Use the Ray Caster to render                     |
 | Renderer > Ray Marcher         | Use the Ray Marcher to render                    |
@@ -135,11 +137,11 @@ Supported Tab Controls
 | Sun & Sky > Sun Direction Y     | Change the Y-axis of the sun direction          |
 | Sun & Sky > Sun Direction Z     | Change the Z-axis of the sun direction          |
 | Sun & Sky > Turbidity           | Change the turbidity of the sky                 |
-| Path Tracer > Maximum Ray Depth | Change the maximum ray depth                    |
-| Ray Marcher > Amplitude         | Change the Amplitude of the terrain generation  |
-| Ray Marcher > Frequency         | Change the Frequency of the terrain generation  |
-| Ray Marcher > Gain              | Change the Gain of the terrain generation       |
-| Ray Marcher > Lacunarity        | Change the Lacunarity of the terrain generation |
+| Renderer > Maximum Ray Depth    | Change the maximum ray depth                    |
+| Renderer > Amplitude            | Change the Amplitude of the terrain generation  |
+| Renderer > Frequency            | Change the Frequency of the terrain generation  |
+| Renderer > Gain                 | Change the Gain of the terrain generation       |
+| Renderer > Lacunarity           | Change the Lacunarity of the terrain generation |
 _____________________________________________________________________________________
 
 Getting Started

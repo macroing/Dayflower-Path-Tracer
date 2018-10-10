@@ -221,14 +221,14 @@ public abstract class AbstractApplication extends Application {
 				if(pixelWriter != null) {
 					synchronized(pixels) {
 						pixelWriter.setPixels(0, 0, getKernelWidth(), getKernelHeight(), pixelFormat, byteBuffer, getKernelWidth() * 4);
+						
+						final WritableImage writableImage = imageView.snapshot(null, null);
+						
+						final
+						GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+						graphicsContext.drawImage(writableImage, 0.0D, 0.0D, getCanvasWidth(), getCanvasHeight());
 					}
 				}
-				
-				final WritableImage writableImage = imageView.snapshot(null, null);
-				
-				final
-				GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-				graphicsContext.drawImage(writableImage, 0.0D, 0.0D, getCanvasWidth(), getCanvasHeight());
 			}
 		}.start();
 	}

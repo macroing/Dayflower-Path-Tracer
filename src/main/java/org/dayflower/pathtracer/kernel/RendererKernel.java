@@ -65,6 +65,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES = 8;
 	private static final int RELATIVE_OFFSET_RAY_DIRECTION = 3;
 	private static final int RELATIVE_OFFSET_RAY_ORIGIN = 0;
+	private static final int RENDERER_AMBIENT_OCCLUSION = 0;
 	private static final int RENDERER_PATH_TRACER = 1;
 	private static final int RENDERER_RAY_CASTER = 2;
 	private static final int RENDERER_RAY_MARCHER = 3;
@@ -74,6 +75,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int SIZE_INTERSECTION = 22;
 	private static final int SIZE_PIXEL = 4;
 	private static final int SIZE_RAY = 6;
+	private static final int SUN_AND_SKY_OFF = 0;
+	private static final int SUN_AND_SKY_ON = 1;
 	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE = 1;
 	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR = 2;
 	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_1 = 3;
@@ -161,6 +164,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int selectedShapeIndex = -1;
 	private int shading = SHADING_GOURAUD;
 	private int shapeOffsetsLength;
+	private int sunAndSky = SUN_AND_SKY_ON;
 	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE;
 	private final int width;
 	@Constant
@@ -306,6 +310,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns {@code true} if, and only if, Ambient Occlusion is enabled, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, Ambient Occlusion is enabled, {@code false} otherwise
+	 */
+	@Override
+	public boolean isAmbientOcclusion() {
+		return this.renderer == RENDERER_AMBIENT_OCCLUSION;
+	}
 	
 	/**
 	 * Returns {@code true} if, and only if, the Grayscale effect is enabled, {@code false} otherwise.
@@ -806,7 +820,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int pixelIndex = getGlobalId();
 		
 		if(doCreatePrimaryRay(pixelIndex)) {
-			if(this.renderer == RENDERER_PATH_TRACER) {
+			if(this.renderer == RENDERER_AMBIENT_OCCLUSION) {
+				doAmbientOcclusion();
+			} else if(this.renderer == RENDERER_PATH_TRACER) {
 				doPathTracing();
 			} else if(this.renderer == RENDERER_RAY_CASTER) {
 				doRayCasting();
@@ -831,6 +847,19 @@ public final class RendererKernel extends AbstractRendererKernel {
 		}
 		
 		doCalculateColor(pixelIndex);
+	}
+	
+	/**
+	 * Sets whether Ambient Occlusion should be enabled or disabled.
+	 * <p>
+	 * If {@code isAmbientOcclusion} is {@code false}, the renderer will be a Path Tracer.
+	 * 
+	 * @param isAmbientOcclusion the Ambient Occlusion state to set
+	 */
+	@Override
+	public void setAmbientOcclusion(final boolean isAmbientOcclusion) {
+		this.renderer = isAmbientOcclusion ? RENDERER_AMBIENT_OCCLUSION : RENDERER_PATH_TRACER;
+		this.isResetRequired = true;
 	}
 	
 	/**
@@ -977,13 +1006,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 	/**
 	 * Sets whether Ray Tracing should be enabled or disabled.
 	 * <p>
-	 * If {@code isRayTracing} is {@code false}, the renderer will be a Path Tracer.
+	 * If {@code isRayTracing} is {@code false}, the renderer will be Ambient Occlusion.
 	 * 
 	 * @param isRayTracing the Ray Tracing state to set
 	 */
 	@Override
 	public void setRayTracing(final boolean isRayTracing) {
-		this.renderer = isRayTracing ? RENDERER_RAY_TRACER : RENDERER_PATH_TRACER;
+		this.renderer = isRayTracing ? RENDERER_RAY_TRACER : RENDERER_AMBIENT_OCCLUSION;
 		this.isResetRequired = true;
 	}
 	
@@ -1076,14 +1105,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void toggleRenderer() {
-		if(isPathTracing()) {
+		if(isAmbientOcclusion()) {
+			setPathTracing(true);
+		} else if(isPathTracing()) {
 			setRayCasting(true);
 		} else if(isRayCasting()) {
 			setRayMarching(true);
 		} else if(isRayMarching()) {
 			setRayTracing(true);
 		} else if(isRayTracing()) {
-			setPathTracing(true);
+			setAmbientOcclusion(true);
 		}
 	}
 	
@@ -1096,6 +1127,18 @@ public final class RendererKernel extends AbstractRendererKernel {
 			setShadingGouraud();
 		} else if(isShadingGouraud()) {
 			setShadingFlat();
+		}
+	}
+	
+	/**
+	 * Toggles to the sun and sky.
+	 */
+	@Override
+	public void toggleSunAndSky() {
+		if(this.sunAndSky == SUN_AND_SKY_OFF) {
+			this.sunAndSky = SUN_AND_SKY_ON;
+		} else {
+			this.sunAndSky = SUN_AND_SKY_OFF;
 		}
 	}
 	
@@ -1260,7 +1303,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return true;
 	}
 	
-	@SuppressWarnings("unused")
 	private float doFractionalBrownianMotionXY(final float persistence, final float scale, final float minimum, final float maximum, final int octaves, final float x, final float y) {
 		float currentAmplitude = 1.0F;
 		float maximumAmplitude = 0.0F;
@@ -1343,6 +1385,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 			return doIntersectPlane(shapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
 		} else if(type == CompiledScene.SPHERE_TYPE) {
 			return doIntersectSphere(shapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
+		} else if(type == CompiledScene.TERRAIN_TYPE) {
+			return doIntersectTerrain(shapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
 		}
 		
 //		Return no hit:
@@ -1431,6 +1475,43 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 //		Return no hit:
 		return INFINITY;
+	}
+	
+	private float doIntersectTerrain(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
+		final float persistence = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_PERSISTENCE];
+		final float scale = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_SCALE];
+		final float minimum = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_MINIMUM];
+		final float maximum = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_MAXIMUM];
+		
+		final int octaves = (int)(this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_OCTAVES]);
+		
+		float t = 0.0F;
+		
+		final float tMinimum = 0.001F;
+		final float tMaximum = 2000.0F;
+		final float tMultiplier = 0.1F;
+		
+		float tDelta = tMultiplier;
+		
+		for(float tCurrent = tMinimum; tCurrent < tMaximum; tCurrent += tDelta) {
+			final float surfaceIntersectionPointX = originX + directionX * tCurrent;
+			final float surfaceIntersectionPointY = originY + directionY * tCurrent;
+			final float surfaceIntersectionPointZ = originZ + directionZ * tCurrent;
+			
+			final float y = doFractionalBrownianMotionXY(persistence, scale, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ);
+			
+			if(surfaceIntersectionPointY < y) {
+				t = tCurrent;
+				
+				tCurrent = tMaximum;
+			}
+			
+			tDelta = tMultiplier * tCurrent;
+		}
+		
+		t = t > EPSILON ? t : INFINITY;
+		
+		return t;
 	}
 	
 	private float doIntersectTriangle(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
@@ -1763,6 +1844,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return 27.0F * (n0 + n1 + n2 + n3 + n4);
 	}
 	
+	@SuppressWarnings("unused")
 	private float doPerlinNoise(final float x, final float y, final float z) {
 //		Calculate the floor of the X-, Y- and Z-coordinates:
 		final float floorX = floor(x);
@@ -1902,6 +1984,162 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return this.permutations[index % this.permutations.length];
 	}
 	
+	private void doAmbientOcclusion() {
+//		Calculate the current offsets to the intersections and rays arrays:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		final int raysOffset = getLocalId() * SIZE_RAY;
+		
+//		Retrieve the offsets of the ray origin and the ray direction:
+		final int offsetOrigin = raysOffset + RELATIVE_OFFSET_RAY_ORIGIN;
+		final int offsetDirection = raysOffset + RELATIVE_OFFSET_RAY_DIRECTION;
+		
+//		Initialize the origin from the primary ray:
+		float originX = this.rays[offsetOrigin];
+		float originY = this.rays[offsetOrigin + 1];
+		float originZ = this.rays[offsetOrigin + 2];
+		
+//		Initialize the direction from the primary ray:
+		float directionX = this.rays[offsetDirection];
+		float directionY = this.rays[offsetDirection + 1];
+		float directionZ = this.rays[offsetDirection + 2];
+		
+//		Initialize the pixel color to black:
+		float pixelColorR = 0.0F;
+		float pixelColorG = 0.0F;
+		float pixelColorB = 0.0F;
+		
+//		Retrieve the pixel index:
+		final int pixelIndex = getLocalId() * 3;
+		
+//		Perform an intersection test:
+		doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
+		
+//		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
+		final float distance = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+		
+//		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
+		final int shapesOffset = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+		
+		this.shapeOffsetsForPrimaryRay[getGlobalId()] = shapesOffset;
+		
+//		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
+		if(distance != INFINITY && shapesOffset != -1) {
+//			Retrieve the offsets of the surface intersection point and the surface normal in the intersections array:
+			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
+			
+//			Retrieve the surface intersection point from the intersections array:
+			final float surfaceIntersectionPointX = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
+			final float surfaceIntersectionPointY = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
+			final float surfaceIntersectionPointZ = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
+			
+//			Retrieve the surface normal from the intersections array:
+			final float surfaceNormalShadingX = this.intersections[offsetIntersectionSurfaceNormalShading];
+			final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+			final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
+			
+			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
+			
+//			Check if the surface normal is correctly oriented:
+			final boolean isCorrectlyOriented = dotProduct < 0.0F;
+			
+//			Retrieve the correctly oriented surface normal:
+			final float w0X = isCorrectlyOriented ? surfaceNormalShadingX : -surfaceNormalShadingX;
+			final float w0Y = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
+			final float w0Z = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
+			
+//			Calculate the orthonormal basis W vector:
+			final float w0LengthReciprocal = rsqrt(w0X * w0X + w0Y * w0Y + w0Z * w0Z);
+			final float w1X = w0X * w0LengthReciprocal;
+			final float w1Y = w0Y * w0LengthReciprocal;
+			final float w1Z = w0Z * w0LengthReciprocal;
+			
+//			Check if the direction is the Y-direction:
+			final boolean isY = abs(w1X) > 0.1F;
+			
+//			Calculate the orthonormal basis U vector:
+			final float u0X = isY ? 0.0F : 1.0F;
+			final float u0Y = isY ? 1.0F : 0.0F;
+			final float u1X = u0Y * w1Z;
+			final float u1Y = -(u0X * w1Z);
+			final float u1Z = u0X * w1Y - u0Y * w1X;
+			final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
+			final float u2X = u1X * u1LengthReciprocal;
+			final float u2Y = u1Y * u1LengthReciprocal;
+			final float u2Z = u1Z * u1LengthReciprocal;
+			
+//			Calculate the orthonormal basis V vector:
+			final float v0X = w0Y * u2Z - w0Z * u2Y;
+			final float v0Y = w0Z * u2X - w0X * u2Z;
+			final float v0Z = w0X * u2Y - w0Y * u2X;
+			
+			final int samples = 10;
+			
+			final float brightR = 1.0F;
+			final float brightG = 1.0F;
+			final float brightB = 1.0F;
+			
+			final float darkR = 0.0F;
+			final float darkG = 0.0F;
+			final float darkB = 0.0F;
+			
+			for(int i = 0; i < samples; i++) {
+				final float xi = nextFloat();
+				final float xj = nextFloat();
+				final float phi = PI_MULTIPLIED_BY_TWO * xi;
+				final float cosPhi = cos(phi);
+				final float sinPhi = sin(phi);
+				final float sinTheta = sqrt(xj);
+				final float cosTheta = sqrt(1.0F - xj);
+				
+				final float direction0X = cosPhi * sinTheta;
+				final float direction0Y = sinPhi * sinTheta;
+				final float direction0Z = cosTheta;
+				final float direction1X = direction0X * u2X + direction0Y * v0X + direction0Z * w1X;
+				final float direction1Y = direction0X * u2Y + direction0Y * v0Y + direction0Z * w1Y;
+				final float direction1Z = direction0X * u2Z + direction0Y * v0Z + direction0Z * w1Z;
+				final float direction1LengthReciprocal = rsqrt(direction1X * direction1X + direction1Y * direction1Y + direction1Z * direction1Z);
+				
+				originX = surfaceIntersectionPointX + w0X * 0.01F;
+				originY = surfaceIntersectionPointY + w0Y * 0.01F;
+				originZ = surfaceIntersectionPointZ + w0Z * 0.01F;
+				
+				directionX = direction1X * direction1LengthReciprocal;
+				directionY = direction1Y * direction1LengthReciprocal;
+				directionZ = direction1Z * direction1LengthReciprocal;
+				
+				doPerformIntersectionTestOnly(-1, originX, originY, originZ, directionX, directionY, directionZ);
+				
+//				Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
+				final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+				
+//				Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
+				final int shapesOffset0 = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+				
+				final boolean isHit = distance0 != INFINITY && shapesOffset0 != -1;
+				
+				final float r = isHit ? 1.0F : 0.0F;
+				final float g = isHit ? 1.0F : 0.0F;
+				final float b = isHit ? 1.0F : 0.0F;
+				
+				pixelColorR += (1.0F - r) * brightR + r * darkR;
+				pixelColorG += (1.0F - g) * brightG + g * darkG;
+				pixelColorB += (1.0F - b) * brightB + b * darkB;
+			}
+			
+			final float samplesReciprocal = 1.0F / samples;
+			
+			pixelColorR *= samplesReciprocal;
+			pixelColorG *= samplesReciprocal;
+			pixelColorB *= samplesReciprocal;
+		}
+		
+//		Update the current pixel color:
+		this.currentPixelColors[pixelIndex] = pixelColorR;
+		this.currentPixelColors[pixelIndex + 1] = pixelColorG;
+		this.currentPixelColors[pixelIndex + 2] = pixelColorB;
+	}
+	
 	private void doCalculateColor(final int pixelIndex) {
 //		Retrieve the offset to the pixels array:
 		final int pixelsOffset = pixelIndex * SIZE_PIXEL;
@@ -1918,18 +2156,20 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float currentPixelG = this.currentPixelColors[pixelIndex1 + 1];
 		final float currentPixelB = this.currentPixelColors[pixelIndex1 + 2];
 		
-		final float oldAverageR = this.accumulatedPixelColors[pixelIndex0 + 0];
-		final float oldAverageG = this.accumulatedPixelColors[pixelIndex0 + 1];
-		final float oldAverageB = this.accumulatedPixelColors[pixelIndex0 + 2];
-		
-		final float newAverageR = oldAverageR + ((currentPixelR - oldAverageR) / newSubSample);
-		final float newAverageG = oldAverageG + ((currentPixelG - oldAverageG) / newSubSample);
-		final float newAverageB = oldAverageB + ((currentPixelB - oldAverageB) / newSubSample);
-		
-		this.subSamples[pixelIndex] = newSubSample;
-		this.accumulatedPixelColors[pixelIndex0 + 0] = newAverageR;
-		this.accumulatedPixelColors[pixelIndex0 + 1] = newAverageG;
-		this.accumulatedPixelColors[pixelIndex0 + 2] = newAverageB;
+		if(currentPixelR >= 0.0F && currentPixelG >= 0.0F && currentPixelB >= 0.0F) {
+			final float oldAverageR = this.accumulatedPixelColors[pixelIndex0 + 0];
+			final float oldAverageG = this.accumulatedPixelColors[pixelIndex0 + 1];
+			final float oldAverageB = this.accumulatedPixelColors[pixelIndex0 + 2];
+			
+			final float newAverageR = oldAverageR + ((currentPixelR - oldAverageR) / newSubSample);
+			final float newAverageG = oldAverageG + ((currentPixelG - oldAverageG) / newSubSample);
+			final float newAverageB = oldAverageB + ((currentPixelB - oldAverageB) / newSubSample);
+			
+			this.subSamples[pixelIndex] = newSubSample;
+			this.accumulatedPixelColors[pixelIndex0 + 0] = newAverageR;
+			this.accumulatedPixelColors[pixelIndex0 + 1] = newAverageG;
+			this.accumulatedPixelColors[pixelIndex0 + 2] = newAverageB;
+		}
 		
 //		Retrieve the 'normalized' accumulated pixel color component values again:
 		float r = this.accumulatedPixelColors[pixelIndex0];
@@ -2024,7 +2264,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float direction0Y = directionX * this.orthoNormalBasisVX + directionY * this.orthoNormalBasisVY + directionZ * this.orthoNormalBasisVZ;
 		float direction0Z = directionX * this.orthoNormalBasisWX + directionY * this.orthoNormalBasisWY + directionZ * this.orthoNormalBasisWZ;
 		
-		if(direction0Z < 0.0F) {
+		if(direction0Z < 0.0F || this.sunAndSky == SUN_AND_SKY_OFF) {
 //			Calculate the pixel index:
 			final int pixelIndex0 = getLocalId() * 3;
 			
@@ -2161,6 +2401,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 			doCalculateSurfacePropertiesForPlane(distance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
 		} else if(type == CompiledScene.SPHERE_TYPE) {
 			doCalculateSurfacePropertiesForSphere(distance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
+		} else if(type == CompiledScene.TERRAIN_TYPE) {
+			doCalculateSurfacePropertiesForTerrain(distance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
 		}
 	}
 	
@@ -2352,6 +2594,52 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 		this.intersections[offsetIntersectionUVCoordinates] = u;
 		this.intersections[offsetIntersectionUVCoordinates + 1] = v;
+	}
+	
+	private void doCalculateSurfacePropertiesForTerrain(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int shapesOffset) {
+		final float persistence = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_PERSISTENCE];
+		final float scale = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_SCALE];
+		final float minimum = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_MINIMUM];
+		final float maximum = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_MAXIMUM];
+		
+		final int octaves = (int)(this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_OCTAVES]);
+		
+		final float surfaceIntersectionPointX = originX + directionX * distance;
+		final float surfaceIntersectionPointY = originY + directionY * distance;
+		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
+		
+		final float epsilon = 0.02F;
+		
+		final float surfaceNormalX = doFractionalBrownianMotionXY(persistence, scale, minimum, maximum, octaves, surfaceIntersectionPointX - epsilon, surfaceIntersectionPointZ) - doFractionalBrownianMotionXY(persistence, scale, minimum, maximum, octaves, surfaceIntersectionPointX + epsilon, surfaceIntersectionPointZ);
+		final float surfaceNormalY = -2.0F * epsilon;
+		final float surfaceNormalZ = doFractionalBrownianMotionXY(persistence, scale, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ - epsilon) - doFractionalBrownianMotionXY(persistence, scale, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ + epsilon);
+		final float surfaceNormalLengthReciprocal = rsqrt(surfaceNormalX * surfaceNormalX + surfaceNormalY * surfaceNormalY + surfaceNormalZ * surfaceNormalZ);
+		final float surfaceNormalNormalizedX = surfaceNormalX * surfaceNormalLengthReciprocal;
+		final float surfaceNormalNormalizedY = surfaceNormalY * surfaceNormalLengthReciprocal;
+		final float surfaceNormalNormalizedZ = surfaceNormalZ * surfaceNormalLengthReciprocal;
+		
+		final float u = surfaceIntersectionPointX;
+		final float v = surfaceIntersectionPointZ;
+		
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
+		final int offsetIntersectionUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		
+		this.intersections[intersectionsOffset] = distance;
+		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = shapesOffset;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint] = surfaceIntersectionPointX;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointY;
+		this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZ;
+		this.intersections[offsetIntersectionUVCoordinates] = u;
+		this.intersections[offsetIntersectionUVCoordinates + 1] = v;
+		this.intersections[offsetIntersectionSurfaceNormal] = surfaceNormalNormalizedX;
+		this.intersections[offsetIntersectionSurfaceNormal + 1] = surfaceNormalNormalizedY;
+		this.intersections[offsetIntersectionSurfaceNormal + 2] = surfaceNormalNormalizedZ;
+		this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormalNormalizedX;
+		this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormalNormalizedY;
+		this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormalNormalizedZ;
 	}
 	
 	private void doCalculateSurfacePropertiesForTriangle(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int shapesOffset) {
@@ -3938,9 +4226,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float z1 = z0 * scaleReciprocal;
 			
 //			Compute the Perlin noise given the X-, Y- and Z-component values:
-			final float noiseX = doFractionalBrownianMotionXYZ(0.5F, scale, -0.1F, 0.1F, 16, x1, y1, z1);//doPerlinNoise(x1, y1, z1);
-			final float noiseY = doFractionalBrownianMotionXYZ(0.5F, scale, -0.1F, 0.1F, 16, y1, z1, x1);//doPerlinNoise(y1, z1, x1);
-			final float noiseZ = doFractionalBrownianMotionXYZ(0.5F, scale, -0.1F, 0.1F, 16, z1, x1, y1);//doPerlinNoise(z1, x1, y1);
+			final float noiseX = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, x1, y1, z1);//doPerlinNoise(x1, y1, z1);
+			final float noiseY = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, y1, z1, x1);//doPerlinNoise(y1, z1, x1);
+			final float noiseZ = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, z1, x1, y1);//doPerlinNoise(z1, x1, y1);
 			
 //			Calculate the surface normal:
 			final float surfaceNormal0X = this.intersections[offsetIntersectionSurfaceNormalShading];

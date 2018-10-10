@@ -73,7 +73,7 @@ public final class Sky {
 	private float[][] imageHistogram;
 	@SuppressWarnings("unused")
 	private final int samples = 4;
-	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y(), Vector3.z());
+	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y(), Vector3.z(), Vector3.x());//new OrthoNormalBasis(Vector3.y(), Vector3.z());
 	private Point3 sunOrigin;
 	private SpectralCurve radiance;
 	private Vector3 sunDirection;

@@ -214,24 +214,24 @@ final class Scenes {
 		final Texture textureAlbedo0 = new SolidTexture(new Color(0.75F, 0.25F, 0.25F));
 		final Texture textureAlbedo1 = new SolidTexture(new Color(0.25F, 0.25F, 0.75F));
 		final Texture textureAlbedo2 = new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
-		final Texture textureAlbedo3 = new SolidTexture(new Color(0.5F, 0.5F, 0.5F));
-		final Texture textureAlbedo4 = new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
-		final Texture textureAlbedo5 = new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
-		final Texture textureAlbedo6 = new SolidTexture(new Color(0.5F * 0.999F, 1.0F * 0.999F, 0.5F * 0.999F));
+		final Texture textureAlbedo3 = new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
+		final Texture textureAlbedo4 = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);//new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
+		final Texture textureAlbedo5 = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);//new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
+		final Texture textureAlbedo6 = new FractionalBrownianMotionTexture(new Color(0.5F * 0.999F, 1.0F * 0.999F, 0.5F * 0.999F), Color.WHITE, 0.5F, 0.8F, 16);//new SolidTexture(new Color(0.5F * 0.999F, 1.0F * 0.999F, 0.5F * 0.999F));//TODO
 		final Texture textureAlbedo7 = new SolidTexture(new Color(1.0F * 0.999F, 1.0F * 0.999F, 1.0F * 0.999F));
 		final Texture textureAlbedo8 = new SolidTexture(Color.BLACK);
 		final Texture textureNormal = new SolidTexture(Color.BLACK);
 		
 		final
 		Scene scene = new Scene("Cornell_Box_Scene");
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureAlbedo0, textureNormal), 1.0e4F, new Point3(1.0e4F + 1.0F, 40.8F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo1, textureNormal), 1.0e4F, new Point3(-1.0e4F + 99.0F, 40.8F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureAlbedo2, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, 1.0e4F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo3, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, -1.0e4F + 170.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo4, textureNormal), 1.0e4F, new Point3(50.0F, 1.0e4F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo5, textureNormal), 1.0e4F, new Point3(50.0F, -1.0e4F + 81.6F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo6, textureNormal), 16.5F, new Point3(27.0F, 16.5F, 47.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, textureAlbedo7, textureNormal), 16.5F, new Point3(73.0F, 16.5F, 78.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo0, textureNormal), 1.0e4F, new Point3(1.0e4F + 1.0F, 40.8F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo1, textureNormal), 1.0e4F, new Point3(-1.0e4F + 99.0F, 40.8F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo2, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, 1.0e4F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo3, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, -1.0e4F + 170.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo4, textureNormal), 1.0e4F, new Point3(50.0F, 1.0e4F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo5, textureNormal), 1.0e4F, new Point3(50.0F, -1.0e4F + 81.6F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.PHONG_METAL, textureAlbedo6, textureNormal), 16.5F, new Point3(27.0F, 16.5F, 47.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, textureAlbedo7, textureNormal), 16.5F, new Point3(73.0F, 16.5F, 78.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(new Color(12.0F, 12.0F, 12.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo8, textureNormal), 600.0F, new Point3(50.0F, 681.6F - 0.27F, 81.6F)));
 		
 		return scene;
@@ -453,7 +453,7 @@ final class Scenes {
 	}
 	
 	public static Scene newMaterialShowcaseScene() {
-		final Texture texture0 = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);
+		final Texture texture0 = new SolidTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));//new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new SolidTexture(Color.WHITE);
 		final Texture texture2 = new SolidTexture(Color.BLACK);
 		final Texture texture3 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 0.008F, 0.008F);
@@ -465,12 +465,13 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Material_Showcase_Scene");
+//		scene.addShape(new Terrain(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 0.5F, 0.8F, -2.0F, 0.0F, 2));
 		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, texture0, texture3), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture6, texture2), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 80.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 120.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 160.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(5.0F, 10.0F, 5.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3(20.0F, 100.0F, 180.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(5.0F, 5.0F, 5.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3(20.0F, 100.0F, 180.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 200.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, texture2, texture2), 16.5F, new Point3(20.0F, 16.5F, 240.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture4, texture5), 16.5F, new Point3(20.0F, 16.5F, 280.0F)));
@@ -481,7 +482,7 @@ final class Scenes {
 	}
 	
 	public static Scene newMonkeyScene() {
-		final Texture textureGroundAlbedo = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture textureGroundAlbedo = new SolidTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));//new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormal = new SolidTexture(Color.BLACK);
 		final Texture textureMonkeyAlbedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.1F, 16);//new SolidTexture(Color.RED);
 		final Texture textureMonkeyNormal = new SolidTexture(Color.BLACK);
