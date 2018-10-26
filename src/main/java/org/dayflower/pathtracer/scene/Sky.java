@@ -57,9 +57,7 @@ public final class Sky {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	@SuppressWarnings("unused")
 	private Color sunColor;
-	@SuppressWarnings("unused")
 	private float jacobian;
 	private float theta;
 	private float turbidity;
@@ -67,11 +65,12 @@ public final class Sky {
 	private float zenithX;
 	private float zenithY;
 	private float[] colHistogram;
+	private float[] imageHistogram;
 	private final float[] perezRelativeLuminance = new float[5];
 	private final float[] perezX = new float[5];
 	private final float[] perezY = new float[5];
-	private float[][] imageHistogram;
-	@SuppressWarnings("unused")
+	private final int imageHistogramHeight = 32;
+	private final int imageHistogramWidth = 32;
 	private final int samples = 4;
 	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y(), Vector3.z(), Vector3.x());//new OrthoNormalBasis(Vector3.y(), Vector3.z());
 	private Point3 sunOrigin;
@@ -87,6 +86,11 @@ public final class Sky {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public float getJacobian() {
+		return this.jacobian;
+	}
 	
 //	TODO: Add Javadocs.
 	public float getTheta() {
@@ -114,6 +118,16 @@ public final class Sky {
 	}
 	
 //	TODO: Add Javadocs.
+	public float[] getColHistogram() {
+		return this.colHistogram;
+	}
+	
+//	TODO: Add Javadocs.
+	public float[] getImageHistogram() {
+		return this.imageHistogram;
+	}
+	
+//	TODO: Add Javadocs.
 	public float[] getPerezRelativeLuminance() {
 		return this.perezRelativeLuminance.clone();
 	}
@@ -126,6 +140,26 @@ public final class Sky {
 //	TODO: Add Javadocs.
 	public float[] getPerezY() {
 		return this.perezY.clone();
+	}
+	
+//	TODO: Add Javadocs.
+	public int getImageHistogramHeight() {
+		return this.imageHistogramHeight;
+	}
+	
+//	TODO: Add Javadocs.
+	public int getImageHistogramWidth() {
+		return this.imageHistogramWidth;
+	}
+	
+//	TODO: Add Javadocs.
+	public int getSamples() {
+		return this.samples;
+	}
+	
+//	TODO: Add Javadocs.
+	public Color getSunColor() {
+		return this.sunColor;
 	}
 	
 //	TODO: Add Javadocs.
@@ -155,7 +189,7 @@ public final class Sky {
 	
 //	TODO: Add Javadocs.
 	public void set(final Vector3 sunDirectionWorld) {
-		set(sunDirectionWorld, 6.0F);
+		set(sunDirectionWorld, 2.0F);
 	}
 	
 //	TODO: Add Javadocs.
@@ -199,37 +233,37 @@ public final class Sky {
 		this.perezY[3] = -0.04405F * turbidity - 1.65369F;
 		this.perezY[4] = -0.01092F * turbidity + 0.05291F;
 		
-		final int w = 32;
-		final int h = 32;
+		final int w = this.imageHistogramWidth;
+		final int h = this.imageHistogramHeight;
 		
 		this.colHistogram = new float[w];
-		this.imageHistogram = new float[w][h];
+		this.imageHistogram = new float[w * h];
 		
 		final float deltaU = 1.0F / w;
 		final float deltaV = 1.0F / h;
 		
-		for(int x = 0; x < w; x++) {
-			for(int y = 0; y < h; y++) {
+		for(int x = 0, index = 0; x < w; x++) {
+			for(int y = 0; y < h; y++, index++) {
 				final float u = (x + 0.5F) * deltaU;
 				final float v = (y + 0.5F) * deltaV;
 				
 				final Color color = doCalculateColor(Vector3.direction(u, v));
 				
-				this.imageHistogram[x][y] = color.luminance() * sin(PI * v);
+				this.imageHistogram[index] = color.luminance() * sin(PI * v);
 				
 				if(y > 0) {
-					this.imageHistogram[x][y] += this.imageHistogram[x][y - 1];
+					this.imageHistogram[index] += this.imageHistogram[index - 1];
 				}
 			}
 			
-			this.colHistogram[x] = this.imageHistogram[x][h - 1];
+			this.colHistogram[x] = this.imageHistogram[index - 1];
 			
 			if(x > 0) {
 				this.colHistogram[x] += this.colHistogram[x - 1];
 			}
 			
 			for(int y = 0; y < h; y++) {
-				this.imageHistogram[x][y] /= this.imageHistogram[x][h - 1];
+				this.imageHistogram[index - h + y] /= this.imageHistogram[index - 1];
 			}
 		}
 		

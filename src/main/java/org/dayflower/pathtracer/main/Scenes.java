@@ -87,6 +87,9 @@ final class Scenes {
 			case "Terrain_Scene":
 			case "Terrain_Scene.scene":
 				return newTerrainScene();
+			case "Test_Scene":
+			case "Test_Scene.scene":
+				return newTestScene();
 			case "Water_Scene":
 			case "Water_Scene.scene":
 				return newWaterScene();
@@ -546,6 +549,20 @@ final class Scenes {
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
 		}
+		
+		return scene;
+	}
+	
+	public static Scene newTestScene() {
+		final Texture textureAlbedoGround = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.08F, 0.08F);//new SolidTexture(Color.WHITE);
+		final Texture textureNormalGround = new SolidTexture(Color.BLACK);
+		final Texture textureAlbedoSphere = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.4F, 16);//new SolidTexture(Color.RED);
+		final Texture textureNormalSphere = new SolidTexture(Color.BLACK);
+		
+		final
+		Scene scene = new Scene("Test_Scene");
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoGround, textureNormalGround), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoSphere, textureNormalSphere), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
 		
 		return scene;
 	}

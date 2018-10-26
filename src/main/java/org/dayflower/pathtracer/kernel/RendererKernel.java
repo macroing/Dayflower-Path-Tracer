@@ -93,6 +93,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private float frequency;
 	private float gain;
 	private final float gamma;
+	private float jacobian;
 	private float lacunarity;
 	private float orthoNormalBasisUX;
 	private float orthoNormalBasisUY;
@@ -106,6 +107,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final float segmentOffset;
 	private final float slope;
 	private final float slopeMatch;
+	private float sunColorB;
+	private float sunColorG;
+	private float sunColorR;
 	private float sunDirectionWorldX;
 	private float sunDirectionWorldY;
 	private float sunDirectionWorldZ;
@@ -124,8 +128,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final float[] boundingVolumeHierarchy;
 	@Constant
 	private final float[] cameraArray;
+	@Constant
+	private final float[] colHistogram;
 	@Local
 	private float[] currentPixelColors;
+	@Constant
+	private final float[] imageHistogram;
 	@Local
 	private float[] intersections;
 	@Constant
@@ -154,10 +162,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final float[] textures;
 	@Constant
 	private final float[] vector3s;
+	private final int colHistogramLength;
 	private int depthMaximum = 5;
 	private int depthRussianRoulette = 5;
 	private int effectGrayScale;
 	private int effectSepiaTone;
+	private final int imageHistogramHeight;
+	@SuppressWarnings("unused")
+	private final int imageHistogramWidth;
 	private int isNormalMapping = 0;
 	private int octaves;
 	private int renderer = RENDERER_PATH_TRACER;
@@ -165,6 +177,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int shading = SHADING_GOURAUD;
 	private int shapeOffsetsLength;
 	private int sunAndSky = SUN_AND_SKY_ON;
+	private int sunAndSkySamples;
 	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE;
 	private final int width;
 	@Constant
@@ -251,6 +264,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.perezRelativeLuminance = sky.getPerezRelativeLuminance();
 		this.perezX = sky.getPerezX();
 		this.perezY = sky.getPerezY();
+		this.imageHistogram = sky.getImageHistogram();
+		this.imageHistogramWidth = sky.getImageHistogramWidth();
+		this.imageHistogramHeight = sky.getImageHistogramHeight();
+		this.colHistogram = sky.getColHistogram();
+		this.jacobian = sky.getJacobian();
+		this.sunColorR = sky.getSunColor().r;
+		this.sunColorG = sky.getSunColor().g;
+		this.sunColorB = sky.getSunColor().b;
+		this.sunAndSkySamples = sky.getSamples();
+		this.colHistogramLength = this.colHistogram.length;
 		
 		for(int i = 0; i < this.permutations.length; i++) {
 			this.permutationsMod12[i] = this.permutations[i] % 12;
@@ -556,6 +579,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		put(this.shapeOffsets);
 		put(this.shapeOffsetsForPrimaryRay);
 		put(this.subSamples);
+		put(this.imageHistogram);
+		put(this.colHistogram);
 		
 		return this;
 	}
@@ -625,6 +650,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public RendererKernel updateSky() {
+		this.jacobian = this.sky.getJacobian();
 		this.orthoNormalBasisUX = this.sky.getOrthoNormalBasis().u.x;
 		this.orthoNormalBasisUY = this.sky.getOrthoNormalBasis().u.y;
 		this.orthoNormalBasisUZ = this.sky.getOrthoNormalBasis().u.z;
@@ -634,6 +660,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.orthoNormalBasisWX = this.sky.getOrthoNormalBasis().w.x;
 		this.orthoNormalBasisWY = this.sky.getOrthoNormalBasis().w.y;
 		this.orthoNormalBasisWZ = this.sky.getOrthoNormalBasis().w.z;
+		this.sunAndSkySamples = this.sky.getSamples();
+		this.sunColorB = this.sky.getSunColor().b;
+		this.sunColorG = this.sky.getSunColor().g;
+		this.sunColorR = this.sky.getSunColor().r;
 		this.sunDirectionWorldX = this.sky.getSunDirectionWorld().x;
 		this.sunDirectionWorldY = this.sky.getSunDirectionWorld().y;
 		this.sunDirectionWorldZ = this.sky.getSunDirectionWorld().z;
@@ -648,10 +678,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.zenithX = this.sky.getZenithX();
 		this.zenithY = this.sky.getZenithY();
 		
+		System.arraycopy(this.sky.getColHistogram(), 0, this.colHistogram, 0, this.colHistogram.length);
+		System.arraycopy(this.sky.getImageHistogram(), 0, this.imageHistogram, 0, this.imageHistogram.length);
 		System.arraycopy(this.sky.getPerezRelativeLuminance(), 0, this.perezRelativeLuminance, 0, this.perezRelativeLuminance.length);
 		System.arraycopy(this.sky.getPerezX(), 0, this.perezX, 0, this.perezX.length);
 		System.arraycopy(this.sky.getPerezY(), 0, this.perezY, 0, this.perezY.length);
 		
+		put(this.colHistogram);
+		put(this.imageHistogram);
 		put(this.perezRelativeLuminance);
 		put(this.perezX);
 		put(this.perezY);
@@ -821,7 +855,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		if(doCreatePrimaryRay(pixelIndex)) {
 			if(this.renderer == RENDERER_AMBIENT_OCCLUSION) {
-				doAmbientOcclusion();
+				doAmbientOcclusion(1.0F, 1.0F, 1.0F, 0.0F, 0.0F, 0.0F);
 			} else if(this.renderer == RENDERER_PATH_TRACER) {
 				doPathTracing();
 			} else if(this.renderer == RENDERER_RAY_CASTER) {
@@ -1301,6 +1335,138 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.rays[raysOffset + 5] = apertureToImagePlane1Z;
 		
 		return true;
+	}
+	
+	private boolean doPerformIntersectionTestOnly(final int shapesOffsetToSkip, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
+//		Calculate the offset to the intersections array:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+//		Calculate the reciprocal of the ray direction vector:
+		final float directionReciprocalX = 1.0F / directionX;
+		final float directionReciprocalY = 1.0F / directionY;
+		final float directionReciprocalZ = 1.0F / directionZ;
+		
+//		Initialize the offset to the root of the BVH structure (which is 0):
+		int boundingVolumeHierarchyOffset = 0;
+		
+//		Initialize a predicate:
+		boolean hasFoundIntersection = false;
+		
+//		Loop through the BVH structure as long as the offset to the next node is not -1:
+		do {
+//			Retrieve the minimum point location of the current bounding box:
+			final float minimumX = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 2];
+			final float minimumY = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3];
+			final float minimumZ = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 4];
+			
+//			Retrieve the maximum point location of the current bounding box:
+			final float maximumX = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 5];
+			final float maximumY = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 6];
+			final float maximumZ = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 7];
+			
+//			Calculate the distance to the minimum point location of the bounding box:
+			final float t0X = (minimumX - originX) * directionReciprocalX;
+			final float t0Y = (minimumY - originY) * directionReciprocalY;
+			final float t0Z = (minimumZ - originZ) * directionReciprocalZ;
+			
+//			Calculate the distance to the maximum point location of the bounding box:
+			final float t1X = (maximumX - originX) * directionReciprocalX;
+			final float t1Y = (maximumY - originY) * directionReciprocalY;
+			final float t1Z = (maximumZ - originZ) * directionReciprocalZ;
+			
+//			Calculate the minimum and maximum X-components:
+			final float tMaximumX = max(t0X, t1X);
+			final float tMinimumX = min(t0X, t1X);
+			
+//			Calculate the minimum and maximum Y-components:
+			final float tMaximumY = max(t0Y, t1Y);
+			final float tMinimumY = min(t0Y, t1Y);
+			
+//			Calculate the minimum and maximum Z-components:
+			final float tMaximumZ = max(t0Z, t1Z);
+			final float tMinimumZ = min(t0Z, t1Z);
+			
+//			Calculate the minimum and maximum distance values of the X-, Y- and Z-components above:
+			final float tMaximum = min(tMaximumX, min(tMaximumY, tMaximumZ));
+			final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
+			
+//			Check if the maximum distance is greater than or equal to the minimum distance:
+			if(tMaximum < tMinimum) {
+//				Retrieve the offset to the next node in the BVH structure, relative to the current one:
+				boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
+			} else {
+//				Retrieve the type of the current BVH node:
+				final float type = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset];
+				
+				if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
+//					This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
+					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
+				} else {
+//					Retrieve the triangle count in the current BVH node:
+					final int triangleCount = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
+					
+					int i = 0;
+					
+//					Loop through all triangles in the current BVH node:
+					while(i < triangleCount) {
+//						Retrieve the offset to the current triangle:
+						final int offset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
+						
+						if(offset != shapesOffsetToSkip) {
+//							Perform an intersection test with the current triangle:
+							final float currentDistance = doIntersectTriangle(offset, originX, originY, originZ, directionX, directionY, directionZ);
+							
+//							Check if the current distance is less than the distance to the closest shape so far:
+							if(currentDistance < INFINITY) {
+//								Update the predicate:
+								hasFoundIntersection = true;
+								
+//								Set the information in the intersections array:
+								this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = currentDistance;
+								this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = offset;
+								
+								i = triangleCount;
+							}
+						}
+						
+						i++;
+					}
+					
+					if(hasFoundIntersection) {
+						boundingVolumeHierarchyOffset = -1;
+					} else {
+//						Retrieve the offset to the next node in the BVH structure, relative to the current one:
+						boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
+					}
+				}
+				
+//				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
+				boundingVolumeHierarchyOffset = boundingVolumeHierarchyOffset + 0;
+			}
+		} while(boundingVolumeHierarchyOffset != -1);
+		
+		if(!hasFoundIntersection) {
+//			Loop through any other shapes, that are not triangles:
+			for(int i = 0; i < this.shapeOffsetsLength; i++) {
+//				Retrieve the offset to the shape:
+				final int currentShapesOffset = this.shapeOffsets[i];
+				
+				if(currentShapesOffset != shapesOffsetToSkip) {
+//					Perform an intersection test with the current shape:
+					final float currentDistance = doIntersect(currentShapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
+					
+//					Check if the current distance is less than the distance to the closest shape so far:
+					if(currentDistance < INFINITY) {
+//						Update the predicate:
+						hasFoundIntersection = true;
+						
+						i = this.shapeOffsetsLength;
+					}
+				}
+			}
+		}
+		
+		return hasFoundIntersection;
 	}
 	
 	private float doFractionalBrownianMotionXY(final float persistence, final float scale, final float minimum, final float maximum, final int octaves, final float x, final float y) {
@@ -1984,7 +2150,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return this.permutations[index % this.permutations.length];
 	}
 	
-	private void doAmbientOcclusion() {
+	private void doAmbientOcclusion(final float brightR, final float brightG, final float brightB, final float darkR, final float darkG, final float darkB) {
 //		Calculate the current offsets to the intersections and rays arrays:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		final int raysOffset = getLocalId() * SIZE_RAY;
@@ -2069,19 +2235,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float u2Z = u1Z * u1LengthReciprocal;
 			
 //			Calculate the orthonormal basis V vector:
-			final float v0X = w0Y * u2Z - w0Z * u2Y;
-			final float v0Y = w0Z * u2X - w0X * u2Z;
-			final float v0Z = w0X * u2Y - w0Y * u2X;
+			final float v0X = w1Y * u2Z - w1Z * u2Y;
+			final float v0Y = w1Z * u2X - w1X * u2Z;
+			final float v0Z = w1X * u2Y - w1Y * u2X;
 			
 			final int samples = 10;
-			
-			final float brightR = 1.0F;
-			final float brightG = 1.0F;
-			final float brightB = 1.0F;
-			
-			final float darkR = 0.0F;
-			final float darkG = 0.0F;
-			final float darkB = 0.0F;
 			
 			for(int i = 0; i < samples; i++) {
 				final float xi = nextFloat();
@@ -2100,27 +2258,19 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float direction1Z = direction0X * u2Z + direction0Y * v0Z + direction0Z * w1Z;
 				final float direction1LengthReciprocal = rsqrt(direction1X * direction1X + direction1Y * direction1Y + direction1Z * direction1Z);
 				
-				originX = surfaceIntersectionPointX + w0X * 0.01F;
-				originY = surfaceIntersectionPointY + w0Y * 0.01F;
-				originZ = surfaceIntersectionPointZ + w0Z * 0.01F;
+				originX = surfaceIntersectionPointX + w1X * 0.01F;
+				originY = surfaceIntersectionPointY + w1Y * 0.01F;
+				originZ = surfaceIntersectionPointZ + w1Z * 0.01F;
 				
 				directionX = direction1X * direction1LengthReciprocal;
 				directionY = direction1Y * direction1LengthReciprocal;
 				directionZ = direction1Z * direction1LengthReciprocal;
 				
-				doPerformIntersectionTestOnly(-1, originX, originY, originZ, directionX, directionY, directionZ);
+				final boolean isHit = doPerformIntersectionTestOnly(-1, originX, originY, originZ, directionX, directionY, directionZ);
 				
-//				Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
-				final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
-				
-//				Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
-				final int shapesOffset0 = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
-				
-				final boolean isHit = distance0 != INFINITY && shapesOffset0 != -1;
-				
-				final float r = isHit ? 1.0F : 0.0F;
-				final float g = isHit ? 1.0F : 0.0F;
-				final float b = isHit ? 1.0F : 0.0F;
+				final float r = isHit ? brightR : darkR;
+				final float g = isHit ? brightG : darkG;
+				final float b = isHit ? brightB : darkB;
 				
 				pixelColorR += (1.0F - r) * brightR + r * darkR;
 				pixelColorG += (1.0F - g) * brightG + g * darkG;
@@ -2384,12 +2534,102 @@ public final class RendererKernel extends AbstractRendererKernel {
 		b += w1;
 		
 //		TODO: Write explanation!
-		final int pixelIndex0 = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * 3;
 		
 //		TODO: Write explanation!
-		this.temporaryColors[pixelIndex0] = r;
-		this.temporaryColors[pixelIndex0 + 1] = g;
-		this.temporaryColors[pixelIndex0 + 2] = b;
+		this.temporaryColors[pixelIndex] = r;
+		this.temporaryColors[pixelIndex + 1] = g;
+		this.temporaryColors[pixelIndex + 2] = b;
+	}
+	
+	@SuppressWarnings("unused")
+	private void doCalculateColorForSkyBySampling(final float directionX, final float directionY, final float directionZ) {
+		float r = 0.0F;
+		float g = 0.0F;
+		float b = 0.0F;
+		
+		final float sunDirectionWorldX = this.sunDirectionWorldX;
+		final float sunDirectionWorldY = this.sunDirectionWorldY;
+		final float sunDirectionWorldZ = this.sunDirectionWorldZ;
+		
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
+		
+		final float surfaceNormalX = this.intersections[offsetIntersectionSurfaceNormal];
+		final float surfaceNormalY = this.intersections[offsetIntersectionSurfaceNormal + 1];
+		final float surfaceNormalZ = this.intersections[offsetIntersectionSurfaceNormal + 2];
+		final float surfaceNormalShadingX = this.intersections[offsetIntersectionSurfaceNormalShading];
+		final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+		final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
+		
+		final float dotProductSunDirectionWorldSurfaceNormal = sunDirectionWorldX * surfaceNormalX + sunDirectionWorldY * surfaceNormalY + sunDirectionWorldZ * surfaceNormalZ;
+		final float dotProductSunDirectionWorldSurfaceNormalShading = sunDirectionWorldX * surfaceNormalShadingX + sunDirectionWorldY * surfaceNormalShadingY + sunDirectionWorldZ * surfaceNormalShadingZ;
+		
+		if(dotProductSunDirectionWorldSurfaceNormal > 0.0F && dotProductSunDirectionWorldSurfaceNormalShading > 0.0F) {
+			r += this.sunColorR;
+			g += this.sunColorG;
+			b += this.sunColorB;
+		}
+		
+		final int samples = this.sunAndSkySamples;
+		final int colHistogramLength = this.colHistogramLength;
+		final int imageHistogramHeight = this.imageHistogramHeight;
+		
+		final int pixelIndex = getLocalId() * 3;
+		
+		for(int i = 0; i < samples; i++) {
+			final float randomX = nextFloat();
+			final float randomY = nextFloat();
+			
+			int x = 0;
+			
+			while(randomX >= this.colHistogram[x] && x < colHistogramLength - 1) {
+				x++;
+			}
+			
+			final int rowHistogramStart = x * imageHistogramHeight;
+			final int rowHistogramEnd = rowHistogramStart + imageHistogramHeight - 1;
+			
+			int y = rowHistogramStart;
+			
+			while(randomY >= this.imageHistogram[y] && y < rowHistogramEnd) {
+				y++;
+			}
+			
+			final float u = x == 0 ? randomX / this.colHistogram[0] : (randomX - this.colHistogram[x - 1]) / (this.colHistogram[x] - this.colHistogram[x - 1]);
+			final float v = y == 0 ? randomY / this.imageHistogram[rowHistogramStart] : (randomY - this.imageHistogram[y - 1]) / (this.imageHistogram[y] - this.imageHistogram[y - 1]);
+			
+			final float px = x == 0 ? this.colHistogram[0] : this.colHistogram[x] - this.colHistogram[x - 1];
+			final float py = y == 0 ? this.imageHistogram[rowHistogramStart] : this.imageHistogram[y] - this.imageHistogram[y - 1];
+			
+			final float su = (x + u) / colHistogramLength;
+			final float sv = (y + v) / imageHistogramHeight;
+			
+			final float invP = sin(sv * PI) * this.jacobian / (samples * px * py);
+			
+			final float theta = u * PI_MULTIPLIED_BY_TWO;
+			final float phi = v * PI;
+			final float sinPhi = sin(phi);
+			
+			final float localX = -sinPhi * cos(theta);
+			final float localY = cos(phi);
+			final float localZ = sinPhi * sin(theta);
+			
+			doCalculateColorForSky(localX, localY, localZ);
+			
+			final float sampleR = this.temporaryColors[pixelIndex];
+			final float sampleG = this.temporaryColors[pixelIndex + 1];
+			final float sampleB = this.temporaryColors[pixelIndex + 2];
+			
+			r += sampleR * invP;
+			g += sampleG * invP;
+			b += sampleB * invP;
+		}
+		
+		this.temporaryColors[pixelIndex] = r;
+		this.temporaryColors[pixelIndex + 1] = g;
+		this.temporaryColors[pixelIndex + 2] = b;
 	}
 	
 	private void doCalculateSurfaceProperties(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int shapesOffset) {
@@ -3245,16 +3485,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 //				If the random number is greater than or equal to the Russian Roulette PDF, then terminate the path:
 				if(random >= probabilityDensityFunction) {
 //					Perform an intersection test:
-					doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
-					
-//					Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
-					final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
-					
-//					Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
-					final int shapesOffset0 = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+					final boolean isIntersecting = doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
 					
 //					Test that an intersection was actually made, and if not, return black color (or possibly the background color):
-					if(distance0 == INFINITY || shapesOffset0 == -1) {
+					if(isIntersecting) {
 //						Calculate the color for the sky in the current direction:
 						doCalculateColorForSky(directionX, directionY, directionZ);
 						
@@ -3396,21 +3630,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 						final float random1Squared0 = sqrt(random1);
 						final float random1Squared1 = sqrt(1.0F - random1);
 						
-//						Calculate the orthonormal basis W vector:
-						final float w0LengthReciprocal = rsqrt(w0X * w0X + w0Y * w0Y + w0Z * w0Z);
-						final float w1X = w0X * w0LengthReciprocal;
-						final float w1Y = w0Y * w0LengthReciprocal;
-						final float w1Z = w0Z * w0LengthReciprocal;
-						
 //						Check if the direction is the Y-direction:
-						final boolean isY = abs(w1X) > 0.1F;
+						final boolean isY = abs(w0X) > 0.1F;
 						
 //						Calculate the orthonormal basis U vector:
 						final float u0X = isY ? 0.0F : 1.0F;
 						final float u0Y = isY ? 1.0F : 0.0F;
-						final float u1X = u0Y * w1Z;
-						final float u1Y = -(u0X * w1Z);
-						final float u1Z = u0X * w1Y - u0Y * w1X;
+						final float u1X = u0Y * w0Z;
+						final float u1Y = -(u0X * w0Z);
+						final float u1Z = u0X * w0Y - u0Y * w0X;
 						final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
 						final float u2X = u1X * u1LengthReciprocal;
 						final float u2Y = u1Y * u1LengthReciprocal;
@@ -3782,16 +4010,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 		} while(depthCurrent < depthMaximum);
 		
 //		Perform an intersection test:
-		doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
-		
-//		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
-		final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
-		
-//		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
-		final int shapesOffset0 = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+		final boolean isIntersecting = doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
-		if(distance0 == INFINITY || shapesOffset0 == -1) {
+		if(isIntersecting) {
 //			Calculate the color for the sky in the current direction:
 			doCalculateColorForSky(directionX, directionY, directionZ);
 			
@@ -3944,144 +4166,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 //			Reset the information in the intersections array:
 			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
 			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = -1;
-		}
-	}
-	
-	private void doPerformIntersectionTestOnly(final int shapesOffsetToSkip, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
-//		Calculate the offset to the intersections array:
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		
-//		Calculate the reciprocal of the ray direction vector:
-		final float directionReciprocalX = 1.0F / directionX;
-		final float directionReciprocalY = 1.0F / directionY;
-		final float directionReciprocalZ = 1.0F / directionZ;
-		
-//		Initialize the offset to the root of the BVH structure (which is 0):
-		int boundingVolumeHierarchyOffset = 0;
-		
-//		Initialize a predicate:
-		boolean hasFoundIntersection = false;
-		
-//		Reset the information in the intersections array:
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
-		this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = -1;
-		
-//		Loop through the BVH structure as long as the offset to the next node is not -1:
-		do {
-//			Retrieve the minimum point location of the current bounding box:
-			final float minimumX = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 2];
-			final float minimumY = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3];
-			final float minimumZ = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 4];
-			
-//			Retrieve the maximum point location of the current bounding box:
-			final float maximumX = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 5];
-			final float maximumY = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 6];
-			final float maximumZ = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 7];
-			
-//			Calculate the distance to the minimum point location of the bounding box:
-			final float t0X = (minimumX - originX) * directionReciprocalX;
-			final float t0Y = (minimumY - originY) * directionReciprocalY;
-			final float t0Z = (minimumZ - originZ) * directionReciprocalZ;
-			
-//			Calculate the distance to the maximum point location of the bounding box:
-			final float t1X = (maximumX - originX) * directionReciprocalX;
-			final float t1Y = (maximumY - originY) * directionReciprocalY;
-			final float t1Z = (maximumZ - originZ) * directionReciprocalZ;
-			
-//			Calculate the minimum and maximum X-components:
-			final float tMaximumX = max(t0X, t1X);
-			final float tMinimumX = min(t0X, t1X);
-			
-//			Calculate the minimum and maximum Y-components:
-			final float tMaximumY = max(t0Y, t1Y);
-			final float tMinimumY = min(t0Y, t1Y);
-			
-//			Calculate the minimum and maximum Z-components:
-			final float tMaximumZ = max(t0Z, t1Z);
-			final float tMinimumZ = min(t0Z, t1Z);
-			
-//			Calculate the minimum and maximum distance values of the X-, Y- and Z-components above:
-			final float tMaximum = min(tMaximumX, min(tMaximumY, tMaximumZ));
-			final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
-			
-//			Check if the maximum distance is greater than or equal to the minimum distance:
-			if(tMaximum < tMinimum) {
-//				Retrieve the offset to the next node in the BVH structure, relative to the current one:
-				boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
-			} else {
-//				Retrieve the type of the current BVH node:
-				final float type = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset];
-				
-				if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
-//					This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
-					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
-				} else {
-//					Retrieve the triangle count in the current BVH node:
-					final int triangleCount = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
-					
-					int i = 0;
-					
-//					Loop through all triangles in the current BVH node:
-					while(i < triangleCount) {
-//						Retrieve the offset to the current triangle:
-						final int offset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
-						
-						if(offset != shapesOffsetToSkip) {
-//							Perform an intersection test with the current triangle:
-							final float currentDistance = doIntersectTriangle(offset, originX, originY, originZ, directionX, directionY, directionZ);
-							
-//							Check if the current distance is less than the distance to the closest shape so far:
-							if(currentDistance < INFINITY) {
-//								Update the predicate:
-								hasFoundIntersection = true;
-								
-//								Set the information in the intersections array:
-								this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = currentDistance;
-								this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = offset;
-								
-								i = triangleCount;
-							}
-						}
-						
-						i++;
-					}
-					
-					if(hasFoundIntersection) {
-						boundingVolumeHierarchyOffset = -1;
-					} else {
-//						Retrieve the offset to the next node in the BVH structure, relative to the current one:
-						boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
-					}
-				}
-				
-//				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
-				boundingVolumeHierarchyOffset = boundingVolumeHierarchyOffset + 0;
-			}
-		} while(boundingVolumeHierarchyOffset != -1);
-		
-		if(!hasFoundIntersection) {
-//			Loop through any other shapes, that are not triangles:
-			for(int i = 0; i < this.shapeOffsetsLength; i++) {
-//				Retrieve the offset to the shape:
-				final int currentShapesOffset = this.shapeOffsets[i];
-				
-				if(currentShapesOffset != shapesOffsetToSkip) {
-//					Perform an intersection test with the current shape:
-					final float currentDistance = doIntersect(currentShapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
-					
-//					Check if the current distance is less than the distance to the closest shape so far:
-					if(currentDistance < INFINITY) {
-//						Update the predicate:
-						hasFoundIntersection = true;
-						
-//						Set the information in the intersections array:
-						this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = currentDistance;
-						this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = currentShapesOffset;
-						
-						i = this.shapeOffsetsLength;
-					}
-				}
-			}
 		}
 	}
 	
@@ -4348,7 +4432,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float lightDirection1Z = lightDirection0Z * lightDirection0LengthReciprocal;
 		
 //		Perform an intersection test:
-		doPerformIntersectionTestOnly(shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, lightDirection1X, lightDirection1Y, lightDirection1Z);
+		doPerformIntersectionTest(shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, lightDirection1X, lightDirection1Y, lightDirection1Z);
 		
 //		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
 		final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
@@ -4398,6 +4482,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 				}
 			}
 		}
+		
+		doAmbientOcclusion(1.0F, 1.0F, 1.0F, 0.1F, 0.1F, 0.1F);
+		
+		final float ambientOcclusionR = this.currentPixelColors[pixelIndex0];
+		final float ambientOcclusionG = this.currentPixelColors[pixelIndex0 + 1];
+		final float ambientOcclusionB = this.currentPixelColors[pixelIndex0 + 2];
+		
+		pixelColorR *= ambientOcclusionR;
+		pixelColorG *= ambientOcclusionG;
+		pixelColorB *= ambientOcclusionB;
 		
 //		Update the current pixel color:
 		this.currentPixelColors[pixelIndex0] = pixelColorR;
@@ -4676,16 +4770,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 		} while(depthCurrent < depthMaximum);
 		
 //		Perform an intersection test:
-		doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
-		
-//		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
-		final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
-		
-//		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
-		final int shapesOffset0 = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+		final boolean isIntersecting = doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
-		if(distance0 == INFINITY || shapesOffset0 == -1) {
+		if(isIntersecting) {
 //			Calculate the color for the sky in the current direction:
 			doCalculateColorForSky(directionX, directionY, directionZ);
 			

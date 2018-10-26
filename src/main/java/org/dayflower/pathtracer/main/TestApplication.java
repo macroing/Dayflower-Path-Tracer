@@ -353,7 +353,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final Label labelSunDirectionWorldY = new Label("Sun Direction Y:");
 		final Label labelSunDirectionWorldZ = new Label("Sun Direction Z:");
 		final Label labelTurbidity = new Label("Turbidity:");
-//		final Label labelToggleSunAndSky = new Label("Toggle Sun & Sky");
 		
 		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
 		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 1.0D, this.sky.getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
