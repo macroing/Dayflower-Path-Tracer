@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -21,10 +21,10 @@ package org.dayflower.pathtracer.scene.shape;
 import java.util.List;
 import java.util.Objects;
 
-import org.dayflower.pathtracer.math.Matrix44;
-import org.dayflower.pathtracer.math.Point2;
-import org.dayflower.pathtracer.math.Point3;
-import org.dayflower.pathtracer.math.Vector3;
+import org.dayflower.pathtracer.math.Matrix44F;
+import org.dayflower.pathtracer.math.Point2F;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
 
@@ -125,15 +125,15 @@ public final class Triangle extends Shape {
 	 * <p>
 	 * Returns a new rotated version of this {@code Triangle} instance.
 	 * <p>
-	 * If either {@code v} or {@code w} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If either {@code w} or {@code v} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param v a {@link Vector3}
-	 * @param w a {@code Vector3}
+	 * @param w a {@link Vector3F}
+	 * @param v a {@code Vector3}
 	 * @return a new rotated version of this {@code Triangle} instance
-	 * @throws NullPointerException thrown if, and only if, either {@code v} or {@code w} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, either {@code w} or {@code v} are {@code null}
 	 */
-	public Triangle rotate(final Vector3 v, final Vector3 w) {
-		final Matrix44 m = Matrix44.rotation(v, w);
+	public Triangle rotate(final Vector3F w, final Vector3F v) {
+		final Matrix44F m = Matrix44F.rotate(w, v);
 		
 		return new Triangle(getSurface(), getA().transform(m), getB().transform(m), getC().transform(m));
 	}
@@ -175,7 +175,7 @@ public final class Triangle extends Shape {
 		final float c1Y = centerY + (c0Y - centerY) * s;
 		final float c1Z = centerZ + (c0Z - centerZ) * s;
 		
-		return new Triangle(getSurface(), this.a.setPosition(new Point3(a1X, a1Y, a1Z)), this.b.setPosition(new Point3(b1X, b1Y, b1Z)), this.c.setPosition(new Point3(c1X, c1Y, c1Z)));
+		return new Triangle(getSurface(), this.a.setPosition(new Point3F(a1X, a1Y, a1Z)), this.b.setPosition(new Point3F(b1X, b1Y, b1Z)), this.c.setPosition(new Point3F(c1X, c1Y, c1Z)));
 	}
 	
 	/**
@@ -258,7 +258,7 @@ public final class Triangle extends Shape {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Returns the maximum {@link Point3} from the positions of the {@code Triangle}s in the {@code List} {@code triangles}.
+	 * Returns the maximum {@link Point3F} from the positions of the {@code Triangle}s in the {@code List} {@code triangles}.
 	 * <p>
 	 * If either {@code triangles} or any of its elements are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
@@ -266,22 +266,22 @@ public final class Triangle extends Shape {
 	 * @return the maximum {@code Point3} from the positions of the {@code Triangle}s in the {@code List} {@code triangles}
 	 * @throws NullPointerException thrown if, and only if, either {@code triangles} or any of its elements are {@code null}
 	 */
-	public static Point3 maximum(final List<Triangle> triangles) {
-		Point3 maximum = Point3.MINIMUM;
+	public static Point3F maximum(final List<Triangle> triangles) {
+		Point3F maximum = Point3F.MINIMUM;
 		
 		for(final Triangle triangle : triangles) {
-			final Point3 a = triangle.a.position;
-			final Point3 b = triangle.b.position;
-			final Point3 c = triangle.c.position;
+			final Point3F a = triangle.a.position;
+			final Point3F b = triangle.b.position;
+			final Point3F c = triangle.c.position;
 			
-			maximum = Point3.maximum(maximum, Point3.maximum(a, b, c));
+			maximum = Point3F.maximum(maximum, Point3F.maximum(a, b, c));
 		}
 		
 		return maximum;
 	}
 	
 	/**
-	 * Returns the minimum {@link Point3} from the positions of the {@code Triangle}s in the {@code List} {@code triangles}.
+	 * Returns the minimum {@link Point3F} from the positions of the {@code Triangle}s in the {@code List} {@code triangles}.
 	 * <p>
 	 * If either {@code triangles} or any of its elements are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
@@ -289,15 +289,15 @@ public final class Triangle extends Shape {
 	 * @return the minimum {@code Point3} from the positions of the {@code Triangle}s in the {@code List} {@code triangles}
 	 * @throws NullPointerException thrown if, and only if, either {@code triangles} or any of its elements are {@code null}
 	 */
-	public static Point3 minimum(final List<Triangle> triangles) {
-		Point3 minimum = Point3.MAXIMUM;
+	public static Point3F minimum(final List<Triangle> triangles) {
+		Point3F minimum = Point3F.MAXIMUM;
 		
 		for(final Triangle triangle : triangles) {
-			final Point3 a = triangle.a.position;
-			final Point3 b = triangle.b.position;
-			final Point3 c = triangle.c.position;
+			final Point3F a = triangle.a.position;
+			final Point3F b = triangle.b.position;
+			final Point3F c = triangle.c.position;
 			
-			minimum = Point3.minimum(minimum, Point3.minimum(a, b, c));
+			minimum = Point3F.minimum(minimum, Point3F.minimum(a, b, c));
 		}
 		
 		return minimum;
@@ -315,17 +315,17 @@ public final class Triangle extends Shape {
 		/**
 		 * The texture coordinates of this {@code Vertex} instance.
 		 */
-		public final Point2 textureCoordinates;
+		public final Point2F textureCoordinates;
 		
 		/**
 		 * The position of this {@code Vertex} instance.
 		 */
-		public final Point3 position;
+		public final Point3F position;
 		
 		/**
 		 * The normal of this {@code Vertex} instance.
 		 */
-		public final Vector3 normal;
+		public final Vector3F normal;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
@@ -339,7 +339,7 @@ public final class Triangle extends Shape {
 		 * @param normal the normal of this {@code Vertex}
 		 * @throws NullPointerException thrown if, and only if, either {@code textureCoordinates}, {@code position} or {@code normal} are {@code null}
 		 */
-		public Vertex(final Point2 textureCoordinates, final Point3 position, final Vector3 normal) {
+		public Vertex(final Point2F textureCoordinates, final Point3F position, final Vector3F normal) {
 			this.textureCoordinates = Objects.requireNonNull(textureCoordinates, "textureCoordinates == null");
 			this.position = Objects.requireNonNull(position, "position == null");
 			this.normal = Objects.requireNonNull(normal, "normal == null");
@@ -387,7 +387,7 @@ public final class Triangle extends Shape {
 		 * 
 		 * @return the texture coordinates of this {@code Vertex} instance
 		 */
-		public Point2 getTextureCoordinates() {
+		public Point2F getTextureCoordinates() {
 			return this.textureCoordinates;
 		}
 		
@@ -396,7 +396,7 @@ public final class Triangle extends Shape {
 		 * 
 		 * @return the position of this {@code Vertex} instance
 		 */
-		public Point3 getPosition() {
+		public Point3F getPosition() {
 			return this.position;
 		}
 		
@@ -415,7 +415,7 @@ public final class Triangle extends Shape {
 		 * 
 		 * @return the normal of this {@code Vertex} instance
 		 */
-		public Vector3 getNormal() {
+		public Vector3F getNormal() {
 			return this.normal;
 		}
 		
@@ -430,12 +430,12 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the new position set
 		 * @throws NullPointerException thrown if, and only if, {@code position} is {@code null}
 		 */
-		public Vertex setPosition(final Point3 position) {
+		public Vertex setPosition(final Point3F position) {
 			return new Vertex(this.textureCoordinates, position, this.normal);
 		}
 		
 		/**
-		 * Transforms this {@code Vertex} given the {@link Matrix44} {@code m}.
+		 * Transforms this {@code Vertex} given the {@link Matrix44F} {@code m}.
 		 * <p>
 		 * Returns a new {@code Vertex} with the transformation performed.
 		 * <p>
@@ -445,7 +445,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the transformation performed
 		 * @throws NullPointerException thrown if, and only if, {@code m} is {@code null}
 		 */
-		public Vertex transform(final Matrix44 m) {
+		public Vertex transform(final Matrix44F m) {
 			return new Vertex(this.textureCoordinates, this.position.transform(m), this.normal);
 		}
 		
@@ -457,7 +457,7 @@ public final class Triangle extends Shape {
 		 * @param x the amount to translate this {@code Vertex} in the X-direction
 		 * @return a new {@code Vertex} with the translation performed
 		 */
-		public Vertex translateX(final float x) {
+		private Vertex translateX(final float x) {
 			return new Vertex(this.textureCoordinates, this.position.translateX(x), this.normal);
 		}
 		

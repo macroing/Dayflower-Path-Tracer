@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -20,7 +20,7 @@ package org.dayflower.pathtracer.color;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.math.Math2;
+import org.dayflower.pathtracer.math.MathF;
 
 /**
  * The {@code Color} class is used to encapsulate colors in the default {@code sRGB} color space.
@@ -200,13 +200,13 @@ public final class Color {
 			return true;
 		} else if(!(object instanceof Color)) {
 			return false;
-		} else if(!Math2.equals(this.r, Color.class.cast(object).r)) {
+		} else if(!MathF.equals(this.r, Color.class.cast(object).r)) {
 			return false;
-		} else if(!Math2.equals(this.g, Color.class.cast(object).g)) {
+		} else if(!MathF.equals(this.g, Color.class.cast(object).g)) {
 			return false;
-		} else if(!Math2.equals(this.b, Color.class.cast(object).b)) {
+		} else if(!MathF.equals(this.b, Color.class.cast(object).b)) {
 			return false;
-		} else if(!Math2.equals(this.a, Color.class.cast(object).a)) {
+		} else if(!MathF.equals(this.a, Color.class.cast(object).a)) {
 			return false;
 		} else {
 			return true;
@@ -219,7 +219,7 @@ public final class Color {
 	 * @return {@code true} if, and only if, this {@code Color} denotes the color black, {@code false} otherwise
 	 */
 	public boolean isBlack() {
-		return Math2.equals(this.r, 0.0F) && Math2.equals(this.g, 0.0F) && Math2.equals(this.b, 0.0F);
+		return this.r <= 0.0F && this.g <= 0.0F && this.b <= 0.0F;
 	}
 	
 	/**
@@ -339,7 +339,7 @@ public final class Color {
 	 * @return a constrained version of this {@code Color} instance
 	 */
 	public Color constrain() {
-		final float w = -Math2.min(0.0F, min());
+		final float w = -MathF.min(0.0F, min());
 		
 		if(w > 0.0F) {
 			return new Color(this.r + w, this.g + w, this.b + w);
@@ -410,7 +410,7 @@ public final class Color {
 	 * @return a new {@code Color} instance with Euler's number {@code e} raised to the power of each RGB-component value
 	 */
 	public Color exp() {
-		return new Color(Math2.exp(this.r), Math2.exp(this.g), Math2.exp(this.b), this.a);
+		return new Color(MathF.exp(this.r), MathF.exp(this.g), MathF.exp(this.b), this.a);
 	}
 	
 	/**
@@ -560,7 +560,7 @@ public final class Color {
 	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
 	 */
 	public Color pow(final Color color) {
-		return new Color(Math2.pow(this.r, color.r), Math2.pow(this.g, color.g), Math2.pow(this.b, color.b), this.a);
+		return new Color(MathF.pow(this.r, color.r), MathF.pow(this.g, color.g), MathF.pow(this.b, color.b), this.a);
 	}
 	
 	/**
@@ -570,7 +570,7 @@ public final class Color {
 	 * @return a new {@code Color} instance with the R-, G- and B-component values of this {@code Color} instance raised to the power of {@code exponent}
 	 */
 	public Color pow(final float exponent) {
-		return new Color(Math2.pow(this.r, exponent), Math2.pow(this.g, exponent), Math2.pow(this.b, exponent), this.a);
+		return new Color(MathF.pow(this.r, exponent), MathF.pow(this.g, exponent), MathF.pow(this.b, exponent), this.a);
 	}
 	
 	/**
@@ -582,7 +582,7 @@ public final class Color {
 	 * @return a new {@code Color} instance with the R-, G- and B-component values of this {@code Color} instance raised to the power of {@code r}, {@code g} and {@code b}, respectively
 	 */
 	public Color pow(final float r, final float g, final float b) {
-		return new Color(Math2.pow(this.r, r), Math2.pow(this.g, g), Math2.pow(this.b, b), this.a);
+		return new Color(MathF.pow(this.r, r), MathF.pow(this.g, g), MathF.pow(this.b, b), this.a);
 	}
 	
 	/**
@@ -595,7 +595,7 @@ public final class Color {
 	 * @return a new {@code Color} instance with the R-, G-, B- and A-component values of this {@code Color} instance raised to the power of {@code r}, {@code g}, {@code b} and {@code a}, respectively
 	 */
 	public Color pow(final float r, final float g, final float b, final float a) {
-		return new Color(Math2.pow(this.r, r), Math2.pow(this.g, g), Math2.pow(this.b, b), Math2.pow(this.a, a));
+		return new Color(MathF.pow(this.r, r), MathF.pow(this.g, g), MathF.pow(this.b, b), MathF.pow(this.a, a));
 	}
 	
 	/**
@@ -622,7 +622,7 @@ public final class Color {
 	 * @return a new {@code Color} instance with the square root performed on each RGB-component value
 	 */
 	public Color sqrt() {
-		return new Color(Math2.sqrt(this.r), Math2.sqrt(this.g), Math2.sqrt(this.b), this.a);
+		return new Color(MathF.sqrt(this.r), MathF.sqrt(this.g), MathF.sqrt(this.b), this.a);
 	}
 	
 	/**

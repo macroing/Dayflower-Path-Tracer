@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.color.RGBColorSpace;
-import org.dayflower.pathtracer.math.Math2;
+import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
+import org.dayflower.pathtracer.math.MathF;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Scene;
@@ -53,7 +53,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int MATERIAL_LAMBERTIAN_DIFFUSE = 2;
 	private static final int MATERIAL_MIRROR = 3;
 	private static final int MATERIAL_PHONG_METAL = 4;
-	private static final int MATERIAL_WATER = 5;
 	private static final int RELATIVE_OFFSET_INTERSECTION_DISTANCE = 0;
 	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_U = 10;
 	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_V = 13;
@@ -143,9 +142,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Constant
 	private final float[] perezY;
 	@Constant
-	private final float[] point2s;
+	private final float[] point2Fs;
 	@Constant
-	private final float[] point3s;
+	private final float[] point3Fs;
 	@Local
 	private float[] rays;
 	@Constant
@@ -161,7 +160,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Constant
 	private final float[] textures;
 	@Constant
-	private final float[] vector3s;
+	private final float[] vector3Fs;
 	private final int colHistogramLength;
 	private int depthMaximum = 5;
 	private int depthRussianRoulette = 5;
@@ -238,12 +237,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.width = width;
 		this.boundingVolumeHierarchy = this.compiledScene.getBoundingVolumeHierarchy();
 		this.cameraArray = this.compiledScene.getCamera();
-		this.point2s = this.compiledScene.getPoint2s().length == 0 ? new float[2] : this.compiledScene.getPoint2s();
-		this.point3s = this.compiledScene.getPoint3s().length == 0 ? new float[3] : this.compiledScene.getPoint3s();
+		this.point2Fs = this.compiledScene.getPoint2Fs().length == 0 ? new float[2] : this.compiledScene.getPoint2Fs();
+		this.point3Fs = this.compiledScene.getPoint3Fs().length == 0 ? new float[3] : this.compiledScene.getPoint3Fs();
 		this.shapes = this.compiledScene.getShapes();
 		this.surfaces = this.compiledScene.getSurfaces();
 		this.textures = this.compiledScene.getTextures();
-		this.vector3s = this.compiledScene.getVector3s().length == 0 ? new float[3] : this.compiledScene.getVector3s();
+		this.vector3Fs = this.compiledScene.getVector3Fs().length == 0 ? new float[3] : this.compiledScene.getVector3Fs();
 		this.accumulatedPixelColors = new float[width * height * 3];
 		this.shapeOffsets = this.compiledScene.getShapeOffsets();
 		this.shapeOffsetsLength = this.shapeOffsets.length;
@@ -563,8 +562,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		put(this.accumulatedPixelColors);
 		put(this.boundingVolumeHierarchy);
 		put(this.cameraArray);
-		put(this.point2s);
-		put(this.point3s);
+		put(this.point2Fs);
+		put(this.point3Fs);
 		put(this.perezRelativeLuminance);
 		put(this.perezX);
 		put(this.perezY);
@@ -573,7 +572,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		put(this.simplexGrad4);
 		put(this.surfaces);
 		put(this.textures);
-		put(this.vector3s);
+		put(this.vector3Fs);
 		put(this.permutations);
 		put(this.permutationsMod12);
 		put(this.shapeOffsets);
@@ -717,12 +716,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 		int delta1X = width < 0 ? -1 : width > 0 ? 1 : 0;
 		int delta1Y = 0;
 		
-		int longest = Math2.abs(width);
-		int shortest = Math2.abs(height);
+		int longest = MathF.abs(width);
+		int shortest = MathF.abs(height);
 		
 		if(longest <= shortest) {
-			longest = Math2.abs(height);
-			shortest = Math2.abs(width);
+			longest = MathF.abs(height);
+			shortest = MathF.abs(width);
 			
 			delta1X = 0;
 			delta1Y = height < 0 ? -1 : height > 0 ? 1 : 0;
@@ -903,7 +902,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void setAmplitude(final float amplitude) {
-		this.amplitude = Math2.max(amplitude, 0.0F);
+		this.amplitude = MathF.max(amplitude, 0.0F);
 	}
 	
 	/**
@@ -954,7 +953,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void setFrequency(final float frequency) {
-		this.frequency = Math2.max(frequency, 0.0F);
+		this.frequency = MathF.max(frequency, 0.0F);
 	}
 	
 	/**
@@ -964,7 +963,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void setGain(final float gain) {
-		this.gain = Math2.max(gain, 0.0F);
+		this.gain = MathF.max(gain, 0.0F);
 	}
 	
 	/**
@@ -974,7 +973,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void setLacunarity(final float lacunarity) {
-		this.lacunarity = Math2.max(lacunarity, 0.0F);
+		this.lacunarity = MathF.max(lacunarity, 0.0F);
 	}
 	
 	/**
@@ -995,7 +994,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void setOctaves(final int octaves) {
-		this.octaves = Math2.max(octaves, 1);
+		this.octaves = MathF.max(octaves, 1);
 	}
 	
 	/**
@@ -1564,9 +1563,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int offsetSurfaceNormal = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET]);
 		
 //		Retrieve the surface normal of the plane:
-		final float surfaceNormalX = this.vector3s[offsetSurfaceNormal];
-		final float surfaceNormalY = this.vector3s[offsetSurfaceNormal + 1];
-		final float surfaceNormalZ = this.vector3s[offsetSurfaceNormal + 2];
+		final float surfaceNormalX = this.vector3Fs[offsetSurfaceNormal];
+		final float surfaceNormalY = this.vector3Fs[offsetSurfaceNormal + 1];
+		final float surfaceNormalZ = this.vector3Fs[offsetSurfaceNormal + 2];
 		
 //		Calculate the dot product between the surface normal and the ray direction:
 		final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
@@ -1577,9 +1576,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_A_POINT3S_OFFSET]);
 			
 //			Retrieve the X-, Y- and Z-coordinates of the point A:
-			final float aX = this.point3s[offsetA];
-			final float aY = this.point3s[offsetA + 1];
-			final float aZ = this.point3s[offsetA + 2];
+			final float aX = this.point3Fs[offsetA];
+			final float aY = this.point3Fs[offsetA + 1];
+			final float aZ = this.point3Fs[offsetA + 2];
 			
 //			Calculate the distance:
 			final float distance = ((aX - originX) * surfaceNormalX + (aY - originY) * surfaceNormalY + (aZ - originZ) * surfaceNormalZ) / dotProduct;
@@ -1599,9 +1598,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int offsetPosition = (int)(this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_POINT3S_OFFSET]);
 		
 //		Retrieve the center position of the sphere:
-		final float positionX = this.point3s[offsetPosition];
-		final float positionY = this.point3s[offsetPosition + 1];
-		final float positionZ = this.point3s[offsetPosition + 2];
+		final float positionX = this.point3Fs[offsetPosition];
+		final float positionY = this.point3Fs[offsetPosition + 1];
+		final float positionZ = this.point3Fs[offsetPosition + 2];
 		
 //		Retrieve the radius of the sphere:
 		final float radius = this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_RADIUS];
@@ -1687,19 +1686,19 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
 		
 //		Retrieve point A of the triangle:
-		final float aX = this.point3s[offsetA];
-		final float aY = this.point3s[offsetA + 1];
-		final float aZ = this.point3s[offsetA + 2];
+		final float aX = this.point3Fs[offsetA];
+		final float aY = this.point3Fs[offsetA + 1];
+		final float aZ = this.point3Fs[offsetA + 2];
 		
 //		Retrieve point B of the triangle:
-		final float bX = this.point3s[offsetB];
-		final float bY = this.point3s[offsetB + 1];
-		final float bZ = this.point3s[offsetB + 2];
+		final float bX = this.point3Fs[offsetB];
+		final float bY = this.point3Fs[offsetB + 1];
+		final float bZ = this.point3Fs[offsetB + 2];
 		
 //		Retrieve point C of the triangle:
-		final float cX = this.point3s[offsetC];
-		final float cY = this.point3s[offsetC + 1];
-		final float cZ = this.point3s[offsetC + 2];
+		final float cX = this.point3Fs[offsetC];
+		final float cY = this.point3Fs[offsetC + 1];
+		final float cZ = this.point3Fs[offsetC + 2];
 		
 //		Calculate the first edge between the points A and B:
 		final float edge0X = bX - aX;
@@ -2239,9 +2238,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float v0Y = w1Z * u2X - w1X * u2Z;
 			final float v0Z = w1X * u2Y - w1Y * u2X;
 			
-			final int samples = 10;
+//			final int samples = 1;
 			
-			for(int i = 0; i < samples; i++) {
+//			for(int i = 0; i < samples; i++) {
 				final float xi = nextFloat();
 				final float xj = nextFloat();
 				final float phi = PI_MULTIPLIED_BY_TWO * xi;
@@ -2275,13 +2274,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 				pixelColorR += (1.0F - r) * brightR + r * darkR;
 				pixelColorG += (1.0F - g) * brightG + g * darkG;
 				pixelColorB += (1.0F - b) * brightB + b * darkB;
-			}
+//			}
 			
-			final float samplesReciprocal = 1.0F / samples;
+//			final float samplesReciprocal = 1.0F / samples;
 			
-			pixelColorR *= samplesReciprocal;
-			pixelColorG *= samplesReciprocal;
-			pixelColorB *= samplesReciprocal;
+//			pixelColorR *= samplesReciprocal;
+//			pixelColorG *= samplesReciprocal;
+//			pixelColorB *= samplesReciprocal;
 		}
 		
 //		Update the current pixel color:
@@ -2659,24 +2658,24 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int offsetSurfaceNormal = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET]);
 		
 //		Retrieve the point A of the plane:
-		final float a0X = this.point3s[offsetA];
-		final float a0Y = this.point3s[offsetA + 1];
-		final float a0Z = this.point3s[offsetA + 2];
+		final float a0X = this.point3Fs[offsetA];
+		final float a0Y = this.point3Fs[offsetA + 1];
+		final float a0Z = this.point3Fs[offsetA + 2];
 		
 //		Retrieve the point B of the plane:
-		final float b0X = this.point3s[offsetB];
-		final float b0Y = this.point3s[offsetB + 1];
-		final float b0Z = this.point3s[offsetB + 2];
+		final float b0X = this.point3Fs[offsetB];
+		final float b0Y = this.point3Fs[offsetB + 1];
+		final float b0Z = this.point3Fs[offsetB + 2];
 		
 //		Retrieve the point C of the plane:
-		final float c0X = this.point3s[offsetC];
-		final float c0Y = this.point3s[offsetC + 1];
-		final float c0Z = this.point3s[offsetC + 2];
+		final float c0X = this.point3Fs[offsetC];
+		final float c0Y = this.point3Fs[offsetC + 1];
+		final float c0Z = this.point3Fs[offsetC + 2];
 		
 //		Retrieve the surface normal:
-		final float surfaceNormalX = this.vector3s[offsetSurfaceNormal];
-		final float surfaceNormalY = this.vector3s[offsetSurfaceNormal + 1];
-		final float surfaceNormalZ = this.vector3s[offsetSurfaceNormal + 2];
+		final float surfaceNormalX = this.vector3Fs[offsetSurfaceNormal];
+		final float surfaceNormalY = this.vector3Fs[offsetSurfaceNormal + 1];
+		final float surfaceNormalZ = this.vector3Fs[offsetSurfaceNormal + 2];
 		
 //		TODO: Write explanation!
 		final float absSurfaceNormalX = abs(surfaceNormalX);
@@ -2787,9 +2786,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int offsetPosition = (int)(this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_POINT3S_OFFSET]);
 		
 //		Retrieve the X-, Y- and Z-components of the position:
-		final float x = this.point3s[offsetPosition];
-		final float y = this.point3s[offsetPosition + 1];
-		final float z = this.point3s[offsetPosition + 2];
+		final float x = this.point3Fs[offsetPosition];
+		final float y = this.point3Fs[offsetPosition + 1];
+		final float z = this.point3Fs[offsetPosition + 2];
 		
 //		Calculate the surface normal:
 		final float surfaceNormal0X = surfaceIntersectionPointX - x;
@@ -2900,15 +2899,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int offsetSurfaceNormalC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_VECTOR3S_OFFSET]);
 		
 //		Calculate the Barycentric-coordinates:
-		final float aX = this.point3s[offsetA];
-		final float aY = this.point3s[offsetA + 1];
-		final float aZ = this.point3s[offsetA + 2];
-		final float bX = this.point3s[offsetB];
-		final float bY = this.point3s[offsetB + 1];
-		final float bZ = this.point3s[offsetB + 2];
-		final float cX = this.point3s[offsetC];
-		final float cY = this.point3s[offsetC + 1];
-		final float cZ = this.point3s[offsetC + 2];
+		final float aX = this.point3Fs[offsetA];
+		final float aY = this.point3Fs[offsetA + 1];
+		final float aZ = this.point3Fs[offsetA + 2];
+		final float bX = this.point3Fs[offsetB];
+		final float bY = this.point3Fs[offsetB + 1];
+		final float bZ = this.point3Fs[offsetB + 2];
+		final float cX = this.point3Fs[offsetC];
+		final float cY = this.point3Fs[offsetC + 1];
+		final float cZ = this.point3Fs[offsetC + 2];
 		final float edge0X = bX - aX;
 		final float edge0Y = bY - aY;
 		final float edge0Z = bZ - aZ;
@@ -2931,12 +2930,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float w = 1.0F - u0 - v0;
 		
 //		Calculate the UV-coordinates:
-		final float aU = this.point2s[offsetUVA];
-		final float aV = this.point2s[offsetUVA + 1];
-		final float bU = this.point2s[offsetUVB];
-		final float bV = this.point2s[offsetUVB + 1];
-		final float cU = this.point2s[offsetUVC];
-		final float cV = this.point2s[offsetUVC + 1];
+		final float aU = this.point2Fs[offsetUVA];
+		final float aV = this.point2Fs[offsetUVA + 1];
+		final float bU = this.point2Fs[offsetUVB];
+		final float bV = this.point2Fs[offsetUVB + 1];
+		final float cU = this.point2Fs[offsetUVC];
+		final float cV = this.point2Fs[offsetUVC + 1];
 		final float u1 = w * aU + u0 * bU + v0 * cU;
 		final float v1 = w * aV + u0 * bV + v0 * cV;
 		
@@ -2960,9 +2959,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		if(this.shading == SHADING_FLAT) {
 //			Calculate the surface normal for Flat Shading:
-			final float surfaceNormalAX = this.vector3s[offsetSurfaceNormalA];
-			final float surfaceNormalAY = this.vector3s[offsetSurfaceNormalA + 1];
-			final float surfaceNormalAZ = this.vector3s[offsetSurfaceNormalA + 2];
+			final float surfaceNormalAX = this.vector3Fs[offsetSurfaceNormalA];
+			final float surfaceNormalAY = this.vector3Fs[offsetSurfaceNormalA + 1];
+			final float surfaceNormalAZ = this.vector3Fs[offsetSurfaceNormalA + 2];
 			final float surfaceNormal0X = edge0Y * edge1Z - edge0Z * edge1Y;
 			final float surfaceNormal0Y = edge0Z * edge1X - edge0X * edge1Z;
 			final float surfaceNormal0Z = edge0X * edge1Y - edge0Y * edge1X;
@@ -2984,15 +2983,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 			this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal2Z;
 		} else if(this.shading == SHADING_GOURAUD) {
 //			Calculate the surface normal for Gouraud Shading:
-			final float surfaceNormalAX = this.vector3s[offsetSurfaceNormalA];
-			final float surfaceNormalAY = this.vector3s[offsetSurfaceNormalA + 1];
-			final float surfaceNormalAZ = this.vector3s[offsetSurfaceNormalA + 2];
-			final float surfaceNormalBX = this.vector3s[offsetSurfaceNormalB];
-			final float surfaceNormalBY = this.vector3s[offsetSurfaceNormalB + 1];
-			final float surfaceNormalBZ = this.vector3s[offsetSurfaceNormalB + 2];
-			final float surfaceNormalCX = this.vector3s[offsetSurfaceNormalC];
-			final float surfaceNormalCY = this.vector3s[offsetSurfaceNormalC + 1];
-			final float surfaceNormalCZ = this.vector3s[offsetSurfaceNormalC + 2];
+			final float surfaceNormalAX = this.vector3Fs[offsetSurfaceNormalA];
+			final float surfaceNormalAY = this.vector3Fs[offsetSurfaceNormalA + 1];
+			final float surfaceNormalAZ = this.vector3Fs[offsetSurfaceNormalA + 2];
+			final float surfaceNormalBX = this.vector3Fs[offsetSurfaceNormalB];
+			final float surfaceNormalBY = this.vector3Fs[offsetSurfaceNormalB + 1];
+			final float surfaceNormalBZ = this.vector3Fs[offsetSurfaceNormalB + 2];
+			final float surfaceNormalCX = this.vector3Fs[offsetSurfaceNormalC];
+			final float surfaceNormalCY = this.vector3Fs[offsetSurfaceNormalC + 1];
+			final float surfaceNormalCZ = this.vector3Fs[offsetSurfaceNormalC + 2];
 			final float surfaceNormal3X = surfaceNormalAX * w + surfaceNormalBX * u0 + surfaceNormalCX * v0;
 			final float surfaceNormal3Y = surfaceNormalAY * w + surfaceNormalBY * u0 + surfaceNormalCY * v0;
 			final float surfaceNormal3Z = surfaceNormalAZ * w + surfaceNormalBZ * u0 + surfaceNormalCZ * v0;
@@ -3889,123 +3888,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 				radianceMultiplierR *= albedoColorR;
 				radianceMultiplierG *= albedoColorG;
 				radianceMultiplierB *= albedoColorB;
-			} else if(material == MATERIAL_WATER) {
-				final float a = REFRACTIVE_INDEX_WATER - REFRACTIVE_INDEX_AIR;
-				final float b = REFRACTIVE_INDEX_WATER + REFRACTIVE_INDEX_AIR;
-				final float c = REFRACTIVE_INDEX_AIR / REFRACTIVE_INDEX_WATER;
-				final float d = REFRACTIVE_INDEX_WATER / REFRACTIVE_INDEX_AIR;
-				final float e = (a * a) / (b * b);
-				
-				final float amount = 1.0F;
-				final float scale = 16.0F;
-				final float scaleReciprocal = 1.0F / scale;
-				
-				final float x0 = surfaceIntersectionPointX * scaleReciprocal;
-				final float y0 = surfaceIntersectionPointY * scaleReciprocal;
-				final float z0 = surfaceIntersectionPointZ * scaleReciprocal;
-				
-				final float x1 = doSimplexFractalXY(8, x0, y0);
-				final float y1 = doSimplexFractalXY(4, y0, z0);
-				final float z1 = doSimplexFractalXY(2, z0, x0);
-				
-				final float surfaceNormalX = surfaceNormalShadingX + x1 * amount;
-				final float surfaceNormalY = surfaceNormalShadingY + y1 * amount;
-				final float surfaceNormalZ = surfaceNormalShadingZ + z1 * amount;
-				final float surfaceNormalLengthReciprocal = rsqrt(surfaceNormalX * surfaceNormalX + surfaceNormalY * surfaceNormalY + surfaceNormalZ * surfaceNormalZ);
-				final float surfaceNormalNormalizedX = surfaceNormalX * surfaceNormalLengthReciprocal;
-				final float surfaceNormalNormalizedY = surfaceNormalY * surfaceNormalLengthReciprocal;
-				final float surfaceNormalNormalizedZ = surfaceNormalZ * surfaceNormalLengthReciprocal;
-				
-				final float dotProduct0 = surfaceNormalNormalizedX * directionX + surfaceNormalNormalizedY * directionY + surfaceNormalNormalizedZ * directionZ;
-				final float dotProductMultipliedByTwo0 = dotProduct0 * 2.0F;
-				
-//				Check if the current ray is going in towards the same shape or out of it:
-				final boolean isGoingIn = surfaceNormalNormalizedX * w0X + surfaceNormalNormalizedY * w0Y + surfaceNormalNormalizedZ * w0Z > 0.0F;
-				
-//				TODO: Write explanation!
-				final float nnt = isGoingIn ? c : d;
-				
-//				Calculate the dot product between the orthonormal basis W vector and the current direction vector:
-				final float dotProductOfW0AndDirection = w0X * directionX + w0Y * directionY + w0Z * directionZ;
-				
-//				Calculate the total internal reflection:
-				final float totalInternalReflection = 1.0F - nnt * nnt * (1.0F - dotProductOfW0AndDirection * dotProductOfW0AndDirection);
-				
-//				Calculate the reflection direction:
-				final float reflectionDirectionX = directionX - surfaceNormalNormalizedX * dotProductMultipliedByTwo0;
-				final float reflectionDirectionY = directionY - surfaceNormalNormalizedY * dotProductMultipliedByTwo0;
-				final float reflectionDirectionZ = directionZ - surfaceNormalNormalizedZ * dotProductMultipliedByTwo0;
-				
-				if(totalInternalReflection < 0.0F) {
-//					Update the ray origin for the next iteration:
-					originX = surfaceIntersectionPointX + w0X * 0.02F;
-					originY = surfaceIntersectionPointY + w0Y * 0.02F;
-					originZ = surfaceIntersectionPointZ + w0Z * 0.02F;
-					
-//					Update the ray direction for the next iteration:
-					directionX = reflectionDirectionX;
-					directionY = reflectionDirectionY;
-					directionZ = reflectionDirectionZ;
-				} else {
-//					Calculate the square root of the total internal reflection:
-					final float sqrtTotalInternalReflection = sqrt(totalInternalReflection);
-					
-//					Calculate the transmission direction:
-					final float scalar = isGoingIn ? dotProductOfW0AndDirection * nnt + sqrtTotalInternalReflection : -(dotProductOfW0AndDirection * nnt + sqrtTotalInternalReflection);
-					final float direction0X = directionX * nnt - surfaceNormalNormalizedX * scalar;
-					final float direction0Y = directionY * nnt - surfaceNormalNormalizedY * scalar;
-					final float direction0Z = directionZ * nnt - surfaceNormalNormalizedZ * scalar;
-					final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
-					final float transmissionDirectionX = direction0X * direction0LengthReciprocal;
-					final float transmissionDirectionY = direction0Y * direction0LengthReciprocal;
-					final float transmissionDirectionZ = direction0Z * direction0LengthReciprocal;
-					
-//					Calculate some angles:
-					final float angle1 = (isGoingIn ? -dotProductOfW0AndDirection : transmissionDirectionX * surfaceNormalNormalizedX + transmissionDirectionY * surfaceNormalNormalizedY + transmissionDirectionZ * surfaceNormalNormalizedZ);
-					final float angle2 = 1.0F - angle1;
-					
-//					Calculate the reflectance:
-					final float reflectance = e + (1.0F - e) * angle2 * angle2 * angle2 * angle2 * angle2;
-					
-//					Calculate the transmittance:
-					final float transmittance = 1.0F - reflectance;
-					
-//					Calculate a probability for the reflection- or the transmission direction:
-					final float probability = 0.25F + 0.5F * reflectance;
-					
-//					Calculate the probability that the direction for the next iteration will be the reflection direction:
-					final float reflectanceProbability = reflectance / probability;
-					
-//					Calculate the probability that the direction for the next iteration will be the transmission direction:
-					final float transmittanceProbability = transmittance / (1.0F - probability);
-					
-//					Check if the direction for the next iteration is the reflection direction or the transmission direction:
-					final boolean isReflectionDirection = randomA < probability;
-					
-//					Retrieve the value to multiply the current radiance multiplier with:
-					final float multiplier = isReflectionDirection ? reflectanceProbability : transmittanceProbability;
-					
-//					Multiply the current radiance multiplier with either the reflectance probability or the transmittance probability:
-					radianceMultiplierR *= multiplier;
-					radianceMultiplierG *= multiplier;
-					radianceMultiplierB *= multiplier;
-					
-//					Retrieve the epsilon value that offsets the ray origin to mitigate self intersections:
-					final float epsilon = isReflectionDirection ? 0.01F : 0.000001F;
-					
-//					Update the ray origin for the next iteration:
-					originX = surfaceIntersectionPointX + w0X * epsilon;
-					originY = surfaceIntersectionPointY + w0Y * epsilon;
-					originZ = surfaceIntersectionPointZ + w0Z * epsilon;
-					
-//					Update the ray direction for the next iteration:
-					directionX = isReflectionDirection ? reflectionDirectionX : transmissionDirectionX;
-					directionY = isReflectionDirection ? reflectionDirectionY : transmissionDirectionY;
-					directionZ = isReflectionDirection ? reflectionDirectionZ : transmissionDirectionZ;
-				}
-				
-//				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
-				depthCurrent = depthCurrent + 0;
 			}
 		} while(depthCurrent < depthMaximum);
 		

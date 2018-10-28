@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -20,15 +20,17 @@ package org.dayflower.pathtracer.math;
 
 import java.util.Objects;
 
+import org.dayflower.pathtracer.util.Strings;
+
 /**
- * A {@code Point2} denotes a point in 2D with coordinates of X and Y.
+ * A {@code Point2F} denotes a point in 2D-space.
  * <p>
- * This class is immutable and therefore suitable for concurrent use without external synchronization.
+ * This class is immutable and therefore thread-safe.
  * 
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Point2 {
+public final class Point2F {
 	/**
 	 * The X-coordinate.
 	 */
@@ -42,21 +44,26 @@ public final class Point2 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Constructs a new {@code Point2} instance.
+	 * Constructs a new {@code Point2F} instance.
 	 * <p>
-	 * Calling this constructor is equivalent to {@code new Point2(0.0F, 0.0F)}.
+	 * Calling this constructor is equivalent to the following:
+	 * <pre>
+	 * {@code
+	 * new Point2F(0.0F, 0.0F)
+	 * }
+	 * </pre>
 	 */
-	public Point2() {
+	public Point2F() {
 		this(0.0F, 0.0F);
 	}
 	
 	/**
-	 * Constructs a new {@code Point2} based on {@code x} and {@code y}.
+	 * Constructs a new {@code Point2F} instance given its coordinates.
 	 * 
 	 * @param x the X-coordinate
 	 * @param y the Y-coordinate
 	 */
-	public Point2(final float x, final float y) {
+	public Point2F(final float x, final float y) {
 		this.x = x;
 		this.y = y;
 	}
@@ -64,22 +71,32 @@ public final class Point2 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Compares {@code object} to this {@code Point2} instance for equality.
-	 * <p>
-	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Point2}, and their respective values are equal, {@code false} otherwise.
+	 * Returns a {@code String} representation of this {@code Point2F} instance.
 	 * 
-	 * @param object the {@code Object} to compare to this {@code Point2} instance for equality
-	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Point2}, and their respective values are equal, {@code false} otherwise
+	 * @return a {@code String} representation of this {@code Point2F} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("new Point2F(%s, %s)", Strings.toNonScientificNotation(this.x), Strings.toNonScientificNotation(this.y));
+	}
+	
+	/**
+	 * Compares {@code object} to this {@code Point2F} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Point2F}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Point2F} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Point2F}, and their respective values are equal, {@code false} otherwise
 	 */
 	@Override
 	public boolean equals(final Object object) {
 		if(object == this) {
 			return true;
-		} else if(!(object instanceof Point2)) {
+		} else if(!(object instanceof Point2F)) {
 			return false;
-		} else if(Float.compare(this.x, Point2.class.cast(object).x) != 0) {
+		} else if(Float.compare(this.x, Point2F.class.cast(object).x) != 0) {
 			return false;
-		} else if(Float.compare(this.y, Point2.class.cast(object).y) != 0) {
+		} else if(Float.compare(this.y, Point2F.class.cast(object).y) != 0) {
 			return false;
 		} else {
 			return true;
@@ -87,22 +104,12 @@ public final class Point2 {
 	}
 	
 	/**
-	 * Returns a hash code for this {@code Point2} instance.
+	 * Returns a hash code for this {@code Point2F} instance.
 	 * 
-	 * @return a hash code for this {@code Point2} instance
+	 * @return a hash code for this {@code Point2F} instance
 	 */
 	@Override
 	public int hashCode() {
 		return Objects.hash(Float.valueOf(this.x), Float.valueOf(this.y));
-	}
-	
-	/**
-	 * Returns a {@code String} representation of this {@code Point2} instance.
-	 * 
-	 * @return a {@code String} representation of this {@code Point2} instance
-	 */
-	@Override
-	public String toString() {
-		return String.format("Point2: [X=%s], [Y=%s]", Float.toString(this.x), Float.toString(this.y));
 	}
 }

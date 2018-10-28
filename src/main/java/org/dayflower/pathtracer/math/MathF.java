@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Math2 {
+public final class MathF {
 	/**
 	 * An epsilon value.
 	 */
@@ -59,24 +59,11 @@ public final class Math2 {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private Math2() {
+	private MathF() {
 		
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Compares {@code a} and {@code b} for equality.
-	 * <p>
-	 * Returns {@code true} if, and only if, {@code a} and {@code b} are equal, {@code false} otherwise.
-	 * 
-	 * @param a a {@code double} value
-	 * @param b a {@code double} value
-	 * @return {@code true} if, and only if, {@code a} and {@code b} are equal, {@code false} otherwise
-	 */
-	public static boolean equals(final double a, final double b) {
-		return Double.compare(a, b) == 0;
-	}
 	
 	/**
 	 * Compares {@code a} and {@code b} for equality.
@@ -89,245 +76,6 @@ public final class Math2 {
 	 */
 	public static boolean equals(final float a, final float b) {
 		return Float.compare(a, b) == 0;
-	}
-	
-	/**
-	 * Returns the absolute version of {@code value}.
-	 * 
-	 * @param value a {@code double} value
-	 * @return the absolute version of {@code value}
-	 */
-	public static double abs(final double value) {
-		return Math.abs(value);
-	}
-	
-	/**
-	 * Returns the arc cosine of {@code value}.
-	 * 
-	 * @param value a {@code double} value
-	 * @return the arc cosine of {@code value}
-	 */
-	public static double acos(final double value) {
-		return Math.acos(value);
-	}
-	
-	/**
-	 * Returns the arc sine of {@code value}.
-	 * 
-	 * @param value a {@code double} value
-	 * @return the arc sine of {@code value}
-	 */
-	public static double asin(final double value) {
-		return Math.asin(value);
-	}
-	
-	/**
-	 * Returns the arc tangent of {@code value}.
-	 * 
-	 * @param value a {@code double} value
-	 * @return the arc tangent of {@code value}
-	 */
-	public static double atan(final double value) {
-		return Math.atan(value);
-	}
-	
-	/**
-	 * Returns the theta component of the point (r, theta) in polar coordinates that corresponds to the point (x, y) in Cartesian coordinates.
-	 * 
-	 * @param y the ordinate coordinate
-	 * @param x the abscissa coordinate
-	 * @return the theta component of the point (r, theta) in polar coordinates that corresponds to the point (x, y) in Cartesian coordinates
-	 */
-	public static double atan2(final double y, final double x) {
-		return Math.atan2(y, x);
-	}
-	
-	/**
-	 * Returns the trigonometric cosine of {@code angle}.
-	 * 
-	 * @param angle an angle, in radians
-	 * @return the trigonometric cosine of {@code angle}
-	 */
-	public static double cos(final double angle) {
-		return Math.cos(angle);
-	}
-	
-	/**
-	 * Returns Euler's number {@code e} raised to the power of {@code exponent}.
-	 * 
-	 * @param exponent the exponent to raise {@code e} to
-	 * @return Euler's number {@code e} raised to the power of {@code exponent}
-	 */
-	public static double exp(final double exponent) {
-		return Math.exp(exponent);
-	}
-	
-	/**
-	 * Returns the largest (closest to positive infinity) {@code double} value that is less than or equal to {@code value} and is equal to a mathematical integer.
-	 * 
-	 * @param value a value
-	 * @return the largest (closest to positive infinity) {@code double} value that is less than or equal to {@code value} and is equal to a mathematical integer
-	 */
-	public static double floor(final double value) {
-		return Math.floor(value);
-	}
-	
-	/**
-	 * Returns the greater value of {@code a} and {@code b}.
-	 * 
-	 * @param a a value
-	 * @param b a value
-	 * @return the greater value of {@code a} and {@code b}
-	 */
-	public static double max(final double a, final double b) {
-		return Math.max(a, b);
-	}
-	
-	/**
-	 * Returns the smaller value of {@code a} and {@code b}.
-	 * 
-	 * @param a a value
-	 * @param b a value
-	 * @return the smaller value of {@code a} and {@code b}
-	 */
-	public static double min(final double a, final double b) {
-		return Math.min(a, b);
-	}
-	
-	/**
-	 * Returns the value that is computed as {@code value - floor(value)}.
-	 * 
-	 * @param value a value
-	 * @return the value that is computed as {@code value - floor(value)}
-	 */
-	public static double modulo(final double value) {
-		return value - floor(value);
-	}
-	
-	/**
-	 * Returns a pseudorandom {@code double} value between {@code 0.0D} (inclusive) and {@code 1.0D} (exclusive).
-	 * 
-	 * @return a pseudorandom {@code double} value between {@code 0.0D} (inclusive) and {@code 1.0D} (exclusive)
-	 */
-	public static double nextDouble() {
-		return ThreadLocalRandom.current().nextDouble();
-	}
-	
-	/**
-	 * Returns {@code base} raised to the power of {@code exponent}.
-	 * 
-	 * @param base the base
-	 * @param exponent the exponent
-	 * @return {@code base} raised to the power of {@code exponent}
-	 */
-	public static double pow(final double base, final double exponent) {
-		return Math.pow(base, exponent);
-	}
-	
-	/**
-	 * Returns a saturated (or clamped) value based on {@code value}.
-	 * <p>
-	 * Calling this method is equivalent to calling {@code Math2.saturate(value, 0.0D, 1.0D)}.
-	 * 
-	 * @param value the value to saturate (or clamp)
-	 * @return a saturated (or clamped) value based on {@code value}
-	 */
-	public static double saturate(final double value) {
-		return saturate(value, 0.0D, 1.0D);
-	}
-	
-	/**
-	 * Returns a saturated (or clamped) value based on {@code value}.
-	 * <p>
-	 * If {@code value} is less than {@code minimum}, {@code minimum} will be returned. If {@code value} is greater than {@code maximum}, {@code maximum} will be returned. Otherwise {@code value} will be returned.
-	 * 
-	 * @param value the value to saturate (or clamp)
-	 * @param minimum the minimum value
-	 * @param maximum the maximum value
-	 * @return a saturated (or clamped) value based on {@code value}
-	 */
-	public static double saturate(final double value, final double minimum, final double maximum) {
-		return max(min(value, maximum), minimum);
-	}
-	
-	/**
-	 * Returns the trigonometric sine of {@code angle}.
-	 * 
-	 * @param angle an angle, in radians
-	 * @return the trigonometric sine of {@code angle}
-	 */
-	public static double sin(final double angle) {
-		return Math.sin(angle);
-	}
-	
-	/**
-	 * Returns the correctly rounded positive square root of {@code value}.
-	 * 
-	 * @param value a value
-	 * @return the correctly rounded positive square root of {@code value}
-	 */
-	public static double sqrt(final double value) {
-		return Math.sqrt(value);
-	}
-	
-	/**
-	 * Returns the trigonometric tangent of {@code angle}.
-	 * 
-	 * @param angle an angle, in radians
-	 * @return the trigonometric tangent of {@code angle}
-	 */
-	public static double tan(final double angle) {
-		return Math.tan(angle);
-	}
-	
-	/**
-	 * Returns an approximately equivalent angle measured in degrees from an angle measured in radians.
-	 * 
-	 * @param radians an angle, in radians
-	 * @return an approximately equivalent angle measured in degrees from an angle measured in radians
-	 */
-	public static double toDegrees(final double radians) {
-		return Math.toDegrees(radians);
-	}
-	
-	/**
-	 * Returns an approximately equivalent angle measured in radians from an angle measured in degrees.
-	 * 
-	 * @param angleInDegrees an angle, in degrees
-	 * @return an approximately equivalent angle measured in radians from an angle measured in degrees
-	 */
-	public static double toRadians(final double angleInDegrees) {
-		return Math.toRadians(angleInDegrees);
-	}
-	
-	/**
-	 * Attempts to solve the quadratic system based on the values {@code a}, {@code b} and {@code c}.
-	 * <p>
-	 * Returns a {@code double} array with a length of {@code 2} containing the result.
-	 * <p>
-	 * If the quadratic system could not be solved, the result will contain the values {@code Double.NaN}.
-	 * 
-	 * @param a a value
-	 * @param b a value
-	 * @param c a value
-	 * @return a {@code double} array with a length of {@code 2} containing the result
-	 */
-	public static double[] solveQuadraticSystem(final double a, final double b, final double c) {
-		final double[] result = new double[] {Double.NaN, Double.NaN};
-		
-		final double discriminant = b * b - 4.0D * a * c;
-		
-		if(discriminant >= 0.0D) {
-			final double discriminantSqrt = sqrt(discriminant);
-			final double quadratic = -0.5D * (b < 0.0D ? b - discriminantSqrt : b + discriminantSqrt);
-			final double result0 = quadratic / a;
-			final double result1 = c / quadratic;
-			
-			result[0] = min(result0, result1);
-			result[1] = max(result0, result1);
-		}
-		
-		return result;
 	}
 	
 	/**
@@ -423,6 +171,18 @@ public final class Math2 {
 	}
 	
 	/**
+	 * Returns the greater value of {@code a}, {@code b} and {@code c}.
+	 * 
+	 * @param a a value
+	 * @param b a value
+	 * @param c a value
+	 * @return the greater value of {@code a}, {@code b} and {@code c}
+	 */
+	public static float max(final float a, final float b, final float c) {
+		return Math.max(Math.max(a, b), c);
+	}
+	
+	/**
 	 * Returns the smaller value of {@code a} and {@code b}.
 	 * 
 	 * @param a a value
@@ -431,6 +191,18 @@ public final class Math2 {
 	 */
 	public static float min(final float a, final float b) {
 		return Math.min(a, b);
+	}
+	
+	/**
+	 * Returns the smaller value of {@code a}, {@code b} and {@code c}.
+	 * 
+	 * @param a a value
+	 * @param b a value
+	 * @param c a value
+	 * @return the smaller value of {@code a}, {@code b} and {@code c}
+	 */
+	public static float min(final float a, final float b, final float c) {
+		return Math.min(Math.min(a, b), c);
 	}
 	
 	/**
@@ -547,6 +319,34 @@ public final class Math2 {
 	 */
 	public static float toRadians(final float angleInDegrees) {
 		return toFloat(Math.toRadians(angleInDegrees));
+	}
+	
+	/**
+	 * Returns {@code value} or its wrapped around representation.
+	 * <p>
+	 * If {@code value} is greater than or equal to {@code min(a, b)} and less than or equal to {@code max(a, b)}, {@code value} will be returned. Otherwise it will wrap around on either side until it is contained in the interval
+	 * {@code [min(a, b), max(a, b)]}.
+	 * 
+	 * @param value the value to potentially wrap around
+	 * @param a one of the values in the interval to wrap around
+	 * @param b one of the values in the interval to wrap around
+	 * @return {@code value} or its wrapped around representation
+	 */
+	public static float wrapAround(final float value, final float a, final float b) {
+		final float minimumValue = min(a, b);
+		final float maximumValue = max(a, b);
+		
+		float currentValue = value;
+		
+		while(currentValue < minimumValue || currentValue > maximumValue) {
+			if(currentValue < minimumValue) {
+				currentValue = maximumValue - (minimumValue - currentValue);
+			} else if(currentValue > maximumValue) {
+				currentValue = minimumValue + (currentValue - maximumValue);
+			}
+		}
+		
+		return currentValue;
 	}
 	
 	/**

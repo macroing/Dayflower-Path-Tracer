@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -16,7 +16,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.color;
+package org.dayflower.pathtracer.color.spectralcurve;
+
+import org.dayflower.pathtracer.color.SpectralCurve;
 
 /**
  * An {@code IrregularSpectralCurve} is an implementation of {@link SpectralCurve} that contains irregular spectral data.

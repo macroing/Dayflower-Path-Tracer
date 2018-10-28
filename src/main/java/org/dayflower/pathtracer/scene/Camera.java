@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,22 +18,23 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import static org.dayflower.pathtracer.math.Math2.atan;
-import static org.dayflower.pathtracer.math.Math2.cos;
-import static org.dayflower.pathtracer.math.Math2.max;
-import static org.dayflower.pathtracer.math.Math2.min;
-import static org.dayflower.pathtracer.math.Math2.sin;
-import static org.dayflower.pathtracer.math.Math2.sqrt;
-import static org.dayflower.pathtracer.math.Math2.tan;
-import static org.dayflower.pathtracer.math.Math2.toDegrees;
-import static org.dayflower.pathtracer.math.Math2.toRadians;
+import static org.dayflower.pathtracer.math.MathF.atan;
+import static org.dayflower.pathtracer.math.MathF.cos;
+import static org.dayflower.pathtracer.math.MathF.max;
+import static org.dayflower.pathtracer.math.MathF.min;
+import static org.dayflower.pathtracer.math.MathF.sin;
+import static org.dayflower.pathtracer.math.MathF.sqrt;
+import static org.dayflower.pathtracer.math.MathF.tan;
+import static org.dayflower.pathtracer.math.MathF.toDegrees;
+import static org.dayflower.pathtracer.math.MathF.toRadians;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.dayflower.pathtracer.math.Angle;
+import org.dayflower.pathtracer.math.AngleF;
+import org.dayflower.pathtracer.math.Vector3F;
 
 //TODO: Add Javadocs.
 public final class Camera {
@@ -123,8 +124,8 @@ public final class Camera {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private Angle pitch;
-	private Angle yaw;
+	private AngleF pitch;
+	private AngleF yaw;
 	private boolean hasUpdated;
 	private boolean isWalkLockEnabled;
 	private CameraPredicate cameraPredicate;
@@ -149,10 +150,10 @@ public final class Camera {
 		setEye(55.0F, 42.0F, 155.6F);
 		setFieldOfViewX(40.0F);
 		setFocalDistance(30.0F);
-		setPitch(Angle.DEGREES_0);
+		setPitch(AngleF.pitch(Vector3F.x()));
 		setResolution(800.0F, 800.0F);
 		setWalkLockEnabled(true);
-		setYaw(Angle.DEGREES_0);
+		setYaw(AngleF.yaw(Vector3F.y()));
 		
 		update();
 	}
@@ -173,12 +174,12 @@ public final class Camera {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
-	public Angle getPitch() {
+	public AngleF getPitch() {
 		return this.pitch;
 	}
 	
 //	TODO: Add Javadocs.
-	public Angle getYaw() {
+	public AngleF getYaw() {
 		return this.yaw;
 	}
 	
@@ -313,16 +314,12 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void changePitch(final Angle pitch) {
-		final float degrees0 = this.pitch.degrees;
-		final float degrees1 = pitch.degrees;
-		final float degrees2 = degrees0 + degrees1 < -90.0F ? -90.0F : degrees0 + degrees1 > 90.0F ? 90.0F : degrees0 + degrees1;
-		
-		setPitch(Angle.degrees(degrees2, -90.0F, 90.0F));
+	public void changePitch(final AngleF pitch) {
+		setPitch(getPitch().add(pitch));
 	}
 	
 //	TODO: Add Javadocs.
-	public void changeYaw(final Angle yaw) {
+	public void changeYaw(final AngleF yaw) {
 		setYaw(getYaw().add(yaw));
 	}
 	
@@ -402,8 +399,8 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void setPitch(final Angle pitch) {
-		this.pitch = Angle.degrees(pitch.degrees < -90.0F ? -90.0F : pitch.degrees > 90.0F ? 90.0F : pitch.degrees, -90.0F, 90.0F);
+	public void setPitch(final AngleF pitch) {
+		this.pitch = Objects.requireNonNull(pitch, "pitch == null");
 		this.hasUpdated = true;
 		this.cameraObservers.forEach(cameraObserver -> cameraObserver.pitchChanged(this, this.pitch));
 	}
@@ -429,7 +426,7 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void setYaw(final Angle yaw) {
+	public void setYaw(final AngleF yaw) {
 		this.yaw = Objects.requireNonNull(yaw, "yaw == null");
 		this.hasUpdated = true;
 		this.cameraObservers.forEach(cameraObserver -> cameraObserver.yawChanged(this, this.yaw));

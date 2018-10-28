@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,28 +18,28 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import static org.dayflower.pathtracer.math.Math2.PI;
-import static org.dayflower.pathtracer.math.Math2.acos;
-import static org.dayflower.pathtracer.math.Math2.cos;
-import static org.dayflower.pathtracer.math.Math2.exp;
-import static org.dayflower.pathtracer.math.Math2.max;
-import static org.dayflower.pathtracer.math.Math2.pow;
-import static org.dayflower.pathtracer.math.Math2.saturate;
-import static org.dayflower.pathtracer.math.Math2.sin;
-import static org.dayflower.pathtracer.math.Math2.tan;
+import static org.dayflower.pathtracer.math.MathF.PI;
+import static org.dayflower.pathtracer.math.MathF.acos;
+import static org.dayflower.pathtracer.math.MathF.cos;
+import static org.dayflower.pathtracer.math.MathF.exp;
+import static org.dayflower.pathtracer.math.MathF.max;
+import static org.dayflower.pathtracer.math.MathF.pow;
+import static org.dayflower.pathtracer.math.MathF.saturate;
+import static org.dayflower.pathtracer.math.MathF.sin;
+import static org.dayflower.pathtracer.math.MathF.tan;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 
-import org.dayflower.pathtracer.color.ChromaticSpectralCurve;
 import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.color.ConstantSpectralCurve;
-import org.dayflower.pathtracer.color.IrregularSpectralCurve;
-import org.dayflower.pathtracer.color.RGBColorSpace;
-import org.dayflower.pathtracer.color.RegularSpectralCurve;
 import org.dayflower.pathtracer.color.SpectralCurve;
-import org.dayflower.pathtracer.math.OrthoNormalBasis;
-import org.dayflower.pathtracer.math.Point3;
-import org.dayflower.pathtracer.math.Vector3;
+import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
+import org.dayflower.pathtracer.color.spectralcurve.ChromaticSpectralCurve;
+import org.dayflower.pathtracer.color.spectralcurve.ConstantSpectralCurve;
+import org.dayflower.pathtracer.color.spectralcurve.IrregularSpectralCurve;
+import org.dayflower.pathtracer.color.spectralcurve.RegularSpectralCurve;
+import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Vector3F;
 
 //TODO: Add Javadocs!
 public final class Sky {
@@ -72,11 +72,11 @@ public final class Sky {
 	private final int imageHistogramHeight = 32;
 	private final int imageHistogramWidth = 32;
 	private final int samples = 4;
-	private final OrthoNormalBasis orthoNormalBasis = new OrthoNormalBasis(Vector3.y(), Vector3.z(), Vector3.x());//new OrthoNormalBasis(Vector3.y(), Vector3.z());
-	private Point3 sunOrigin;
+	private final OrthoNormalBasis33F orthoNormalBasis = new OrthoNormalBasis33F(Vector3F.y(), Vector3F.z(), Vector3F.x());
+	private Point3F sunOrigin;
 	private SpectralCurve radiance;
-	private Vector3 sunDirection;
-	private Vector3 sunDirectionWorld;
+	private Vector3F sunDirection;
+	private Vector3F sunDirectionWorld;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -163,41 +163,41 @@ public final class Sky {
 	}
 	
 //	TODO: Add Javadocs.
-	public OrthoNormalBasis getOrthoNormalBasis() {
+	public OrthoNormalBasis33F getOrthoNormalBasis() {
 		return this.orthoNormalBasis;
 	}
 	
 //	TODO: Add Javadocs.
-	public Point3 getSunOrigin() {
+	public Point3F getSunOrigin() {
 		return this.sunOrigin;
 	}
 	
 //	TODO: Add Javadocs.
-	public Vector3 getSunDirection() {
+	public Vector3F getSunDirection() {
 		return this.sunDirection;
 	}
 	
 //	TODO: Add Javadocs.
-	public Vector3 getSunDirectionWorld() {
+	public Vector3F getSunDirectionWorld() {
 		return this.sunDirectionWorld;
 	}
 	
 //	TODO: Add Javadocs.
 	public void set() {
-		set(new Vector3(1.0F, 1.0F, 1.0F).normalize());
+		set(new Vector3F(1.0F, 1.0F, 1.0F).normalize());
 	}
 	
 //	TODO: Add Javadocs.
-	public void set(final Vector3 sunDirectionWorld) {
+	public void set(final Vector3F sunDirectionWorld) {
 		set(sunDirectionWorld, 2.0F);
 	}
 	
 //	TODO: Add Javadocs.
-	public void set(final Vector3 sunDirectionWorld, final float turbidity) {
+	public void set(final Vector3F sunDirectionWorld, final float turbidity) {
 		this.sunDirectionWorld = sunDirectionWorld.normalize();
 		this.turbidity = turbidity;
 		this.sunDirection = this.sunDirectionWorld.transformReverse(this.orthoNormalBasis).normalize();
-		this.sunOrigin = new Point3().pointAt(this.sunDirectionWorld, 10000.0F);
+		this.sunOrigin = new Point3F().pointAt(this.sunDirectionWorld, 10000.0F);
 		this.theta = acos(saturate(this.sunDirection.z, -1.0F, 1.0F));
 		
 		if(this.sunDirection.z > 0.0F) {
@@ -247,7 +247,7 @@ public final class Sky {
 				final float u = (x + 0.5F) * deltaU;
 				final float v = (y + 0.5F) * deltaV;
 				
-				final Color color = doCalculateColor(Vector3.direction(u, v));
+				final Color color = doCalculateColor(Vector3F.direction(u, v));
 				
 				this.imageHistogram[index] = color.luminance() * sin(PI * v);
 				
@@ -279,25 +279,25 @@ public final class Sky {
 	}
 	
 	public void setX(final float x) {
-		set(new Vector3(x, this.sunDirectionWorld.y, this.sunDirectionWorld.z).normalize(), this.turbidity);
+		set(new Vector3F(x, this.sunDirectionWorld.y, this.sunDirectionWorld.z).normalize(), this.turbidity);
 	}
 	
 	public void setY(final float y) {
-		set(new Vector3(this.sunDirectionWorld.x, y, this.sunDirectionWorld.z).normalize(), this.turbidity);
+		set(new Vector3F(this.sunDirectionWorld.x, y, this.sunDirectionWorld.z).normalize(), this.turbidity);
 	}
 	
 	public void setZ(final float z) {
-		set(new Vector3(this.sunDirectionWorld.x, this.sunDirectionWorld.y, z).normalize(), this.turbidity);
+		set(new Vector3F(this.sunDirectionWorld.x, this.sunDirectionWorld.y, z).normalize(), this.turbidity);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private Color doCalculateColor(final Vector3 direction) {
+	private Color doCalculateColor(final Vector3F direction) {
 		if(direction.z < 0.0F) {
 			return Color.BLACK;
 		}
 		
-		final Vector3 direction0 = new Vector3(direction.x, direction.y, max(direction.z, 0.001F)).normalize();
+		final Vector3F direction0 = new Vector3F(direction.x, direction.y, max(direction.z, 0.001F)).normalize();
 		
 		final float theta = acos(saturate(direction0.z, -1.0F, 1.0F));
 		final float gamma = acos(saturate(direction0.dotProduct(this.sunDirection), -1.0F, 1.0F));

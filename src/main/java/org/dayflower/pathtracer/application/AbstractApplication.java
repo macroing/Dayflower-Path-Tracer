@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -221,8 +221,6 @@ public abstract class AbstractApplication extends Application {
 				if(pixelWriter != null) {
 					synchronized(pixels) {
 						pixelWriter.setPixels(0, 0, getKernelWidth(), getKernelHeight(), pixelFormat, byteBuffer, getKernelWidth() * 4);
-						
-						final WritableImage writableImage = imageView.snapshot(null, null);
 						
 						final
 						GraphicsContext graphicsContext = canvas.getGraphicsContext2D();

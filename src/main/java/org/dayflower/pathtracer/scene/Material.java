@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -52,12 +52,7 @@ public enum Material {
 	/**
 	 * A {@code Material} that represents a Phong metal material.
 	 */
-	PHONG_METAL,
-	
-	/**
-	 * A {@code Material} that represents water.
-	 */
-	WATER;
+	PHONG_METAL;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

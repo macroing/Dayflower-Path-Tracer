@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -30,9 +30,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.dayflower.pathtracer.math.Point2;
-import org.dayflower.pathtracer.math.Point3;
-import org.dayflower.pathtracer.math.Vector3;
+import org.dayflower.pathtracer.math.Point2F;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
 
@@ -153,11 +153,11 @@ public final class Mesh {
 			final IndexedModel indexedModel = oBJModel.toIndexedModel();
 			
 			final List<Integer> indices = indexedModel.getIndices();
-			final List<Point2> textureCoordinates = indexedModel.getTextureCoordinates();
-			final List<Point3> positions = indexedModel.getPositions();
+			final List<Point2F> textureCoordinates = indexedModel.getTextureCoordinates();
+			final List<Point3F> positions = indexedModel.getPositions();
 			final List<String> materials = indexedModel.getMaterials();
 			final List<Triangle> triangles = new ArrayList<>();
-			final List<Vector3> normals = indexedModel.getNormals();
+			final List<Vector3F> normals = indexedModel.getNormals();
 			
 			for(int i = 0; i < indices.size(); i += 3) {
 				final int indexA = indices.get(i + 0).intValue();
@@ -168,13 +168,15 @@ public final class Mesh {
 				
 				final Surface surface = meshConfigurator.getSurface(materialName);
 				
-				final Vertex a = new Vertex(textureCoordinates.get(indexA), positions.get(indexA), normals.get(indexA));
-				final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), normals.get(indexB));
-				final Vertex c = new Vertex(textureCoordinates.get(indexC), positions.get(indexC), normals.get(indexC));
-				
-				final Triangle triangle = new Triangle(surface, a, b, c);
-				
-				triangles.add(triangle);
+				if(surface != null) {
+					final Vertex a = new Vertex(textureCoordinates.get(indexA), positions.get(indexA), normals.get(indexA));
+					final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), normals.get(indexB));
+					final Vertex c = new Vertex(textureCoordinates.get(indexC), positions.get(indexC), normals.get(indexC));
+					
+					final Triangle triangle = new Triangle(surface, a, b, c);
+					
+					triangles.add(triangle);
+				}
 			}
 			
 			return new Mesh(triangles);
@@ -248,11 +250,11 @@ public final class Mesh {
 	
 	private static final class IndexedModel {
 		private final List<Integer> indices = new ArrayList<>();
-		private final List<Point2> textureCoordinates = new ArrayList<>();
-		private final List<Point3> positions = new ArrayList<>();
+		private final List<Point2F> textureCoordinates = new ArrayList<>();
+		private final List<Point3F> positions = new ArrayList<>();
 		private final List<String> materials = new ArrayList<>();
-		private final List<Vector3> normals = new ArrayList<>();
-		private final List<Vector3> tangents = new ArrayList<>();
+		private final List<Vector3F> normals = new ArrayList<>();
+		private final List<Vector3F> tangents = new ArrayList<>();
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
@@ -270,19 +272,19 @@ public final class Mesh {
 			return this.materials;
 		}
 		
-		public List<Vector3> getNormals() {
+		public List<Vector3F> getNormals() {
 			return this.normals;
 		}
 		
-		public List<Point3> getPositions() {
+		public List<Point3F> getPositions() {
 			return this.positions;
 		}
 		
-		public List<Vector3> getTangents() {
+		public List<Vector3F> getTangents() {
 			return this.tangents;
 		}
 		
-		public List<Point2> getTextureCoordinates() {
+		public List<Point2F> getTextureCoordinates() {
 			return this.textureCoordinates;
 		}
 		
@@ -292,9 +294,9 @@ public final class Mesh {
 				final int index1 = this.indices.get(i + 1).intValue();
 				final int index2 = this.indices.get(i + 2).intValue();
 				
-				final Vector3 edge0 = Vector3.direction(this.positions.get(index0), this.positions.get(index1));
-				final Vector3 edge1 = Vector3.direction(this.positions.get(index0), this.positions.get(index2));
-				final Vector3 normal = edge0.crossProduct(edge1).normalize();
+				final Vector3F edge0 = Vector3F.direction(this.positions.get(index0), this.positions.get(index1));
+				final Vector3F edge1 = Vector3F.direction(this.positions.get(index0), this.positions.get(index2));
+				final Vector3F normal = edge0.crossProduct(edge1).normalize();
 				
 				this.normals.set(index0, this.normals.get(index0).add(normal));
 				this.normals.set(index1, this.normals.get(index1).add(normal));
@@ -312,8 +314,8 @@ public final class Mesh {
 				final int index1 = this.indices.get(i + 1).intValue();
 				final int index2 = this.indices.get(i + 2).intValue();
 				
-				final Vector3 edge0 = Vector3.direction(this.positions.get(index0), this.positions.get(index1));
-				final Vector3 edge1 = Vector3.direction(this.positions.get(index0), this.positions.get(index2));
+				final Vector3F edge0 = Vector3F.direction(this.positions.get(index0), this.positions.get(index1));
+				final Vector3F edge1 = Vector3F.direction(this.positions.get(index0), this.positions.get(index2));
 				
 				final float deltaU0 = this.textureCoordinates.get(index1).x - this.textureCoordinates.get(index0).x;
 				final float deltaV0 = this.textureCoordinates.get(index1).y - this.textureCoordinates.get(index0).y;
@@ -327,7 +329,7 @@ public final class Mesh {
 				final float y = fraction * (deltaV1 * edge0.y - deltaV0 * edge1.y);
 				final float z = fraction * (deltaV1 * edge0.y - deltaV0 * edge1.y);
 				
-				final Vector3 tangent = new Vector3(x, y, z);
+				final Vector3F tangent = new Vector3F(x, y, z);
 				
 				this.tangents.set(index0, this.tangents.get(index0).add(tangent));
 				this.tangents.set(index1, this.tangents.get(index1).add(tangent));
@@ -346,10 +348,10 @@ public final class Mesh {
 		private final AtomicBoolean hasNormals = new AtomicBoolean();
 		private final AtomicBoolean hasTextureCoordinates = new AtomicBoolean();
 		private final List<OBJIndex> indices = new ArrayList<>();
-		private final List<Point2> textureCoordinates = new ArrayList<>();
-		private final List<Point3> positions = new ArrayList<>();
+		private final List<Point2F> textureCoordinates = new ArrayList<>();
+		private final List<Point3F> positions = new ArrayList<>();
 		private final List<String> materials = new ArrayList<>();
-		private final List<Vector3> normals = new ArrayList<>();
+		private final List<Vector3F> normals = new ArrayList<>();
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
@@ -365,11 +367,11 @@ public final class Mesh {
 					} else if(tokens[0].equals("usemtl")) {
 						material = tokens[1];
 					} else if(tokens[0].equals("v")) {
-						this.positions.add(new Point3(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale));
+						this.positions.add(new Point3F(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale));
 					} else if(tokens[0].equals("vt")) {
-						this.textureCoordinates.add(new Point2(Float.valueOf(tokens[1]).floatValue() * scale, 1.0F - Float.valueOf(tokens[2]).floatValue() * scale));
+						this.textureCoordinates.add(new Point2F(Float.valueOf(tokens[1]).floatValue() * scale, 1.0F - Float.valueOf(tokens[2]).floatValue() * scale));
 					} else if(tokens[0].equals("vn")) {
-						this.normals.add(new Vector3(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale));
+						this.normals.add(new Vector3F(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale));
 					} else if(tokens[0].equals("f")) {
 						for(int i = 0; i < tokens.length - 3; i++) {
 							this.indices.add(doParseOBJIndex(tokens[1 + 0]));
@@ -398,13 +400,13 @@ public final class Mesh {
 			for(int i = 0; i < this.indices.size(); i++) {
 				final OBJIndex currentOBJIndex = this.indices.get(i);
 				
-				final Point2 currentTextureCoordinate = this.hasTextureCoordinates.get() ? this.textureCoordinates.get(currentOBJIndex.getTextureCoordinateIndex()) : new Point2();
+				final Point2F currentTextureCoordinate = this.hasTextureCoordinates.get() ? this.textureCoordinates.get(currentOBJIndex.getTextureCoordinateIndex()) : new Point2F();
 				
-				final Point3 currentPosition = this.positions.get(currentOBJIndex.getVertexIndex());
+				final Point3F currentPosition = this.positions.get(currentOBJIndex.getVertexIndex());
 				
 				final String currentMaterial = this.materials.get(i);
 				
-				final Vector3 currentNormal = this.hasNormals.get() ? this.normals.get(currentOBJIndex.getNormalIndex()) : new Vector3();
+				final Vector3F currentNormal = this.hasNormals.get() ? this.normals.get(currentOBJIndex.getNormalIndex()) : new Vector3F();
 				
 				Integer modelVertexIndex = modelVertexIndices.get(currentOBJIndex);
 				
@@ -433,7 +435,7 @@ public final class Mesh {
 					indexedModel1.getPositions().add(currentPosition);
 					indexedModel1.getMaterials().add(currentMaterial);
 					indexedModel1.getNormals().add(currentNormal);
-					indexedModel1.getTangents().add(new Vector3());
+					indexedModel1.getTangents().add(new Vector3F());
 				}
 				
 				indexedModel0.getIndices().add(modelVertexIndex);

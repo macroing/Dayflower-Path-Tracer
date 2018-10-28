@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -16,10 +16,13 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.color;
+package org.dayflower.pathtracer.color.colorspace;
 
-import static org.dayflower.pathtracer.math.Math2.pow;
-import static org.dayflower.pathtracer.math.Math2.saturate;
+import static org.dayflower.pathtracer.math.MathF.pow;
+import static org.dayflower.pathtracer.math.MathF.saturate;
+
+import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.color.ColorSpace;
 
 /**
  * The {@code RGBColorSpace} class is an implementation of {@link ColorSpace} and represents an RGB color space.
@@ -193,6 +196,11 @@ public final class RGBColorSpace extends ColorSpace {
 		return this.matrixRGBToXYZ[8];
 	}
 	
+	/**
+	 * Returns the break point.
+	 * 
+	 * @return the break point
+	 */
 	public float getBreakPoint() {
 		return this.breakPoint;
 	}
@@ -233,6 +241,11 @@ public final class RGBColorSpace extends ColorSpace {
 		return this.matrixRGBToXYZ[5];
 	}
 	
+	/**
+	 * Returns the gamma value.
+	 * 
+	 * @return the gamma value
+	 */
 	public float getGamma() {
 		return this.gamma;
 	}
@@ -273,14 +286,29 @@ public final class RGBColorSpace extends ColorSpace {
 		return this.matrixRGBToXYZ[2];
 	}
 	
+	/**
+	 * Returns the segment offset.
+	 * 
+	 * @return the segment offset
+	 */
 	public float getSegmentOffset() {
 		return this.segmentOffset;
 	}
 	
+	/**
+	 * Returns the slope.
+	 * 
+	 * @return the slope
+	 */
 	public float getSlope() {
 		return this.slope;
 	}
 	
+	/**
+	 * Returns the slope match.
+	 * 
+	 * @return the slope match
+	 */
 	public float getSlopeMatch() {
 		return this.slopeMatch;
 	}
@@ -401,6 +429,7 @@ public final class RGBColorSpace extends ColorSpace {
 	 * @param value a {@code float} value
 	 * @return {@code value} with Gamma Correction
 	 */
+	@Override
 	public float redoGammaCorrection(final float value) {
 		if(value <= 0.0F) {
 			return 0.0F;
@@ -421,6 +450,7 @@ public final class RGBColorSpace extends ColorSpace {
 	 * @param value a {@code float} value
 	 * @return {@code value} without Gamma Correction
 	 */
+	@Override
 	public float undoGammaCorrection(final float value) {
 		if(value <= 0.0F) {
 			return 0.0F;

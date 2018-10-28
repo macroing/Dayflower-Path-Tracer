@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,13 +18,13 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import org.dayflower.pathtracer.math.Angle;
+import org.dayflower.pathtracer.math.AngleF;
 
 //TODO: Add Javadocs.
 public interface CameraObserver {
 //	TODO: Add Javadocs.
-	void pitchChanged(final Camera camera, final Angle pitch);
+	void pitchChanged(final Camera camera, final AngleF pitch);
 	
 //	TODO: Add Javadocs.
-	void yawChanged(final Camera camera, final Angle yaw);
+	void yawChanged(final Camera camera, final AngleF yaw);
 }

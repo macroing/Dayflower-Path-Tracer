@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,7 +18,7 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import org.dayflower.pathtracer.math.Math2;
+import org.dayflower.pathtracer.math.MathF;
 
 import com.amd.aparapi.Kernel;
 
@@ -263,13 +263,13 @@ public abstract class AbstractKernel extends Kernel {
 		this.sinTable = new float[COUNT];
 		
 		for(int i = 0; i < COUNT; i++) {
-			this.cosTable[i] = Math2.cos((i + 0.5F) / COUNT * RADIANS_MAXIMUM);
-			this.sinTable[i] = Math2.sin((i + 0.5F) / COUNT * RADIANS_MAXIMUM);
+			this.cosTable[i] = MathF.cos((i + 0.5F) / COUNT * RADIANS_MAXIMUM);
+			this.sinTable[i] = MathF.sin((i + 0.5F) / COUNT * RADIANS_MAXIMUM);
 		}
 		
 		for(int i = 0; i < DEGREES_MAXIMUM; i += 90) {
-			this.cosTable[(int)(i * DEGREES_TO_INDEX) & MASK_0] = Math2.cos(i * RADIANS);
-			this.sinTable[(int)(i * DEGREES_TO_INDEX) & MASK_0] = Math2.sin(i * RADIANS);
+			this.cosTable[(int)(i * DEGREES_TO_INDEX) & MASK_0] = MathF.cos(i * RADIANS);
+			this.sinTable[(int)(i * DEGREES_TO_INDEX) & MASK_0] = MathF.sin(i * RADIANS);
 		}
 		
 		put(this.cosTable);

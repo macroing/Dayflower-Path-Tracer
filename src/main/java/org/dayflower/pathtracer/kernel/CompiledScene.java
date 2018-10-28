@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,9 +18,9 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import static org.dayflower.pathtracer.math.Math2.cos;
-import static org.dayflower.pathtracer.math.Math2.sin;
-import static org.dayflower.pathtracer.math.Math2.toRadians;
+import static org.dayflower.pathtracer.math.MathF.cos;
+import static org.dayflower.pathtracer.math.MathF.sin;
+import static org.dayflower.pathtracer.math.MathF.toRadians;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -42,9 +42,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import org.dayflower.pathtracer.math.Point2;
-import org.dayflower.pathtracer.math.Point3;
-import org.dayflower.pathtracer.math.Vector3;
+import org.dayflower.pathtracer.math.Point2F;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
@@ -293,26 +293,26 @@ public final class CompiledScene {
 	
 	private final float[] boundingVolumeHierarchy;
 	private final float[] camera;
-	private final float[] point2s;
-	private final float[] point3s;
+	private final float[] point2Fs;
+	private final float[] point3Fs;
 	private final float[] shapes;
 	private final float[] surfaces;
 	private final float[] textures;
-	private final float[] vector3s;
+	private final float[] vector3Fs;
 	private final int[] shapeOffsets;
 	private final String name;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private CompiledScene(final float[] boundingVolumeHierarchy, final float[] camera, final float[] point2s, final float[] point3s, final float[] shapes, final float[] surfaces, final float[] textures, final float[] vector3s, final int[] shapeOffsets, final String name) {
+	private CompiledScene(final float[] boundingVolumeHierarchy, final float[] camera, final float[] point2Fs, final float[] point3Fs, final float[] shapes, final float[] surfaces, final float[] textures, final float[] vector3Fs, final int[] shapeOffsets, final String name) {
 		this.boundingVolumeHierarchy = Objects.requireNonNull(boundingVolumeHierarchy, "boundingVolumeHierarchy == null");
 		this.camera = Objects.requireNonNull(camera, "camera == null");
-		this.point2s = Objects.requireNonNull(point2s, "point2s == null");
-		this.point3s = Objects.requireNonNull(point3s, "point3s == null");
+		this.point2Fs = Objects.requireNonNull(point2Fs, "point2Fs == null");
+		this.point3Fs = Objects.requireNonNull(point3Fs, "point3Fs == null");
 		this.shapes = Objects.requireNonNull(shapes, "shapes == null");
 		this.surfaces = Objects.requireNonNull(surfaces, "surfaces == null");
 		this.textures = Objects.requireNonNull(textures, "textures == null");
-		this.vector3s = Objects.requireNonNull(vector3s, "vector3s == null");
+		this.vector3Fs = Objects.requireNonNull(vector3Fs, "vector3Fs == null");
 		this.shapeOffsets = Objects.requireNonNull(shapeOffsets, "shapeOffsets == null");
 		this.name = Objects.requireNonNull(name, "name == null");
 	}
@@ -413,16 +413,16 @@ public final class CompiledScene {
 			}
 		}
 		
-		for(int i = 0; i < this.point2s.length; i++) {
-			this.point2s[i] *= scale;
+		for(int i = 0; i < this.point2Fs.length; i++) {
+			this.point2Fs[i] *= scale;
 		}
 		
-		for(int i = 0; i < this.point3s.length; i++) {
-			this.point3s[i] *= scale;
+		for(int i = 0; i < this.point3Fs.length; i++) {
+			this.point3Fs[i] *= scale;
 		}
 		
-		for(int i = 0; i < this.vector3s.length; i++) {
-			this.vector3s[i] *= scale;
+		for(int i = 0; i < this.vector3Fs.length; i++) {
+			this.vector3Fs[i] *= scale;
 		}
 		
 		return this;
@@ -439,13 +439,13 @@ public final class CompiledScene {
 	}
 	
 //	TODO: Add Javadocs.
-	public float[] getPoint2s() {
-		return this.point2s;
+	public float[] getPoint2Fs() {
+		return this.point2Fs;
 	}
 	
 //	TODO: Add Javadocs.
-	public float[] getPoint3s() {
-		return this.point3s;
+	public float[] getPoint3Fs() {
+		return this.point3Fs;
 	}
 	
 //	TODO: Add Javadocs.
@@ -464,8 +464,8 @@ public final class CompiledScene {
 	}
 	
 //	TODO: Add Javadocs.
-	public float[] getVector3s() {
-		return this.vector3s;
+	public float[] getVector3Fs() {
+		return this.vector3Fs;
 	}
 	
 //	TODO: Add Javadocs.
@@ -485,12 +485,12 @@ public final class CompiledScene {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("BoundingVolumeHierarchy: " + Arrays.toString(this.boundingVolumeHierarchy) + "\n");
 		stringBuilder.append("Camera: " + Arrays.toString(this.camera) + "\n");
-		stringBuilder.append("Point2s: " + Arrays.toString(this.point2s) + "\n");
-		stringBuilder.append("Point3s: " + Arrays.toString(this.point3s) + "\n");
+		stringBuilder.append("Point2Fs: " + Arrays.toString(this.point2Fs) + "\n");
+		stringBuilder.append("Point3s: " + Arrays.toString(this.point3Fs) + "\n");
 		stringBuilder.append("Shapes: " + Arrays.toString(this.shapes) + "\n");
 		stringBuilder.append("Surfaces: " + Arrays.toString(this.surfaces) + "\n");
 		stringBuilder.append("Textures: " + Arrays.toString(this.textures) + "\n");
-		stringBuilder.append("Vector3s: " + Arrays.toString(this.vector3s) + "\n");
+		stringBuilder.append("Vector3Fs: " + Arrays.toString(this.vector3Fs) + "\n");
 		stringBuilder.append("ShapeOffsets: " + Arrays.toString(this.shapeOffsets) + "\n");
 		
 		return stringBuilder.toString();
@@ -523,12 +523,12 @@ public final class CompiledScene {
 			
 			doWriteFloatArray(dataOutputStream, this.boundingVolumeHierarchy);
 			doWriteFloatArray(dataOutputStream, this.camera);
-			doWriteFloatArray(dataOutputStream, this.point2s);
-			doWriteFloatArray(dataOutputStream, this.point3s);
+			doWriteFloatArray(dataOutputStream, this.point2Fs);
+			doWriteFloatArray(dataOutputStream, this.point3Fs);
 			doWriteFloatArray(dataOutputStream, this.shapes);
 			doWriteFloatArray(dataOutputStream, this.surfaces);
 			doWriteFloatArray(dataOutputStream, this.textures);
-			doWriteFloatArray(dataOutputStream, this.vector3s);
+			doWriteFloatArray(dataOutputStream, this.vector3Fs);
 			doWriteIntArray(dataOutputStream, this.shapeOffsets);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
@@ -544,30 +544,30 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static CompiledScene compile(final Camera camera, final Scene scene, final String name) {
-		final List<Point2> point2s0 = doFindPoint2s(scene);
-		final List<Point3> point3s0 = doFindPoint3s(scene);
+		final List<Point2F> point2Fs0 = doFindPoint2Fs(scene);
+		final List<Point3F> point3Fs0 = doFindPoint3Fs(scene);
 		final List<Surface> surfaces0 = doFindSurfaces(scene);
 		final List<Texture> textures0 = doFindTextures(scene);
-		final List<Vector3> vector3s0 = doFindVector3s(scene);
+		final List<Vector3F> vector3Fs0 = doFindVector3Fs(scene);
 		
-		final Map<Point2, Integer> point2s1 = doCreatePoint2Mapping(point2s0);
-		final Map<Point3, Integer> point3s1 = doCreatePoint3Mapping(point3s0);
-		final Map<Vector3, Integer> vector3s1 = doCreateVector3Mapping(vector3s0);
+		final Map<Point2F, Integer> point2Fs1 = doCreatePoint2FMapping(point2Fs0);
+		final Map<Point3F, Integer> point3Fs1 = doCreatePoint3FMapping(point3Fs0);
+		final Map<Vector3F, Integer> vector3Fs1 = doCreateVector3FMapping(vector3Fs0);
 		
 		final float[] boundingVolumeHierarchy = doCompileBoundingVolumeHierarchy(scene);
 		final float[] camera0 = camera.getArray();
-		final float[] point2s = doCompilePoint2s(point2s0);
-		final float[] point3s = doCompilePoint3s(point3s0);
-		final float[] shapes = doCompileShapes(surfaces0, point2s1, point3s1, vector3s1, scene);
+		final float[] point2Fs = doCompilePoint2Fs(point2Fs0);
+		final float[] point3Fs = doCompilePoint3Fs(point3Fs0);
+		final float[] shapes = doCompileShapes(surfaces0, point2Fs1, point3Fs1, vector3Fs1, scene);
 		final float[] surfaces = doCompileSurfaces(surfaces0, textures0);
 		final float[] textures = doCompileTextures(textures0);
-		final float[] vector3s = doCompileVector3s(vector3s0);
+		final float[] vector3Fs = doCompileVector3Fs(vector3Fs0);
 		
 		final int[] shapeOffsets = doCompileShapeOffsets(scene);
 		
 		doReorderShapes(boundingVolumeHierarchy, shapes, shapeOffsets);
 		
-		return new CompiledScene(boundingVolumeHierarchy, camera0, point2s, point3s, shapes, surfaces, textures, vector3s, shapeOffsets, name);
+		return new CompiledScene(boundingVolumeHierarchy, camera0, point2Fs, point3Fs, shapes, surfaces, textures, vector3Fs, shapeOffsets, name);
 	}
 	
 //	TODO: Add Javadocs.
@@ -586,15 +586,15 @@ public final class CompiledScene {
 			
 			final float[] boundingVolumeHierarchy = doReadFloatArray(dataInputStream);
 			final float[] cameraArray = doReadFloatArray(dataInputStream, camera.getArray());
-			final float[] point2s = doReadFloatArray(dataInputStream);
-			final float[] point3s = doReadFloatArray(dataInputStream);
+			final float[] point2Fs = doReadFloatArray(dataInputStream);
+			final float[] point3Fs = doReadFloatArray(dataInputStream);
 			final float[] shapes = doReadFloatArray(dataInputStream);
 			final float[] surfaces = doReadFloatArray(dataInputStream);
 			final float[] textures = doReadFloatArray(dataInputStream);
 			final float[] vector3s = doReadFloatArray(dataInputStream);
 			final int[] shapeOffsets = doReadIntArray(dataInputStream);
 			
-			return new CompiledScene(boundingVolumeHierarchy, cameraArray, point2s, point3s, shapes, surfaces, textures, vector3s, shapeOffsets, name);
+			return new CompiledScene(boundingVolumeHierarchy, cameraArray, point2Fs, point3Fs, shapes, surfaces, textures, vector3s, shapeOffsets, name);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -728,48 +728,48 @@ public final class CompiledScene {
 		return boundingVolumeHierarchyArray;
 	}
 	
-	private static float[] doCompilePoint2s(final List<Point2> point2s) {
-		doReportProgress("Compiling Point2s...");
+	private static float[] doCompilePoint2Fs(final List<Point2F> point2Fs) {
+		doReportProgress("Compiling Point2Fs...");
 		
-		final float[] point2s0 = new float[point2s.size() * 2];
+		final float[] point2Fs0 = new float[point2Fs.size() * 2];
 		
-		for(int i = 0, j = 0; i < point2s.size(); i++, j += 2) {
-			final Point2 point2 = point2s.get(i);
+		for(int i = 0, j = 0; i < point2Fs.size(); i++, j += 2) {
+			final Point2F point2F = point2Fs.get(i);
 			
-			point2s0[j + 0] = point2.x;
-			point2s0[j + 1] = point2.y;
+			point2Fs0[j + 0] = point2F.x;
+			point2Fs0[j + 1] = point2F.y;
 		}
 		
 		doReportProgress(" Done.\n");
 		
-		return point2s0;
+		return point2Fs0;
 	}
 	
-	private static float[] doCompilePoint3s(final List<Point3> point3s) {
-		doReportProgress("Compiling Point3s...");
+	private static float[] doCompilePoint3Fs(final List<Point3F> point3Fs) {
+		doReportProgress("Compiling Point3Fs...");
 		
-		final float[] point3s0 = new float[point3s.size() * 3];
+		final float[] point3Fs0 = new float[point3Fs.size() * 3];
 		
-		for(int i = 0, j = 0; i < point3s.size(); i++, j += 3) {
-			final Point3 point3 = point3s.get(i);
+		for(int i = 0, j = 0; i < point3Fs.size(); i++, j += 3) {
+			final Point3F point3F = point3Fs.get(i);
 			
-			point3s0[j + 0] = point3.x;
-			point3s0[j + 1] = point3.y;
-			point3s0[j + 2] = point3.z;
+			point3Fs0[j + 0] = point3F.x;
+			point3Fs0[j + 1] = point3F.y;
+			point3Fs0[j + 2] = point3F.z;
 		}
 		
 		doReportProgress(" Done.\n");
 		
-		return point3s0;
+		return point3Fs0;
 	}
 	
-	private static float[] doCompileShapes(final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s, final Scene scene) {
+	private static float[] doCompileShapes(final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs, final Scene scene) {
 		doReportProgress("Compiling Shapes...");
 		
 		final List<Float> floats = new ArrayList<>();
 		
 		for(final Shape shape : scene.getShapes()) {
-			final float[] floatArray = doToFloatArray(shape, surfaces, point2s, point3s, vector3s);
+			final float[] floatArray = doToFloatArray(shape, surfaces, point2Fs, point3Fs, vector3Fs);
 			
 			for(final float value : floatArray) {
 				floats.add(Float.valueOf(value));
@@ -835,22 +835,22 @@ public final class CompiledScene {
 		return floatArray;
 	}
 	
-	private static float[] doCompileVector3s(final List<Vector3> vector3s) {
-		doReportProgress("Compiling Vector3s...");
+	private static float[] doCompileVector3Fs(final List<Vector3F> vector3Fs) {
+		doReportProgress("Compiling Vector3Fs...");
 		
-		final float[] vector3s0 = new float[vector3s.size() * 3];
+		final float[] vector3Fs0 = new float[vector3Fs.size() * 3];
 		
-		for(int i = 0, j = 0; i < vector3s.size(); i++, j += 3) {
-			final Vector3 vector3 = vector3s.get(i);
+		for(int i = 0, j = 0; i < vector3Fs.size(); i++, j += 3) {
+			final Vector3F vector3F = vector3Fs.get(i);
 			
-			vector3s0[j + 0] = vector3.x;
-			vector3s0[j + 1] = vector3.y;
-			vector3s0[j + 2] = vector3.z;
+			vector3Fs0[j + 0] = vector3F.x;
+			vector3Fs0[j + 1] = vector3F.y;
+			vector3Fs0[j + 2] = vector3F.z;
 		}
 		
 		doReportProgress(" Done.\n");
 		
-		return vector3s0;
+		return vector3Fs0;
 	}
 	
 	private static float[] doReadFloatArray(final DataInputStream dataInputStream) throws IOException {
@@ -875,15 +875,15 @@ public final class CompiledScene {
 		return array;
 	}
 	
-	private static float[] doToFloatArray(final Shape shape, final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s) {
+	private static float[] doToFloatArray(final Shape shape, final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
 		if(shape instanceof Plane) {
-			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces, point3s, vector3s);
+			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces, point3Fs, vector3Fs);
 		} else if(shape instanceof Sphere) {
-			return doToFloatArraySphere(Sphere.class.cast(shape), surfaces, point3s);
+			return doToFloatArraySphere(Sphere.class.cast(shape), surfaces, point3Fs);
 		} else if(shape instanceof Terrain) {
 			return doToFloatArrayTerrain(Terrain.class.cast(shape), surfaces);
 		} else if(shape instanceof Triangle) {
-			return doToFloatArrayTriangle(Triangle.class.cast(shape), surfaces, point2s, point3s, vector3s);
+			return doToFloatArrayTriangle(Triangle.class.cast(shape), surfaces, point2Fs, point3Fs, vector3Fs);
 		} else {
 			throw new IllegalArgumentException(String.format("The Shape provided is not supported: %s", shape));
 		}
@@ -966,14 +966,14 @@ public final class CompiledScene {
 		return floatArray;
 	}
 	
-	private static float[] doToFloatArrayPlane(final Plane plane, final List<Surface> surfaces, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s) {
+	private static float[] doToFloatArrayPlane(final Plane plane, final List<Surface> surfaces, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
 		return new float[] {
 			PLANE_TYPE,
 			doGetOffset(plane.getSurface(), surfaces),
-			point3s.get(plane.getA()).intValue(),
-			point3s.get(plane.getB()).intValue(),
-			point3s.get(plane.getC()).intValue(),
-			vector3s.get(plane.getSurfaceNormal()).intValue()
+			point3Fs.get(plane.getA()).intValue(),
+			point3Fs.get(plane.getB()).intValue(),
+			point3Fs.get(plane.getC()).intValue(),
+			vector3Fs.get(plane.getSurfaceNormal()).intValue()
 		};
 	}
 	
@@ -985,12 +985,12 @@ public final class CompiledScene {
 		};
 	}
 	
-	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Surface> surfaces, final Map<Point3, Integer> point3s) {
+	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Surface> surfaces, final Map<Point3F, Integer> point3Fs) {
 		return new float[] {
 			SPHERE_TYPE,
 			doGetOffset(sphere.getSurface(), surfaces),
 			sphere.getRadius(),
-			point3s.get(sphere.getPosition()).intValue()
+			point3Fs.get(sphere.getPosition()).intValue()
 		};
 	}
 	
@@ -1014,19 +1014,19 @@ public final class CompiledScene {
 		};
 	}
 	
-	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces, final Map<Point2, Integer> point2s, final Map<Point3, Integer> point3s, final Map<Vector3, Integer> vector3s) {
+	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
 		return new float[] {
 			TRIANGLE_TYPE,
 			doGetOffset(triangle.getSurface(), surfaces),
-			point3s.get(triangle.getA().position).intValue(),
-			point3s.get(triangle.getB().position).intValue(),
-			point3s.get(triangle.getC().position).intValue(),
-			vector3s.get(triangle.getA().normal).intValue(),
-			vector3s.get(triangle.getB().normal).intValue(),
-			vector3s.get(triangle.getC().normal).intValue(),
-			point2s.get(triangle.getA().textureCoordinates).intValue(),
-			point2s.get(triangle.getB().textureCoordinates).intValue(),
-			point2s.get(triangle.getC().textureCoordinates).intValue()
+			point3Fs.get(triangle.getA().position).intValue(),
+			point3Fs.get(triangle.getB().position).intValue(),
+			point3Fs.get(triangle.getC().position).intValue(),
+			vector3Fs.get(triangle.getA().normal).intValue(),
+			vector3Fs.get(triangle.getB().normal).intValue(),
+			vector3Fs.get(triangle.getC().normal).intValue(),
+			point2Fs.get(triangle.getA().textureCoordinates).intValue(),
+			point2Fs.get(triangle.getB().textureCoordinates).intValue(),
+			point2Fs.get(triangle.getC().textureCoordinates).intValue()
 		};
 	}
 	
@@ -1207,60 +1207,60 @@ public final class CompiledScene {
 		return nodes;
 	}
 	
-	private static List<Point2> doFindPoint2s(final Scene scene) {
-		final Set<Point2> point2s = new LinkedHashSet<>();
+	private static List<Point2F> doFindPoint2Fs(final Scene scene) {
+		final Set<Point2F> point2Fs = new LinkedHashSet<>();
 		
 		for(final Shape shape : scene.getShapes()) {
 			if(shape instanceof Triangle) {
 				final Triangle triangle = Triangle.class.cast(shape);
 				
-				final Point2 a = triangle.getA().getTextureCoordinates();
-				final Point2 b = triangle.getB().getTextureCoordinates();
-				final Point2 c = triangle.getC().getTextureCoordinates();
+				final Point2F a = triangle.getA().getTextureCoordinates();
+				final Point2F b = triangle.getB().getTextureCoordinates();
+				final Point2F c = triangle.getC().getTextureCoordinates();
 				
-				point2s.add(a);
-				point2s.add(b);
-				point2s.add(c);
+				point2Fs.add(a);
+				point2Fs.add(b);
+				point2Fs.add(c);
 			}
 		}
 		
-		return new ArrayList<>(point2s);
+		return new ArrayList<>(point2Fs);
 	}
 	
-	private static List<Point3> doFindPoint3s(final Scene scene) {
-		final Set<Point3> point3s = new LinkedHashSet<>();
+	private static List<Point3F> doFindPoint3Fs(final Scene scene) {
+		final Set<Point3F> point3Fs = new LinkedHashSet<>();
 		
 		for(final Shape shape : scene.getShapes()) {
 			if(shape instanceof Plane) {
 				final Plane plane = Plane.class.cast(shape);
 				
-				final Point3 a = plane.getA();
-				final Point3 b = plane.getB();
-				final Point3 c = plane.getC();
+				final Point3F a = plane.getA();
+				final Point3F b = plane.getB();
+				final Point3F c = plane.getC();
 				
-				point3s.add(a);
-				point3s.add(b);
-				point3s.add(c);
+				point3Fs.add(a);
+				point3Fs.add(b);
+				point3Fs.add(c);
 			} else if(shape instanceof Sphere) {
 				final Sphere sphere = Sphere.class.cast(shape);
 				
-				final Point3 position = sphere.getPosition();
+				final Point3F position = sphere.getPosition();
 				
-				point3s.add(position);
+				point3Fs.add(position);
 			} else if(shape instanceof Triangle) {
 				final Triangle triangle = Triangle.class.cast(shape);
 				
-				final Point3 a = triangle.getA().getPosition();
-				final Point3 b = triangle.getB().getPosition();
-				final Point3 c = triangle.getC().getPosition();
+				final Point3F a = triangle.getA().getPosition();
+				final Point3F b = triangle.getB().getPosition();
+				final Point3F c = triangle.getC().getPosition();
 				
-				point3s.add(a);
-				point3s.add(b);
-				point3s.add(c);
+				point3Fs.add(a);
+				point3Fs.add(b);
+				point3Fs.add(c);
 			}
 		}
 		
-		return new ArrayList<>(point3s);
+		return new ArrayList<>(point3Fs);
 	}
 	
 	private static List<Surface> doFindSurfaces(final Scene scene) {
@@ -1291,66 +1291,66 @@ public final class CompiledScene {
 		return new ArrayList<>(textures);
 	}
 	
-	private static List<Vector3> doFindVector3s(final Scene scene) {
-		final Set<Vector3> vector3s = new LinkedHashSet<>();
+	private static List<Vector3F> doFindVector3Fs(final Scene scene) {
+		final Set<Vector3F> vector3Fs = new LinkedHashSet<>();
 		
 		for(final Shape shape : scene.getShapes()) {
 			if(shape instanceof Plane) {
 				final Plane plane = Plane.class.cast(shape);
 				
-				final Vector3 surfaceNormal = plane.getSurfaceNormal();
+				final Vector3F surfaceNormal = plane.getSurfaceNormal();
 				
-				vector3s.add(surfaceNormal);
+				vector3Fs.add(surfaceNormal);
 			} else if(shape instanceof Triangle) {
 				final Triangle triangle = Triangle.class.cast(shape);
 				
-				final Vector3 a = triangle.getA().getNormal();
-				final Vector3 b = triangle.getB().getNormal();
-				final Vector3 c = triangle.getC().getNormal();
+				final Vector3F a = triangle.getA().getNormal();
+				final Vector3F b = triangle.getB().getNormal();
+				final Vector3F c = triangle.getC().getNormal();
 				
-				vector3s.add(a);
-				vector3s.add(b);
-				vector3s.add(c);
+				vector3Fs.add(a);
+				vector3Fs.add(b);
+				vector3Fs.add(c);
 			}
 		}
 		
-		return new ArrayList<>(vector3s);
+		return new ArrayList<>(vector3Fs);
 	}
 	
-	private static Map<Point2, Integer> doCreatePoint2Mapping(final List<Point2> point2s) {
-		final Map<Point2, Integer> point2Mapping = new HashMap<>();
+	private static Map<Point2F, Integer> doCreatePoint2FMapping(final List<Point2F> point2Fs) {
+		final Map<Point2F, Integer> point2FMapping = new HashMap<>();
 		
-		for(int i = 0, j = 0; i < point2s.size(); i++, j += 2) {
-			final Point2 point2 = point2s.get(i);
+		for(int i = 0, j = 0; i < point2Fs.size(); i++, j += 2) {
+			final Point2F point2F = point2Fs.get(i);
 			
-			point2Mapping.put(point2, Integer.valueOf(j));
+			point2FMapping.put(point2F, Integer.valueOf(j));
 		}
 		
-		return point2Mapping;
+		return point2FMapping;
 	}
 	
-	private static Map<Point3, Integer> doCreatePoint3Mapping(final List<Point3> point3s) {
-		final Map<Point3, Integer> point3Mapping = new HashMap<>();
+	private static Map<Point3F, Integer> doCreatePoint3FMapping(final List<Point3F> point3Fs) {
+		final Map<Point3F, Integer> point3FMapping = new HashMap<>();
 		
-		for(int i = 0, j = 0; i < point3s.size(); i++, j += 3) {
-			final Point3 point3 = point3s.get(i);
+		for(int i = 0, j = 0; i < point3Fs.size(); i++, j += 3) {
+			final Point3F point3F = point3Fs.get(i);
 			
-			point3Mapping.put(point3, Integer.valueOf(j));
+			point3FMapping.put(point3F, Integer.valueOf(j));
 		}
 		
-		return point3Mapping;
+		return point3FMapping;
 	}
 	
-	private static Map<Vector3, Integer> doCreateVector3Mapping(final List<Vector3> vector3s) {
-		final Map<Vector3, Integer> vector3Mapping = new HashMap<>();
+	private static Map<Vector3F, Integer> doCreateVector3FMapping(final List<Vector3F> vector3Fs) {
+		final Map<Vector3F, Integer> vector3FMapping = new HashMap<>();
 		
-		for(int i = 0, j = 0; i < vector3s.size(); i++, j += 3) {
-			final Vector3 vector3 = vector3s.get(i);
+		for(int i = 0, j = 0; i < vector3Fs.size(); i++, j += 3) {
+			final Vector3F vector3F = vector3Fs.get(i);
 			
-			vector3Mapping.put(vector3, Integer.valueOf(j));
+			vector3FMapping.put(vector3F, Integer.valueOf(j));
 		}
 		
-		return vector3Mapping;
+		return vector3FMapping;
 	}
 	
 	private static void doReorderShapes(final float[] boundingVolumeHierarchy, final float[] shapes, final int[] shapeOffsets) {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -30,26 +30,6 @@ public final class Ranges {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Returns a clamped version of {@code value}.
-	 * <p>
-	 * The clamped version will be at least as low as {@code minimum}, or at most as high as {@code maximum}.
-	 * 
-	 * @param value the {@code float} value to clamp
-	 * @param minimum the minimum {@code float} value to be returned
-	 * @param maximum the maximum {@code float} value to be returned
-	 * @return a clamped version of {@code value}
-	 */
-	public static float clamp(final float value, final float minimum, final float maximum) {
-		if(value < minimum) {
-			return minimum;
-		} else if(value > maximum) {
-			return maximum;
-		} else {
-			return value;
-		}
-	}
 	
 	/**
 	 * Returns {@code value}, but only if it is within the range of {@code minimum} (inclusive) and {@code maximum} (inclusive).

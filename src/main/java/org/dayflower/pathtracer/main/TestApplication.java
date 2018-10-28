@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -53,7 +53,8 @@ import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.ConvolutionKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
-import org.dayflower.pathtracer.math.Angle;
+import org.dayflower.pathtracer.math.AngleF;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
@@ -142,10 +143,10 @@ public final class TestApplication extends AbstractApplication implements Camera
 		camera.setEye(55.0F, 42.0F, 155.6F);
 		camera.setFieldOfViewX(70.0F);
 		camera.setFocalDistance(30.0F);
-		camera.setPitch(Angle.DEGREES_0);
+		camera.setPitch(AngleF.pitch(Vector3F.x()));
 		camera.setResolution(getKernelWidth(), getKernelHeight());
 		camera.setWalkLockEnabled(true);
-		camera.setYaw(Angle.DEGREES_0);
+		camera.setYaw(AngleF.yaw(Vector3F.y()));
 		camera.update();
 		camera.addCameraObserver(this);
 		
@@ -153,7 +154,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	}
 	
 	@Override
-	public void pitchChanged(final Camera camera, final Angle pitch) {
+	public void pitchChanged(final Camera camera, final AngleF pitch) {
 		final Slider sliderPitch = this.sliderPitch;
 		
 		if(sliderPitch != null) {
@@ -166,7 +167,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	}
 	
 	@Override
-	public void yawChanged(final Camera camera, final Angle yaw) {
+	public void yawChanged(final Camera camera, final AngleF yaw) {
 		final Slider sliderYaw = this.sliderYaw;
 		
 		if(sliderYaw != null) {
@@ -438,8 +439,8 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void onMouseDragged(final float x, final float y) {
-		this.camera.changeYaw(Angle.degrees(-x * 0.5F));
-		this.camera.changePitch(Angle.degrees(-(y * 0.5F), -90.0F, 90.0F));
+		this.camera.changeYaw(AngleF.degrees(-x * 0.5F));
+		this.camera.changePitch(AngleF.degrees(-(y * 0.5F), -90.0F, 90.0F));
 	}
 	
 	/**
@@ -451,8 +452,8 @@ public final class TestApplication extends AbstractApplication implements Camera
 	@Override
 	protected void onMouseMoved(final float x, final float y) {
 		if(isMouseRecentering()) {
-			this.camera.changeYaw(Angle.degrees(-x * 0.5F));
-			this.camera.changePitch(Angle.degrees(-(y * 0.5F), -90.0F, 90.0F));
+			this.camera.changeYaw(AngleF.degrees(-x * 0.5F));
+			this.camera.changePitch(AngleF.degrees(-(y * 0.5F), -90.0F, 90.0F));
 		}
 	}
 	
@@ -554,14 +555,16 @@ public final class TestApplication extends AbstractApplication implements Camera
 		}
 		
 		if(isMouseDragging() || isMouseMoving() && isMouseRecentering() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
-			camera.resetUpdateStatus();
-			
-			abstractRendererKernel.updateResetStatus();
-			abstractRendererKernel.reset();
-			
-			this.renderPass.set(0);
-			
-			this.currentTimeMillis.set(System.currentTimeMillis());
+			synchronized(this.pixels1) {
+				camera.resetUpdateStatus();
+				
+				abstractRendererKernel.updateResetStatus();
+				abstractRendererKernel.reset();
+				
+				this.renderPass.set(0);
+				
+				this.currentTimeMillis.set(System.currentTimeMillis());
+			}
 		}
 	}
 	
@@ -569,8 +572,11 @@ public final class TestApplication extends AbstractApplication implements Camera
 	
 	@SuppressWarnings("unused")
 	private void doOnCheckBoxToggleSunAndSky(final ActionEvent e) {
-		this.abstractRendererKernel.toggleSunAndSky();
-		this.abstractRendererKernel.reset();
+		synchronized(this.pixels1) {
+			this.abstractRendererKernel.toggleSunAndSky();
+			this.abstractRendererKernel.updateResetStatus();
+			this.abstractRendererKernel.reset();
+		}
 	}
 	
 	@SuppressWarnings("unused")
@@ -615,7 +621,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderPitch(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setPitch(Angle.degrees(newValue.floatValue(), -90.0F, 90.0F));
+		this.camera.setPitch(AngleF.degrees(newValue.floatValue(), -90.0F, 90.0F));
 	}
 	
 	@SuppressWarnings("unused")
@@ -644,7 +650,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderYaw(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setYaw(Angle.degrees(newValue.floatValue()));
+		this.camera.setYaw(AngleF.degrees(newValue.floatValue()));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

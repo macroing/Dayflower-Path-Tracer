@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,9 +18,9 @@
  */
 package org.dayflower.pathtracer.scene.bvh;
 
-import static org.dayflower.pathtracer.math.Math2.abs;
-import static org.dayflower.pathtracer.math.Math2.max;
-import static org.dayflower.pathtracer.math.Math2.min;
+import static org.dayflower.pathtracer.math.MathF.abs;
+import static org.dayflower.pathtracer.math.MathF.max;
+import static org.dayflower.pathtracer.math.MathF.min;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.Point3;
+import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.util.Strings;
 
@@ -63,9 +63,9 @@ public final class BoundingVolumeHierarchy {
 		float minimumZ = Float.MAX_VALUE;
 		
 		for(final Triangle triangle : triangles) {
-			final Point3 p0 = triangle.a.position;
-			final Point3 p1 = triangle.b.position;
-			final Point3 p2 = triangle.c.position;
+			final Point3F p0 = triangle.a.position;
+			final Point3F p1 = triangle.b.position;
+			final Point3F p2 = triangle.c.position;
 			
 			final
 			LeafNode leafNode = new LeafNode(0);
@@ -299,27 +299,27 @@ public final class BoundingVolumeHierarchy {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private static float doGetMaximumX(final Point3 p0, final Point3 p1, final Point3 p2) {
+	private static float doGetMaximumX(final Point3F p0, final Point3F p1, final Point3F p2) {
 		return p0.x > p1.x && p0.x > p2.x ? p0.x : p1.x > p2.x ? p1.x : p2.x;
 	}
 	
-	private static float doGetMaximumY(final Point3 p0, final Point3 p1, final Point3 p2) {
+	private static float doGetMaximumY(final Point3F p0, final Point3F p1, final Point3F p2) {
 		return p0.y > p1.y && p0.y > p2.y ? p0.y : p1.y > p2.y ? p1.y : p2.y;
 	}
 	
-	private static float doGetMaximumZ(final Point3 p0, final Point3 p1, final Point3 p2) {
+	private static float doGetMaximumZ(final Point3F p0, final Point3F p1, final Point3F p2) {
 		return p0.z > p1.z && p0.z > p2.z ? p0.z : p1.z > p2.z ? p1.z : p2.z;
 	}
 	
-	private static float doGetMinimumX(final Point3 p0, final Point3 p1, final Point3 p2) {
+	private static float doGetMinimumX(final Point3F p0, final Point3F p1, final Point3F p2) {
 		return p0.x < p1.x && p0.x < p2.x ? p0.x : p1.x < p2.x ? p1.x : p2.x;
 	}
 	
-	private static float doGetMinimumY(final Point3 p0, final Point3 p1, final Point3 p2) {
+	private static float doGetMinimumY(final Point3F p0, final Point3F p1, final Point3F p2) {
 		return p0.y < p1.y && p0.y < p2.y ? p0.y : p1.y < p2.y ? p1.y : p2.y;
 	}
 	
-	private static float doGetMinimumZ(final Point3 p0, final Point3 p1, final Point3 p2) {
+	private static float doGetMinimumZ(final Point3F p0, final Point3F p1, final Point3F p2) {
 		return p0.z < p1.z && p0.z < p2.z ? p0.z : p1.z < p2.z ? p1.z : p2.z;
 	}
 	

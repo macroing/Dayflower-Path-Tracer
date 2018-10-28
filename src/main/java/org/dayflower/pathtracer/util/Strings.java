@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,6 +18,8 @@
  */
 package org.dayflower.pathtracer.util;
 
+import java.text.DecimalFormat;
+
 /**
  * A class that consists exclusively of static methods that operates on or returns {@code String}s.
  * 
@@ -25,6 +27,10 @@ package org.dayflower.pathtracer.util;
  * @author J&#246;rgen Lundgren
  */
 public final class Strings {
+	private static final DecimalFormat DECIMAL_FORMAT = doCreateDecimalFormat();
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private Strings() {
 		
 	}
@@ -50,5 +56,28 @@ public final class Strings {
 		}
 		
 		return stringBuilder.toString();
+	}
+	
+	/**
+	 * Returns a {@code String} representation of {@code value} without scientific notation.
+	 * 
+	 * @param value a {@code float} value
+	 * @return a {@code String} representation of {@code value} without scientific notation
+	 */
+	public static String toNonScientificNotation(final float value) {
+		return DECIMAL_FORMAT.format(value).replace(',', '.');
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static DecimalFormat doCreateDecimalFormat() {
+		final
+		DecimalFormat decimalFormat = new DecimalFormat("#");
+		decimalFormat.setDecimalSeparatorAlwaysShown(true);
+		decimalFormat.setMaximumFractionDigits(8);
+		decimalFormat.setMinimumFractionDigits(1);
+		decimalFormat.setMinimumIntegerDigits(1);
+		
+		return decimalFormat;
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,7 +18,7 @@
  */
 package org.dayflower.pathtracer.color;
 
-import static org.dayflower.pathtracer.math.Math2.max;
+import static org.dayflower.pathtracer.math.MathF.max;
 
 /**
  * A {@code ToneMapper} is an abstraction of a Tone Mapping operator to be applied on a {@link Color}.

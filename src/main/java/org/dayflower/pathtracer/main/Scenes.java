@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -18,8 +18,8 @@
  */
 package org.dayflower.pathtracer.main;
 
-import static org.dayflower.pathtracer.math.Math2.max;
-import static org.dayflower.pathtracer.math.Math2.min;
+import static org.dayflower.pathtracer.math.MathF.max;
+import static org.dayflower.pathtracer.math.MathF.min;
 
 import java.io.File;
 import java.util.HashMap;
@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.math.Point2;
-import org.dayflower.pathtracer.math.Point3;
-import org.dayflower.pathtracer.math.Vector3;
+import org.dayflower.pathtracer.math.Point2F;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Surface;
@@ -90,9 +90,6 @@ final class Scenes {
 			case "Test_Scene":
 			case "Test_Scene.scene":
 				return newTestScene();
-			case "Water_Scene":
-			case "Water_Scene.scene":
-				return newWaterScene();
 			default:
 				return newMaterialShowcaseScene();
 		}
@@ -102,20 +99,24 @@ final class Scenes {
 		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);
 		
-		final Texture textureCarAlbedo = new SolidTexture(Color.BLACK);
+		final Texture textureCarAlbedo = new SolidTexture(Color.GRAY);
 		final Texture textureCarNormalMap = new SolidTexture(Color.BLACK);
 		final Texture textureCarWindGlass = new SolidTexture(Color.WHITE);
 		final Texture textureCarBodyPaint = new SolidTexture(Color.RED);
 		final Texture textureCarChrome = new SolidTexture(Color.GRAY);
 		final Texture textureCarDriver = new SolidTexture(new Color(227, 161, 115));
 		final Texture textureCarDoorLine = new SolidTexture(Color.RED);
-		final Texture textureCarTireBack = new SolidTexture(Color.BLACK);
-		final Texture textureCarTireTread = new SolidTexture(Color.BLACK);
-		final Texture textureCarTireSidewall = new SolidTexture(Color.BLACK);
+		final Texture textureCarTireBack = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
+		final Texture textureCarTireTread = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
+		final Texture textureCarTireSidewall = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
 		final Texture textureCarMisc = new SolidTexture(Color.GRAY);
 		final Texture textureCarMaterial = new SolidTexture(Color.GRAY);
+		final Texture textureCarLicense = new SolidTexture(Color.WHITE);
+		final Texture textureCarLicense0 = new SolidTexture(Color.WHITE);
+		final Texture textureCarInterior = new SolidTexture(new Color(222, 184, 135));
+		final Texture textureCarInterior0 = new SolidTexture(new Color(222, 184, 135));
 		
-		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarAlbedo, textureCarNormalMap);
+		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarAlbedo, textureCarNormalMap);
 		
 		final Map<String, Surface> surfaces = new HashMap<>();
 		
@@ -151,13 +152,17 @@ final class Scenes {
 		surfaces.put("Material__597", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
 		surfaces.put("Material__598", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
 		surfaces.put("Material__600", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarMaterial, textureCarNormalMap));
+		surfaces.put("License", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarLicense, textureCarNormalMap));
+		surfaces.put("License0", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarLicense0, textureCarNormalMap));
+		surfaces.put("Interior", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarInterior, textureCarNormalMap));
+		surfaces.put("Interior0", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarInterior0, textureCarNormalMap));
 		
 		//			wind_glass
 		//			Body_paint
 		//			Misc
 		//			Misc0
 		//			Material__583
-		//License
+		//			License
 		//			Material__586
 		//			Material__589
 		//			DoorLine
@@ -168,7 +173,7 @@ final class Scenes {
 		//			Misc_Chrome1
 		//Black
 		//			Body_paint0
-		//Bottom
+		//			Bottom
 		//Brake_Pads
 		//Brake_Disc
 		//Brake_Pads0
@@ -183,9 +188,9 @@ final class Scenes {
 		//			Misc4
 		//			Misc_Chrome3
 		//			Body_paint2
-		//Interior
+		//			Interior
 		//			Material__597
-		//Interior0
+		//			Interior0
 		//			Misc_Chrome4
 		//			Material__598
 		//			Body_paint3
@@ -193,21 +198,27 @@ final class Scenes {
 		//			Tire_Tread
 		//			Tire_Sidewall
 		//			Material__600
-		//License0
+		//			License0
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("SL500.obj"), 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> {
+//			if(materialName.equals("Body_paint")) {
+//				return surfaces.getOrDefault(materialName, surface);
+//			}
+			
+			return surfaces.getOrDefault(materialName, surface);
+		}, Dayflower.getModelFilename("SL500.obj"), 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		
 		final
 		Scene scene = new Scene("Car_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
 		
-		final Vector3 v = Vector3.z();
-		final Vector3 w = Vector3.y();
+		final Vector3F w = Vector3F.y();
+		final Vector3F v = Vector3F.z();
 		
 		for(final Triangle triangle : triangles) {
-			scene.addShape(triangle.rotate(v, w).translateY(10.0F));
+			scene.addShape(triangle.rotate(w, v).translateY(10.0F));
 		}
 		
 		return scene;
@@ -227,15 +238,15 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Cornell_Box_Scene");
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo0, textureNormal), 1.0e4F, new Point3(1.0e4F + 1.0F, 40.8F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo1, textureNormal), 1.0e4F, new Point3(-1.0e4F + 99.0F, 40.8F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo2, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, 1.0e4F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo3, textureNormal), 1.0e4F, new Point3(50.0F, 40.8F, -1.0e4F + 170.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo4, textureNormal), 1.0e4F, new Point3(50.0F, 1.0e4F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo5, textureNormal), 1.0e4F, new Point3(50.0F, -1.0e4F + 81.6F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.PHONG_METAL, textureAlbedo6, textureNormal), 16.5F, new Point3(27.0F, 16.5F, 47.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, textureAlbedo7, textureNormal), 16.5F, new Point3(73.0F, 16.5F, 78.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(12.0F, 12.0F, 12.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo8, textureNormal), 600.0F, new Point3(50.0F, 681.6F - 0.27F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo0, textureNormal), 1.0e4F, new Point3F(1.0e4F + 1.0F, 40.8F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo1, textureNormal), 1.0e4F, new Point3F(-1.0e4F + 99.0F, 40.8F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo2, textureNormal), 1.0e4F, new Point3F(50.0F, 40.8F, 1.0e4F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo3, textureNormal), 1.0e4F, new Point3F(50.0F, 40.8F, -1.0e4F + 170.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo4, textureNormal), 1.0e4F, new Point3F(50.0F, 1.0e4F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo5, textureNormal), 1.0e4F, new Point3F(50.0F, -1.0e4F + 81.6F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.PHONG_METAL, textureAlbedo6, textureNormal), 16.5F, new Point3F(27.0F, 16.5F, 47.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, textureAlbedo7, textureNormal), 16.5F, new Point3F(73.0F, 16.5F, 78.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(12.0F, 12.0F, 12.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo8, textureNormal), 600.0F, new Point3F(50.0F, 681.6F - 0.27F, 81.6F)));
 		
 		return scene;
 	}
@@ -261,7 +272,7 @@ final class Scenes {
 		final
 		Scene scene = new Scene("Cornell_Box_Scene_2");
 		scene.addShape(doCreateTriangle(surface0, 0.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F));
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
 		
 		return scene;
 	}
@@ -291,12 +302,12 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Girl_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture3, texture4), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 80.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 120.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 160.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture7, texture4), 16.5F, new Point3(20.0F, 16.5F, 200.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture3, texture4), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 40.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 80.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 120.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 160.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 200.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
@@ -341,7 +352,7 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("House_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture0, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture0, textureNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
@@ -365,7 +376,7 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("House_Scene_2");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
@@ -410,11 +421,11 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("House_Scene_3");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 1.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3(2.0F, 180.0F, 2.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 10.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3(2.0F, 180.0F, 498.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 1.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3(498.0F, 180.0F, 2.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 10.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3(498.0F, 180.0F, 498.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 1.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3F(2.0F, 180.0F, 2.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 10.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3F(2.0F, 180.0F, 498.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 1.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3F(498.0F, 180.0F, 2.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 10.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3F(498.0F, 180.0F, 498.0F)));
 		scene.addShape(trianglesWall0[0]);
 		scene.addShape(trianglesWall0[1]);
 		scene.addShape(trianglesWall1[0]);
@@ -469,17 +480,17 @@ final class Scenes {
 		final
 		Scene scene = new Scene("Material_Showcase_Scene");
 //		scene.addShape(new Terrain(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 0.5F, 0.8F, -2.0F, 0.0F, 2));
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, texture0, texture3), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture6, texture2), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 80.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 120.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 160.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(5.0F, 5.0F, 5.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3(20.0F, 100.0F, 180.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture1, texture2), 16.5F, new Point3(20.0F, 16.5F, 200.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, texture2, texture2), 16.5F, new Point3(20.0F, 16.5F, 240.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture4, texture5), 16.5F, new Point3(20.0F, 16.5F, 280.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture5), 16.5F, new Point3(20.0F, 16.5F, 320.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture8, texture5), 16.5F, new Point3(20.0F, 16.5F, 360.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, texture0, texture3), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture6, texture2), 16.5F, new Point3F(20.0F, 16.5F, 40.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3F(20.0F, 16.5F, 80.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture1, texture2), 16.5F, new Point3F(20.0F, 16.5F, 120.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture1, texture2), 16.5F, new Point3F(20.0F, 16.5F, 160.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(5.0F, 5.0F, 5.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3F(20.0F, 100.0F, 180.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture1, texture2), 16.5F, new Point3F(20.0F, 16.5F, 200.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, texture2, texture2), 16.5F, new Point3F(20.0F, 16.5F, 240.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture4, texture5), 16.5F, new Point3F(20.0F, 16.5F, 280.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture5), 16.5F, new Point3F(20.0F, 16.5F, 320.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture8, texture5), 16.5F, new Point3F(20.0F, 16.5F, 360.0F)));
 		
 		return scene;
 	}
@@ -498,7 +509,7 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Monkey_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureGroundAlbedo, textureGroundNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F), new Point3(1.0F, 0.0F, 0.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureGroundAlbedo, textureGroundNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(100.0F));
@@ -521,7 +532,7 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Sponza_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(1.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
@@ -544,7 +555,7 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Terrain_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(1.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
@@ -561,23 +572,8 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Test_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoGround, textureNormalGround), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoSphere, textureNormalSphere), 16.5F, new Point3(20.0F, 16.5F, 40.0F)));
-		
-		return scene;
-	}
-	
-	public static Scene newWaterScene() {
-		final Texture textureAlbedoLight = new SolidTexture(Color.WHITE);
-		final Texture textureAlbedoSand = new CheckerboardTexture(Color.BLUE, Color.GRAY, 0.08F, 0.08F);
-		final Texture textureAlbedoWater = new SolidTexture(new Color(0.0F, 0.0F, 0.1F));
-		final Texture textureNormal = new SolidTexture(Color.BLACK);
-		
-		final
-		Scene scene = new Scene("Sponza_Scene");
-		scene.addShape(new Sphere(Surface.getInstance(new Color(5.0F, 20.0F, 5.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoLight, textureNormal), 16.5F, new Point3(20.0F, 100.0F, 180.0F)));
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.WATER, textureAlbedoWater, textureNormal), new Point3(0.0F, 10.0F, 0.0F), new Point3(1.0F, 10.0F, 0.0F), new Point3(0.0F, 10.0F, 1.0F)));
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoSand, textureNormal), new Point3(0.0F, 0.0F, 0.0F), new Point3(1.0F, 0.0F, 0.0F), new Point3(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoGround, textureNormalGround), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(1.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoSphere, textureNormalSphere), 16.5F, new Point3F(20.0F, 16.5F, 40.0F)));
 		
 		return scene;
 	}
@@ -585,9 +581,9 @@ final class Scenes {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private static Triangle doCreateTriangle(final Surface surface, final float textureCoordinateAX, final float textureCoordinateAY, final float positionAX, final float positionAY, final float positionAZ, final float surfaceNormalAX, final float surfaceNormalAY, final float surfaceNormalAZ, final float textureCoordinateBX, final float textureCoordinateBY, final float positionBX, final float positionBY, final float positionBZ, final float surfaceNormalBX, final float surfaceNormalBY, final float surfaceNormalBZ, final float textureCoordinateCX, final float textureCoordinateCY, final float positionCX, final float positionCY, final float positionCZ, final float surfaceNormalCX, final float surfaceNormalCY, final float surfaceNormalCZ) {
-		final Vertex a = new Vertex(new Point2(textureCoordinateAX, textureCoordinateAY), new Point3(positionAX, positionAY, positionAZ), new Vector3(surfaceNormalAX, surfaceNormalAY, surfaceNormalAZ));
-		final Vertex b = new Vertex(new Point2(textureCoordinateBX, textureCoordinateBY), new Point3(positionBX, positionBY, positionBZ), new Vector3(surfaceNormalBX, surfaceNormalBY, surfaceNormalBZ));
-		final Vertex c = new Vertex(new Point2(textureCoordinateCX, textureCoordinateCY), new Point3(positionCX, positionCY, positionCZ), new Vector3(surfaceNormalCX, surfaceNormalCY, surfaceNormalCZ));
+		final Vertex a = new Vertex(new Point2F(textureCoordinateAX, textureCoordinateAY), new Point3F(positionAX, positionAY, positionAZ), new Vector3F(surfaceNormalAX, surfaceNormalAY, surfaceNormalAZ));
+		final Vertex b = new Vertex(new Point2F(textureCoordinateBX, textureCoordinateBY), new Point3F(positionBX, positionBY, positionBZ), new Vector3F(surfaceNormalBX, surfaceNormalBY, surfaceNormalBZ));
+		final Vertex c = new Vertex(new Point2F(textureCoordinateCX, textureCoordinateCY), new Point3F(positionCX, positionCY, positionCZ), new Vector3F(surfaceNormalCX, surfaceNormalCY, surfaceNormalCZ));
 		
 		return new Triangle(surface, a, b, c);
 	}
@@ -599,13 +595,13 @@ final class Scenes {
 		final float maxX = max(x0, x1);
 		final float maxY = max(y0, y1);
 		
-		final Point3 position0 = new Point3(minX, maxY, z);
-		final Point3 position1 = new Point3(minX, minY, z);
-		final Point3 position2 = new Point3(maxX, minY, z);
-		final Point3 position3 = new Point3(maxX, maxY, z);
+		final Point3F position0 = new Point3F(minX, maxY, z);
+		final Point3F position1 = new Point3F(minX, minY, z);
+		final Point3F position2 = new Point3F(maxX, minY, z);
+		final Point3F position3 = new Point3F(maxX, maxY, z);
 		
-		final Vector3 surfaceNormal0 = Vector3.normalNormalized(position0, position1, position2);
-		final Vector3 surfaceNormal1 = Vector3.normalNormalized(position2, position3, position0);
+		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
+		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
 		
 		final Triangle triangle0 = doCreateTriangle(surface, 0.0F, 0.0F, minX, maxY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, minX, minY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, maxX, minY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
 		final Triangle triangle1 = doCreateTriangle(surface, 1.0F, 1.0F, maxX, minY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, maxX, maxY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, minX, maxY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
@@ -620,13 +616,13 @@ final class Scenes {
 		final float maxX = max(x0, x1);
 		final float maxZ = max(z0, z1);
 		
-		final Point3 position0 = new Point3(minX, y, maxZ);
-		final Point3 position1 = new Point3(minX, y, minZ);
-		final Point3 position2 = new Point3(maxX, y, minZ);
-		final Point3 position3 = new Point3(maxX, y, maxZ);
+		final Point3F position0 = new Point3F(minX, y, maxZ);
+		final Point3F position1 = new Point3F(minX, y, minZ);
+		final Point3F position2 = new Point3F(maxX, y, minZ);
+		final Point3F position3 = new Point3F(maxX, y, maxZ);
 		
-		final Vector3 surfaceNormal0 = Vector3.normalNormalized(position0, position1, position2);
-		final Vector3 surfaceNormal1 = Vector3.normalNormalized(position2, position3, position0);
+		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
+		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
 		
 		final Triangle triangle0 = doCreateTriangle(surface, 0.0F, 0.0F, minX, y, maxZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, minX, y, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, maxX, y, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
 		final Triangle triangle1 = doCreateTriangle(surface, 1.0F, 1.0F, maxX, y, minZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, maxX, y, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, minX, y, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
@@ -641,13 +637,13 @@ final class Scenes {
 		final float maxY = max(y0, y1);
 		final float maxZ = max(z0, z1);
 		
-		final Point3 position0 = new Point3(x, minY, maxZ);
-		final Point3 position1 = new Point3(x, minY, minZ);
-		final Point3 position2 = new Point3(x, maxY, minZ);
-		final Point3 position3 = new Point3(x, maxY, maxZ);
+		final Point3F position0 = new Point3F(x, minY, maxZ);
+		final Point3F position1 = new Point3F(x, minY, minZ);
+		final Point3F position2 = new Point3F(x, maxY, minZ);
+		final Point3F position3 = new Point3F(x, maxY, maxZ);
 		
-		final Vector3 surfaceNormal0 = Vector3.normalNormalized(position0, position1, position2);
-		final Vector3 surfaceNormal1 = Vector3.normalNormalized(position2, position3, position0);
+		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
+		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
 		
 		final Triangle triangle0 = doCreateTriangle(surface, 0.0F, 0.0F, x, minY, maxZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, x, minY, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, x, maxY, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
 		final Triangle triangle1 = doCreateTriangle(surface, 1.0F, 1.0F, x, maxY, minZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, x, maxY, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, x, minY, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);

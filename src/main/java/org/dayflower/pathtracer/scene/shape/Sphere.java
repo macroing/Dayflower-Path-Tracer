@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -20,7 +20,7 @@ package org.dayflower.pathtracer.scene.shape;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.math.Point3;
+import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
 
@@ -32,7 +32,7 @@ import org.dayflower.pathtracer.scene.Surface;
  */
 public final class Sphere extends Shape {
 	private final float radius;
-	private final Point3 position;
+	private final Point3F position;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -46,7 +46,7 @@ public final class Sphere extends Shape {
 	 * @param position the position of this {@code Sphere}
 	 * @throws NullPointerException thrown if, and only if, either {@code surface} or {@code position} are {@code null}
 	 */
-	public Sphere(final Surface surface, final float radius, final Point3 position) {
+	public Sphere(final Surface surface, final float radius, final Point3F position) {
 		super(surface);
 		
 		this.radius = radius;
@@ -140,7 +140,7 @@ public final class Sphere extends Shape {
 	 * 
 	 * @return the center position of this {@code Sphere}
 	 */
-	public Point3 getPosition() {
+	public Point3F getPosition() {
 		return this.position;
 	}
 	

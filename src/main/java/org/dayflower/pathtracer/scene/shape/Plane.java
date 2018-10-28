@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -20,8 +20,8 @@ package org.dayflower.pathtracer.scene.shape;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.math.Point3;
-import org.dayflower.pathtracer.math.Vector3;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
 
@@ -33,24 +33,24 @@ import org.dayflower.pathtracer.scene.Surface;
  */
 public final class Plane extends Shape {
 	/**
-	 * A {@link Point3} denoting the point A.
+	 * A {@link Point3F} denoting the point A.
 	 */
-	public final Point3 a;
+	public final Point3F a;
 	
 	/**
-	 * A {@link Point3} denoting the point B.
+	 * A {@link Point3F} denoting the point B.
 	 */
-	public final Point3 b;
+	public final Point3F b;
 	
 	/**
-	 * A {@link Point3} denoting the point C.
+	 * A {@link Point3F} denoting the point C.
 	 */
-	public final Point3 c;
+	public final Point3F c;
 	
 	/**
 	 * The surface normal.
 	 */
-	public final Vector3 surfaceNormal;
+	public final Vector3F surfaceNormal;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -60,18 +60,18 @@ public final class Plane extends Shape {
 	 * If either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param surface a {@link Surface} denoting the surface of this {@code Plane}
-	 * @param a a {@link Point3} denoting the point A
+	 * @param a a {@link Point3F} denoting the point A
 	 * @param b a {@code Point3} denoting the point A
 	 * @param c a {@code Point3} denoting the point A
 	 * @throws NullPointerException thrown if, and only if, either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}
 	 */
-	public Plane(final Surface surface, final Point3 a, final Point3 b, final Point3 c) {
+	public Plane(final Surface surface, final Point3F a, final Point3F b, final Point3F c) {
 		super(surface);
 		
 		this.a = Objects.requireNonNull(a, "a == null");
 		this.b = Objects.requireNonNull(b, "b == null");
 		this.c = Objects.requireNonNull(c, "c == null");
-		this.surfaceNormal = Vector3.normalNormalized(this.a, this.b, this.c);
+		this.surfaceNormal = Vector3F.normalNormalized(this.a, this.b, this.c);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +120,7 @@ public final class Plane extends Shape {
 	 * 
 	 * @return the point A
 	 */
-	public Point3 getA() {
+	public Point3F getA() {
 		return this.a;
 	}
 	
@@ -129,7 +129,7 @@ public final class Plane extends Shape {
 	 * 
 	 * @return the point B
 	 */
-	public Point3 getB() {
+	public Point3F getB() {
 		return this.b;
 	}
 	
@@ -138,7 +138,7 @@ public final class Plane extends Shape {
 	 * 
 	 * @return the point C
 	 */
-	public Point3 getC() {
+	public Point3F getC() {
 		return this.c;
 	}
 	
@@ -157,7 +157,7 @@ public final class Plane extends Shape {
 	 * 
 	 * @return the surface normal
 	 */
-	public Vector3 getSurfaceNormal() {
+	public Vector3F getSurfaceNormal() {
 		return this.surfaceNormal;
 	}
 }

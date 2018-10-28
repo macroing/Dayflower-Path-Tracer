@@ -1,5 +1,5 @@
 /**
- * Copyright 2009 - 2018 J&#246;rgen Lundgren
+ * Copyright 2015 - 2018 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -31,4 +31,26 @@ public abstract class ColorSpace {
 	protected ColorSpace() {
 		
 	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Call this method to redo Gamma Correction on {@code value}.
+	 * <p>
+	 * Returns {@code value} with Gamma Correction.
+	 * 
+	 * @param value a {@code float} value
+	 * @return {@code value} with Gamma Correction
+	 */
+	public abstract float redoGammaCorrection(final float value);
+	
+	/**
+	 * Call this method to undo Gamma Correction on {@code value}.
+	 * <p>
+	 * Returns {@code value} without Gamma Correction.
+	 * 
+	 * @param value a {@code float} value
+	 * @return {@code value} without Gamma Correction
+	 */
+	public abstract float undoGammaCorrection(final float value);
 }
