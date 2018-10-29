@@ -141,7 +141,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		Camera camera = this.camera;
 		camera.setApertureRadius(0.0F);
 		camera.setEye(55.0F, 42.0F, 155.6F);
-		camera.setFieldOfViewX(70.0F);
+		camera.setFieldOfViewX(90.0F);
 		camera.setFocalDistance(30.0F);
 		camera.setPitch(AngleF.pitch(Vector3F.x()));
 		camera.setResolution(getKernelWidth(), getKernelHeight());

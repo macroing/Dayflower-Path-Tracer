@@ -315,7 +315,10 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public void changePitch(final AngleF pitch) {
-		setPitch(getPitch().add(pitch));
+		final float degrees = max(min(getPitch().degrees + pitch.degrees, 89.99F), -89.99F);
+		
+		setPitch(AngleF.degrees(degrees, -89.99F, 89.99F));
+//		setPitch(getPitch().add(pitch));
 	}
 	
 //	TODO: Add Javadocs.
