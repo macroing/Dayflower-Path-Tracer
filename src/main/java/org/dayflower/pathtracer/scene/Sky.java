@@ -20,13 +20,9 @@ package org.dayflower.pathtracer.scene;
 
 import static org.dayflower.pathtracer.math.MathF.PI;
 import static org.dayflower.pathtracer.math.MathF.acos;
-import static org.dayflower.pathtracer.math.MathF.cos;
-import static org.dayflower.pathtracer.math.MathF.exp;
 import static org.dayflower.pathtracer.math.MathF.max;
-import static org.dayflower.pathtracer.math.MathF.pow;
 import static org.dayflower.pathtracer.math.MathF.saturate;
 import static org.dayflower.pathtracer.math.MathF.sin;
-import static org.dayflower.pathtracer.math.MathF.tan;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 
@@ -58,17 +54,17 @@ public final class Sky {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private Color sunColor;
+	private double zenithRelativeLuminance;
+	private double zenithX;
+	private double zenithY;
+	private final double[] perezRelativeLuminance = new double[5];
+	private final double[] perezX = new double[5];
+	private final double[] perezY = new double[5];
 	private float jacobian;
 	private float theta;
 	private float turbidity;
-	private float zenithRelativeLuminance;
-	private float zenithX;
-	private float zenithY;
 	private float[] colHistogram;
 	private float[] imageHistogram;
-	private final float[] perezRelativeLuminance = new float[5];
-	private final float[] perezX = new float[5];
-	private final float[] perezY = new float[5];
 	private final int imageHistogramHeight = 32;
 	private final int imageHistogramWidth = 32;
 	private final int samples = 4;
@@ -88,6 +84,36 @@ public final class Sky {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
+	public double getZenithRelativeLuminance() {
+		return this.zenithRelativeLuminance;
+	}
+	
+//	TODO: Add Javadocs.
+	public double getZenithX() {
+		return this.zenithX;
+	}
+	
+//	TODO: Add Javadocs.
+	public double getZenithY() {
+		return this.zenithY;
+	}
+	
+//	TODO: Add Javadocs.
+	public double[] getPerezRelativeLuminance() {
+		return this.perezRelativeLuminance.clone();
+	}
+	
+//	TODO: Add Javadocs.
+	public double[] getPerezX() {
+		return this.perezX.clone();
+	}
+	
+//	TODO: Add Javadocs.
+	public double[] getPerezY() {
+		return this.perezY.clone();
+	}
+	
+//	TODO: Add Javadocs.
 	public float getJacobian() {
 		return this.jacobian;
 	}
@@ -103,21 +129,6 @@ public final class Sky {
 	}
 	
 //	TODO: Add Javadocs.
-	public float getZenithRelativeLuminance() {
-		return this.zenithRelativeLuminance;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getZenithX() {
-		return this.zenithX;
-	}
-	
-//	TODO: Add Javadocs.
-	public float getZenithY() {
-		return this.zenithY;
-	}
-	
-//	TODO: Add Javadocs.
 	public float[] getColHistogram() {
 		return this.colHistogram;
 	}
@@ -125,21 +136,6 @@ public final class Sky {
 //	TODO: Add Javadocs.
 	public float[] getImageHistogram() {
 		return this.imageHistogram;
-	}
-	
-//	TODO: Add Javadocs.
-	public float[] getPerezRelativeLuminance() {
-		return this.perezRelativeLuminance.clone();
-	}
-	
-//	TODO: Add Javadocs.
-	public float[] getPerezX() {
-		return this.perezX.clone();
-	}
-	
-//	TODO: Add Javadocs.
-	public float[] getPerezY() {
-		return this.perezY.clone();
 	}
 	
 //	TODO: Add Javadocs.
@@ -184,7 +180,7 @@ public final class Sky {
 	
 //	TODO: Add Javadocs.
 	public void set() {
-		set(new Vector3F(1.0F, 1.0F, 1.0F).normalize());
+		set(new Vector3F(1.0F, 1.0F, 1.0F));
 	}
 	
 //	TODO: Add Javadocs.
@@ -208,30 +204,30 @@ public final class Sky {
 			this.sunColor = Color.BLACK;
 		}
 		
-		final float theta = this.theta;
-		final float theta2 = theta * theta;
-		final float theta3 = theta * theta * theta;
-		final float turbidity2 = turbidity * turbidity;
-		final float chi = (4.0F / 9.0F - turbidity / 120.0F) * (PI - 2.0F * this.theta);
+		final double theta = this.theta;
+		final double theta2 = theta * theta;
+		final double theta3 = theta * theta * theta;
+		final double turbidity2 = turbidity * turbidity;
+		final double chi = (4.0D / 9.0D - turbidity / 120.0D) * (PI - 2.0D * this.theta);
 		
-		this.zenithRelativeLuminance = ((4.0453F * turbidity - 4.9710F) * tan(chi) - 0.2155F * turbidity + 2.4192F) * 1000.0F;
-		this.zenithX = (0.00165F * theta3 - 0.00374F * theta2 + 0.00208F * theta + 0.0F) * turbidity2 + (-0.02902F * theta3 + 0.06377F * theta2 - 0.03202F * theta + 0.00394F) * turbidity + (0.11693F * theta3 - 0.21196F * theta2 + 0.06052F * theta + 0.25885F);
-		this.zenithY = (0.00275F * theta3 - 0.00610F * theta2 + 0.00316F * theta + 0.0F) * turbidity2 + (-0.04212F * theta3 + 0.08970F * theta2 - 0.04153F * theta + 0.00515F) * turbidity + (0.15346F * theta3 - 0.26756F * theta2 + 0.06669F * theta + 0.26688F);
-		this.perezRelativeLuminance[0] = 0.17872F * turbidity - 1.46303F;
-		this.perezRelativeLuminance[1] = -0.35540F * turbidity + 0.42749F;
-		this.perezRelativeLuminance[2] = -0.02266F * turbidity + 5.32505F;
-		this.perezRelativeLuminance[3] = 0.12064F * turbidity - 2.57705F;
-		this.perezRelativeLuminance[4] = -0.06696F * turbidity + 0.37027F;
-		this.perezX[0] = -0.01925F * turbidity - 0.25922F;
-		this.perezX[1] = -0.06651F * turbidity + 0.00081F;
-		this.perezX[2] = -0.00041F * turbidity + 0.21247F;
-		this.perezX[3] = -0.06409F * turbidity - 0.89887F;
-		this.perezX[4] = -0.00325F * turbidity + 0.04517F;
-		this.perezY[0] = -0.01669F * turbidity - 0.26078F;
-		this.perezY[1] = -0.09495F * turbidity + 0.00921F;
-		this.perezY[2] = -0.00792F * turbidity + 0.21023F;
-		this.perezY[3] = -0.04405F * turbidity - 1.65369F;
-		this.perezY[4] = -0.01092F * turbidity + 0.05291F;
+		this.zenithRelativeLuminance = ((4.0453D * turbidity - 4.9710D) * Math.tan(chi) - 0.2155D * turbidity + 2.4192D) * 1000.0D;
+		this.zenithX = (0.00165D * theta3 - 0.00374D * theta2 + 0.00208D * theta + 0.0D) * turbidity2 + (-0.02902D * theta3 + 0.06377D * theta2 - 0.03202D * theta + 0.00394D) * turbidity + (0.11693D * theta3 - 0.21196D * theta2 + 0.06052D * theta + 0.25885D);
+		this.zenithY = (0.00275D * theta3 - 0.00610D * theta2 + 0.00316D * theta + 0.0D) * turbidity2 + (-0.04212D * theta3 + 0.08970D * theta2 - 0.04153D * theta + 0.00515D) * turbidity + (0.15346D * theta3 - 0.26756D * theta2 + 0.06669D * theta + 0.26688D);
+		this.perezRelativeLuminance[0] = 0.17872D * turbidity - 1.46303D;
+		this.perezRelativeLuminance[1] = -0.35540D * turbidity + 0.42749D;
+		this.perezRelativeLuminance[2] = -0.02266D * turbidity + 5.32505D;
+		this.perezRelativeLuminance[3] = 0.12064D * turbidity - 2.57705D;
+		this.perezRelativeLuminance[4] = -0.06696D * turbidity + 0.37027D;
+		this.perezX[0] = -0.01925D * turbidity - 0.25922D;
+		this.perezX[1] = -0.06651D * turbidity + 0.00081D;
+		this.perezX[2] = -0.00041D * turbidity + 0.21247D;
+		this.perezX[3] = -0.06409D * turbidity - 0.89887D;
+		this.perezX[4] = -0.00325D * turbidity + 0.04517D;
+		this.perezY[0] = -0.01669D * turbidity - 0.26078D;
+		this.perezY[1] = -0.09495D * turbidity + 0.00921D;
+		this.perezY[2] = -0.00792D * turbidity + 0.21023D;
+		this.perezY[3] = -0.04405D * turbidity - 1.65369D;
+		this.perezY[4] = -0.01092D * turbidity + 0.05291D;
 		
 		final int w = this.imageHistogramWidth;
 		final int h = this.imageHistogramHeight;
@@ -299,24 +295,24 @@ public final class Sky {
 		
 		final Vector3F direction0 = new Vector3F(direction.x, direction.y, max(direction.z, 0.001F)).normalize();
 		
-		final float theta = acos(saturate(direction0.z, -1.0F, 1.0F));
-		final float gamma = acos(saturate(direction0.dotProduct(this.sunDirection), -1.0F, 1.0F));
-		final float relativeLuminance = doCalculatePerezFunction(this.perezRelativeLuminance, theta, gamma, this.zenithRelativeLuminance) * 1.0e-4F;
-		final float x = doCalculatePerezFunction(this.perezX, theta, gamma, this.zenithX);
-		final float y = doCalculatePerezFunction(this.perezY, theta, gamma, this.zenithY);
+		final double theta = Math.acos(saturate(direction0.z, -1.0F, 1.0F));
+		final double gamma = Math.acos(saturate(direction0.dotProduct(this.sunDirection), -1.0F, 1.0F));
+		final double relativeLuminance = doCalculatePerezFunction(this.perezRelativeLuminance, theta, gamma, this.zenithRelativeLuminance) * 1.0e-4F;
+		final double x = doCalculatePerezFunction(this.perezX, theta, gamma, this.zenithX);
+		final double y = doCalculatePerezFunction(this.perezY, theta, gamma, this.zenithY);
 		
-		final Color color = ChromaticSpectralCurve.getXYZ(x, y);
+		final Color color = ChromaticSpectralCurve.getXYZ((float)(x), (float)(y));
 		
-		final float x0 = color.r * relativeLuminance / color.g;
-		final float y0 = relativeLuminance;
-		final float z0 = color.b * relativeLuminance / color.g;
+		final float x0 = (float)(color.r * relativeLuminance / color.g);
+		final float y0 = (float)(relativeLuminance);
+		final float z0 = (float)(color.b * relativeLuminance / color.g);
 		
 		return RGBColorSpace.SRGB.convertXYZToRGB(new Color(x0, y0, z0));
 	}
 	
-	private float doCalculatePerezFunction(final float[] lam, final float theta, final float gamma, final float lvz) {
-		final float den = ((1.0F + lam[0] * exp(lam[1])) * (1.0F + lam[2] * exp(lam[3] * this.theta) + lam[4] * cos(this.theta) * cos(this.theta)));
-		final float num = ((1.0F + lam[0] * exp(lam[1] / cos(theta))) * (1.0F + lam[2] * exp(lam[3] * gamma) + lam[4] * cos(gamma) * cos(gamma)));
+	private double doCalculatePerezFunction(final double[] lam, final double theta, final double gamma, final double lvz) {
+		final double den = ((1.0D + lam[0] * Math.exp(lam[1])) * (1.0D + lam[2] * Math.exp(lam[3] * this.theta) + lam[4] * Math.cos(this.theta) * Math.cos(this.theta)));
+		final double num = ((1.0D + lam[0] * Math.exp(lam[1] / Math.cos(theta))) * (1.0D + lam[2] * Math.exp(lam[3] * gamma) + lam[4] * Math.cos(gamma) * Math.cos(gamma)));
 		
 		return lvz * num / den;
 	}
@@ -326,21 +322,21 @@ public final class Sky {
 	private static SpectralCurve doCalculateAttenuatedSunlight(final float theta, final float turbidity) {
 		final float[] spectrum = new float[91];
 		
-		final float alpha = 1.3F;
-		final float lozone = 0.35F;
-		final float w = 2.0F;
-		final float beta = 0.04608365822050F * turbidity - 0.04586025928522F;
-		final float relativeOpticalMass = 1.0F / (cos(theta) + 0.000940F * pow(1.6386F - theta, -1.253F));
+		final double alpha = 1.3D;
+		final double lozone = 0.35D;
+		final double w = 2.0D;
+		final double beta = 0.04608365822050D * turbidity - 0.04586025928522D;
+		final double relativeOpticalMass = 1.0D / (Math.cos(theta) + 0.000940D * Math.pow(1.6386D - theta, -1.253D));
 		
 		for(int i = 0, lambda = 350; lambda <= 800; i++, lambda += 5) {
-			final float tauRayleighScattering = exp(-relativeOpticalMass * 0.008735F * pow(lambda / 1000.0F, -4.08F));
-			final float tauAerosolAttenuation = exp(-relativeOpticalMass * beta * pow(lambda / 1000.0F, -alpha));
-			final float tauOzoneAbsorptionAttenuation = exp(-relativeOpticalMass * K_O_SPECTRAL_CURVE.sample(lambda) * lozone);
-			final float tauGasAbsorptionAttenuation = exp(-1.41F * K_G_SPECTRAL_CURVE.sample(lambda) * relativeOpticalMass / pow(1.0F + 118.93F * K_G_SPECTRAL_CURVE.sample(lambda) * relativeOpticalMass, 0.45F));
-			final float tauWaterVaporAbsorptionAttenuation = exp(-0.2385F * K_WA_SPECTRAL_CURVE.sample(lambda) * w * relativeOpticalMass / pow(1.0F + 20.07F * K_WA_SPECTRAL_CURVE.sample(lambda) * w * relativeOpticalMass, 0.45F));
-			final float amplitude = SOL_SPECTRAL_CURVE.sample(lambda) * tauRayleighScattering * tauAerosolAttenuation * tauOzoneAbsorptionAttenuation * tauGasAbsorptionAttenuation * tauWaterVaporAbsorptionAttenuation;
+			final double tauRayleighScattering = Math.exp(-relativeOpticalMass * 0.008735D * Math.pow(lambda / 1000.0D, -4.08D));
+			final double tauAerosolAttenuation = Math.exp(-relativeOpticalMass * beta * Math.pow(lambda / 1000.0D, -alpha));
+			final double tauOzoneAbsorptionAttenuation = Math.exp(-relativeOpticalMass * K_O_SPECTRAL_CURVE.sample(lambda) * lozone);
+			final double tauGasAbsorptionAttenuation = Math.exp(-1.41D * K_G_SPECTRAL_CURVE.sample(lambda) * relativeOpticalMass / Math.pow(1.0D + 118.93D * K_G_SPECTRAL_CURVE.sample(lambda) * relativeOpticalMass, 0.45D));
+			final double tauWaterVaporAbsorptionAttenuation = Math.exp(-0.2385D * K_WA_SPECTRAL_CURVE.sample(lambda) * w * relativeOpticalMass / Math.pow(1.0D + 20.07D * K_WA_SPECTRAL_CURVE.sample(lambda) * w * relativeOpticalMass, 0.45D));
+			final double amplitude = SOL_SPECTRAL_CURVE.sample(lambda) * tauRayleighScattering * tauAerosolAttenuation * tauOzoneAbsorptionAttenuation * tauGasAbsorptionAttenuation * tauWaterVaporAbsorptionAttenuation;
 			
-			spectrum[i] = amplitude;
+			spectrum[i] = (float)(amplitude);
 		}
 		
 		return new RegularSpectralCurve(350.0F, 800.0F, spectrum);

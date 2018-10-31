@@ -37,11 +37,8 @@ import org.dayflower.pathtracer.scene.Sky;
  * @author J&#246;rgen Lundgren
  */
 public final class RendererKernel extends AbstractRendererKernel {
-	private static final float PHONG_EXPONENT = 20.0F;
-	private static final float PHONE_EXPONENT_PLUS_ONE_RECIPROCAL = 1.0F / (PHONG_EXPONENT + 1.0F);
 	private static final float REFRACTIVE_INDEX_AIR = 1.0F;
 	private static final float REFRACTIVE_INDEX_GLASS = 1.5F;
-	private static final float REFRACTIVE_INDEX_WATER = 1.33F;
 	private static final float SIMPLEX_F2 = 0.3660254037844386F;
 	private static final float SIMPLEX_F3 = 1.0F / 3.0F;
 	private static final float SIMPLEX_F4 = 0.30901699437494745F;
@@ -119,9 +116,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private float sunOriginY;
 	private float sunOriginZ;
 	private float theta;
-	private float zenithRelativeLuminance;
-	private float zenithX;
-	private float zenithY;
+	private double zenithRelativeLuminance;
+	private double zenithX;
+	private double zenithY;
 	private final float[] accumulatedPixelColors;
 	@Constant
 	private final float[] boundingVolumeHierarchy;
@@ -136,11 +133,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Local
 	private float[] intersections;
 	@Constant
-	private final float[] perezRelativeLuminance;
+	private final double[] perezRelativeLuminance;
 	@Constant
-	private final float[] perezX;
+	private final double[] perezX;
 	@Constant
-	private final float[] perezY;
+	private final double[] perezY;
 	@Constant
 	private final float[] point2Fs;
 	@Constant
@@ -2443,94 +2440,87 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float dotProduct = direction2X * this.sunDirectionX + direction2Y * this.sunDirectionY + direction2Z * this.sunDirectionZ;
 		
 //		Calculate some theta angles:
-		final float theta0 = this.theta;
-		final float theta1 = acos(max(min(direction2Z, 1.0F), -1.0F));
+		final double theta0 = this.theta;
+		final double theta1 = acos(max(min(direction2Z, 1.0D), -1.0D));
 		
 //		Calculate the cosines of the theta angles:
-		final float cosTheta0 = cos(theta0);
-		final float cosTheta1 = cos(theta1);
-		final float cosTheta1Reciprocal = 1.0F / (cosTheta1 + 0.01F);
+		final double cosTheta0 = cos(theta0);
+		final double cosTheta1 = cos(theta1);
+		final double cosTheta1Reciprocal = 1.0D / (cosTheta1 + 0.01D);
 		
 //		Calculate the gamma:
-		final float gamma = acos(max(min(dotProduct, 1.0F), -1.0F));
+		final double gamma = acos(max(min(dotProduct, 1.0D), -1.0D));
 		
 //		Calculate the cosine of the gamma:
-		final float cosGamma = cos(gamma);
+		final double cosGamma = cos(gamma);
 		
 //		TODO: Write explanation!
-		final float perezRelativeLuminance0 = this.perezRelativeLuminance[0];
-		final float perezRelativeLuminance1 = this.perezRelativeLuminance[1];
-		final float perezRelativeLuminance2 = this.perezRelativeLuminance[2];
-		final float perezRelativeLuminance3 = this.perezRelativeLuminance[3];
-		final float perezRelativeLuminance4 = this.perezRelativeLuminance[4];
+		final double perezRelativeLuminance0 = this.perezRelativeLuminance[0];
+		final double perezRelativeLuminance1 = this.perezRelativeLuminance[1];
+		final double perezRelativeLuminance2 = this.perezRelativeLuminance[2];
+		final double perezRelativeLuminance3 = this.perezRelativeLuminance[3];
+		final double perezRelativeLuminance4 = this.perezRelativeLuminance[4];
 		
 //		TODO: Write explanation!
-		final float zenithRelativeLuminance = this.zenithRelativeLuminance;
+		final double zenithRelativeLuminance = this.zenithRelativeLuminance;
 		
 //		TODO: Write explanation!
-		final float perezX0 = this.perezX[0];
-		final float perezX1 = this.perezX[1];
-		final float perezX2 = this.perezX[2];
-		final float perezX3 = this.perezX[3];
-		final float perezX4 = this.perezX[4];
+		final double perezX0 = this.perezX[0];
+		final double perezX1 = this.perezX[1];
+		final double perezX2 = this.perezX[2];
+		final double perezX3 = this.perezX[3];
+		final double perezX4 = this.perezX[4];
 		
 //		TODO: Write explanation!
-		final float perezY0 = this.perezY[0];
-		final float perezY1 = this.perezY[1];
-		final float perezY2 = this.perezY[2];
-		final float perezY3 = this.perezY[3];
-		final float perezY4 = this.perezY[4];
+		final double perezY0 = this.perezY[0];
+		final double perezY1 = this.perezY[1];
+		final double perezY2 = this.perezY[2];
+		final double perezY3 = this.perezY[3];
+		final double perezY4 = this.perezY[4];
 		
 //		TODO: Write explanation!
-		final float zenithX = this.zenithX;
-		final float zenithY = this.zenithY;
+		final double zenithX = this.zenithX;
+		final double zenithY = this.zenithY;
 		
 //		TODO: Write explanation!
-		final float den0 = ((1.0F + perezRelativeLuminance0 * exp(perezRelativeLuminance1)) * (1.0F + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * theta0) + perezRelativeLuminance4 * cosTheta0 * cosTheta0));
-		final float num0 = ((1.0F + perezRelativeLuminance0 * exp(perezRelativeLuminance1 * cosTheta1Reciprocal)) * (1.0F + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * gamma) + perezRelativeLuminance4 * cosGamma * cosGamma));
-		final float relativeLuminance = zenithRelativeLuminance * num0 / den0 * 1.0e-4F;
+		final double relativeLuminanceDenominator = ((1.0D + perezRelativeLuminance0 * exp(perezRelativeLuminance1)) * (1.0D + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * theta0) + perezRelativeLuminance4 * cosTheta0 * cosTheta0));
+		final double relativeLuminanceNumerator = ((1.0D + perezRelativeLuminance0 * exp(perezRelativeLuminance1 * cosTheta1Reciprocal)) * (1.0D + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * gamma) + perezRelativeLuminance4 * cosGamma * cosGamma));
+		final double relativeLuminance = zenithRelativeLuminance * relativeLuminanceNumerator / relativeLuminanceDenominator * 1.0e-4D;
 		
 //		TODO: Write explanation!
-		final float den1 = ((1.0F + perezX0 * exp(perezX1)) * (1.0F + perezX2 * exp(perezX3 * theta1) + perezX4 * cosTheta0 * cosTheta0));
-		final float num1 = ((1.0F + perezX0 * exp(perezX1 * cosTheta1Reciprocal)) * (1.0F + perezX2 * exp(perezX3 * gamma) + perezX4 * cosGamma * cosGamma));
-		final float x = zenithX * num1 / den1;
+		final double xDenominator = ((1.0D + perezX0 * exp(perezX1)) * (1.0D + perezX2 * exp(perezX3 * theta1) + perezX4 * cosTheta0 * cosTheta0));
+		final double xNumerator = ((1.0D + perezX0 * exp(perezX1 * cosTheta1Reciprocal)) * (1.0D + perezX2 * exp(perezX3 * gamma) + perezX4 * cosGamma * cosGamma));
+		final double x = zenithX * xNumerator / xDenominator;
 		
 //		TODO: Write explanation!
-		final float den2 = ((1.0F + perezY0 * exp(perezY1)) * (1.0F + perezY2 * exp(perezY3 * theta1) + perezY4 * cosTheta0 * cosTheta0));
-		final float num2 = ((1.0F + perezY0 * exp(perezY1 * cosTheta1Reciprocal)) * (1.0F + perezY2 * exp(perezY3 * gamma) + perezY4 * cosGamma * cosGamma));
-		final float y = zenithY * num2 / den2;
+		final double yDenominator = ((1.0D + perezY0 * exp(perezY1)) * (1.0D + perezY2 * exp(perezY3 * theta1) + perezY4 * cosTheta0 * cosTheta0));
+		final double yNumerator = ((1.0D + perezY0 * exp(perezY1 * cosTheta1Reciprocal)) * (1.0D + perezY2 * exp(perezY3 * gamma) + perezY4 * cosGamma * cosGamma));
+		final double y = zenithY * yNumerator / yDenominator;
+		
+//		Calculates a CIE XYZ color:
+		final float colorCIE0 = 1.0F / (0.0241F + 0.2562F * (float)(x) - 0.7341F * (float)(y));
+		final float colorCIE1 = (-1.3515F - 1.7703F * (float)(x) + 5.9114F * (float)(y)) * colorCIE0;
+		final float colorCIE2 = (0.03F - 31.4424F * (float)(x) + 30.0717F * (float)(y)) * colorCIE0;
+		final float colorCIEX = 10246.121F + colorCIE1 * 187.75537F + colorCIE2 * 213.14803F;
+		final float colorCIEY = 10676.695F + colorCIE1 * 192.59653F + colorCIE2 * 76.29494F;
+		final float colorCIEZ = 12372.504F + colorCIE1 * 3482.8765F + colorCIE2 * -235.71611F;
+		final float colorCIEYReciprocal = 1.0F / colorCIEY;
+		final float colorCIER = (float)(colorCIEX * relativeLuminance * colorCIEYReciprocal);
+		final float colorCIEG = (float)(relativeLuminance);
+		final float colorCIEB = (float)(colorCIEZ * relativeLuminance * colorCIEYReciprocal);
+		
+//		Converts the CIE XYZ color to an sRGB color:
+		float r = 3.2410042F * colorCIER + -1.5373994F * colorCIEG + -0.49861607F * colorCIEB;
+		float g = -0.9692241F * colorCIER + 1.8759298F * colorCIEG + 0.041554242F * colorCIEB;
+		float b = 0.05563942F * colorCIER + -0.20401107F * colorCIEG + 1.0571486F * colorCIEB;
 		
 //		TODO: Write explanation!
-		final float v0 = 1.0F / (0.0241F + 0.2562F * x - 0.7341F * y);
-		final float v1 = (-1.3515F - 1.7703F * x + 5.9114F * y) * v0;
-		final float v2 = (0.03F - 31.4424F * x + 30.0717F * y) * v0;
+		final float w = max(0.0F, -min(0.0F, min(r, min(g, b))));
 		
 //		TODO: Write explanation!
-		final float x3 = 10246.121F + v1 * 187.75537F + v2 * 213.14803F;
-		final float y3 = 10676.695F + v1 * 192.59653F + v2 * 76.29494F;
-		final float z3 = 12372.504F + v1 * 3482.8765F + v2 * -235.71611F;
-		
-//		TODO: Write explanation!
-		final float y3Reciprocal = 1.0F / y3;
-		
-//		TODO: Write explanation!
-		final float x4 = x3 * relativeLuminance * y3Reciprocal;
-		final float y4 = relativeLuminance;
-		final float z4 = z3 * relativeLuminance * y3Reciprocal;
-		
-//		TODO: Write explanation!
-		float r = 3.2410042F * x4 + -1.5373994F * y4 + -0.49861607F * z4;
-		float g = -0.9692241F * x4 + 1.8759298F * y4 + 0.041554242F * z4;
-		float b = 0.05563942F * x4 + -0.20401107F * y4 + 1.0571486F * z4;
-		
-//		TODO: Write explanation!
-		final float w0 = -min(0.0F, min(r, min(g, b)));
-		final float w1 = max(0.0F, w0);
-		
-//		TODO: Write explanation!
-		r += w1;
-		g += w1;
-		b += w1;
+		r += w;
+		g += w;
+		b += w;
 		
 //		TODO: Write explanation!
 		final int pixelIndex = getLocalId() * 3;
@@ -3525,14 +3515,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final boolean isCorrectlyOriented = dotProduct < 0.0F;
 			
 //			Retrieve the correctly oriented surface normal:
-			final float w0X = isCorrectlyOriented ? surfaceNormalShadingX : -surfaceNormalShadingX;
-			final float w0Y = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
-			final float w0Z = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
-			
-//			Pre-compute the random values that will be used later:
-			final float randomA = nextFloat();
-			final float randomB = nextFloat();
-			final float randomC = nextFloat();
+			final float surfaceNormalWNormalizedX = isCorrectlyOriented ? surfaceNormalShadingX : -surfaceNormalShadingX;
+			final float surfaceNormalWNormalizedY = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
+			final float surfaceNormalWNormalizedZ = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
 			
 			if(material == MATERIAL_CLEAR_COAT) {
 				final float a = REFRACTIVE_INDEX_GLASS - REFRACTIVE_INDEX_AIR;
@@ -3544,10 +3529,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float nnt = c;
 				
 //				Calculate the dot product between the W direction and the current ray direction:
-				final float dotProductOfW0AndDirection = w0X * directionX + w0Y * directionY + w0Z * directionZ;
+				final float dotProduct0 = surfaceNormalWNormalizedX * directionX + surfaceNormalWNormalizedY * directionY + surfaceNormalWNormalizedZ * directionZ;
 				
 //				Calculate the total internal reflection:
-				final float totalInternalReflection = 1.0F - nnt * nnt * (1.0F - dotProductOfW0AndDirection * dotProductOfW0AndDirection);
+				final float totalInternalReflection = 1.0F - nnt * nnt * (1.0F - dotProduct0 * dotProduct0);
 				
 //				Calculate the reflection direction:
 				final float reflectionDirectionX = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
@@ -3561,9 +3546,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				
 				if(totalInternalReflection < 0.0F) {
 //					Update the ray origin for the next iteration:
-					originX = surfaceIntersectionPointX + w0X * 0.02F;
-					originY = surfaceIntersectionPointY + w0Y * 0.02F;
-					originZ = surfaceIntersectionPointZ + w0Z * 0.02F;
+					originX = surfaceIntersectionPointX + surfaceNormalWNormalizedX * 0.02F;
+					originY = surfaceIntersectionPointY + surfaceNormalWNormalizedY * 0.02F;
+					originZ = surfaceIntersectionPointZ + surfaceNormalWNormalizedZ * 0.02F;
 					
 //					Update the ray direction for the next iteration:
 					directionX = reflectionDirectionX;
@@ -3576,7 +3561,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 					radianceMultiplierB *= specularColorB;
 				} else {
 //					Calculate some angles:
-					final float angle1 = -dotProductOfW0AndDirection;
+					final float angle1 = -dotProduct0;
 					final float angle2 = 1.0F - angle1;
 					
 //					Calculate the reflectance:
@@ -3595,7 +3580,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 					final float transmittanceProbability = transmittance / (1.0F - probability);
 					
 //					Check if the direction for the next iteration is the reflection direction or the transmission direction:
-					final boolean isReflectionDirection = randomA < probability;
+					final boolean isReflectionDirection = nextFloat() < probability;
 					
 //					Retrieve the value to multiply the current radiance multiplier with:
 					final float multiplier = isReflectionDirection ? reflectanceProbability : transmittanceProbability;
@@ -3607,9 +3592,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 					
 					if(isReflectionDirection) {
 //						Update the ray origin for the next iteration:
-						originX = surfaceIntersectionPointX + w0X * 0.02F;
-						originY = surfaceIntersectionPointY + w0Y * 0.02F;
-						originZ = surfaceIntersectionPointZ + w0Z * 0.02F;
+						originX = surfaceIntersectionPointX + surfaceNormalWNormalizedX * 0.02F;
+						originY = surfaceIntersectionPointY + surfaceNormalWNormalizedY * 0.02F;
+						originZ = surfaceIntersectionPointZ + surfaceNormalWNormalizedZ * 0.02F;
 						
 //						Update the ray direction for the next iteration:
 						directionX = reflectionDirectionX;
@@ -3621,48 +3606,51 @@ public final class RendererKernel extends AbstractRendererKernel {
 						radianceMultiplierG *= specularColorG;
 						radianceMultiplierB *= specularColorB;
 					} else {
-//						Compute some random values:
-						final float random0 = PI_MULTIPLIED_BY_TWO * randomB;
-						final float random0Cos = cos(random0);
-						final float random0Sin = sin(random0);
-						final float random1 = randomC;
-						final float random1Squared0 = sqrt(random1);
-						final float random1Squared1 = sqrt(1.0F - random1);
+//						Compute cosine weighted hemisphere sample:
+						final float u = nextFloat();
+						final float v = nextFloat();
+						final float phi = PI_MULTIPLIED_BY_TWO * u;
+						final float cosTheta = sqrt(v);
+						final float sinTheta = sqrt(1.0F - v);
+						final float x = cos(phi) * sinTheta;
+						final float y = sin(phi) * sinTheta;
+						final float z = cosTheta;
 						
 //						Check if the direction is the Y-direction:
-						final boolean isY = abs(w0X) > 0.1F;
+						final boolean isY = abs(surfaceNormalWNormalizedX) > 0.1F;
 						
 //						Calculate the orthonormal basis U vector:
-						final float u0X = isY ? 0.0F : 1.0F;
-						final float u0Y = isY ? 1.0F : 0.0F;
-						final float u1X = u0Y * w0Z;
-						final float u1Y = -(u0X * w0Z);
-						final float u1Z = u0X * w0Y - u0Y * w0X;
-						final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
-						final float u2X = u1X * u1LengthReciprocal;
-						final float u2Y = u1Y * u1LengthReciprocal;
-						final float u2Z = u1Z * u1LengthReciprocal;
+						final float surfaceNormalUX = (isY ? 1.0F : 0.0F) * surfaceNormalWNormalizedZ;
+						final float surfaceNormalUY = -((isY ? 0.0F : 1.0F) * surfaceNormalWNormalizedZ);
+						final float surfaceNormalUZ = (isY ? 0.0F : 1.0F) * surfaceNormalWNormalizedY - (isY ? 1.0F : 0.0F) * surfaceNormalWNormalizedX;
+						final float surfaceNormalULengthReciprocal = rsqrt(surfaceNormalUX * surfaceNormalUX + surfaceNormalUY * surfaceNormalUY + surfaceNormalUZ * surfaceNormalUZ);
+						final float surfaceNormalUNormalizedX = surfaceNormalUX * surfaceNormalULengthReciprocal;
+						final float surfaceNormalUNormalizedY = surfaceNormalUY * surfaceNormalULengthReciprocal;
+						final float surfaceNormalUNormalizedZ = surfaceNormalUZ * surfaceNormalULengthReciprocal;
 						
 //						Calculate the orthonormal basis V vector:
-						final float v0X = w0Y * u2Z - w0Z * u2Y;
-						final float v0Y = w0Z * u2X - w0X * u2Z;
-						final float v0Z = w0X * u2Y - w0Y * u2X;
+						final float surfaceNormalVNormalizedX = surfaceNormalWNormalizedY * surfaceNormalUNormalizedZ - surfaceNormalWNormalizedZ * surfaceNormalUNormalizedY;
+						final float surfaceNormalVNormalizedY = surfaceNormalWNormalizedZ * surfaceNormalUNormalizedX - surfaceNormalWNormalizedX * surfaceNormalUNormalizedZ;
+						final float surfaceNormalVNormalizedZ = surfaceNormalWNormalizedX * surfaceNormalUNormalizedY - surfaceNormalWNormalizedY * surfaceNormalUNormalizedX;
 						
 //						Calculate the direction for the next iteration:
-						final float direction0X = u2X * random0Cos * random1Squared0 + v0X * random0Sin * random1Squared0 + w0X * random1Squared1;
-						final float direction0Y = u2Y * random0Cos * random1Squared0 + v0Y * random0Sin * random1Squared0 + w0Y * random1Squared1;
-						final float direction0Z = u2Z * random0Cos * random1Squared0 + v0Z * random0Sin * random1Squared0 + w0Z * random1Squared1;
-						final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+						final float lambertianDirectionX = surfaceNormalUNormalizedX * x + surfaceNormalVNormalizedX * y + surfaceNormalWNormalizedX * z;
+						final float lambertianDirectionY = surfaceNormalUNormalizedY * x + surfaceNormalVNormalizedY * y + surfaceNormalWNormalizedY * z;
+						final float lambertianDirectionZ = surfaceNormalUNormalizedZ * x + surfaceNormalVNormalizedZ * y + surfaceNormalWNormalizedZ * z;
+						final float lambertianDirectionLengthReciprocal = rsqrt(lambertianDirectionX * lambertianDirectionX + lambertianDirectionY * lambertianDirectionY + lambertianDirectionZ * lambertianDirectionZ);
+						final float lambertianDirectionNormalizedX = lambertianDirectionX * lambertianDirectionLengthReciprocal;
+						final float lambertianDirectionNormalizedY = lambertianDirectionY * lambertianDirectionLengthReciprocal;
+						final float lambertianDirectionNormalizedZ = lambertianDirectionZ * lambertianDirectionLengthReciprocal;
 						
 //						Update the ray origin for the next iteration:
-						originX = surfaceIntersectionPointX + w0X * 0.01F;
-						originY = surfaceIntersectionPointY + w0Y * 0.01F;
-						originZ = surfaceIntersectionPointZ + w0Z * 0.01F;
+						originX = surfaceIntersectionPointX + surfaceNormalWNormalizedX * 0.01F;
+						originY = surfaceIntersectionPointY + surfaceNormalWNormalizedY * 0.01F;
+						originZ = surfaceIntersectionPointZ + surfaceNormalWNormalizedZ * 0.01F;
 						
 //						Update the ray direction for the next iteration:
-						directionX = direction0X * direction0LengthReciprocal;
-						directionY = direction0Y * direction0LengthReciprocal;
-						directionZ = direction0Z * direction0LengthReciprocal;
+						directionX = lambertianDirectionNormalizedX;
+						directionY = lambertianDirectionNormalizedY;
+						directionZ = lambertianDirectionNormalizedZ;
 						
 //						Multiply the current radiance multiplier with the albedo:
 						radianceMultiplierR *= albedoColorR;
@@ -3674,106 +3662,112 @@ public final class RendererKernel extends AbstractRendererKernel {
 //				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
 				depthCurrent = depthCurrent + 0;
 			} else if(material == MATERIAL_LAMBERTIAN_DIFFUSE) {
-//				Compute some random values:
-				final float theta = PI_MULTIPLIED_BY_TWO * randomA;
-				final float cosTheta = cos(theta);
-				final float sinTheta = sin(theta);
-				final float sqrtR0 = sqrt(randomB);
-				final float sqrtR1 = sqrt(1.0F - randomB);
+//				Compute cosine weighted hemisphere sample:
+				final float u = nextFloat();
+				final float v = nextFloat();
+				final float phi = PI_MULTIPLIED_BY_TWO * u;
+				final float cosTheta = sqrt(v);
+				final float sinTheta = sqrt(1.0F - v);
+				final float x = cos(phi) * sinTheta;
+				final float y = sin(phi) * sinTheta;
+				final float z = cosTheta;
 				
 //				Check if the direction is the Y-direction:
-				final boolean isY = abs(w0X) > 0.1F;
+				final boolean isY = abs(surfaceNormalWNormalizedX) > 0.1F;
 				
 //				Calculate the orthonormal basis U vector:
-				final float u0X = isY ? 0.0F : 1.0F;
-				final float u0Y = isY ? 1.0F : 0.0F;
-				final float u1X = u0Y * w0Z;
-				final float u1Y = -(u0X * w0Z);
-				final float u1Z = u0X * w0Y - u0Y * w0X;
-				final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
-				final float u2X = u1X * u1LengthReciprocal;
-				final float u2Y = u1Y * u1LengthReciprocal;
-				final float u2Z = u1Z * u1LengthReciprocal;
+				final float surfaceNormalUX = (isY ? 1.0F : 0.0F) * surfaceNormalWNormalizedZ;
+				final float surfaceNormalUY = -((isY ? 0.0F : 1.0F) * surfaceNormalWNormalizedZ);
+				final float surfaceNormalUZ = (isY ? 0.0F : 1.0F) * surfaceNormalWNormalizedY - (isY ? 1.0F : 0.0F) * surfaceNormalWNormalizedX;
+				final float surfaceNormalULengthReciprocal = rsqrt(surfaceNormalUX * surfaceNormalUX + surfaceNormalUY * surfaceNormalUY + surfaceNormalUZ * surfaceNormalUZ);
+				final float surfaceNormalUNormalizedX = surfaceNormalUX * surfaceNormalULengthReciprocal;
+				final float surfaceNormalUNormalizedY = surfaceNormalUY * surfaceNormalULengthReciprocal;
+				final float surfaceNormalUNormalizedZ = surfaceNormalUZ * surfaceNormalULengthReciprocal;
 				
 //				Calculate the orthonormal basis V vector:
-				final float v0X = w0Y * u2Z - w0Z * u2Y;
-				final float v0Y = w0Z * u2X - w0X * u2Z;
-				final float v0Z = w0X * u2Y - w0Y * u2X;
+				final float surfaceNormalVNormalizedX = surfaceNormalWNormalizedY * surfaceNormalUNormalizedZ - surfaceNormalWNormalizedZ * surfaceNormalUNormalizedY;
+				final float surfaceNormalVNormalizedY = surfaceNormalWNormalizedZ * surfaceNormalUNormalizedX - surfaceNormalWNormalizedX * surfaceNormalUNormalizedZ;
+				final float surfaceNormalVNormalizedZ = surfaceNormalWNormalizedX * surfaceNormalUNormalizedY - surfaceNormalWNormalizedY * surfaceNormalUNormalizedX;
 				
 //				Calculate the direction for the next iteration:
-				final float direction0X = u2X * cosTheta * sqrtR0 + v0X * sinTheta * sqrtR0 + w0X * sqrtR1;
-				final float direction0Y = u2Y * cosTheta * sqrtR0 + v0Y * sinTheta * sqrtR0 + w0Y * sqrtR1;
-				final float direction0Z = u2Z * cosTheta * sqrtR0 + v0Z * sinTheta * sqrtR0 + w0Z * sqrtR1;
-				final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+				final float lambertianDirectionX = surfaceNormalUNormalizedX * x + surfaceNormalVNormalizedX * y + surfaceNormalWNormalizedX * z;
+				final float lambertianDirectionY = surfaceNormalUNormalizedY * x + surfaceNormalVNormalizedY * y + surfaceNormalWNormalizedY * z;
+				final float lambertianDirectionZ = surfaceNormalUNormalizedZ * x + surfaceNormalVNormalizedZ * y + surfaceNormalWNormalizedZ * z;
+				final float lambertianDirectionLengthReciprocal = rsqrt(lambertianDirectionX * lambertianDirectionX + lambertianDirectionY * lambertianDirectionY + lambertianDirectionZ * lambertianDirectionZ);
+				final float lambertianDirectionNormalizedX = lambertianDirectionX * lambertianDirectionLengthReciprocal;
+				final float lambertianDirectionNormalizedY = lambertianDirectionY * lambertianDirectionLengthReciprocal;
+				final float lambertianDirectionNormalizedZ = lambertianDirectionZ * lambertianDirectionLengthReciprocal;
 				
 //				Update the ray origin for the next iteration:
-				originX = surfaceIntersectionPointX + w0X * 0.01F;
-				originY = surfaceIntersectionPointY + w0Y * 0.01F;
-				originZ = surfaceIntersectionPointZ + w0Z * 0.01F;
+				originX = surfaceIntersectionPointX + surfaceNormalWNormalizedX * 0.01F;
+				originY = surfaceIntersectionPointY + surfaceNormalWNormalizedY * 0.01F;
+				originZ = surfaceIntersectionPointZ + surfaceNormalWNormalizedZ * 0.01F;
 				
 //				Update the ray direction for the next iteration:
-				directionX = direction0X * direction0LengthReciprocal;
-				directionY = direction0Y * direction0LengthReciprocal;
-				directionZ = direction0Z * direction0LengthReciprocal;
+				directionX = lambertianDirectionNormalizedX;
+				directionY = lambertianDirectionNormalizedY;
+				directionZ = lambertianDirectionNormalizedZ;
 				
 //				Multiply the current radiance multiplier with the albedo:
 				radianceMultiplierR *= albedoColorR;
 				radianceMultiplierG *= albedoColorG;
 				radianceMultiplierB *= albedoColorB;
 			} else if(material == MATERIAL_PHONG_METAL) {
-//				Compute some random values:
-				final float random0 = PI_MULTIPLIED_BY_TWO * randomA;
-				final float random0Cos = cos(random0);
-				final float random0Sin = sin(random0);
-				final float random1 = randomB;
-				
-//				Calculate the cos and sin values of theta:
-				final float cosTheta = pow(1.0F - random1, PHONE_EXPONENT_PLUS_ONE_RECIPROCAL);
+//				Compute power cosine weighted hemisphere sample:
+				final float exponent = 20.0F;
+				final float u = nextFloat();
+				final float v = nextFloat();
+				final float phi = PI_MULTIPLIED_BY_TWO * u;
+				final float cosTheta = pow(1.0F - v, 1.0F / (exponent + 1.0F));
 				final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
+				final float x = cos(phi) * sinTheta;
+				final float y = sin(phi) * sinTheta;
+				final float z = cosTheta;
 				
 //				Calculate the orthonormal basis W vector:
-				final float w1X = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
-				final float w1Y = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
-				final float w1Z = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
-				final float w1LengthReciprocal = rsqrt(w1X * w1X + w1Y * w1Y + w1Z * w1Z);
-				final float w2X = w1X * w1LengthReciprocal;
-				final float w2Y = w1Y * w1LengthReciprocal;
-				final float w2Z = w1Z * w1LengthReciprocal;
+				final float reflectionDirectionWX = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
+				final float reflectionDirectionWY = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
+				final float reflectionDirectionWZ = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
+				final float reflectionDirectionWLengthReciprocal = rsqrt(reflectionDirectionWX * reflectionDirectionWX + reflectionDirectionWY * reflectionDirectionWY + reflectionDirectionWZ * reflectionDirectionWZ);
+				final float reflectionDirectionWNormalizedX = reflectionDirectionWX * reflectionDirectionWLengthReciprocal;
+				final float reflectionDirectionWNormalizedY = reflectionDirectionWY * reflectionDirectionWLengthReciprocal;
+				final float reflectionDirectionWNormalizedZ = reflectionDirectionWZ * reflectionDirectionWLengthReciprocal;
 				
 //				Check if the direction is the Y-direction:
-				final boolean isY = abs(w2X) > 0.1F;
+				final boolean isY = abs(reflectionDirectionWNormalizedX) > 0.1F;
 				
 //				Calculate the orthonormal basis U vector:
-				final float u0X = isY ? 0.0F : 1.0F;
-				final float u0Y = isY ? 1.0F : 0.0F;
-				final float u1X = u0Y * w2Z;
-				final float u1Y = -(u0X * w2Z);
-				final float u1Z = u0X * w2Y - u0Y * w2X;
-				final float u1LengthReciprocal = rsqrt(u1X * u1X + u1Y * u1Y + u1Z * u1Z);
-				final float u2X = u1X * u1LengthReciprocal;
-				final float u2Y = u1Y * u1LengthReciprocal;
-				final float u2Z = u1Z * u1LengthReciprocal;
+				final float reflectionDirectionUX = (isY ? 1.0F : 0.0F) * reflectionDirectionWNormalizedZ;
+				final float reflectionDirectionUY = -((isY ? 0.0F : 1.0F) * reflectionDirectionWNormalizedZ);
+				final float reflectionDirectionUZ = (isY ? 0.0F : 1.0F) * reflectionDirectionWNormalizedY - (isY ? 1.0F : 0.0F) * reflectionDirectionWNormalizedX;
+				final float reflectionDirectionULengthReciprocal = rsqrt(reflectionDirectionUX * reflectionDirectionUX + reflectionDirectionUY * reflectionDirectionUY + reflectionDirectionUZ * reflectionDirectionUZ);
+				final float reflectionDirectionUNormalizedX = reflectionDirectionUX * reflectionDirectionULengthReciprocal;
+				final float reflectionDirectionUNormalizedY = reflectionDirectionUY * reflectionDirectionULengthReciprocal;
+				final float reflectionDirectionUNormalizedZ = reflectionDirectionUZ * reflectionDirectionULengthReciprocal;
 				
 //				Calculate the orthonormal basis V vector:
-				final float v0X = w2Y * u2Z - w2Z * u2Y;
-				final float v0Y = w2Z * u2X - w2X * u2Z;
-				final float v0Z = w2X * u2Y - w2Y * u2X;
+				final float reflectionDirectionVNormalizedX = reflectionDirectionWNormalizedY * reflectionDirectionUNormalizedZ - reflectionDirectionWNormalizedZ * reflectionDirectionUNormalizedY;
+				final float reflectionDirectionVNormalizedY = reflectionDirectionWNormalizedZ * reflectionDirectionUNormalizedX - reflectionDirectionWNormalizedX * reflectionDirectionUNormalizedZ;
+				final float reflectionDirectionVNormalizedZ = reflectionDirectionWNormalizedX * reflectionDirectionUNormalizedY - reflectionDirectionWNormalizedY * reflectionDirectionUNormalizedX;
 				
 //				Calculate the direction for the next iteration:
-				final float direction0X = u2X * random0Cos * sinTheta + v0X * random0Sin * sinTheta + w1X * cosTheta;
-				final float direction0Y = u2Y * random0Cos * sinTheta + v0Y * random0Sin * sinTheta + w1Y * cosTheta;
-				final float direction0Z = u2Z * random0Cos * sinTheta + v0Z * random0Sin * sinTheta + w1Z * cosTheta;
-				final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+				final float phongDirectionX = reflectionDirectionUNormalizedX * x + reflectionDirectionVNormalizedX * y + reflectionDirectionWX * z;
+				final float phongDirectionY = reflectionDirectionUNormalizedY * x + reflectionDirectionVNormalizedY * y + reflectionDirectionWY * z;
+				final float phongDirectionZ = reflectionDirectionUNormalizedZ * x + reflectionDirectionVNormalizedZ * y + reflectionDirectionWZ * z;
+				final float phongDirectionLengthReciprocal = rsqrt(phongDirectionX * phongDirectionX + phongDirectionY * phongDirectionY + phongDirectionZ * phongDirectionZ);
+				final float phongDirectionNormalizedX = phongDirectionX * phongDirectionLengthReciprocal;
+				final float phongDirectionNormalizedY = phongDirectionY * phongDirectionLengthReciprocal;
+				final float phongDirectionNormalizedZ = phongDirectionZ * phongDirectionLengthReciprocal;
 				
 //				Update the ray origin for the next iteration:
-				originX = surfaceIntersectionPointX + w2X * 0.01F;
-				originY = surfaceIntersectionPointY + w2Y * 0.01F;
-				originZ = surfaceIntersectionPointZ + w2Z * 0.01F;
+				originX = surfaceIntersectionPointX + reflectionDirectionWNormalizedX * 0.01F;
+				originY = surfaceIntersectionPointY + reflectionDirectionWNormalizedY * 0.01F;
+				originZ = surfaceIntersectionPointZ + reflectionDirectionWNormalizedZ * 0.01F;
 				
 //				Update the ray direction for the next iteration:
-				directionX = direction0X * direction0LengthReciprocal;
-				directionY = direction0Y * direction0LengthReciprocal;
-				directionZ = direction0Z * direction0LengthReciprocal;
+				directionX = phongDirectionNormalizedX;
+				directionY = phongDirectionNormalizedY;
+				directionZ = phongDirectionNormalizedZ;
 				
 //				Multiply the current radiance multiplier with the albedo:
 				radianceMultiplierR *= albedoColorR;
@@ -3787,13 +3781,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 				final float e = (a * a) / (b * b);
 				
 //				Check if the current ray is going in towards the same shape or out of it:
-				final boolean isGoingIn = surfaceNormalShadingX * w0X + surfaceNormalShadingY * w0Y + surfaceNormalShadingZ * w0Z > 0.0F;
+				final boolean isGoingIn = surfaceNormalShadingX * surfaceNormalWNormalizedX + surfaceNormalShadingY * surfaceNormalWNormalizedY + surfaceNormalShadingZ * surfaceNormalWNormalizedZ > 0.0F;
 				
 //				TODO: Write explanation!
 				final float nnt = isGoingIn ? c : d;
 				
 //				Calculate the dot product between the orthonormal basis W vector and the current direction vector:
-				final float dotProductOfW0AndDirection = w0X * directionX + w0Y * directionY + w0Z * directionZ;
+				final float dotProductOfW0AndDirection = surfaceNormalWNormalizedX * directionX + surfaceNormalWNormalizedY * directionY + surfaceNormalWNormalizedZ * directionZ;
 				
 //				Calculate the total internal reflection:
 				final float totalInternalReflection = 1.0F - nnt * nnt * (1.0F - dotProductOfW0AndDirection * dotProductOfW0AndDirection);
@@ -3805,9 +3799,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				
 				if(totalInternalReflection < 0.0F) {
 //					Update the ray origin for the next iteration:
-					originX = surfaceIntersectionPointX + w0X * 0.02F;
-					originY = surfaceIntersectionPointY + w0Y * 0.02F;
-					originZ = surfaceIntersectionPointZ + w0Z * 0.02F;
+					originX = surfaceIntersectionPointX + surfaceNormalWNormalizedX * 0.02F;
+					originY = surfaceIntersectionPointY + surfaceNormalWNormalizedY * 0.02F;
+					originZ = surfaceIntersectionPointZ + surfaceNormalWNormalizedZ * 0.02F;
 					
 //					Update the ray direction for the next iteration:
 					directionX = reflectionDirectionX;
@@ -3847,7 +3841,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 					final float transmittanceProbability = transmittance / (1.0F - probability);
 					
 //					Check if the direction for the next iteration is the reflection direction or the transmission direction:
-					final boolean isReflectionDirection = randomA < probability;
+					final boolean isReflectionDirection = nextFloat() < probability;
 					
 //					Retrieve the value to multiply the current radiance multiplier with:
 					final float multiplier = isReflectionDirection ? reflectanceProbability : transmittanceProbability;
@@ -3861,9 +3855,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 					final float epsilon = isReflectionDirection ? 0.01F : 0.000001F;
 					
 //					Update the ray origin for the next iteration:
-					originX = surfaceIntersectionPointX + w0X * epsilon;
-					originY = surfaceIntersectionPointY + w0Y * epsilon;
-					originZ = surfaceIntersectionPointZ + w0Z * epsilon;
+					originX = surfaceIntersectionPointX + surfaceNormalWNormalizedX * epsilon;
+					originY = surfaceIntersectionPointY + surfaceNormalWNormalizedY * epsilon;
+					originZ = surfaceIntersectionPointZ + surfaceNormalWNormalizedZ * epsilon;
 					
 //					Update the ray direction for the next iteration:
 					directionX = isReflectionDirection ? reflectionDirectionX : transmissionDirectionX;

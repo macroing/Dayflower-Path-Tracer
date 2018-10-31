@@ -369,9 +369,9 @@ public final class Mesh {
 					} else if(tokens[0].equals("v")) {
 						this.positions.add(new Point3F(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale));
 					} else if(tokens[0].equals("vt")) {
-						this.textureCoordinates.add(new Point2F(Float.valueOf(tokens[1]).floatValue() * scale, 1.0F - Float.valueOf(tokens[2]).floatValue() * scale));
+						this.textureCoordinates.add(new Point2F(Float.valueOf(tokens[1]).floatValue() * scale, 1.0F * scale - Float.valueOf(tokens[2]).floatValue() * scale));
 					} else if(tokens[0].equals("vn")) {
-						this.normals.add(new Vector3F(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale));
+						this.normals.add(new Vector3F(Float.valueOf(tokens[1]).floatValue(), Float.valueOf(tokens[2]).floatValue(), Float.valueOf(tokens[3]).floatValue()));
 					} else if(tokens[0].equals("f")) {
 						for(int i = 0; i < tokens.length - 3; i++) {
 							this.indices.add(doParseOBJIndex(tokens[1 + 0]));
