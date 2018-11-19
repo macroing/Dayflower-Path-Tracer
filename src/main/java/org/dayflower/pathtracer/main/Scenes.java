@@ -115,6 +115,8 @@ final class Scenes {
 		final Texture textureCarLicense0 = new SolidTexture(Color.WHITE);
 		final Texture textureCarInterior = new SolidTexture(new Color(222, 184, 135));
 		final Texture textureCarInterior0 = new SolidTexture(new Color(222, 184, 135));
+		final Texture textureCarBlack = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
+		final Texture textureCarBottom = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarAlbedo, textureCarNormalMap);
 		
@@ -156,6 +158,8 @@ final class Scenes {
 		surfaces.put("License0", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarLicense0, textureCarNormalMap));
 		surfaces.put("Interior", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarInterior, textureCarNormalMap));
 		surfaces.put("Interior0", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarInterior0, textureCarNormalMap));
+		surfaces.put("Black", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarBlack, textureCarNormalMap));
+		surfaces.put("Bottom", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureCarBottom, textureCarNormalMap));
 		
 		//			wind_glass
 		//			Body_paint
@@ -200,13 +204,7 @@ final class Scenes {
 		//			Material__600
 		//			License0
 		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> {
-//			if(materialName.equals("Body_paint")) {
-//				return surfaces.getOrDefault(materialName, surface);
-//			}
-			
-			return surfaces.getOrDefault(materialName, surface);
-		}, Dayflower.getModelFilename("SL500.obj"), 100.0F);
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("SL500.obj"), 100.0F);
 		
 		final List<Triangle> triangles = mesh.getTriangles();
 		

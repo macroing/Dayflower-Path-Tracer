@@ -45,6 +45,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final float SIMPLEX_G2 = 0.21132486540518713F;
 	private static final float SIMPLEX_G3 = 1.0F / 6.0F;
 	private static final float SIMPLEX_G4 = 0.1381966011250105F;
+	private static final int BOOLEAN_FALSE = 0;
+	private static final int BOOLEAN_TRUE = 1;
 	private static final int MATERIAL_CLEAR_COAT = 0;
 	private static final int MATERIAL_GLASS = 1;
 	private static final int MATERIAL_LAMBERTIAN_DIFFUSE = 2;
@@ -71,8 +73,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int SIZE_INTERSECTION = 22;
 	private static final int SIZE_PIXEL = 4;
 	private static final int SIZE_RAY = 6;
-	private static final int SUN_AND_SKY_OFF = 0;
-	private static final int SUN_AND_SKY_ON = 1;
 	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE = 1;
 	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR = 2;
 	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_1 = 3;
@@ -116,6 +116,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private float sunOriginY;
 	private float sunOriginZ;
 	private float theta;
+	@SuppressWarnings("unused")
+	private float turbidity;
 	private double zenithRelativeLuminance;
 	private double zenithX;
 	private double zenithY;
@@ -158,6 +160,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final float[] textures;
 	@Constant
 	private final float[] vector3Fs;
+	private int clouds = BOOLEAN_FALSE;
 	private final int colHistogramLength;
 	private int depthMaximum = 5;
 	private int depthRussianRoulette = 5;
@@ -172,7 +175,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int selectedShapeIndex = -1;
 	private int shading = SHADING_GOURAUD;
 	private int shapeOffsetsLength;
-	private int sunAndSky = SUN_AND_SKY_ON;
+	private int sunAndSky = BOOLEAN_TRUE;
 	private int sunAndSkySamples;
 	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE;
 	private final int width;
@@ -254,6 +257,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.sunOriginY = sky.getSunOrigin().y;
 		this.sunOriginZ = sky.getSunOrigin().z;
 		this.theta = sky.getTheta();
+		this.turbidity = sky.getTurbidity();
 		this.zenithRelativeLuminance = sky.getZenithRelativeLuminance();
 		this.zenithX = sky.getZenithX();
 		this.zenithY = sky.getZenithY();
@@ -434,6 +438,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Override
 	public boolean isShadingGouraud() {
 		return this.shading == SHADING_GOURAUD;
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, the sky is showing clouds, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the sky is showing clouds, {@code false} otherwise
+	 */
+	@Override
+	public boolean isShowingClouds() {
+		return this.clouds == BOOLEAN_TRUE;
 	}
 	
 	/**
@@ -670,6 +684,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.sunOriginY = this.sky.getSunOrigin().y;
 		this.sunOriginZ = this.sky.getSunOrigin().z;
 		this.theta = this.sky.getTheta();
+		this.turbidity = this.sky.getTurbidity();
 		this.zenithRelativeLuminance = this.sky.getZenithRelativeLuminance();
 		this.zenithX = this.sky.getZenithX();
 		this.zenithY = this.sky.getZenithY();
@@ -1071,6 +1086,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
+	 * Sets whether the sky is showing clouds or not.
+	 * 
+	 * @param isShowingClouds {@code true} if, and only if, the sky is showing clouds, {@code false} otherwise
+	 */
+	@Override
+	public void setShowingClouds(final boolean isShowingClouds) {
+		this.clouds = isShowingClouds ? BOOLEAN_TRUE : BOOLEAN_FALSE;
+	}
+	
+	/**
 	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve.
 	 */
 	@Override
@@ -1104,6 +1129,18 @@ public final class RendererKernel extends AbstractRendererKernel {
 	public void setToneMappingAndGammaCorrectionReinhard2() {
 		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_2;
 		this.isResetRequired = true;
+	}
+	
+	/**
+	 * Toggles the visibility for the clouds in the sky.
+	 */
+	@Override
+	public void toggleClouds() {
+		if(this.clouds == BOOLEAN_FALSE) {
+			this.clouds = BOOLEAN_TRUE;
+		} else {
+			this.clouds = BOOLEAN_FALSE;
+		}
 	}
 	
 	/**
@@ -1165,10 +1202,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void toggleSunAndSky() {
-		if(this.sunAndSky == SUN_AND_SKY_OFF) {
-			this.sunAndSky = SUN_AND_SKY_ON;
+		if(this.sunAndSky == BOOLEAN_FALSE) {
+			this.sunAndSky = BOOLEAN_TRUE;
 		} else {
-			this.sunAndSky = SUN_AND_SKY_OFF;
+			this.sunAndSky = BOOLEAN_FALSE;
 		}
 	}
 	
@@ -2410,14 +2447,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float direction0Y = directionX * this.orthoNormalBasisVX + directionY * this.orthoNormalBasisVY + directionZ * this.orthoNormalBasisVZ;
 		float direction0Z = directionX * this.orthoNormalBasisWX + directionY * this.orthoNormalBasisWY + directionZ * this.orthoNormalBasisWZ;
 		
-		if(direction0Z < 0.0F || this.sunAndSky == SUN_AND_SKY_OFF) {
+		if(direction0Z < 0.0F || this.sunAndSky == BOOLEAN_FALSE) {
 //			Calculate the pixel index:
 			final int pixelIndex0 = getLocalId() * 3;
 			
 //			Update the temporaryColors array with black:
-			this.temporaryColors[pixelIndex0] = 0.0F;
-			this.temporaryColors[pixelIndex0 + 1] = 0.0F;
-			this.temporaryColors[pixelIndex0 + 2] = 0.0F;
+			this.temporaryColors[pixelIndex0] = 0.01F;
+			this.temporaryColors[pixelIndex0 + 1] = 0.01F;
+			this.temporaryColors[pixelIndex0 + 2] = 0.01F;
 			
 			return;
 		}
@@ -2522,10 +2559,32 @@ public final class RendererKernel extends AbstractRendererKernel {
 		g += w;
 		b += w;
 		
-//		TODO: Write explanation!
+		if(this.clouds == BOOLEAN_TRUE) {
+//			final float phi0 = atan2(directionX, directionZ);
+//			final float phi1 = phi0 < 0.0F ? phi0 + PI_MULTIPLIED_BY_TWO : phi0;
+			
+//			final float theta = acos(directionY);
+			
+//			final float u = phi1 / PI_MULTIPLIED_BY_TWO;
+//			final float v = theta / PI;
+			
+			final float scale = (this.turbidity - 2.0F) * 8.0F;
+			final float rMultiplier = 1.0F;
+			final float gMultiplier = 1.0F;
+			final float bMultiplier = 1.0F;
+			final float rAddend = 135.0F / 2550.0F;
+			final float gAddend = 206.0F / 2550.0F;
+			final float bAddend = 235.0F / 2550.0F;
+			
+			final float noise = doFractionalBrownianMotionXYZ(0.5F, scale, 0.0F, 1.0F, 16, directionX, directionY, directionZ);
+			
+			r *= saturate(noise * rMultiplier + rAddend, 0.0F, 1.0F);
+			g *= saturate(noise * gMultiplier + gAddend, 0.0F, 1.0F);
+			b *= saturate(noise * bMultiplier + bAddend, 0.0F, 1.0F);
+		}
+		
 		final int pixelIndex = getLocalId() * 3;
 		
-//		TODO: Write explanation!
 		this.temporaryColors[pixelIndex] = r;
 		this.temporaryColors[pixelIndex + 1] = g;
 		this.temporaryColors[pixelIndex + 2] = b;

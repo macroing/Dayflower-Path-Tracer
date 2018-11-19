@@ -217,6 +217,16 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Returns {@code true} if, and only if, the sky is showing clouds, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the sky is showing clouds, {@code false} otherwise
+	 */
+	@SuppressWarnings("static-method")
+	public boolean isShowingClouds() {
+		return false;
+	}
+	
+	/**
 	 * Returns the {@code byte} array with the pixels.
 	 * 
 	 * @return the {@code byte} array with the pixels
@@ -591,6 +601,15 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Sets whether the sky is showing clouds or not.
+	 * 
+	 * @param isShowingClouds {@code true} if, and only if, the sky is showing clouds, {@code false} otherwise
+	 */
+	public void setShowingClouds(final boolean isShowingClouds) {
+//		Do nothing.
+	}
+	
+	/**
 	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve.
 	 */
 	public void setToneMappingAndGammaCorrectionFilmicCurve() {
@@ -615,6 +634,13 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * Sets the Tone Mapping and Gamma Correction to Reinhard version 2.
 	 */
 	public void setToneMappingAndGammaCorrectionReinhard2() {
+//		Do nothing.
+	}
+	
+	/**
+	 * Toggles the visibility for the clouds in the sky.
+	 */
+	public void toggleClouds() {
 //		Do nothing.
 	}
 	

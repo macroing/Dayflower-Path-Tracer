@@ -361,11 +361,12 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, this.sky.getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
 		final CheckBox checkBoxToggleSunAndSky = JavaFX.newCheckBox("Toggle Sun & Sky", this::doOnCheckBoxToggleSunAndSky, true);
+		final CheckBox checkBoxToggleClouds = JavaFX.newCheckBox("Toggle Clouds", this::doOnCheckBoxToggleClouds, false);
 		
 		final
 		VBox vBoxSunAndSky = new VBox();
 		vBoxSunAndSky.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity, checkBoxToggleSunAndSky);
+		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity, checkBoxToggleSunAndSky, checkBoxToggleClouds);
 		
 		final
 		Tab tabSunAndSky = new Tab();
@@ -569,6 +570,15 @@ public final class TestApplication extends AbstractApplication implements Camera
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@SuppressWarnings("unused")
+	private void doOnCheckBoxToggleClouds(final ActionEvent e) {
+		synchronized(this.pixels1) {
+			this.abstractRendererKernel.toggleClouds();
+			this.abstractRendererKernel.updateResetStatus();
+			this.abstractRendererKernel.reset();
+		}
+	}
 	
 	@SuppressWarnings("unused")
 	private void doOnCheckBoxToggleSunAndSky(final ActionEvent e) {
