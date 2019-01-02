@@ -85,7 +85,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 	private final Label labelSPS = new Label("SPS: 00000000");
 	private Range range;
 	private RendererRunnable rendererRunnable;
-	private final Setting settingFilterBloom = new Setting("Filter.Bloom");
 	private final Setting settingFilterBlur = new Setting("Filter.Blur");
 	private final Setting settingFilterDetectEdges = new Setting("Filter.DetectEdges");
 	private final Setting settingFilterEmboss = new Setting("Filter.Emboss");
@@ -219,7 +218,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 		menuBar.getMenus().add(menuCamera);
 		
 //		Create the "Effect" Menu:
-		final CheckMenuItem checkMenuItemBloom = JavaFX.newCheckMenuItem("Bloom", e -> this.settingFilterBloom.toggle());
 		final CheckMenuItem checkMenuItemBlur = JavaFX.newCheckMenuItem("Blur", e -> this.settingFilterBlur.toggle());
 		final CheckMenuItem checkMenuItemDetectEdges = JavaFX.newCheckMenuItem("Detect Edges", e -> this.settingFilterDetectEdges.toggle());
 		final CheckMenuItem checkMenuItemEmboss = JavaFX.newCheckMenuItem("Emboss", e -> this.settingFilterEmboss.toggle());
@@ -229,7 +227,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		final CheckMenuItem checkMenuItemGrayscale = JavaFX.newCheckMenuItem("Grayscale", e -> this.abstractRendererKernel.setEffectGrayScale(!this.abstractRendererKernel.isEffectGrayScale()));
 		final CheckMenuItem checkMenuItemSepiaTone = JavaFX.newCheckMenuItem("Sepia Tone", e -> this.abstractRendererKernel.setEffectSepiaTone(!this.abstractRendererKernel.isEffectSepiaTone()));
 		
-		final Menu menuEffect = JavaFX.newMenu("Effect", checkMenuItemBloom, checkMenuItemBlur, checkMenuItemDetectEdges, checkMenuItemEmboss, checkMenuItemGradientHorizontal, checkMenuItemGradientVertical, checkMenuItemSharpen, checkMenuItemGrayscale, checkMenuItemSepiaTone);
+		final Menu menuEffect = JavaFX.newMenu("Effect", checkMenuItemBlur, checkMenuItemDetectEdges, checkMenuItemEmboss, checkMenuItemGradientHorizontal, checkMenuItemGradientVertical, checkMenuItemSharpen, checkMenuItemGrayscale, checkMenuItemSepiaTone);
 		
 		menuBar.getMenus().add(menuEffect);
 		
@@ -286,7 +284,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		this.range = Range.create(getKernelWidth() * getKernelHeight());
 		this.abstractRendererKernel.updateLocalVariables(this.range.getLocalSize(0));
 		this.abstractRendererKernel.compile(this.pixels1, getKernelWidth(), getKernelHeight());
-		this.rendererRunnable = new RendererRunnable(this.abstractRendererKernel, this.renderPass, this.convolutionKernel, this.range, this.settingFilterBloom, this.settingFilterBlur, this.settingFilterDetectEdges, this.settingFilterEmboss, this.settingFilterGradientHorizontal, this.settingFilterGradientVertical, this.settingFilterSharpen, this.pixels0, this.pixels1);
+		this.rendererRunnable = new RendererRunnable(this.abstractRendererKernel, this.renderPass, this.convolutionKernel, this.range, this.settingFilterBlur, this.settingFilterDetectEdges, this.settingFilterEmboss, this.settingFilterGradientHorizontal, this.settingFilterGradientVertical, this.settingFilterSharpen, this.pixels0, this.pixels1);
 		
 		final
 		Thread thread = new Thread(this.rendererRunnable);
@@ -388,7 +386,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 		labelPathTracer.setFont(Font.font(16.0D));
 		labelPathTracer.setPadding(new Insets(0.0D, 0.0D, 10.0D, 0.0D));
 		labelRayMarcher.setFont(Font.font(16.0D));
-		labelRayMarcher.setPadding(new Insets(10.0D, 0.0D, 0.0D, 0.0D));
+		labelRayMarcher.setPadding(new Insets(10.0D, 0.0D, 10.0D, 0.0D));
 		
 		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, this.abstractRendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
 		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
@@ -672,7 +670,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 		private final AtomicLong renderTimeMillis;
 		private final ConvolutionKernel convolutionKernel;
 		private final Range range;
-		private final Setting settingFilterBloom;
 		private final Setting settingFilterBlur;
 		private final Setting settingFilterDetectEdges;
 		private final Setting settingFilterEmboss;
@@ -684,12 +681,11 @@ public final class TestApplication extends AbstractApplication implements Camera
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		public RendererRunnable(final AbstractRendererKernel abstractRendererKernel, final AtomicInteger renderPass, final ConvolutionKernel convolutionKernel, final Range range, final Setting settingFilterBloom, final Setting settingFilterBlur, final Setting settingFilterDetectEdges, final Setting settingFilterEmboss, final Setting settingFilterGradientHorizontal, final Setting settingFilterGradientVertical, final Setting settingFilterSharpen, final byte[] pixels0, final byte[] pixels1) {
+		public RendererRunnable(final AbstractRendererKernel abstractRendererKernel, final AtomicInteger renderPass, final ConvolutionKernel convolutionKernel, final Range range, final Setting settingFilterBlur, final Setting settingFilterDetectEdges, final Setting settingFilterEmboss, final Setting settingFilterGradientHorizontal, final Setting settingFilterGradientVertical, final Setting settingFilterSharpen, final byte[] pixels0, final byte[] pixels1) {
 			this.abstractRendererKernel = Objects.requireNonNull(abstractRendererKernel, "abstractRendererKernel == null");
 			this.renderPass = Objects.requireNonNull(renderPass, "renderPass == null");
 			this.convolutionKernel = Objects.requireNonNull(convolutionKernel, "convolutionKernel == null");
 			this.range = Objects.requireNonNull(range, "range == null");
-			this.settingFilterBloom = Objects.requireNonNull(settingFilterBloom, "settingFilterBloom == null");
 			this.settingFilterBlur = Objects.requireNonNull(settingFilterBlur, "settingFilterBlur == null");
 			this.settingFilterDetectEdges = Objects.requireNonNull(settingFilterDetectEdges, "settingFilterDetectEdges == null");
 			this.settingFilterEmboss = Objects.requireNonNull(settingFilterEmboss, "settingFilterEmboss == null");
@@ -716,15 +712,6 @@ public final class TestApplication extends AbstractApplication implements Camera
 				synchronized(this.pixels1) {
 					this.abstractRendererKernel.execute(this.range);
 					this.abstractRendererKernel.get(this.pixels1);
-					
-					if(this.settingFilterBloom.isEnabled()) {
-						this.convolutionKernel.update();
-						this.convolutionKernel.enableBloomPass1();
-						this.convolutionKernel.execute(this.range);
-						this.convolutionKernel.enableBloomPass2();
-						this.convolutionKernel.execute(this.range);
-						this.convolutionKernel.get();
-					}
 					
 					if(this.settingFilterBlur.isEnabled()) {
 						this.convolutionKernel.update();

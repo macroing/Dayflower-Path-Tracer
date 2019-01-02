@@ -116,7 +116,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private float sunOriginY;
 	private float sunOriginZ;
 	private float theta;
-	@SuppressWarnings("unused")
 	private float turbidity;
 	private double zenithRelativeLuminance;
 	private double zenithX;
@@ -1424,12 +1423,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
 			
 //			Check if the maximum distance is greater than or equal to the minimum distance:
-			if(tMaximum < tMinimum) {
+			if(tMaximum < 0.0F || tMinimum > tMaximum) {
 //				Retrieve the offset to the next node in the BVH structure, relative to the current one:
 				boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
 			} else {
 //				Retrieve the type of the current BVH node:
-				final float type = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset];
+				final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
 				
 				if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
 //					This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
@@ -4021,12 +4020,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
 			
 //			Check if the maximum distance is greater than or equal to the minimum distance:
-			if(tMaximum < tMinimum || minimumDistance < tMinimum) {
+			if(tMaximum < 0.0F || tMinimum > tMaximum || minimumDistance < tMinimum) {
 //				Retrieve the offset to the next node in the BVH structure, relative to the current one:
 				boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
 			} else {
 //				Retrieve the type of the current BVH node:
-				final float type = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset];
+				final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
 				
 				if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
 //					This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:

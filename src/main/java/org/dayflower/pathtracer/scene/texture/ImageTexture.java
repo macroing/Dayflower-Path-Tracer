@@ -34,6 +34,8 @@ import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
+import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
 import org.dayflower.pathtracer.scene.Texture;
 
 /**
@@ -62,6 +64,34 @@ public final class ImageTexture implements Texture {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public ImageTexture redoGammaCorrection() {
+		for(int i = 0; i < this.data.length; i++) {
+			this.data[i] = new Color(this.data[i]).redoGammaCorrection(RGBColorSpace.SRGB).multiply(255.0F).toRGB();
+		}
+		
+		return this;
+	}
+	
+//	TODO: Add Javadocs.
+	public ImageTexture undoGammaCorrection() {
+		for(int i = 0; i < this.data.length; i++) {
+			this.data[i] = new Color(this.data[i]).undoGammaCorrection(RGBColorSpace.SRGB).multiply(255.0F).toRGB();
+		}
+		
+		return this;
+	}
+	
+	/**
+	 * Returns a {@code String} representation of this {@code ImageTexture} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code ImageTexture} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("ImageTexture: [Degrees=%s], [Width=%s], [Height=%s], [ScaleU=%s], [ScaleV=%s]", Float.toString(this.degrees), Float.toString(this.width), Float.toString(this.height), Float.toString(this.scaleU), Float.toString(this.scaleV));
+	}
 	
 	/**
 	 * Compares {@code object} to this {@code ImageTexture} instance for equality.
@@ -167,16 +197,6 @@ public final class ImageTexture implements Texture {
 	@Override
 	public int hashCode() {
 		return Objects.hash(Float.valueOf(this.degrees), Float.valueOf(this.height), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV), Float.valueOf(this.width), Integer.valueOf(Arrays.hashCode(this.data)));
-	}
-	
-	/**
-	 * Returns a {@code String} representation of this {@code ImageTexture} instance.
-	 * 
-	 * @return a {@code String} representation of this {@code ImageTexture} instance
-	 */
-	@Override
-	public String toString() {
-		return String.format("ImageTexture: [Degrees=%s], [Width=%s], [Height=%s], [ScaleU=%s], [ScaleV=%s]", Float.toString(this.degrees), Float.toString(this.width), Float.toString(this.height), Float.toString(this.scaleU), Float.toString(this.scaleV));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

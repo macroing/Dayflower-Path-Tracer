@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.0.31
+Dayflower - Path Tracer v.0.0.32
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
@@ -23,7 +23,6 @@ Supported Features
 | Camera                 | Free Movement                                            |
 | Camera                 | Fisheye camera lens                                      |
 | Camera                 | Thin camera lens                                         |
-| Effect                 | Bloom - WIP                                              |
 | Effect                 | Blur                                                     |
 | Effect                 | Detect Edges                                             |
 | Effect                 | Emboss                                                   |
@@ -95,7 +94,6 @@ Supported Menu Controls
 | Camera > Walk Lock             | Toggle walk lock                                 |
 | Camera > Fisheye Camera Lens   | Use a Fisheye camera lens                        |
 | Camera > Thin Camera Lens      | Use a Thin camera lens                           |
-| Effect > Bloom                 | Toggle the Bloom effect                          |
 | Effect > Blur                  | Toggle the Blur effect                           |
 | Effect > Detect Edges          | Toggle the Detect Edges effect                   |
 | Effect > Emboss                | Toggle the Emboss effect                         |

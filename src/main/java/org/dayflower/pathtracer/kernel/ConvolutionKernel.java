@@ -23,8 +23,6 @@ import java.util.Objects;
 import com.amd.aparapi.Kernel;
 
 public final class ConvolutionKernel extends Kernel {
-	private static final int FILTER_BLOOM_PASS_1 = 7;
-	private static final int FILTER_BLOOM_PASS_2 = 8;
 	private static final int FILTER_BLUR = 1;
 	private static final int FILTER_DETECT_EDGES = 2;
 	private static final int FILTER_EMBOSS = 3;
@@ -39,7 +37,6 @@ public final class ConvolutionKernel extends Kernel {
 	private final float[][] blur = new float[][] {new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F}, new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F}, new float[] {1.0F, 1.0F, 1.0F, 1.0F, 1.0F}, new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F}, new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F}};
 	private final float[][] detectEdges = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 8.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
 	private final float[][] emboss = new float[][] {new float[] {-1.0F, -1.0F, 0.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {0.0F, 1.0F, 1.0F}};
-	private final float[][] gaussianBlur = new float[][] {new float[] {0.0030F, 0.0133F, 0.0219F, 0.0133F, 0.0030F}, new float[] {0.0133F, 0.0596F, 0.0983F, 0.0596F, 0.0133F}, new float[] {0.0219F, 0.0983F, 0.1621F, 0.0983F, 0.0219F}, new float[] {0.0133F, 0.0596F, 0.0983F, 0.0596F, 0.0133F}, new float[] {0.0030F, 0.0133F, 0.0219F, 0.0133F, 0.0030F}};
 	private final float[][] gradientHorizontal = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {0.0F, 0.0F, 0.0F}, new float[] {1.0F, 1.0F, 1.0F}};
 	private final float[][] gradientVertical = new float[][] {new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}};
 	private final float[][] sharpen = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 9.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
@@ -57,14 +54,6 @@ public final class ConvolutionKernel extends Kernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	public void enableBloomPass1() {
-		this.filter = FILTER_BLOOM_PASS_1;
-	}
-	
-	public void enableBloomPass2() {
-		this.filter = FILTER_BLOOM_PASS_2;
-	}
 	
 	public void enableBlur() {
 		this.filter = FILTER_BLUR;
@@ -100,11 +89,7 @@ public final class ConvolutionKernel extends Kernel {
 		final int y = index / this.width;
 		final int x = index - y * this.width;
 		
-		if(this.filter == FILTER_BLOOM_PASS_1) {
-			doFilterBloomPass1(x, y);
-		} else if(this.filter == FILTER_BLOOM_PASS_2) {
-			doFilterBloomPass2(x, y);
-		} else if(this.filter == FILTER_BLUR) {
+		if(this.filter == FILTER_BLUR) {
 			doFilterBlur(x, y);
 		} else if(this.filter == FILTER_DETECT_EDGES) {
 			doFilterDetectEdges(x, y);
@@ -131,59 +116,6 @@ public final class ConvolutionKernel extends Kernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private void doFilterBloomPass1(final int x, final int y) {
-		final int index = (y * this.width + x) * 4;
-		
-		float r0 = (this.pixels[index + 0] & 0xFF) / 255.0F;
-		float g0 = (this.pixels[index + 1] & 0xFF) / 255.0F;
-		float b0 = (this.pixels[index + 2] & 0xFF) / 255.0F;
-		
-		final float luminance = 0.2989F * r0 + 0.5866F * g0 + 0.1145F * b0;
-		
-		if(luminance < 0.8F) {
-			this.pixelsCopy[index + 0] = (byte)(0);
-			this.pixelsCopy[index + 1] = (byte)(0);
-			this.pixelsCopy[index + 2] = (byte)(0);
-		}
-	}
-	
-	private void doFilterBloomPass2(final int x, final int y) {
-		final int index = (y * this.width + x) * 4;
-		
-		float r0 = 0.0F;
-		float g0 = 0.0F;
-		float b0 = 0.0F;
-		
-		for(int filterY = 0; filterY < 5; filterY++) {
-			for(int filterX = 0; filterX < 5; filterX++) {
-				final int imageX = (x - 5 / 2 + filterX + this.width) % this.width;
-				final int imageY = (y - 5 / 2 + filterY + this.height) % this.height;
-				
-				final int index0 = (imageY * this.width + imageX) * 4;
-				
-				final float gaussianBlur = this.gaussianBlur[filterY][filterX];
-				
-				r0 += (this.pixelsCopy[index0 + 0] & 0xFF) * gaussianBlur;
-				g0 += (this.pixelsCopy[index0 + 1] & 0xFF) * gaussianBlur;
-				b0 += (this.pixelsCopy[index0 + 2] & 0xFF) * gaussianBlur;
-			}
-		}
-		
-		localBarrier();
-		
-		final float r1 = (this.pixels[index + 0] & 0xFF) / 255.0F;
-		final float g1 = (this.pixels[index + 1] & 0xFF) / 255.0F;
-		final float b1 = (this.pixels[index + 2] & 0xFF) / 255.0F;
-		
-		final int r2 = min(max((int)((r0 + r1) * 255.0F), 0), 255);
-		final int g2 = min(max((int)((g0 + g1) * 255.0F), 0), 255);
-		final int b2 = min(max((int)((b0 + b1) * 255.0F), 0), 255);
-		
-		this.pixels[index + 0] = (byte)(r2);
-		this.pixels[index + 1] = (byte)(g2);
-		this.pixels[index + 2] = (byte)(b2);
-	}
 	
 	private void doFilterBlur(final int x, final int y) {
 		final float factor = 1.0F / 13.0F;

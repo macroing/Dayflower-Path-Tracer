@@ -678,7 +678,7 @@ public final class CompiledScene {
 					boundingVolumeHierarchyArray[j + 9 + k] = doGetOffset(leafNode.getTriangles().get(k), shapes);
 				}
 				
-				j += 9.0F + leafNode.getTriangles().size();
+				j += 9 + leafNode.getTriangles().size();
 			} else if(node instanceof TreeNode) {
 				final TreeNode treeNode = TreeNode.class.cast(node);
 				
@@ -697,15 +697,13 @@ public final class CompiledScene {
 					}
 				}
 				
-				for(int k = i + 1, l = 0; k < nodes.size() && l < 2; k++) {
+				for(int k = i + 1; k < nodes.size(); k++) {
 					final Node node0 = nodes.get(k);
 					
 					if(node0.getDepth() == depth + 1) {
-						if(l == 0) {
-							leftIndex = offsets[k];
-						}
+						leftIndex = offsets[k];
 						
-						l++;
+						break;
 					}
 				}
 				

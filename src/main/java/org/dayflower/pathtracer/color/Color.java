@@ -599,6 +599,25 @@ public final class Color {
 	}
 	
 	/**
+	 * Call this method to redo Gamma Correction using the specified {@link ColorSpace}.
+	 * <p>
+	 * Returns a new {@code Color} instance.
+	 * <p>
+	 * If {@code colorSpace} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param colorSpace the {@code ColorSpace} to use
+	 * @return a new {@code Color} instance
+	 * @throws NullPointerException thrown if, and only if, {@code colorSpace} is {@code null}
+	 */
+	public Color redoGammaCorrection(final ColorSpace colorSpace) {
+		final float r = colorSpace.redoGammaCorrection(this.r);
+		final float g = colorSpace.redoGammaCorrection(this.g);
+		final float b = colorSpace.redoGammaCorrection(this.b);
+		
+		return new Color(r, g, b);
+	}
+	
+	/**
 	 * Saturates this {@code Color} instance, such that each component value will lie in the range {@code [min, max]}.
 	 * <p>
 	 * Returns a new {@code Color} instance with the result of the saturation.
@@ -679,6 +698,25 @@ public final class Color {
 	 */
 	public Color subtract(final float r, final float g, final float b, final float a) {
 		return new Color(this.r - r, this.g - g, this.b - b, this.a - a);
+	}
+	
+	/**
+	 * Call this method to undo Gamma Correction using the specified {@link ColorSpace}.
+	 * <p>
+	 * Returns a new {@code Color} instance.
+	 * <p>
+	 * If {@code colorSpace} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param colorSpace the {@code ColorSpace} to use
+	 * @return a new {@code Color} instance
+	 * @throws NullPointerException thrown if, and only if, {@code colorSpace} is {@code null}
+	 */
+	public Color undoGammaCorrection(final ColorSpace colorSpace) {
+		final float r = colorSpace.undoGammaCorrection(this.r);
+		final float g = colorSpace.undoGammaCorrection(this.g);
+		final float b = colorSpace.undoGammaCorrection(this.b);
+		
+		return new Color(r, g, b);
 	}
 	
 	/**
