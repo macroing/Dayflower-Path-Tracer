@@ -128,7 +128,6 @@ public final class Camera {
 	private AngleF yaw;
 	private boolean hasUpdated;
 	private boolean isWalkLockEnabled;
-	private CameraPredicate cameraPredicate;
 	private final float[] array;
 	private final List<CameraObserver> cameraObservers;
 	
@@ -136,17 +135,11 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public Camera() {
-		this((oldX, oldY, oldZ, newX, newY, newZ) -> new boolean[] {true, true, true});
-	}
-	
-//	TODO: Add Javadocs.
-	public Camera(final CameraPredicate cameraPredicate) {
 		this.array = new float[SIZE];
 		this.cameraObservers = new ArrayList<>();
 		
 		setApertureRadius(0.4F);
 		setCameraLens(CAMERA_LENS_THIN);
-		setCameraPredicate(cameraPredicate);
 		setEye(55.0F, 42.0F, 155.6F);
 		setFieldOfViewX(40.0F);
 		setFocalDistance(30.0F);
@@ -160,15 +153,8 @@ public final class Camera {
 	
 //	TODO: Add Javadocs.
 	public Camera(final float[] array) {
-		this(array, (oldX, oldY, oldZ, newX, newY, newZ) -> new boolean[] {true, true, true});
-	}
-	
-//	TODO: Add Javadocs.
-	public Camera(final float[] array, final CameraPredicate cameraPredicate) {
 		this.array = array;
 		this.cameraObservers = new ArrayList<>();
-		
-		setCameraPredicate(cameraPredicate);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,11 +187,6 @@ public final class Camera {
 //	TODO: Add Javadocs.
 	public boolean isWalkLockEnabled() {
 		return this.isWalkLockEnabled;
-	}
-	
-//	TODO: Add Javadocs.
-	public CameraPredicate getCameraPredicate() {
-		return this.cameraPredicate;
 	}
 	
 //	TODO: Add Javadocs.
@@ -358,28 +339,11 @@ public final class Camera {
 	}
 	
 //	TODO: Add Javadocs.
-	public void setCameraPredicate(final CameraPredicate cameraPredicate) {
-		this.cameraPredicate = Objects.requireNonNull(cameraPredicate, "cameraPredicate == null");
-	}
-	
-//	TODO: Add Javadocs.
 	public void setEye(final float eyeX, final float eyeY, final float eyeZ) {
-		final boolean[] test = this.cameraPredicate.test(getEyeX(), getEyeY(), getEyeZ(), eyeX, eyeY, eyeZ);
-		
-		if(test[0]) {
-			this.array[ABSOLUTE_OFFSET_OF_EYE_X] = eyeX;
-			this.hasUpdated = true;
-		}
-		
-		if(test[1]) {
-			this.array[ABSOLUTE_OFFSET_OF_EYE_Y] = eyeY;
-			this.hasUpdated = true;
-		}
-		
-		if(test[2]) {
-			this.array[ABSOLUTE_OFFSET_OF_EYE_Z] = eyeZ;
-			this.hasUpdated = true;
-		}
+		this.array[ABSOLUTE_OFFSET_OF_EYE_X] = eyeX;
+		this.array[ABSOLUTE_OFFSET_OF_EYE_Y] = eyeY;
+		this.array[ABSOLUTE_OFFSET_OF_EYE_Z] = eyeZ;
+		this.hasUpdated = true;
 	}
 	
 //	TODO: Add Javadocs.
