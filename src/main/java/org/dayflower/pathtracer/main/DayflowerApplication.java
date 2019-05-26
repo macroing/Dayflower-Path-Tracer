@@ -136,7 +136,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		setKernelWidth(Dayflower.getKernelWidth());
 		setKernelHeight(Dayflower.getKernelHeight());
 		
-		this.abstractRendererKernel = new RendererKernel(false, getKernelWidth(), getKernelHeight(), this.camera, this.sky, sceneFilename, 1.0F);
+		this.abstractRendererKernel = new RendererKernel(getKernelWidth(), getKernelHeight(), this.camera, this.sky, sceneFilename, 1.0F);
 		
 		final
 		Camera camera = this.camera;

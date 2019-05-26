@@ -82,7 +82,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private boolean isResetRequired;
-	private final boolean isResettingFully;
 	private byte[] pixels;
 	private final CompiledScene compiledScene;
 	private float amplitude;
@@ -199,7 +198,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * <p>
 	 * If either {@code camera}, {@code sky} or {@code compiledScene} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param isResettingFully {@code true} if full resetting should be performed, {@code false} otherwise
 	 * @param width the width to use
 	 * @param height the height to use
 	 * @param camera the {@link Camera} to use
@@ -207,7 +205,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @param compiledScene the {@link CompiledScene} to use
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code compiledScene} are {@code null}
 	 */
-	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final Sky sky, final CompiledScene compiledScene) {
+	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final CompiledScene compiledScene) {
 		super(width, height, camera, compiledScene);
 		
 		final RGBColorSpace rGBColorSpace = RGBColorSpace.SRGB;
@@ -233,7 +231,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.orthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
 		this.orthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
 		this.orthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
-		this.isResettingFully = isResettingFully;
 		this.width = width;
 		this.boundingVolumeHierarchy = this.compiledScene.getBoundingVolumeHierarchy();
 		this.cameraArray = this.compiledScene.getCamera();
@@ -285,7 +282,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * <p>
 	 * If either {@code camera}, {@code sky} or {@code scene} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param isResettingFully {@code true} if full resetting should be performed, {@code false} otherwise
 	 * @param width the width to use
 	 * @param height the height to use
 	 * @param camera the {@link Camera} to use
@@ -293,8 +289,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @param scene the {@link Scene} to use
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code scene} are {@code null}
 	 */
-	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final Sky sky, final Scene scene) {
-		this(isResettingFully, width, height, camera, sky, CompiledScene.compile(camera, scene));
+	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final Scene scene) {
+		this(width, height, camera, sky, CompiledScene.compile(camera, scene));
 	}
 	
 	/**
@@ -302,7 +298,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * <p>
 	 * If either {@code camera}, {@code sky} or {@code filename} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param isResettingFully {@code true} if full resetting should be performed, {@code false} otherwise
 	 * @param width the width to use
 	 * @param height the height to use
 	 * @param camera the {@link Camera} to use
@@ -310,8 +305,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @param filename the filename of the file to read from
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code filename} are {@code null}
 	 */
-	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final Sky sky, final String filename) {
-		this(isResettingFully, width, height, camera, sky, filename, 1.0F);
+	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final String filename) {
+		this(width, height, camera, sky, filename, 1.0F);
 	}
 	
 	/**
@@ -319,7 +314,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * <p>
 	 * If either {@code camera}, {@code sky} or {@code filename} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param isResettingFully {@code true} if full resetting should be performed, {@code false} otherwise
 	 * @param width the width to use
 	 * @param height the height to use
 	 * @param camera the {@link Camera} to use
@@ -328,8 +322,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @param scale the scale to use in the scene
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code filename} are {@code null}
 	 */
-	public RendererKernel(final boolean isResettingFully, final int width, final int height, final Camera camera, final Sky sky, final String filename, final float scale) {
-		this(isResettingFully, width, height, camera, sky, CompiledScene.read(camera, new File(Objects.requireNonNull(filename, "filename == null"))).scale(scale));
+	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final String filename, final float scale) {
+		this(width, height, camera, sky, CompiledScene.read(camera, new File(Objects.requireNonNull(filename, "filename == null"))).scale(scale));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -604,8 +598,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public RendererKernel reset() {
+		final boolean isResettingFully = this.renderer != RENDERER_AMBIENT_OCCLUSION && this.renderer != RENDERER_PATH_TRACER;
+		
 		for(int i = 0; i < this.subSamples.length; i++) {
-			if(this.isResettingFully) {
+			if(isResettingFully) {
 				final int pixelIndex = i * SIZE_COLOR_RGB;
 				
 				this.accumulatedPixelColors[pixelIndex + 0] = 0.0F;
@@ -624,7 +620,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			put(this.cameraArray);
 		});
 		
-		if(this.isResettingFully) {
+		if(isResettingFully) {
 			put(this.accumulatedPixelColors);
 		}
 		
@@ -4417,15 +4413,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 			}
 		}
 		
-		doAmbientOcclusion(1.0F, 1.0F, 1.0F, 0.1F, 0.1F, 0.1F);
+//		doAmbientOcclusion(1.0F, 1.0F, 1.0F, 0.1F, 0.1F, 0.1F);
 		
-		final float ambientOcclusionR = this.currentPixelColors[pixelIndex0];
-		final float ambientOcclusionG = this.currentPixelColors[pixelIndex0 + 1];
-		final float ambientOcclusionB = this.currentPixelColors[pixelIndex0 + 2];
+//		final float ambientOcclusionR = this.currentPixelColors[pixelIndex0];
+//		final float ambientOcclusionG = this.currentPixelColors[pixelIndex0 + 1];
+//		final float ambientOcclusionB = this.currentPixelColors[pixelIndex0 + 2];
 		
-		pixelColorR *= ambientOcclusionR;
-		pixelColorG *= ambientOcclusionG;
-		pixelColorB *= ambientOcclusionB;
+//		pixelColorR *= ambientOcclusionR;
+//		pixelColorG *= ambientOcclusionG;
+//		pixelColorB *= ambientOcclusionB;
 		
 //		Update the current pixel color:
 		this.currentPixelColors[pixelIndex0] = pixelColorR;
