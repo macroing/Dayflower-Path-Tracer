@@ -4,11 +4,11 @@
 	<property name="java.source" value="1.8"/>
 	<property name="java.target" value="1.8"/>
 	<property name="project.class.classpath" value=". ./lib/aparapi.jar"/>
-	<property name="project.class.main" value="org.dayflower.pathtracer.main.TestApplication"/>
+	<property name="project.class.main" value="org.dayflower.pathtracer.main.DayflowerApplication"/>
 	<property name="project.directory.root" location="."/>
 	<property name="project.name" value="${ant.project.name}"/>
 	<property name="project.vendor" value="Dayflower.org"/>
-	<property name="project.version" value="0.0.32"/>
+	<property name="project.version" value="0.0.33"/>
 	
 	<!--The following properties are based on the above properties and don't really need to change.-->
 	<property name="project.directory.binary" location="bin"/>

@@ -59,6 +59,7 @@ import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
+import org.dayflower.pathtracer.util.FPSCounter;
 
 /**
  * An implementation of {@link AbstractApplication} that performs Path Tracing, Ray Casting or Ray Marching.
@@ -66,7 +67,7 @@ import org.dayflower.pathtracer.scene.Sky;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class TestApplication extends AbstractApplication implements CameraObserver {
+public final class DayflowerApplication extends AbstractApplication implements CameraObserver {
 	private static final String ENGINE_NAME = "Dayflower - Path Tracer";
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +81,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	private ConvolutionKernel convolutionKernel;
 	private final Label labelFPS = new Label("FPS: 0");
 	private final Label labelKernelTime = new Label("Kernel Time: 0 ms");
+	private final Label labelPosition = new Label("Position: [0.0, 0.0, 0.0]");
 	private final Label labelRenderPass = new Label("Pass: 0");
 	private final Label labelRenderTime = new Label("Time: 00:00:00");
 	private final Label labelSPS = new Label("SPS: 00000000");
@@ -100,7 +102,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	/**
 	 * Constructs a new {@code TestApplication} instance.
 	 */
-	public TestApplication() {
+	public DayflowerApplication() {
 		
 	}
 	
@@ -308,7 +310,7 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void configureStatusBar(final HBox hBox) {
-		hBox.getChildren().addAll(this.labelRenderPass, this.labelFPS, this.labelSPS, this.labelRenderTime, this.labelKernelTime);
+		hBox.getChildren().addAll(this.labelRenderPass, this.labelFPS, this.labelSPS, this.labelRenderTime, this.labelKernelTime, this.labelPosition);
 	}
 	
 	/**
@@ -461,21 +463,30 @@ public final class TestApplication extends AbstractApplication implements Camera
 	 */
 	@Override
 	protected void render() {
-		getFPSCounter().update();
+		final
+		FPSCounter fPSCounter = getFPSCounter();
+		fPSCounter.update();
 		
 		final int renderPass = this.renderPass.get();
 		
 		final long renderTimeMillis = this.rendererRunnable.getRenderTimeMillis();
 		final long elapsedTimeMillis = System.currentTimeMillis() - this.currentTimeMillis.get();
-		final long fPS = getFPSCounter().getFPS();
+		final long fPS = fPSCounter.getFPS();
 		final long sPS = fPS * getKernelWidth() * getKernelHeight();
 		
 		final long hours = elapsedTimeMillis / (60L * 60L * 1000L);
 		final long minutes = (elapsedTimeMillis - (hours * 60L * 60L * 1000L)) / (60L * 1000L);
 		final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 		
+		final Camera camera = this.camera;
+		
+		final Float x = Float.valueOf(camera.getEyeX());
+		final Float y = Float.valueOf(camera.getEyeY());
+		final Float z = Float.valueOf(camera.getEyeZ());
+		
 		this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
 		this.labelKernelTime.setText(String.format("Kernel Time: %s ms", Long.valueOf(renderTimeMillis)));
+		this.labelPosition.setText(String.format("Position: [%s, %s, %s]", x, y, z));
 		this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass)));
 		this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
 		this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));

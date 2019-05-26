@@ -581,8 +581,7 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 //	TODO: Add Javadocs!
-	@SuppressWarnings("unused")
-	public void setSelectedShapeIndex(final int selectedShapeIndex) {
+	public void setSelectedShapeIndex(@SuppressWarnings("unused") final int selectedShapeIndex) {
 //		Do nothing.
 	}
 	

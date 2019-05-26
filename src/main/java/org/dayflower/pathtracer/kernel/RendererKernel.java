@@ -70,6 +70,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int RENDERER_RAY_TRACER = 4;
 	private static final int SHADING_FLAT = 1;
 	private static final int SHADING_GOURAUD = 2;
+	private static final int SIZE_COLOR_RGB = 3;
 	private static final int SIZE_INTERSECTION = 22;
 	private static final int SIZE_PIXEL = 4;
 	private static final int SIZE_RAY = 6;
@@ -242,7 +243,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.surfaces = this.compiledScene.getSurfaces();
 		this.textures = this.compiledScene.getTextures();
 		this.vector3Fs = this.compiledScene.getVector3Fs().length == 0 ? new float[3] : this.compiledScene.getVector3Fs();
-		this.accumulatedPixelColors = new float[width * height * 3];
+		this.accumulatedPixelColors = new float[width * height * SIZE_COLOR_RGB];
 		this.shapeOffsets = this.compiledScene.getShapeOffsets();
 		this.shapeOffsetsLength = this.shapeOffsets.length;
 		this.subSamples = new long[width * height];
@@ -605,7 +606,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	public RendererKernel reset() {
 		for(int i = 0; i < this.subSamples.length; i++) {
 			if(this.isResettingFully) {
-				final int pixelIndex = i * 3;
+				final int pixelIndex = i * SIZE_COLOR_RGB;
 				
 				this.accumulatedPixelColors[pixelIndex + 0] = 0.0F;
 				this.accumulatedPixelColors[pixelIndex + 1] = 0.0F;
@@ -642,10 +643,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public RendererKernel updateLocalVariables(final int localSize) {
-		this.currentPixelColors = new float[localSize * 3];
+		this.currentPixelColors = new float[localSize * SIZE_COLOR_RGB];
 		this.intersections = new float[localSize * SIZE_INTERSECTION];
 		this.rays = new float[localSize * SIZE_RAY];
-		this.temporaryColors = new float[localSize * 3];
+		this.temporaryColors = new float[localSize * SIZE_COLOR_RGB];
 		
 		return this;
 	}
@@ -876,8 +877,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 				doRayTracing();
 			}
 		} else {
-			final int pixelIndex0 = pixelIndex * 3;
-			final int pixelIndex1 = getLocalId() * 3;
+			final int pixelIndex0 = pixelIndex * SIZE_COLOR_RGB;
+			final int pixelIndex1 = getLocalId() * SIZE_COLOR_RGB;
 			
 			this.accumulatedPixelColors[pixelIndex0] = 0.0F;
 			this.accumulatedPixelColors[pixelIndex0 + 1] = 0.0F;
@@ -2207,7 +2208,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float pixelColorB = 0.0F;
 		
 //		Retrieve the pixel index:
-		final int pixelIndex = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 //		Perform an intersection test:
 		doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
@@ -2327,8 +2328,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int pixelsOffset = pixelIndex * SIZE_PIXEL;
 		
 //		Calculate the pixel index:
-		final int pixelIndex0 = pixelIndex * 3;
-		final int pixelIndex1 = getLocalId() * 3;
+		final int pixelIndex0 = pixelIndex * SIZE_COLOR_RGB;
+		final int pixelIndex1 = getLocalId() * SIZE_COLOR_RGB;
 		
 //		Perform the moving average algorithm to calculate the average pixel color:
 		final long oldSubSample = this.subSamples[pixelIndex];
@@ -2448,7 +2449,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		if(direction0Z < 0.0F || this.sunAndSky == BOOLEAN_FALSE) {
 //			Calculate the pixel index:
-			final int pixelIndex0 = getLocalId() * 3;
+			final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
 			
 //			Update the temporaryColors array with black:
 			this.temporaryColors[pixelIndex0] = 0.01F;
@@ -2582,7 +2583,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			b *= saturate(noise * bMultiplier + bAddend, 0.0F, 1.0F);
 		}
 		
-		final int pixelIndex = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 		this.temporaryColors[pixelIndex] = r;
 		this.temporaryColors[pixelIndex + 1] = g;
@@ -2623,7 +2624,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int colHistogramLength = this.colHistogramLength;
 		final int imageHistogramHeight = this.imageHistogramHeight;
 		
-		final int pixelIndex = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 		for(int i = 0; i < samples; i++) {
 			final float randomX = nextFloat();
@@ -3130,7 +3131,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final boolean isDark = isDarkU ^ isDarkV;
 		
 //		TODO: Write explanation!
-		final int pixelIndex0 = getLocalId() * 3;
+		final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
 		
 		if(color0R == color1R && color0G == color1G && color0B == color1B) {
 //			TODO: Write explanation!
@@ -3198,7 +3199,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float g = saturate(noise * multiplierG + addendG, 0.0F, 1.0F);
 		final float b = saturate(noise * multiplierB + addendB, 0.0F, 1.0F);
 		
-		final int pixelIndex = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 		this.temporaryColors[pixelIndex] = r;
 		this.temporaryColors[pixelIndex + 1] = g;
@@ -3245,7 +3246,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float b = (rGB & 0xFF) / 255.0F;
 		
 //		TODO: Write explanation!
-		final int pixelIndex0 = getLocalId() * 3;
+		final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
 		
 //		TODO: Write explanation!
 		this.temporaryColors[pixelIndex0] = r;
@@ -3331,7 +3332,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float g = g00 * k00 + g01 * k01 + g10 * k10 + g11 * k11;
 		final float b = b00 * k00 + b01 * k01 + b10 * k10 + b11 * k11;
 		
-		final int pixelIndex = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 		this.temporaryColors[pixelIndex] = r;
 		this.temporaryColors[pixelIndex + 1] = g;
@@ -3349,7 +3350,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float b = (rGB & 0xFF) / 255.0F;
 		
 //		Calculate the pixel index:
-		final int pixelIndex = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 //		Update the temporaryColors array with the color of the texture:
 		this.temporaryColors[pixelIndex] = r;
@@ -3357,10 +3358,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.temporaryColors[pixelIndex + 2] = b;
 	}
 	
-	@SuppressWarnings("unused")
-	private void doCalculateTextureColorForSurfaceNormalTexture(final int texturesOffset) {
+	private void doCalculateTextureColorForSurfaceNormalTexture(@SuppressWarnings("unused") final int texturesOffset) {
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		final int pixelIndex = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 //		TODO: Add support for tangent space. This requires the Ortho Normal Basis (Tangent vectors). The Ortho Normal Basis probably requires object-spaces (at least for simplicity).
 //		final float isTangentSpace = this.textures[texturesOffset + CompiledScene.SURFACE_NORMAL_TEXTURE_RELATIVE_OFFSET_IS_TANGENT_SPACE];
@@ -3433,7 +3433,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float radianceMultiplierB = 1.0F;
 		
 //		Retrieve the pixel index:
-		final int pixelIndex0 = getLocalId() * 3;
+		final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
 		
 //		Initialize the offset of the shape to skip to -1:
 		int shapesOffsetToSkip = -1;
@@ -4117,7 +4117,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			doCalculateTextureColorForImageTextureBilinearInterpolation(texturesOffset);
 			
 //			Calculate the index into the temporaryColors array:
-			final int pixelIndex0 = getLocalId() * 3;
+			final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
 			
 //			Retrieve the R-, G- and B-component values:
 			final float r = 2.0F * this.temporaryColors[pixelIndex0] - 1.0F;
@@ -4292,7 +4292,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float pixelColorB = 0.0F;
 		
 //		Retrieve the pixel index:
-		final int pixelIndex0 = getLocalId() * 3;
+		final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
 		
 //		Perform an intersection test:
 		doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
@@ -4595,27 +4595,21 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float pixelColorG = 0.0F;
 		float pixelColorB = 0.0F;
 		
-//		Initialize the radiance multiplier to white:
-		float radianceMultiplierR = 1.0F;
-		float radianceMultiplierG = 1.0F;
-		float radianceMultiplierB = 1.0F;
-		
 //		Retrieve the pixel index:
-		final int pixelIndex0 = getLocalId() * 3;
+		final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
 		
-//		Initialize the offset of the shape to skip to -1:
-		int shapesOffsetToSkip = -1;
+//		Initialize the offset of the shape to -1:
+		int shapesOffset = -1;
 		
-//		Run the following do-while-loop as long as the current depth is less than the maximum depth and Russian Roulette does not terminate:
 		do {
 //			Perform an intersection test:
-			doPerformIntersectionTest(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
+			doPerformIntersectionTest(shapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
 			
 //			Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
 			final float distance = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
 			
 //			Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
-			final int shapesOffset = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+			shapesOffset = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
 			
 			if(depthCurrent == 0) {
 				this.shapeOffsetsForPrimaryRay[getGlobalId()] = shapesOffset;
@@ -4627,9 +4621,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				doCalculateColorForSky(directionX, directionY, directionZ);
 				
 //				Add the color for the sky to the current pixel color:
-				pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
-				pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
-				pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
+				pixelColorR = this.temporaryColors[pixelIndex0];
+				pixelColorG = this.temporaryColors[pixelIndex0 + 1];
+				pixelColorB = this.temporaryColors[pixelIndex0 + 2];
 				
 //				Update the current pixel color:
 				this.currentPixelColors[pixelIndex0] = pixelColorR;
@@ -4639,25 +4633,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 				return;
 			}
 			
+//			Increment the current depth:
+			depthCurrent++;
+			
 //			Retrieve the offset to the surfaces array for the given shape:
 			final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
 			
-//			Update the offset of the shape to skip to the current offset:
-			shapesOffsetToSkip = shapesOffset;
-			
-//			Retrieve the offsets of the surface intersection point and the surface normal:
-			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
-			
-//			Retrieve the surface intersection point:
-			final float surfaceIntersectionPointX = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
-			final float surfaceIntersectionPointY = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
-			final float surfaceIntersectionPointZ = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
-			
-//			Retrieve the surface normal for shading:
-			final float surfaceNormalShadingX = this.intersections[offsetIntersectionSurfaceNormalShading];
-			final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
-			final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
+//			Retrieve the material type of the intersected shape:
+			final int material = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL]);
 			
 //			Calculate the albedo texture color for the intersected shape:
 			doCalculateTextureColor(CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
@@ -4667,55 +4650,110 @@ public final class RendererKernel extends AbstractRendererKernel {
 			float albedoColorG = this.temporaryColors[pixelIndex0 + 1];
 			float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
 			
-//			Retrieve the offset of the emission:
-			final int offsetEmission = surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_EMISSION;
+//			Retrieve the offsets of the surface intersection point and the surface normal in the intersections array:
+			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 			
-//			Retrieve the emission from the intersected shape:
-			final float emissionR = this.surfaces[offsetEmission];
-			final float emissionG = this.surfaces[offsetEmission + 1];
-			final float emissionB = this.surfaces[offsetEmission + 2];
+//			Retrieve the surface intersection point from the intersections array:
+			final float surfaceIntersectionPointX = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
+			final float surfaceIntersectionPointY = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
+			final float surfaceIntersectionPointZ = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
 			
-//			Add the current radiance multiplied by the emission of the intersected shape to the current pixel color:
-			pixelColorR += radianceMultiplierR * emissionR;
-			pixelColorG += radianceMultiplierG * emissionG;
-			pixelColorB += radianceMultiplierB * emissionB;
+//			Retrieve the surface normal from the intersections array:
+			final float surfaceNormalShadingX = this.intersections[offsetIntersectionSurfaceNormalShading];
+			final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+			final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
 			
-//			Increment the current depth:
-			depthCurrent++;
+//			Initialize the pixel color components with ambient lighting:
+			pixelColorR += albedoColorR * 0.5F;
+			pixelColorG += albedoColorG * 0.5F;
+			pixelColorB += albedoColorB * 0.5F;
 			
-//			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
-			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
-			final float dotProductMultipliedByTwo = dotProduct * 2.0F;
+//			Retrieve the sun origin:
+			final float sunOriginX = this.sunOriginX;
+			final float sunOriginY = this.sunOriginY;
+			final float sunOriginZ = this.sunOriginZ;
 			
-//			Update the ray origin for the next iteration:
-			originX = surfaceIntersectionPointX + surfaceNormalShadingX * 0.000001F;
-			originY = surfaceIntersectionPointY + surfaceNormalShadingY * 0.000001F;
-			originZ = surfaceIntersectionPointZ + surfaceNormalShadingZ * 0.000001F;
+//			Retrieve the sun direction from the surface intersection point:
+			final float lightDirection0X = sunOriginX - surfaceIntersectionPointX;
+			final float lightDirection0Y = sunOriginY - surfaceIntersectionPointY;
+			final float lightDirection0Z = sunOriginZ - surfaceIntersectionPointZ;
+			final float lightDirection0Length = sqrt(lightDirection0X * lightDirection0X + lightDirection0Y * lightDirection0Y + lightDirection0Z * lightDirection0Z);
+			final float lightDirection0LengthReciprocal = 1.0F / lightDirection0Length;
+			final float lightDirection1X = lightDirection0X * lightDirection0LengthReciprocal;
+			final float lightDirection1Y = lightDirection0Y * lightDirection0LengthReciprocal;
+			final float lightDirection1Z = lightDirection0Z * lightDirection0LengthReciprocal;
 			
-//			Update the ray direction for the next iteration:
-			directionX = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
-			directionY = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
-			directionZ = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
+//			Perform an intersection test:
+			doPerformIntersectionTest(shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, lightDirection1X, lightDirection1Y, lightDirection1Z);
 			
-//			Multiply the current radiance multiplier with the albedo:
-			radianceMultiplierR *= albedoColorR;
-			radianceMultiplierG *= albedoColorG;
-			radianceMultiplierB *= albedoColorB;
+//			Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
+			final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+			
+			if(distance0 > lightDirection0Length) {
+				final float wi0X = sunOriginX - surfaceNormalShadingX;
+				final float wi0Y = sunOriginY - surfaceNormalShadingY;
+				final float wi0Z = sunOriginZ - surfaceNormalShadingZ;
+				final float wi0LengthReciprocal = rsqrt(wi0X * wi0X + wi0Y * wi0Y + wi0Z * wi0Z);
+				final float wi1X = wi0X * wi0LengthReciprocal;
+				final float wi1Y = wi0Y * wi0LengthReciprocal;
+				final float wi1Z = wi0Z * wi0LengthReciprocal;
+				
+				final float woX = -directionX;
+				final float woY = -directionY;
+				final float woZ = -directionZ;
+				
+				final float surfaceNormalDotWi = surfaceNormalShadingX * wi1X + surfaceNormalShadingY * wi1Y + surfaceNormalShadingZ * wi1Z;
+				
+				if(surfaceNormalDotWi > 0.0F) {
+					final float reflectionX = -wi1X + (2.0F * surfaceNormalShadingX * surfaceNormalDotWi);
+					final float reflectionY = -wi1Y + (2.0F * surfaceNormalShadingY * surfaceNormalDotWi);
+					final float reflectionZ = -wi1Z + (2.0F * surfaceNormalShadingZ * surfaceNormalDotWi);
+					
+					final float reflectionDotWo = reflectionX * woX + reflectionY * woY + reflectionZ * woZ;
+					
+					final float diffuseIntensity = 1.0F;
+					final float diffuseColorR = albedoColorR * diffuseIntensity * PI_RECIPROCAL;
+					final float diffuseColorG = albedoColorG * diffuseIntensity * PI_RECIPROCAL;
+					final float diffuseColorB = albedoColorB * diffuseIntensity * PI_RECIPROCAL;
+					
+					if(reflectionDotWo > 0.0F) {
+						final float specularIntensity = 1.0F;
+						final float specularPower = 25.0F;
+						final float specularComponent = pow(reflectionDotWo, specularPower) * specularIntensity;
+						final float specularColorR = 1.0F * specularComponent;
+						final float specularColorG = 1.0F * specularComponent;
+						final float specularColorB = 1.0F * specularComponent;
+						
+						pixelColorR += (diffuseColorR + specularColorR) * surfaceNormalDotWi;
+						pixelColorG += (diffuseColorG + specularColorG) * surfaceNormalDotWi;
+						pixelColorB += (diffuseColorB + specularColorB) * surfaceNormalDotWi;
+					} else {
+						pixelColorR += diffuseColorR * surfaceNormalDotWi;
+						pixelColorG += diffuseColorG * surfaceNormalDotWi;
+						pixelColorB += diffuseColorB * surfaceNormalDotWi;
+					}
+				}
+			}
+			
+			if(material == MATERIAL_MIRROR) {
+//				Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
+				final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
+				final float dotProductMultipliedByTwo = dotProduct * 2.0F;
+				
+//				Update the ray origin for the next iteration:
+				originX = surfaceIntersectionPointX + surfaceNormalShadingX * 0.000001F;
+				originY = surfaceIntersectionPointY + surfaceNormalShadingY * 0.000001F;
+				originZ = surfaceIntersectionPointZ + surfaceNormalShadingZ * 0.000001F;
+				
+//				Update the ray direction for the next iteration:
+				directionX = directionX - surfaceNormalShadingX * dotProductMultipliedByTwo;
+				directionY = directionY - surfaceNormalShadingY * dotProductMultipliedByTwo;
+				directionZ = directionZ - surfaceNormalShadingZ * dotProductMultipliedByTwo;
+			} else {
+				depthCurrent = depthMaximum;
+			}
 		} while(depthCurrent < depthMaximum);
-		
-//		Perform an intersection test:
-		final boolean isIntersecting = doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
-		
-//		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
-		if(isIntersecting) {
-//			Calculate the color for the sky in the current direction:
-			doCalculateColorForSky(directionX, directionY, directionZ);
-			
-//			Add the color for the sky to the current pixel color:
-			pixelColorR += radianceMultiplierR * this.temporaryColors[pixelIndex0];
-			pixelColorG += radianceMultiplierG * this.temporaryColors[pixelIndex0 + 1];
-			pixelColorB += radianceMultiplierB * this.temporaryColors[pixelIndex0 + 2];
-		}
 		
 //		Update the current pixel color:
 		this.currentPixelColors[pixelIndex0] = pixelColorR;
