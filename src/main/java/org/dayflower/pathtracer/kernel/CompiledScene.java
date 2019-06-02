@@ -215,10 +215,10 @@ public final class CompiledScene {
 	public static final int SURFACE_RELATIVE_OFFSET_MATERIAL = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT = 6;
+	public static final int SURFACE_RELATIVE_OFFSET_NOISE_AMOUNT = 6;
 	
 //	TODO: Add Javadocs.
-	public static final int SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE = 7;
+	public static final int SURFACE_RELATIVE_OFFSET_NOISE_SCALE = 7;
 	
 //	TODO: Add Javadocs.
 	public static final int SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO = 4;
@@ -320,6 +320,24 @@ public final class CompiledScene {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
+	public boolean hasNoiceBasedNormalMapping() {
+		boolean hasNoiceBasedNormalMapping = false;
+		
+		for(int i = 0; i < this.surfaces.length; i += SURFACE_SIZE) {
+			final float noiceAmount = this.surfaces[i + SURFACE_RELATIVE_OFFSET_NOISE_AMOUNT];
+			final float noiceScale = this.surfaces[i + SURFACE_RELATIVE_OFFSET_NOISE_SCALE];
+			
+			if(noiceAmount > 0.0F || noiceScale > 0.0F) {
+				hasNoiceBasedNormalMapping = true;
+				
+				break;
+			}
+		}
+		
+		return hasNoiceBasedNormalMapping;
+	}
+	
+//	TODO: Add Javadocs.
 	public boolean hasNormalMapping() {
 		boolean hasNormalMapping = false;
 		
@@ -335,24 +353,6 @@ public final class CompiledScene {
 		}
 		
 		return hasNormalMapping;
-	}
-	
-//	TODO: Add Javadocs.
-	public boolean hasPerlinNoiceNormalMapping() {
-		boolean hasPerlinNoiceNormalMapping = false;
-		
-		for(int i = 0; i < this.surfaces.length; i += SURFACE_SIZE) {
-			final float perlinNoiceAmount = this.surfaces[i + SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT];
-			final float perlinNoiceScale = this.surfaces[i + SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE];
-			
-			if(perlinNoiceAmount > 0.0F || perlinNoiceScale > 0.0F) {
-				hasPerlinNoiceNormalMapping = true;
-				
-				break;
-			}
-		}
-		
-		return hasPerlinNoiceNormalMapping;
 	}
 	
 //	TODO: Add Javadocs.

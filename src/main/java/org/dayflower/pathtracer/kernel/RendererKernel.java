@@ -4090,12 +4090,68 @@ public final class RendererKernel extends AbstractRendererKernel {
 //			Perform standard Normal Mapping:
 			doPerformNormalMapping(shapesOffset);
 			
-//			Perform Perlin Noise Normal Mapping:
-			doPerformPerlinNoiseNormalMapping(shapesOffset);
+//			Perform Noise-based Normal Mapping:
+			doPerformNoiseBasedNormalMapping(shapesOffset);
 		} else {
 //			Reset the information in the intersections array:
 			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
 			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = -1;
+		}
+	}
+	
+	private void doPerformNoiseBasedNormalMapping(final int shapesOffset) {
+//		Get the intersections offset:
+		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
+		
+//		Retrieve the offset to the surfaces array:
+		final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+		
+//		Retrieve the noise amount from the current shape:
+		final float amount = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_NOISE_AMOUNT];
+		
+//		Retrieve the noise scale from the current shape:
+		final float scale = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_NOISE_SCALE];
+		
+//		Check that the noise amount and noise scale are greater than 0.0:
+		if(/*this.isNormalMapping == 1 &&*/ amount > 0.0F && scale > 0.0F) {
+//			Retrieve the surface intersection point and the surface normal from the current shape:
+			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
+			
+//			Retrieve the X-, Y- and Z-component values from the surface intersection point:
+			final float x0 = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
+			final float y0 = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
+			final float z0 = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
+			
+//			Compute the reciprocal of the noise scale:
+			final float scaleReciprocal = 1.0F / scale;
+			
+//			Scale the X-, Y- and Z-component values:
+			final float x1 = x0 * scaleReciprocal;
+			final float y1 = y0 * scaleReciprocal;
+			final float z1 = z0 * scaleReciprocal;
+			
+//			Compute the noise given the X-, Y- and Z-component values:
+			final float noiseX = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, x1, y1, z1);//doPerlinNoise(x1, y1, z1);
+			final float noiseY = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, y1, z1, x1);//doPerlinNoise(y1, z1, x1);
+			final float noiseZ = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, z1, x1, y1);//doPerlinNoise(z1, x1, y1);
+			
+//			Calculate the surface normal:
+			final float surfaceNormal0X = this.intersections[offsetIntersectionSurfaceNormalShading];
+			final float surfaceNormal0Y = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
+			final float surfaceNormal0Z = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
+			final float surfaceNormal1X = surfaceNormal0X + noiseX * amount;
+			final float surfaceNormal1Y = surfaceNormal0Y + noiseY * amount;
+			final float surfaceNormal1Z = surfaceNormal0Z + noiseZ * amount;
+			final float surfaceNormal1LengthReciprocal = rsqrt(surfaceNormal1X * surfaceNormal1X + surfaceNormal1Y * surfaceNormal1Y + surfaceNormal1Z * surfaceNormal1Z);
+			final float surfaceNormal2X = surfaceNormal1X * surfaceNormal1LengthReciprocal;
+			final float surfaceNormal2Y = surfaceNormal1Y * surfaceNormal1LengthReciprocal;
+			final float surfaceNormal2Z = surfaceNormal1Z * surfaceNormal1LengthReciprocal;
+			
+//			Update the intersections array with the new surface normal:
+			this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormal2X;
+			this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal2Y;
+			this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal2Z;
 		}
 	}
 	
@@ -4204,62 +4260,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 				this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
 				this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 			}
-		}
-	}
-	
-	private void doPerformPerlinNoiseNormalMapping(final int shapesOffset) {
-//		Get the intersections offset:
-		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
-		
-//		Retrieve the offset to the surfaces array:
-		final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
-		
-//		Retrieve the Perlin noise amount from the current shape:
-		final float amount = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_AMOUNT];
-		
-//		Retrieve the Perlin noise scale from the current shape:
-		final float scale = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_PERLIN_NOISE_SCALE];
-		
-//		Check that the Perlin noise amount and Perlin noise scale are greater than 0.0:
-		if(/*this.isNormalMapping == 1 &&*/ amount > 0.0F && scale > 0.0F) {
-//			Retrieve the surface intersection point and the surface normal from the current shape:
-			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
-			
-//			Retrieve the X-, Y- and Z-component values from the surface intersection point:
-			final float x0 = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
-			final float y0 = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
-			final float z0 = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
-			
-//			Compute the reciprocal of the Perlin noise scale:
-			final float scaleReciprocal = 1.0F / scale;
-			
-//			Scale the X-, Y- and Z-component values:
-			final float x1 = x0 * scaleReciprocal;
-			final float y1 = y0 * scaleReciprocal;
-			final float z1 = z0 * scaleReciprocal;
-			
-//			Compute the Perlin noise given the X-, Y- and Z-component values:
-			final float noiseX = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, x1, y1, z1);//doPerlinNoise(x1, y1, z1);
-			final float noiseY = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, y1, z1, x1);//doPerlinNoise(y1, z1, x1);
-			final float noiseZ = doFractionalBrownianMotionXYZ(0.5F, scale, -0.26F, 0.26F, 16, z1, x1, y1);//doPerlinNoise(z1, x1, y1);
-			
-//			Calculate the surface normal:
-			final float surfaceNormal0X = this.intersections[offsetIntersectionSurfaceNormalShading];
-			final float surfaceNormal0Y = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
-			final float surfaceNormal0Z = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
-			final float surfaceNormal1X = surfaceNormal0X + noiseX * amount;
-			final float surfaceNormal1Y = surfaceNormal0Y + noiseY * amount;
-			final float surfaceNormal1Z = surfaceNormal0Z + noiseZ * amount;
-			final float surfaceNormal1LengthReciprocal = rsqrt(surfaceNormal1X * surfaceNormal1X + surfaceNormal1Y * surfaceNormal1Y + surfaceNormal1Z * surfaceNormal1Z);
-			final float surfaceNormal2X = surfaceNormal1X * surfaceNormal1LengthReciprocal;
-			final float surfaceNormal2Y = surfaceNormal1Y * surfaceNormal1LengthReciprocal;
-			final float surfaceNormal2Z = surfaceNormal1Z * surfaceNormal1LengthReciprocal;
-			
-//			Update the intersections array with the new surface normal:
-			this.intersections[offsetIntersectionSurfaceNormalShading] = surfaceNormal2X;
-			this.intersections[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal2Y;
-			this.intersections[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal2Z;
 		}
 	}
 	
@@ -4478,12 +4478,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float height = doGetY(surfaceIntersectionPointX, surfaceIntersectionPointZ);
 			
 			if(surfaceIntersectionPointY < height) {
-				final float gray = 0.5F;
+				final float noise = doFractionalBrownianMotionXYZ(0.5F, 8.0F, 0.0F, 1.0F, 16, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ);
 				
 //				Calculate the albedo color of the surface intersection point:
-				float albedoColorR = gray;
-				float albedoColorG = gray;
-				float albedoColorB = gray;
+				float albedoColorR = saturate(noise * 1.0F + 0.1F, 0.0F, 1.0F);
+				float albedoColorG = saturate(noise * 1.0F + 0.1F, 0.0F, 1.0F);
+				float albedoColorB = saturate(noise * 1.0F + 0.1F, 0.0F, 1.0F);
 				
 //				Calculate the surface normal at the surface intersection point:
 				final float surfaceNormal0X = doGetY(surfaceIntersectionPointX - EPSILON, surfaceIntersectionPointZ) - doGetY(surfaceIntersectionPointX + EPSILON, surfaceIntersectionPointZ);
@@ -4617,9 +4617,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				doCalculateColorForSky(directionX, directionY, directionZ);
 				
 //				Add the color for the sky to the current pixel color:
-				pixelColorR = this.temporaryColors[pixelIndex0];
-				pixelColorG = this.temporaryColors[pixelIndex0 + 1];
-				pixelColorB = this.temporaryColors[pixelIndex0 + 2];
+				pixelColorR += this.temporaryColors[pixelIndex0];
+				pixelColorG += this.temporaryColors[pixelIndex0 + 1];
+				pixelColorB += this.temporaryColors[pixelIndex0 + 2];
 				
 //				Update the current pixel color:
 				this.currentPixelColors[pixelIndex0] = pixelColorR;
