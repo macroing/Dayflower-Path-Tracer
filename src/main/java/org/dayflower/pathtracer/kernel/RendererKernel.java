@@ -2179,6 +2179,171 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return this.permutations[index % this.permutations.length];
 	}
 	
+	private int doShaderPhongReflectionModel0(final boolean isCheckingForIntersections, final int shapesOffset, final float pX, final float pY, final float pZ, final float nX, final float nY, final float nZ, final float vX, final float vY, final float vZ, final float albedoR, final float albedoG, final float albedoB, final float kaR, final float kaG, final float kaB, final float kdR, final float kdG, final float kdB, final float ksR, final float ksG, final float ksB, final float ns) {
+//		Initialize the color:
+		float r = 0.0F;
+		float g = 0.0F;
+		float b = 0.0F;
+		
+//		Retrieve Ia, the ambient intensity:
+		final float ia = 1.0F;
+		
+//		Compute and add the ambient light to the current color:
+		r += albedoR * kaR * ia;
+		g += albedoG * kaG * ia;
+		b += albedoB * kaB * ia;
+		
+		final float lPositionX = this.sunOriginX;
+		final float lPositionY = this.sunOriginY;
+		final float lPositionZ = this.sunOriginZ;
+		
+//		Compute L, the normalized direction vector from the intersection point to the point light:
+		final float lX = lPositionX - pX;
+		final float lY = lPositionY - pY;
+		final float lZ = lPositionZ - pZ;
+		final float lLengthSquared = lX * lX + lY * lY + lZ * lZ;
+		final float lLength = sqrt(lLengthSquared);
+		final float lLengthReciprocal = 1.0F / lLength;
+		final float lNormalizedX = lX * lLengthReciprocal;
+		final float lNormalizedY = lY * lLengthReciprocal;
+		final float lNormalizedZ = lZ * lLengthReciprocal;
+		
+		if(isCheckingForIntersections) {
+//			Perform an intersection test:
+			doPerformIntersectionTest(shapesOffset, pX, pY, pZ, lNormalizedX, lNormalizedY, lNormalizedZ);
+		}
+		
+//		Compute t, the closest intersection from the intersection point in the direction of L:
+		final float t = isCheckingForIntersections ? this.intersections[getLocalId() * SIZE_INTERSECTION + RELATIVE_OFFSET_INTERSECTION_DISTANCE] : INFINITY;
+		
+		if(t >= INFINITY || t > lLengthSquared) {
+//			Compute the dot product between L and N:
+			final float lDotN = lNormalizedX * nX + lNormalizedY * nY + lNormalizedZ * nZ;
+			
+//			Retrieve Id, the diffuse intensity:
+			final float id = 1.0F;
+			
+//			Compute and add the diffuse light to the current color:
+			r += albedoR * kdR * max(lDotN, 0.0F) * id;
+			g += albedoG * kdG * max(lDotN, 0.0F) * id;
+			b += albedoB * kdB * max(lDotN, 0.0F) * id;
+			
+			if(lDotN > 0.0F) {
+				final float rX = 2.0F * lDotN * nX - lNormalizedX;
+				final float rY = 2.0F * lDotN * nY - lNormalizedY;
+				final float rZ = 2.0F * lDotN * nZ - lNormalizedZ;
+				final float rLengthReciprocal = rsqrt(rX * rX + rY * rY + rZ * rZ);
+				final float rNormalizedX = rX * rLengthReciprocal;
+				final float rNormalizedY = rY * rLengthReciprocal;
+				final float rNormalizedZ = rZ * rLengthReciprocal;
+				
+				final float rDotV = rNormalizedX * vX + rNormalizedY * vY + rNormalizedZ * vZ;
+				
+				final float shininess = pow(max(rDotV, 0.0F), ns);
+				
+//				Retrieve Is, the specular intensity:
+				final float is = 1.0F;
+				
+//				Compute and add the specular light to the color:
+				r += ksR * shininess * is;
+				g += ksG * shininess * is;
+				b += ksB * shininess * is;
+			}
+		}
+		
+		r = saturate(r, 0.0F, 1.0F);
+		g = saturate(g, 0.0F, 1.0F);
+		b = saturate(b, 0.0F, 1.0F);
+		
+		return (((int)(r * 255.0F + 0.5F) & 0xFF) << 16) | (((int)(g * 255.0F + 0.5F) & 0xFF) << 8) | (((int)(b * 255.0F + 0.5F) & 0xFF));
+	}
+	
+	@SuppressWarnings("unused")
+	private int doShaderPhongReflectionModel1(final boolean isCheckingForIntersections, final int shapesOffset, final float surfaceIntersectionPointX, final float surfaceIntersectionPointY, final float surfaceIntersectionPointZ, final float surfaceNormalX, final float surfaceNormalY, final float surfaceNormalZ, final float rayDirectionX, final float rayDirectionY, final float rayDirectionZ, final float albedoR, final float albedoG, final float albedoB) {
+		float r = albedoR * 0.5F;
+		float g = albedoG * 0.5F;
+		float b = albedoB * 0.5F;
+		
+		final float woX = -rayDirectionX;
+		final float woY = -rayDirectionY;
+		final float woZ = -rayDirectionZ;
+		final float woLengthReciprocal = rsqrt(woX * woX + woY * woY + woZ * woZ);
+		final float woNormalizedX = woX * woLengthReciprocal;
+		final float woNormalizedY = woY * woLengthReciprocal;
+		final float woNormalizedZ = woZ * woLengthReciprocal;
+		
+		final float lPositionX = this.sunOriginX;
+		final float lPositionY = this.sunOriginY;
+		final float lPositionZ = this.sunOriginZ;
+		
+//		Compute L, the normalized direction vector from the intersection point to the point light:
+		final float lX = lPositionX - surfaceIntersectionPointX;
+		final float lY = lPositionY - surfaceIntersectionPointY;
+		final float lZ = lPositionZ - surfaceIntersectionPointZ;
+		final float lLengthSquared = lX * lX + lY * lY + lZ * lZ;
+		final float lLength = sqrt(lLengthSquared);
+		final float lLengthReciprocal = 1.0F / lLength;
+		final float lNormalizedX = lX * lLengthReciprocal;
+		final float lNormalizedY = lY * lLengthReciprocal;
+		final float lNormalizedZ = lZ * lLengthReciprocal;
+		
+		if(isCheckingForIntersections) {
+//			Perform an intersection test:
+			doPerformIntersectionTest(shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, lNormalizedX, lNormalizedY, lNormalizedZ);
+		}
+		
+//		Compute t, the closest intersection from the intersection point in the direction of L:
+		final float t = isCheckingForIntersections ? this.intersections[getLocalId() * SIZE_INTERSECTION + RELATIVE_OFFSET_INTERSECTION_DISTANCE] : INFINITY;
+		
+		if(t >= INFINITY || t > lLengthSquared) {
+			final float wiX = lPositionX - surfaceIntersectionPointX;//surfaceNormalX;
+			final float wiY = lPositionY - surfaceIntersectionPointY;//surfaceNormalY;
+			final float wiZ = lPositionZ - surfaceIntersectionPointZ;//surfaceNormalZ;
+			final float wiLengthReciprocal = rsqrt(wiX * wiX + wiY * wiY + wiZ * wiZ);
+			final float wiNormalizedX = wiX * wiLengthReciprocal;
+			final float wiNormalizedY = wiY * wiLengthReciprocal;
+			final float wiNormalizedZ = wiZ * wiLengthReciprocal;
+			
+			final float surfaceNormalDotWi = surfaceNormalX * wiNormalizedX + surfaceNormalY * wiNormalizedY + surfaceNormalZ * wiNormalizedZ;
+			
+			if(surfaceNormalDotWi > 0.0F) {
+				final float reflectionX = -wiNormalizedX + (2.0F * surfaceNormalX * surfaceNormalDotWi);
+				final float reflectionY = -wiNormalizedY + (2.0F * surfaceNormalY * surfaceNormalDotWi);
+				final float reflectionZ = -wiNormalizedZ + (2.0F * surfaceNormalZ * surfaceNormalDotWi);
+				
+				final float reflectionDotWo = reflectionX * woNormalizedX + reflectionY * woNormalizedY + reflectionZ * woNormalizedZ;
+				
+				final float diffuseIntensity = 1.0F;
+				final float diffuseColorR = albedoR * diffuseIntensity * PI_RECIPROCAL;
+				final float diffuseColorG = albedoG * diffuseIntensity * PI_RECIPROCAL;
+				final float diffuseColorB = albedoB * diffuseIntensity * PI_RECIPROCAL;
+				
+				if(reflectionDotWo > 0.0F) {
+					final float specularIntensity = 1.0F;
+					final float specularPower = 50.0F;
+					final float specularComponent = pow(reflectionDotWo, specularPower) * specularIntensity;
+					final float specularColorR = 1.0F * specularComponent;
+					final float specularColorG = 1.0F * specularComponent;
+					final float specularColorB = 1.0F * specularComponent;
+					
+					r += (diffuseColorR + specularColorR) * surfaceNormalDotWi;
+					g += (diffuseColorG + specularColorG) * surfaceNormalDotWi;
+					b += (diffuseColorB + specularColorB) * surfaceNormalDotWi;
+				} else {
+					r += diffuseColorR * surfaceNormalDotWi;
+					g += diffuseColorG * surfaceNormalDotWi;
+					b += diffuseColorB * surfaceNormalDotWi;
+				}
+			}
+		}
+		
+		r = saturate(r, 0.0F, 1.0F);
+		g = saturate(g, 0.0F, 1.0F);
+		b = saturate(b, 0.0F, 1.0F);
+		
+		return (((int)(r * 255.0F + 0.5F) & 0xFF) << 16) | (((int)(g * 255.0F + 0.5F) & 0xFF) << 8) | (((int)(b * 255.0F + 0.5F) & 0xFF));
+	}
+	
 	private void doAmbientOcclusion(final float brightR, final float brightG, final float brightB, final float darkR, final float darkG, final float darkB) {
 //		Calculate the current offsets to the intersections and rays arrays:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
@@ -4288,7 +4453,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float pixelColorB = 0.0F;
 		
 //		Retrieve the pixel index:
-		final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 //		Perform an intersection test:
 		doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
@@ -4307,14 +4472,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 			doCalculateColorForSky(directionX, directionY, directionZ);
 			
 //			Add the color for the sky to the current pixel color:
-			pixelColorR = this.temporaryColors[pixelIndex0];
-			pixelColorG = this.temporaryColors[pixelIndex0 + 1];
-			pixelColorB = this.temporaryColors[pixelIndex0 + 2];
+			pixelColorR = this.temporaryColors[pixelIndex];
+			pixelColorG = this.temporaryColors[pixelIndex + 1];
+			pixelColorB = this.temporaryColors[pixelIndex + 2];
 			
 //			Update the current pixel color:
-			this.currentPixelColors[pixelIndex0] = pixelColorR;
-			this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
-			this.currentPixelColors[pixelIndex0 + 2] = pixelColorB;
+			this.currentPixelColors[pixelIndex] = pixelColorR;
+			this.currentPixelColors[pixelIndex + 1] = pixelColorG;
+			this.currentPixelColors[pixelIndex + 2] = pixelColorB;
 			
 			return;
 		}
@@ -4323,9 +4488,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		doCalculateTextureColor(CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
 		
 //		Get the color of the shape from the albedo texture color that was looked up:
-		float albedoColorR = this.temporaryColors[pixelIndex0];
-		float albedoColorG = this.temporaryColors[pixelIndex0 + 1];
-		float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
+		float albedoColorR = this.temporaryColors[pixelIndex];
+		float albedoColorG = this.temporaryColors[pixelIndex + 1];
+		float albedoColorB = this.temporaryColors[pixelIndex + 2];
 		
 //		Retrieve the offsets of the surface intersection point and the surface normal in the intersections array:
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
@@ -4341,96 +4506,31 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
 		final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
 		
-//		Initialize the pixel color components with ambient lighting:
-		pixelColorR = albedoColorR * 0.5F;
-		pixelColorG = albedoColorG * 0.5F;
-		pixelColorB = albedoColorB * 0.5F;
+		final int colorRGB = doShaderPhongReflectionModel0(true, shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
+//		final int colorRGB = doShaderPhongReflectionModel1(true, shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
 		
-//		Retrieve the sun origin:
-		final float sunOriginX = this.sunOriginX;
-		final float sunOriginY = this.sunOriginY;
-		final float sunOriginZ = this.sunOriginZ;
-		
-//		Retrieve the sun direction from the surface intersection point:
-		final float lightDirection0X = sunOriginX - surfaceIntersectionPointX;
-		final float lightDirection0Y = sunOriginY - surfaceIntersectionPointY;
-		final float lightDirection0Z = sunOriginZ - surfaceIntersectionPointZ;
-		final float lightDirection0Length = sqrt(lightDirection0X * lightDirection0X + lightDirection0Y * lightDirection0Y + lightDirection0Z * lightDirection0Z);
-		final float lightDirection0LengthReciprocal = 1.0F / lightDirection0Length;
-		final float lightDirection1X = lightDirection0X * lightDirection0LengthReciprocal;
-		final float lightDirection1Y = lightDirection0Y * lightDirection0LengthReciprocal;
-		final float lightDirection1Z = lightDirection0Z * lightDirection0LengthReciprocal;
-		
-//		Perform an intersection test:
-		doPerformIntersectionTest(shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, lightDirection1X, lightDirection1Y, lightDirection1Z);
-		
-//		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
-		final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
-		
-		if(distance0 > lightDirection0Length) {
-			final float wi0X = sunOriginX - surfaceNormalShadingX;
-			final float wi0Y = sunOriginY - surfaceNormalShadingY;
-			final float wi0Z = sunOriginZ - surfaceNormalShadingZ;
-			final float wi0LengthReciprocal = rsqrt(wi0X * wi0X + wi0Y * wi0Y + wi0Z * wi0Z);
-			final float wi1X = wi0X * wi0LengthReciprocal;
-			final float wi1Y = wi0Y * wi0LengthReciprocal;
-			final float wi1Z = wi0Z * wi0LengthReciprocal;
-			
-			final float woX = -directionX;
-			final float woY = -directionY;
-			final float woZ = -directionZ;
-			
-			final float surfaceNormalDotWi = surfaceNormalShadingX * wi1X + surfaceNormalShadingY * wi1Y + surfaceNormalShadingZ * wi1Z;
-			
-			if(surfaceNormalDotWi > 0.0F) {
-				final float reflectionX = -wi1X + (2.0F * surfaceNormalShadingX * surfaceNormalDotWi);
-				final float reflectionY = -wi1Y + (2.0F * surfaceNormalShadingY * surfaceNormalDotWi);
-				final float reflectionZ = -wi1Z + (2.0F * surfaceNormalShadingZ * surfaceNormalDotWi);
-				
-				final float reflectionDotWo = reflectionX * woX + reflectionY * woY + reflectionZ * woZ;
-				
-				final float diffuseIntensity = 1.0F;
-				final float diffuseColorR = albedoColorR * diffuseIntensity * PI_RECIPROCAL;
-				final float diffuseColorG = albedoColorG * diffuseIntensity * PI_RECIPROCAL;
-				final float diffuseColorB = albedoColorB * diffuseIntensity * PI_RECIPROCAL;
-				
-				if(reflectionDotWo > 0.0F) {
-					final float specularIntensity = 1.0F;
-					final float specularPower = 25.0F;
-					final float specularComponent = pow(reflectionDotWo, specularPower) * specularIntensity;
-					final float specularColorR = 1.0F * specularComponent;
-					final float specularColorG = 1.0F * specularComponent;
-					final float specularColorB = 1.0F * specularComponent;
-					
-					pixelColorR += (diffuseColorR + specularColorR) * surfaceNormalDotWi;
-					pixelColorG += (diffuseColorG + specularColorG) * surfaceNormalDotWi;
-					pixelColorB += (diffuseColorB + specularColorB) * surfaceNormalDotWi;
-				} else {
-					pixelColorR += diffuseColorR * surfaceNormalDotWi;
-					pixelColorG += diffuseColorG * surfaceNormalDotWi;
-					pixelColorB += diffuseColorB * surfaceNormalDotWi;
-				}
-			}
-		}
+		pixelColorR = ((colorRGB >> 16) & 0xFF) / 255.0F;
+		pixelColorG = ((colorRGB >> 8) & 0xFF) / 255.0F;
+		pixelColorB = (colorRGB & 0xFF) / 255.0F;
 		
 //		doAmbientOcclusion(1.0F, 1.0F, 1.0F, 0.1F, 0.1F, 0.1F);
 		
-//		final float ambientOcclusionR = this.currentPixelColors[pixelIndex0];
-//		final float ambientOcclusionG = this.currentPixelColors[pixelIndex0 + 1];
-//		final float ambientOcclusionB = this.currentPixelColors[pixelIndex0 + 2];
+//		final float ambientOcclusionR = this.currentPixelColors[pixelIndex];
+//		final float ambientOcclusionG = this.currentPixelColors[pixelIndex + 1];
+//		final float ambientOcclusionB = this.currentPixelColors[pixelIndex + 2];
 		
 //		pixelColorR *= ambientOcclusionR;
 //		pixelColorG *= ambientOcclusionG;
 //		pixelColorB *= ambientOcclusionB;
 		
 //		Update the current pixel color:
-		this.currentPixelColors[pixelIndex0] = pixelColorR;
-		this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
-		this.currentPixelColors[pixelIndex0 + 2] = pixelColorB;
+		this.currentPixelColors[pixelIndex] = pixelColorR;
+		this.currentPixelColors[pixelIndex + 1] = pixelColorG;
+		this.currentPixelColors[pixelIndex + 2] = pixelColorB;
 	}
 	
 	private void doRayMarching() {
-		final int pixelIndex0 = getLocalId() * 3;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		final int raysOffset = getLocalId() * SIZE_RAY;
 		final int offsetOrigin = raysOffset + RELATIVE_OFFSET_RAY_ORIGIN;
 		final int offsetDirection = raysOffset + RELATIVE_OFFSET_RAY_DIRECTION;
@@ -4454,21 +4554,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		doCalculateColorForSky(directionX, directionY, directionZ);
 		
-		float pixelColorR = this.temporaryColors[pixelIndex0];
-		float pixelColorG = this.temporaryColors[pixelIndex0 + 1];
-		float pixelColorB = this.temporaryColors[pixelIndex0 + 2];
-		
-		final float sunDirectionX = this.sunDirectionWorldX;
-		final float sunDirectionY = this.sunDirectionWorldY;
-		final float sunDirectionZ = this.sunDirectionWorldZ;
-		
-		final float sunDistance = 1000.0F;
-		
-		final float sunPositionX = sunDirectionX * sunDistance;
-		final float sunPositionY = sunDirectionY * sunDistance;
-		final float sunPositionZ = sunDirectionZ * sunDistance;
-		
-		final float sunAmbientCoefficient = 0.2F;
+		float pixelColorR = this.temporaryColors[pixelIndex];
+		float pixelColorG = this.temporaryColors[pixelIndex + 1];
+		float pixelColorB = this.temporaryColors[pixelIndex + 2];
 		
 		for(float t = minT; t < maxT; t += delT) {
 			final float surfaceIntersectionPointX = originX + directionX * t;
@@ -4478,6 +4566,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float height = doGetY(surfaceIntersectionPointX, surfaceIntersectionPointZ);
 			
 			if(surfaceIntersectionPointY < height) {
+//				Calculate the surface normal at the surface intersection point:
+				final float surfaceNormalX = doGetY(surfaceIntersectionPointX - EPSILON, surfaceIntersectionPointZ) - doGetY(surfaceIntersectionPointX + EPSILON, surfaceIntersectionPointZ);
+				final float surfaceNormalY = 2.0F * EPSILON;
+				final float surfaceNormalZ = doGetY(surfaceIntersectionPointX, surfaceIntersectionPointZ - EPSILON) - doGetY(surfaceIntersectionPointX, surfaceIntersectionPointZ + EPSILON);
+				final float surfaceNormalLengthReciprocal = 1.0F / sqrt(surfaceNormalX * surfaceNormalX + surfaceNormalY * surfaceNormalY + surfaceNormalZ * surfaceNormalZ);
+				final float surfaceNormalNormalizedX = surfaceNormalX * surfaceNormalLengthReciprocal;
+				final float surfaceNormalNormalizedY = surfaceNormalY * surfaceNormalLengthReciprocal;
+				final float surfaceNormalNormalizedZ = surfaceNormalZ * surfaceNormalLengthReciprocal;
+				
 				final float noise = doFractionalBrownianMotionXYZ(0.5F, 8.0F, 0.0F, 1.0F, 16, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ);
 				
 //				Calculate the albedo color of the surface intersection point:
@@ -4485,70 +4582,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 				float albedoColorG = saturate(noise * 1.0F + 0.1F, 0.0F, 1.0F);
 				float albedoColorB = saturate(noise * 1.0F + 0.1F, 0.0F, 1.0F);
 				
-//				Calculate the surface normal at the surface intersection point:
-				final float surfaceNormal0X = doGetY(surfaceIntersectionPointX - EPSILON, surfaceIntersectionPointZ) - doGetY(surfaceIntersectionPointX + EPSILON, surfaceIntersectionPointZ);
-				final float surfaceNormal0Y = 2.0F * EPSILON;
-				final float surfaceNormal0Z = doGetY(surfaceIntersectionPointX, surfaceIntersectionPointZ - EPSILON) - doGetY(surfaceIntersectionPointX, surfaceIntersectionPointZ + EPSILON);
-				final float surfaceNormal0LengthReciprocal = 1.0F / sqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
-				final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
-				final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
-				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
+				final int colorRGB = doShaderPhongReflectionModel0(false, -1, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalNormalizedX, surfaceNormalNormalizedY, surfaceNormalNormalizedZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
+//				final int colorRGB = doShaderPhongReflectionModel1(false, -1, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalNormalizedX, surfaceNormalNormalizedY, surfaceNormalNormalizedZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
 				
-//				Calculate the direction from the surface intersection point to the sun:
-				final float surfaceToSun0X = sunPositionX - surfaceIntersectionPointX;
-				final float surfaceToSun0Y = sunPositionY - surfaceIntersectionPointY;
-				final float surfaceToSun0Z = sunPositionZ - surfaceIntersectionPointZ;
-				final float surfaceToSun0LengthReciprocal = 1.0F / sqrt(surfaceToSun0X * surfaceToSun0X + surfaceToSun0Y * surfaceToSun0Y + surfaceToSun0Z * surfaceToSun0Z);
-				final float surfaceToSun1X = surfaceToSun0X * surfaceToSun0LengthReciprocal;
-				final float surfaceToSun1Y = surfaceToSun0Y * surfaceToSun0LengthReciprocal;
-				final float surfaceToSun1Z = surfaceToSun0Z * surfaceToSun0LengthReciprocal;
-				
-//				Calculate the direction from the surface intersection point to the camera:
-				final float surfaceToCameraX = -directionX;
-				final float surfaceToCameraY = -directionY;
-				final float surfaceToCameraZ = -directionZ;
-				
-//				Calculate the ambient color:
-				final float ambientColorR = sunAmbientCoefficient * albedoColorR * 1.0F;
-				final float ambientColorG = sunAmbientCoefficient * albedoColorG * 1.0F;
-				final float ambientColorB = sunAmbientCoefficient * albedoColorB * 1.0F;
-				
-//				Calculate the diffuse color:
-				final float dotProductSurfaceNormalAndSurfaceToSun = surfaceNormal1X * surfaceToSun1X + surfaceNormal1Y * surfaceToSun1Y + surfaceNormal1Z * surfaceToSun1Z;
-				final float diffuseCoefficient = max(dotProductSurfaceNormalAndSurfaceToSun, 0.0F);
-				final float diffuseColorR = diffuseCoefficient * albedoColorR * 1.0F;
-				final float diffuseColorG = diffuseCoefficient * albedoColorG * 1.0F;
-				final float diffuseColorB = diffuseCoefficient * albedoColorB * 1.0F;
-				
-//				Calculate the specular color:
-				float specularCoefficient = 0.0F;
-				
-				if(diffuseCoefficient > 0.0F) {
-					final float incidentX = -surfaceToSun1X;
-					final float incidentY = -surfaceToSun1Y;
-					final float incidentZ = -surfaceToSun1Z;
-					
-					final float dotProductSurfaceNormalAndIncident = surfaceNormal1X * incidentX + surfaceNormal1Y * incidentY + surfaceNormal1Z * incidentZ;
-					
-					final float reflectionX = incidentX - 2.0F * dotProductSurfaceNormalAndIncident * surfaceNormal1X;
-					final float reflectionY = incidentY - 2.0F * dotProductSurfaceNormalAndIncident * surfaceNormal1Y;
-					final float reflectionZ = incidentZ - 2.0F * dotProductSurfaceNormalAndIncident * surfaceNormal1Z;
-					
-					final float dotProductSurfaceToCameraAndReflection = surfaceToCameraX * reflectionX + surfaceToCameraY * reflectionY + surfaceToCameraZ * reflectionZ;
-					
-					final float specularPower = 50.0F;
-					
-					specularCoefficient = pow(max(dotProductSurfaceToCameraAndReflection, 0.0F), specularPower);
-				}
-				
-				final float specularColorR = specularCoefficient * 1.0F * 1.0F;
-				final float specularColorG = specularCoefficient * 1.0F * 1.0F;
-				final float specularColorB = specularCoefficient * 1.0F * 1.0F;
-				
-//				Calculate the final color in linear color space:
-				pixelColorR = ambientColorR + diffuseColorR + specularColorR;
-				pixelColorG = ambientColorG + diffuseColorG + specularColorG;
-				pixelColorB = ambientColorB + diffuseColorB + specularColorB;
+				pixelColorR = ((colorRGB >> 16) & 0xFF) / 255.0F;
+				pixelColorG = ((colorRGB >> 8) & 0xFF) / 255.0F;
+				pixelColorB = (colorRGB & 0xFF) / 255.0F;
 				
 				t = maxT;
 			}
@@ -4556,9 +4595,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			delT = delTMultiplier * t;
 		}
 		
-		this.currentPixelColors[pixelIndex0] = pixelColorR;
-		this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
-		this.currentPixelColors[pixelIndex0 + 2] = pixelColorB;
+		this.currentPixelColors[pixelIndex] = pixelColorR;
+		this.currentPixelColors[pixelIndex + 1] = pixelColorG;
+		this.currentPixelColors[pixelIndex + 2] = pixelColorB;
 	}
 	
 	private void doRayTracing() {
@@ -4660,77 +4699,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float surfaceNormalShadingY = this.intersections[offsetIntersectionSurfaceNormalShading + 1];
 			final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
 			
-//			Initialize the pixel color components with ambient lighting:
-			pixelColorR += albedoColorR * 0.5F;
-			pixelColorG += albedoColorG * 0.5F;
-			pixelColorB += albedoColorB * 0.5F;
+			final int colorRGB = doShaderPhongReflectionModel0(true, shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
+//			final int colorRGB = doShaderPhongReflectionModel1(true, shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
 			
-//			Retrieve the sun origin:
-			final float sunOriginX = this.sunOriginX;
-			final float sunOriginY = this.sunOriginY;
-			final float sunOriginZ = this.sunOriginZ;
-			
-//			Retrieve the sun direction from the surface intersection point:
-			final float lightDirection0X = sunOriginX - surfaceIntersectionPointX;
-			final float lightDirection0Y = sunOriginY - surfaceIntersectionPointY;
-			final float lightDirection0Z = sunOriginZ - surfaceIntersectionPointZ;
-			final float lightDirection0Length = sqrt(lightDirection0X * lightDirection0X + lightDirection0Y * lightDirection0Y + lightDirection0Z * lightDirection0Z);
-			final float lightDirection0LengthReciprocal = 1.0F / lightDirection0Length;
-			final float lightDirection1X = lightDirection0X * lightDirection0LengthReciprocal;
-			final float lightDirection1Y = lightDirection0Y * lightDirection0LengthReciprocal;
-			final float lightDirection1Z = lightDirection0Z * lightDirection0LengthReciprocal;
-			
-//			Perform an intersection test:
-			doPerformIntersectionTest(shapesOffset, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, lightDirection1X, lightDirection1Y, lightDirection1Z);
-			
-//			Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
-			final float distance0 = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
-			
-			if(distance0 > lightDirection0Length) {
-				final float wi0X = sunOriginX - surfaceNormalShadingX;
-				final float wi0Y = sunOriginY - surfaceNormalShadingY;
-				final float wi0Z = sunOriginZ - surfaceNormalShadingZ;
-				final float wi0LengthReciprocal = rsqrt(wi0X * wi0X + wi0Y * wi0Y + wi0Z * wi0Z);
-				final float wi1X = wi0X * wi0LengthReciprocal;
-				final float wi1Y = wi0Y * wi0LengthReciprocal;
-				final float wi1Z = wi0Z * wi0LengthReciprocal;
-				
-				final float woX = -directionX;
-				final float woY = -directionY;
-				final float woZ = -directionZ;
-				
-				final float surfaceNormalDotWi = surfaceNormalShadingX * wi1X + surfaceNormalShadingY * wi1Y + surfaceNormalShadingZ * wi1Z;
-				
-				if(surfaceNormalDotWi > 0.0F) {
-					final float reflectionX = -wi1X + (2.0F * surfaceNormalShadingX * surfaceNormalDotWi);
-					final float reflectionY = -wi1Y + (2.0F * surfaceNormalShadingY * surfaceNormalDotWi);
-					final float reflectionZ = -wi1Z + (2.0F * surfaceNormalShadingZ * surfaceNormalDotWi);
-					
-					final float reflectionDotWo = reflectionX * woX + reflectionY * woY + reflectionZ * woZ;
-					
-					final float diffuseIntensity = 1.0F;
-					final float diffuseColorR = albedoColorR * diffuseIntensity * PI_RECIPROCAL;
-					final float diffuseColorG = albedoColorG * diffuseIntensity * PI_RECIPROCAL;
-					final float diffuseColorB = albedoColorB * diffuseIntensity * PI_RECIPROCAL;
-					
-					if(reflectionDotWo > 0.0F) {
-						final float specularIntensity = 1.0F;
-						final float specularPower = 25.0F;
-						final float specularComponent = pow(reflectionDotWo, specularPower) * specularIntensity;
-						final float specularColorR = 1.0F * specularComponent;
-						final float specularColorG = 1.0F * specularComponent;
-						final float specularColorB = 1.0F * specularComponent;
-						
-						pixelColorR += (diffuseColorR + specularColorR) * surfaceNormalDotWi;
-						pixelColorG += (diffuseColorG + specularColorG) * surfaceNormalDotWi;
-						pixelColorB += (diffuseColorB + specularColorB) * surfaceNormalDotWi;
-					} else {
-						pixelColorR += diffuseColorR * surfaceNormalDotWi;
-						pixelColorG += diffuseColorG * surfaceNormalDotWi;
-						pixelColorB += diffuseColorB * surfaceNormalDotWi;
-					}
-				}
-			}
+			pixelColorR += ((colorRGB >> 16) & 0xFF) / 255.0F;
+			pixelColorG += ((colorRGB >> 8) & 0xFF) / 255.0F;
+			pixelColorB += (colorRGB & 0xFF) / 255.0F;
 			
 			if(material == MATERIAL_MIRROR) {
 //				Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
