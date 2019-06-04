@@ -3231,13 +3231,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		if(textureType == CompiledScene.CHECKERBOARD_TEXTURE_TYPE) {
 			doCalculateTextureColorForCheckerboardTexture(texturesOffset);
+		} else if(textureType == CompiledScene.CONSTANT_TEXTURE_TYPE) {
+			doCalculateTextureColorForConstantTexture(texturesOffset);
 		} else if(textureType == CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_TYPE) {
 			doCalculateTextureColorForFractionalBrownianMotionTexture(texturesOffset);
 		} else if(textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
 //			doCalculateTextureColorForImageTexture(texturesOffset);
 			doCalculateTextureColorForImageTextureBilinearInterpolation(texturesOffset);
-		} else if(textureType == CompiledScene.SOLID_TEXTURE_TYPE) {
-			doCalculateTextureColorForSolidTexture(texturesOffset);
 		} else if(textureType == CompiledScene.SURFACE_NORMAL_TEXTURE_TYPE) {
 			doCalculateTextureColorForSurfaceNormalTexture(texturesOffset);
 		}
@@ -3245,10 +3245,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private void doCalculateTextureColorForCheckerboardTexture(final int texturesOffset) {
 //		Get the intersections offset:
-		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
 //		TODO: Write explanation!
-		final int offsetUVCoordinates = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
 		final int offsetColor0 = texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0;
 		final int offsetColor1 = texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1;
 		
@@ -3257,22 +3257,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float v = this.intersections[offsetUVCoordinates + 1];
 		
 //		TODO: Write explanation!
-		final float color0 = this.textures[offsetColor0];
+		final int color0RGB = (int)(this.textures[offsetColor0]);
+		final int color1RGB = (int)(this.textures[offsetColor1]);
 		
-		final int rGB0 = (int)(color0);
+		final float color0R = ((color0RGB >> 16) & 0xFF) / 255.0F;
+		final float color0G = ((color0RGB >>  8) & 0xFF) / 255.0F;
+		final float color0B = ((color0RGB >>  0) & 0xFF) / 255.0F;
 		
-		final float color0R = ((rGB0 >> 16) & 0xFF) / 255.0F;
-		final float color0G = ((rGB0 >> 8) & 0xFF) / 255.0F;
-		final float color0B = (rGB0 & 0xFF) / 255.0F;
-		
-//		TODO: Write explanation!
-		final float color1 = this.textures[offsetColor1];
-		
-		final int rGB1 = (int)(color1);
-		
-		final float color1R = ((rGB1 >> 16) & 0xFF) / 255.0F;
-		final float color1G = ((rGB1 >> 8) & 0xFF) / 255.0F;
-		final float color1B = (rGB1 & 0xFF) / 255.0F;
+		final float color1R = ((color1RGB >> 16) & 0xFF) / 255.0F;
+		final float color1G = ((color1RGB >>  8) & 0xFF) / 255.0F;
+		final float color1B = ((color1RGB >>  0) & 0xFF) / 255.0F;
 		
 //		TODO: Write explanation!
 		final float sU = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U];
@@ -3292,7 +3286,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final boolean isDark = isDarkU ^ isDarkV;
 		
 //		TODO: Write explanation!
-		final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
 		if(color0R == color1R && color0G == color1G && color0B == color1B) {
 //			TODO: Write explanation!
@@ -3304,9 +3298,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float b = color0B * textureMultiplier;
 			
 //			TODO: Write explanation!
-			this.temporaryColors[pixelIndex0] = r;
-			this.temporaryColors[pixelIndex0 + 1] = g;
-			this.temporaryColors[pixelIndex0 + 2] = b;
+			this.temporaryColors[pixelIndex + 0] = r;
+			this.temporaryColors[pixelIndex + 1] = g;
+			this.temporaryColors[pixelIndex + 2] = b;
 		} else {
 //			TODO: Write explanation!
 			final float r = isDark ? color0R : color1R;
@@ -3314,10 +3308,27 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float b = isDark ? color0B : color1B;
 			
 //			TODO: Write explanation!
-			this.temporaryColors[pixelIndex0] = r;
-			this.temporaryColors[pixelIndex0 + 1] = g;
-			this.temporaryColors[pixelIndex0 + 2] = b;
+			this.temporaryColors[pixelIndex + 0] = r;
+			this.temporaryColors[pixelIndex + 1] = g;
+			this.temporaryColors[pixelIndex + 2] = b;
 		}
+	}
+	
+	private void doCalculateTextureColorForConstantTexture(final int texturesOffset) {
+//		Retrieve the R-, G- and B-component values of the texture:
+		final int colorRGB = (int)(this.textures[texturesOffset + CompiledScene.CONSTANT_TEXTURE_RELATIVE_OFFSET_COLOR]);
+		
+		final float colorR = ((colorRGB >> 16) & 0xFF) / 255.0F;
+		final float colorG = ((colorRGB >>  8) & 0xFF) / 255.0F;
+		final float colorB = ((colorRGB >>  0) & 0xFF) / 255.0F;
+		
+//		Calculate the pixel index:
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
+		
+//		Update the temporaryColors array with the color of the texture:
+		this.temporaryColors[pixelIndex + 0] = colorR;
+		this.temporaryColors[pixelIndex + 1] = colorG;
+		this.temporaryColors[pixelIndex + 2] = colorB;
 	}
 	
 	private void doCalculateTextureColorForFractionalBrownianMotionTexture(final int texturesOffset) {
@@ -3495,25 +3506,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
-		this.temporaryColors[pixelIndex] = r;
-		this.temporaryColors[pixelIndex + 1] = g;
-		this.temporaryColors[pixelIndex + 2] = b;
-	}
-	
-	private void doCalculateTextureColorForSolidTexture(final int texturesOffset) {
-//		Retrieve the R-, G- and B-component values of the texture:
-		final float color = this.textures[texturesOffset + CompiledScene.SOLID_TEXTURE_RELATIVE_OFFSET_COLOR];
-		
-		final int rGB = (int)(color);
-		
-		final float r = ((rGB >> 16) & 0xFF) / 255.0F;
-		final float g = ((rGB >> 8) & 0xFF) / 255.0F;
-		final float b = (rGB & 0xFF) / 255.0F;
-		
-//		Calculate the pixel index:
-		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
-		
-//		Update the temporaryColors array with the color of the texture:
 		this.temporaryColors[pixelIndex] = r;
 		this.temporaryColors[pixelIndex + 1] = g;
 		this.temporaryColors[pixelIndex + 2] = b;

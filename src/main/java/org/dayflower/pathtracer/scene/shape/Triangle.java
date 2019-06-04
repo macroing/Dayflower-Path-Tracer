@@ -128,7 +128,7 @@ public final class Triangle extends Shape {
 	 * If either {@code w} or {@code v} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param w a {@link Vector3F}
-	 * @param v a {@code Vector3}
+	 * @param v a {@code Vector3F}
 	 * @return a new rotated version of this {@code Triangle} instance
 	 * @throws NullPointerException thrown if, and only if, either {@code w} or {@code v} are {@code null}
 	 */
@@ -457,7 +457,7 @@ public final class Triangle extends Shape {
 		 * @param x the amount to translate this {@code Vertex} in the X-direction
 		 * @return a new {@code Vertex} with the translation performed
 		 */
-		private Vertex translateX(final float x) {
+		public Vertex translateX(final float x) {
 			return new Vertex(this.textureCoordinates, this.position.translateX(x), this.normal);
 		}
 		

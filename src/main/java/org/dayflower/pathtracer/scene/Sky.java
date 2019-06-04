@@ -54,6 +54,11 @@ public final class Sky {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private Color sunColor;
+	private final OrthoNormalBasis33F orthoNormalBasis = new OrthoNormalBasis33F(Vector3F.y(), Vector3F.z(), Vector3F.x());
+	private Point3F sunOrigin;
+	private SpectralCurve radiance;
+	private Vector3F sunDirection;
+	private Vector3F sunDirectionWorld;
 	private double zenithRelativeLuminance;
 	private double zenithX;
 	private double zenithY;
@@ -68,11 +73,6 @@ public final class Sky {
 	private final int imageHistogramHeight = 32;
 	private final int imageHistogramWidth = 32;
 	private final int samples = 4;
-	private final OrthoNormalBasis33F orthoNormalBasis = new OrthoNormalBasis33F(Vector3F.y(), Vector3F.z(), Vector3F.x());
-	private Point3F sunOrigin;
-	private SpectralCurve radiance;
-	private Vector3F sunDirection;
-	private Vector3F sunDirectionWorld;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -82,6 +82,31 @@ public final class Sky {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+//	TODO: Add Javadocs.
+	public Color getSunColor() {
+		return this.sunColor;
+	}
+	
+//	TODO: Add Javadocs.
+	public OrthoNormalBasis33F getOrthoNormalBasis() {
+		return this.orthoNormalBasis;
+	}
+	
+//	TODO: Add Javadocs.
+	public Point3F getSunOrigin() {
+		return this.sunOrigin;
+	}
+	
+//	TODO: Add Javadocs.
+	public Vector3F getSunDirection() {
+		return this.sunDirection;
+	}
+	
+//	TODO: Add Javadocs.
+	public Vector3F getSunDirectionWorld() {
+		return this.sunDirectionWorld;
+	}
 	
 //	TODO: Add Javadocs.
 	public double getZenithRelativeLuminance() {
@@ -151,31 +176,6 @@ public final class Sky {
 //	TODO: Add Javadocs.
 	public int getSamples() {
 		return this.samples;
-	}
-	
-//	TODO: Add Javadocs.
-	public Color getSunColor() {
-		return this.sunColor;
-	}
-	
-//	TODO: Add Javadocs.
-	public OrthoNormalBasis33F getOrthoNormalBasis() {
-		return this.orthoNormalBasis;
-	}
-	
-//	TODO: Add Javadocs.
-	public Point3F getSunOrigin() {
-		return this.sunOrigin;
-	}
-	
-//	TODO: Add Javadocs.
-	public Vector3F getSunDirection() {
-		return this.sunDirection;
-	}
-	
-//	TODO: Add Javadocs.
-	public Vector3F getSunDirectionWorld() {
-		return this.sunDirectionWorld;
 	}
 	
 //	TODO: Add Javadocs.

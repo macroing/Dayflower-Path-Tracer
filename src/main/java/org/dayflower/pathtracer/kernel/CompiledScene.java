@@ -59,9 +59,9 @@ import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
+import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
-import org.dayflower.pathtracer.scene.texture.SolidTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 
 //TODO: Add Javadocs.
@@ -99,6 +99,15 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static final int CHECKERBOARD_TEXTURE_TYPE = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int CONSTANT_TEXTURE_RELATIVE_OFFSET_COLOR = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int CONSTANT_TEXTURE_SIZE = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int CONSTANT_TEXTURE_TYPE = 2;
 	
 //	TODO: Add Javadocs.
 	public static final int FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_ADDEND = 2;
@@ -168,15 +177,6 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static final int SHAPE_RELATIVE_OFFSET_TYPE = 0;
-	
-//	TODO: Add Javadocs.
-	public static final int SOLID_TEXTURE_RELATIVE_OFFSET_COLOR = 2;
-	
-//	TODO: Add Javadocs.
-	public static final int SOLID_TEXTURE_SIZE = 3;
-	
-//	TODO: Add Javadocs.
-	public static final int SOLID_TEXTURE_TYPE = 2;
 	
 //	TODO: Add Javadocs.
 	public static final int SPHERE_RELATIVE_OFFSET_POSITION_POINT3S_OFFSET = 3;
@@ -895,20 +895,20 @@ public final class CompiledScene {
 			surface.getMaterial().ordinal(),
 			doGetOffset(surface.getTextureAlbedo(), textures),
 			doGetOffset(surface.getTextureNormal(), textures),
-			surface.getPerlinNoiseAmount(),
-			surface.getPerlinNoiseScale()
+			surface.getNoiseAmount(),
+			surface.getNoiseScale()
 		};
 	}
 	
 	private static float[] doToFloatArray(final Texture texture) {
 		if(texture instanceof CheckerboardTexture) {
 			return doToFloatArrayCheckerboardTexture(CheckerboardTexture.class.cast(texture));
+		} else if(texture instanceof ConstantTexture) {
+			return doToFloatArrayConstantTexture(ConstantTexture.class.cast(texture));
 		} else if(texture instanceof FractionalBrownianMotionTexture) {
 			return doToFloatArrayFractionalBrownianMotionTexture(FractionalBrownianMotionTexture.class.cast(texture));
 		} else if(texture instanceof ImageTexture) {
 			return doToFloatArrayImageTexture(ImageTexture.class.cast(texture));
-		} else if(texture instanceof SolidTexture) {
-			return doToFloatArraySolidTexture(SolidTexture.class.cast(texture));
 		} else if(texture instanceof SurfaceNormalTexture) {
 			return doToFloatArraySurfaceNormalTexture(SurfaceNormalTexture.class.cast(texture));
 		} else {
@@ -926,6 +926,14 @@ public final class CompiledScene {
 			sin(toRadians(checkerboardTexture.getDegrees())),
 			checkerboardTexture.getScaleU(),
 			checkerboardTexture.getScaleV()
+		};
+	}
+	
+	private static float[] doToFloatArrayConstantTexture(final ConstantTexture constantTexture) {
+		return new float[] {
+			CONSTANT_TEXTURE_TYPE,
+			CONSTANT_TEXTURE_SIZE,
+			constantTexture.getColor().multiply(255.0F).toRGB()
 		};
 	}
 	
@@ -972,14 +980,6 @@ public final class CompiledScene {
 			point3Fs.get(plane.getB()).intValue(),
 			point3Fs.get(plane.getC()).intValue(),
 			vector3Fs.get(plane.getSurfaceNormal()).intValue()
-		};
-	}
-	
-	private static float[] doToFloatArraySolidTexture(final SolidTexture solidTexture) {
-		return new float[] {
-			SOLID_TEXTURE_TYPE,
-			SOLID_TEXTURE_SIZE,
-			solidTexture.getColor().multiply(255.0F).toRGB()
 		};
 	}
 	
@@ -1125,12 +1125,12 @@ public final class CompiledScene {
 	private static int doSize(final Texture texture) {
 		if(texture instanceof CheckerboardTexture) {
 			return CHECKERBOARD_TEXTURE_SIZE;
+		} else if(texture instanceof ConstantTexture) {
+			return CONSTANT_TEXTURE_SIZE;
 		} else if(texture instanceof FractionalBrownianMotionTexture) {
 			return FRACTIONAL_BROWNIAN_MOTION_TEXTURE_SIZE;
 		} else if(texture instanceof ImageTexture) {
 			return 8 + ImageTexture.class.cast(texture).getData().length;
-		} else if(texture instanceof SolidTexture) {
-			return SOLID_TEXTURE_SIZE;
 		} else if(texture instanceof SurfaceNormalTexture) {
 			return SURFACE_NORMAL_TEXTURE_SIZE;
 		} else {

@@ -149,6 +149,34 @@ public final class CheckerboardTexture implements Texture {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Returns one of the two {@link Color}s assigned to this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return one of the two {@code Color}s assigned to this {@code CheckerboardTexture} instance
+	 */
+	public Color getColor0() {
+		return this.color0;
+	}
+	
+	/**
+	 * Returns one of the two {@link Color}s assigned to this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return one of the two {@code Color}s assigned to this {@code CheckerboardTexture} instance
+	 */
+	public Color getColor1() {
+		return this.color1;
+	}
+	
+	/**
+	 * Returns a {@code String} representation of this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code CheckerboardTexture} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("new CheckerboardTexture(%s, %s, %s, %s, %s)", this.color0, this.color1, Float.toString(this.scaleU), Float.toString(this.scaleV), Float.toString(this.degrees));
+	}
+	
+	/**
 	 * Compares {@code object} to this {@code CheckerboardTexture} instance for equality.
 	 * <p>
 	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code CheckerboardTexture}, and their respective values are equal, {@code false} otherwise.
@@ -175,24 +203,6 @@ public final class CheckerboardTexture implements Texture {
 		} else {
 			return true;
 		}
-	}
-	
-	/**
-	 * Returns one of the two {@link Color}s assigned to this {@code CheckerboardTexture} instance.
-	 * 
-	 * @return one of the two {@code Color}s assigned to this {@code CheckerboardTexture} instance
-	 */
-	public Color getColor0() {
-		return this.color0;
-	}
-	
-	/**
-	 * Returns one of the two {@link Color}s assigned to this {@code CheckerboardTexture} instance.
-	 * 
-	 * @return one of the two {@code Color}s assigned to this {@code CheckerboardTexture} instance
-	 */
-	public Color getColor1() {
-		return this.color1;
 	}
 	
 	/**
@@ -230,15 +240,5 @@ public final class CheckerboardTexture implements Texture {
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.color0, this.color1, Float.valueOf(this.degrees), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV));
-	}
-	
-	/**
-	 * Returns a {@code String} representation of this {@code CheckerboardTexture} instance.
-	 * 
-	 * @return a {@code String} representation of this {@code CheckerboardTexture} instance
-	 */
-	@Override
-	public String toString() {
-		return String.format("CheckerboardTexture: [Color0=%s], [Color1=%s], [Degrees=%s], [ScaleU=%s], [ScaleV=%s]", this.color0, this.color1, Float.toString(this.degrees), Float.toString(this.scaleU), Float.toString(this.scaleV));
 	}
 }

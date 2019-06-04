@@ -40,9 +40,9 @@ import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
+import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
-import org.dayflower.pathtracer.scene.texture.SolidTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 
 final class Scenes {
@@ -97,26 +97,26 @@ final class Scenes {
 	
 	public static Scene newCarScene() {
 		final Texture textureGroundAlbedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.3F, 0.1F), Color.WHITE, 0.5F, 0.8F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);
+		final Texture textureGroundNormalMap = new ConstantTexture(Color.BLACK);
 		
-		final Texture textureCarAlbedo = new SolidTexture(Color.GRAY);
-		final Texture textureCarNormalMap = new SolidTexture(Color.BLACK);
-		final Texture textureCarWindGlass = new SolidTexture(Color.WHITE);
-		final Texture textureCarBodyPaint = new SolidTexture(Color.RED);
-		final Texture textureCarChrome = new SolidTexture(Color.GRAY);
-		final Texture textureCarDriver = new SolidTexture(new Color(227, 161, 115));
-		final Texture textureCarDoorLine = new SolidTexture(Color.RED);
-		final Texture textureCarTireBack = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
-		final Texture textureCarTireTread = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
-		final Texture textureCarTireSidewall = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
-		final Texture textureCarMisc = new SolidTexture(Color.GRAY);
-		final Texture textureCarMaterial = new SolidTexture(Color.GRAY);
-		final Texture textureCarLicense = new SolidTexture(Color.WHITE);
-		final Texture textureCarLicense0 = new SolidTexture(Color.WHITE);
-		final Texture textureCarInterior = new SolidTexture(new Color(222, 184, 135));
-		final Texture textureCarInterior0 = new SolidTexture(new Color(222, 184, 135));
-		final Texture textureCarBlack = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
-		final Texture textureCarBottom = new SolidTexture(new Color(0.1F, 0.1F, 0.1F));
+		final Texture textureCarAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture textureCarNormalMap = new ConstantTexture(Color.BLACK);
+		final Texture textureCarWindGlass = new ConstantTexture(Color.WHITE);
+		final Texture textureCarBodyPaint = new ConstantTexture(Color.RED);
+		final Texture textureCarChrome = new ConstantTexture(Color.GRAY);
+		final Texture textureCarDriver = new ConstantTexture(new Color(227, 161, 115));
+		final Texture textureCarDoorLine = new ConstantTexture(Color.RED);
+		final Texture textureCarTireBack = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
+		final Texture textureCarTireTread = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
+		final Texture textureCarTireSidewall = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
+		final Texture textureCarMisc = new ConstantTexture(Color.GRAY);
+		final Texture textureCarMaterial = new ConstantTexture(Color.GRAY);
+		final Texture textureCarLicense = new ConstantTexture(Color.WHITE);
+		final Texture textureCarLicense0 = new ConstantTexture(Color.WHITE);
+		final Texture textureCarInterior = new ConstantTexture(new Color(222, 184, 135));
+		final Texture textureCarInterior0 = new ConstantTexture(new Color(222, 184, 135));
+		final Texture textureCarBlack = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
+		final Texture textureCarBottom = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarAlbedo, textureCarNormalMap);
 		
@@ -223,16 +223,16 @@ final class Scenes {
 	}
 	
 	public static Scene newCornellBoxScene() {
-		final Texture textureAlbedo0 = new SolidTexture(new Color(0.75F, 0.25F, 0.25F));
-		final Texture textureAlbedo1 = new SolidTexture(new Color(0.25F, 0.25F, 0.75F));
-		final Texture textureAlbedo2 = new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
-		final Texture textureAlbedo3 = new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
-		final Texture textureAlbedo4 = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);//new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
-		final Texture textureAlbedo5 = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);//new SolidTexture(new Color(0.75F, 0.75F, 0.75F));
-		final Texture textureAlbedo6 = new FractionalBrownianMotionTexture(new Color(0.5F * 0.999F, 1.0F * 0.999F, 0.5F * 0.999F), Color.WHITE, 0.5F, 0.8F, 16);//new SolidTexture(new Color(0.5F * 0.999F, 1.0F * 0.999F, 0.5F * 0.999F));//TODO
-		final Texture textureAlbedo7 = new SolidTexture(new Color(1.0F * 0.999F, 1.0F * 0.999F, 1.0F * 0.999F));
-		final Texture textureAlbedo8 = new SolidTexture(Color.BLACK);
-		final Texture textureNormal = new SolidTexture(Color.BLACK);
+		final Texture textureAlbedo0 = new ConstantTexture(new Color(0.75F, 0.25F, 0.25F));
+		final Texture textureAlbedo1 = new ConstantTexture(new Color(0.25F, 0.25F, 0.75F));
+		final Texture textureAlbedo2 = new ConstantTexture(new Color(0.75F, 0.75F, 0.75F));
+		final Texture textureAlbedo3 = new ConstantTexture(new Color(0.75F, 0.75F, 0.75F));
+		final Texture textureAlbedo4 = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);//new ConstantTexture(new Color(0.75F, 0.75F, 0.75F));
+		final Texture textureAlbedo5 = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);//new ConstantTexture(new Color(0.75F, 0.75F, 0.75F));
+		final Texture textureAlbedo6 = new FractionalBrownianMotionTexture(new Color(0.5F * 0.999F, 1.0F * 0.999F, 0.5F * 0.999F), Color.WHITE, 0.5F, 0.8F, 16);//new ConstantTexture(new Color(0.5F * 0.999F, 1.0F * 0.999F, 0.5F * 0.999F));//TODO
+		final Texture textureAlbedo7 = new ConstantTexture(new Color(1.0F * 0.999F, 1.0F * 0.999F, 1.0F * 0.999F));
+		final Texture textureAlbedo8 = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal = new ConstantTexture(Color.BLACK);
 		
 		final
 		Scene scene = new Scene("Cornell_Box_Scene");
@@ -251,10 +251,10 @@ final class Scenes {
 	
 	public static Scene newCornellBoxScene2() {
 		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture textureGroundNormalMap = new SolidTexture(Color.BLACK);
+		final Texture textureGroundNormalMap = new ConstantTexture(Color.BLACK);
 		
-		final Texture textureAlbedo0 = new SolidTexture(Color.BLACK);
-		final Texture textureAlbedo1 = new SolidTexture(new Color(1.0F, 0.0F, 0.0F));
+		final Texture textureAlbedo0 = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo1 = new ConstantTexture(new Color(1.0F, 0.0F, 0.0F));
 		
 		final Surface surface0 = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo1, textureAlbedo0);
 		
@@ -276,13 +276,13 @@ final class Scenes {
 	}
 	
 	public static Scene newGirlScene() {
-		final Texture texture1 = new SolidTexture(new Color(227, 161, 115));
-		final Texture texture2 = new SolidTexture(new Color(0.8F, 0.1F, 0.8F));//new SolidTexture(new Color(32, 53, 98));//new CheckerboardTexture(new Color(0.1F, 0.1F, 0.1F), Color.WHITE, 0.05F, 0.05F, 0.0F);
+		final Texture texture1 = new ConstantTexture(new Color(227, 161, 115));
+		final Texture texture2 = new ConstantTexture(new Color(0.8F, 0.1F, 0.8F));//new ConstantTexture(new Color(32, 53, 98));//new CheckerboardTexture(new Color(0.1F, 0.1F, 0.1F), Color.WHITE, 0.05F, 0.05F, 0.0F);
 		final Texture texture3 = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.005F, 0.005F, 0.0F);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture texture4 = new SolidTexture(Color.BLACK);
-		final Texture texture5 = new SolidTexture(new Color(216, 192, 120));
-		final Texture texture6 = new SolidTexture(Color.WHITE);
-		final Texture texture7 = new SolidTexture(Color.GRAY);
+		final Texture texture4 = new ConstantTexture(Color.BLACK);
+		final Texture texture5 = new ConstantTexture(new Color(216, 192, 120));
+		final Texture texture6 = new ConstantTexture(Color.WHITE);
+		final Texture texture7 = new ConstantTexture(Color.GRAY);
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture4, texture4);
 		
@@ -315,19 +315,19 @@ final class Scenes {
 	}
 	
 	public static Scene newHouseScene() {
-		final Texture textureAlbedo = new SolidTexture(Color.WHITE);
-		final Texture textureNormal = new SolidTexture(Color.BLACK);
+		final Texture textureAlbedo = new ConstantTexture(Color.WHITE);
+		final Texture textureNormal = new ConstantTexture(Color.BLACK);
 		final Texture texture0 = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture texture1 = new CheckerboardTexture(Color.GRAY, Color.WHITE);
-		final Texture texture2 = new SolidTexture(Color.GRAY);
+		final Texture texture2 = new ConstantTexture(Color.GRAY);
 		final Texture texture3 = new CheckerboardTexture(Color.RED, Color.WHITE);
 		final Texture texture4 = new CheckerboardTexture(Color.GREEN, Color.WHITE);
 		final Texture texture5 = new CheckerboardTexture(Color.BLUE, Color.WHITE);
-		final Texture texture6 = new SolidTexture(Color.GRAY);
-		final Texture texture7 = new SolidTexture(Color.ORANGE);
-		final Texture texture8 = new SolidTexture(Color.ORANGE);
-		final Texture texture9 = new SolidTexture(Color.ORANGE);
-		final Texture texture10 = new SolidTexture(Color.GRAY);
+		final Texture texture6 = new ConstantTexture(Color.GRAY);
+		final Texture texture7 = new ConstantTexture(Color.ORANGE);
+		final Texture texture8 = new ConstantTexture(Color.ORANGE);
+		final Texture texture9 = new ConstantTexture(Color.ORANGE);
+		final Texture texture10 = new ConstantTexture(Color.GRAY);
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal);
 		
@@ -360,9 +360,9 @@ final class Scenes {
 	}
 	
 	public static Scene newHouseScene2() {
-		final Texture textureAlbedo = new SolidTexture(Color.WHITE);
+		final Texture textureAlbedo = new ConstantTexture(Color.WHITE);
 		final Texture textureGround = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture textureNormal = new SolidTexture(Color.BLACK);
+		final Texture textureNormal = new ConstantTexture(Color.BLACK);
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureNormal);
 		
@@ -386,9 +386,9 @@ final class Scenes {
 	public static Scene newHouseScene3() {
 		final Texture textureFloor = new CheckerboardTexture(Color.GRAY, Color.WHITE);
 		final Texture textureGround = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture textureNormal = new SolidTexture(Color.BLACK);
-		final Texture textureRoof = new SolidTexture(Color.WHITE);
-		final Texture textureWall = new SolidTexture(Color.WHITE);
+		final Texture textureNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureRoof = new ConstantTexture(Color.WHITE);
+		final Texture textureWall = new ConstantTexture(Color.WHITE);
 		
 		final Surface surfaceFloor = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureFloor, textureNormal);
 		final Surface surfaceRoof = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureRoof, textureNormal);
@@ -465,9 +465,9 @@ final class Scenes {
 	}
 	
 	public static Scene newMaterialShowcaseScene() {
-		final Texture texture0 = new SolidTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));//new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);
-		final Texture texture1 = new SolidTexture(Color.WHITE);
-		final Texture texture2 = new SolidTexture(Color.BLACK);
+		final Texture texture0 = new ConstantTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));//new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);
+		final Texture texture1 = new ConstantTexture(Color.WHITE);
+		final Texture texture2 = new ConstantTexture(Color.BLACK);
 		final Texture texture3 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 0.008F, 0.008F);
 		final Texture texture4 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")));
 		final Texture texture5 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")));
@@ -494,10 +494,10 @@ final class Scenes {
 	}
 	
 	public static Scene newMonkeyScene() {
-		final Texture textureGroundAlbedo = new SolidTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));//new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture textureGroundNormal = new SolidTexture(Color.BLACK);
-		final Texture textureMonkeyAlbedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.1F, 16);//new SolidTexture(Color.RED);
-		final Texture textureMonkeyNormal = new SolidTexture(Color.BLACK);
+		final Texture textureGroundAlbedo = new ConstantTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));//new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureMonkeyAlbedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.1F, 16);//new ConstantTexture(Color.RED);
+		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureMonkeyAlbedo, textureMonkeyNormal);
 		
@@ -517,8 +517,8 @@ final class Scenes {
 	}
 	
 	public static Scene newSponzaScene() {
-		final Texture textureAlbedo = new SolidTexture(Color.GRAY);
-		final Texture textureNormal = new SolidTexture(Color.BLACK);
+		final Texture textureAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture textureNormal = new ConstantTexture(Color.BLACK);
 		
 		final Material material = Material.LAMBERTIAN_DIFFUSE;
 		
@@ -541,7 +541,7 @@ final class Scenes {
 	
 	public static Scene newTerrainScene() {
 		final Texture textureAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture textureNormal = new SolidTexture(Color.BLACK);
+		final Texture textureNormal = new ConstantTexture(Color.BLACK);
 		
 		final Material material = Material.LAMBERTIAN_DIFFUSE;
 		
@@ -563,10 +563,10 @@ final class Scenes {
 	}
 	
 	public static Scene newTestScene() {
-		final Texture textureAlbedoGround = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.08F, 0.08F);//new SolidTexture(Color.WHITE);
-		final Texture textureNormalGround = new SolidTexture(Color.BLACK);
-		final Texture textureAlbedoSphere = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.4F, 16);//new SolidTexture(Color.RED);
-		final Texture textureNormalSphere = new SolidTexture(Color.BLACK);
+		final Texture textureAlbedoGround = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.08F, 0.08F);//new ConstantTexture(Color.WHITE);
+		final Texture textureNormalGround = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedoSphere = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.4F, 16);//new ConstantTexture(Color.RED);
+		final Texture textureNormalSphere = new ConstantTexture(Color.BLACK);
 		
 		final
 		Scene scene = new Scene("Test_Scene");

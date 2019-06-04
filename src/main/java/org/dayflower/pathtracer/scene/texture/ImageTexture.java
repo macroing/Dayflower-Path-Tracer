@@ -90,7 +90,7 @@ public final class ImageTexture implements Texture {
 	 */
 	@Override
 	public String toString() {
-		return String.format("ImageTexture: [Degrees=%s], [Width=%s], [Height=%s], [ScaleU=%s], [ScaleV=%s]", Float.toString(this.degrees), Float.toString(this.width), Float.toString(this.height), Float.toString(this.scaleU), Float.toString(this.scaleV));
+		return String.format("new ImageTexture(%s, %s, %s, %s, %s, data)", Float.toString(this.degrees), Float.toString(this.width), Float.toString(this.height), Float.toString(this.scaleU), Float.toString(this.scaleV));
 	}
 	
 	/**
@@ -170,17 +170,6 @@ public final class ImageTexture implements Texture {
 	}
 	
 	/**
-	 * Returns the data of the image as an {@code int} array.
-	 * <p>
-	 * Modifying the array will not affect this {@code ImageTexture} instance.
-	 * 
-	 * @return the data of the image as an {@code int} array
-	 */
-	public int[] getData() {
-		return this.data.clone();
-	}
-	
-	/**
 	 * Returns the length of the data in this {@code ImageTexture} instance.
 	 * 
 	 * @return the length of the data in this {@code ImageTexture} instance
@@ -197,6 +186,17 @@ public final class ImageTexture implements Texture {
 	@Override
 	public int hashCode() {
 		return Objects.hash(Float.valueOf(this.degrees), Float.valueOf(this.height), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV), Float.valueOf(this.width), Integer.valueOf(Arrays.hashCode(this.data)));
+	}
+	
+	/**
+	 * Returns the data of the image as an {@code int} array.
+	 * <p>
+	 * Modifying the array will not affect this {@code ImageTexture} instance.
+	 * 
+	 * @return the data of the image as an {@code int} array
+	 */
+	public int[] getData() {
+		return this.data.clone();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

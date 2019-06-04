@@ -23,6 +23,12 @@ import java.util.Objects;
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.Texture;
 
+/**
+ * A {@code FractionalBrownianMotionTexture} is a {@link Texture} implementation that uses fractional Brownian motion (fBm) to compute its image data.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class FractionalBrownianMotionTexture implements Texture {
 	private final Color addend;
 	private final Color multiplier;
@@ -32,6 +38,7 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+//	TODO: Add Javadocs.
 	public FractionalBrownianMotionTexture(final Color addend, final Color multiplier, final float persistence, final float scale, final int octaves) {
 		this.addend = Objects.requireNonNull(addend, "addend == null");
 		this.multiplier = Objects.requireNonNull(multiplier, "multiplier == null");
@@ -42,14 +49,34 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+//	TODO: Add Javadocs.
 	public Color getAddend() {
 		return this.addend;
 	}
 	
+//	TODO: Add Javadocs.
 	public Color getMultiplier() {
 		return this.multiplier;
 	}
 	
+	/**
+	 * Returns a {@code String} representation of this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code FractionalBrownianMotionTexture} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("new FractionalBrownianMotionTexture(%s, %s, %s, %s, %s)", this.addend, this.multiplier, Float.toString(this.persistence), Float.toString(this.scale), Integer.toString(this.octaves));
+	}
+	
+	/**
+	 * Compares {@code object} to this {@code FractionalBrownianMotionTexture} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code FractionalBrownianMotionTexture}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code FractionalBrownianMotionTexture} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code FractionalBrownianMotionTexture}, and their respective values are equal, {@code false} otherwise
+	 */
 	@Override
 	public boolean equals(final Object object) {
 		if(object == this) {
@@ -71,18 +98,26 @@ public final class FractionalBrownianMotionTexture implements Texture {
 		}
 	}
 	
+//	TODO: Add Javadocs.
 	public float getPersistence() {
 		return this.persistence;
 	}
 	
+//	TODO: Add Javadocs.
 	public float getScale() {
 		return this.scale;
 	}
 	
+//	TODO: Add Javadocs.
 	public int getOctaves() {
 		return this.octaves;
 	}
 	
+	/**
+	 * Returns a hash code for this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return a hash code for this {@code FractionalBrownianMotionTexture} instance
+	 */
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.addend, this.multiplier, Float.valueOf(this.persistence), Float.valueOf(this.scale), Integer.valueOf(this.octaves));

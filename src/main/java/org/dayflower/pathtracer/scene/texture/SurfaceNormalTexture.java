@@ -18,6 +18,8 @@
  */
 package org.dayflower.pathtracer.scene.texture;
 
+import java.util.Objects;
+
 import org.dayflower.pathtracer.scene.Texture;
 
 /**
@@ -57,11 +59,52 @@ public final class SurfaceNormalTexture implements Texture {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Returns a {@code String} representation of this {@code SurfaceNormalTexture} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code SurfaceNormalTexture} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("new SurfaceNormalTexture(%s)", Boolean.toString(this.isTangentSpace));
+	}
+	
+	/**
+	 * Compares {@code object} to this {@code SurfaceNormalTexture} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code SurfaceNormalTexture}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code SurfaceNormalTexture} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code SurfaceNormalTexture}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof SurfaceNormalTexture)) {
+			return false;
+		} else if(this.isTangentSpace != SurfaceNormalTexture.class.cast(object).isTangentSpace) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
 	 * Returns {@code true} if, and only if, this {@code SurfaceNormalTexture} shows the surface normal in tangent space, {@code false} otherwise.
 	 * 
 	 * @return {@code true} if, and only if, this {@code SurfaceNormalTexture} shows the surface normal in tangent space, {@code false} otherwise
 	 */
 	public boolean isTangentSpace() {
 		return this.isTangentSpace;
+	}
+	
+	/**
+	 * Returns a hash code for this {@code SurfaceNormalTexture} instance.
+	 * 
+	 * @return a hash code for this {@code SurfaceNormalTexture} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(Boolean.valueOf(this.isTangentSpace));
 	}
 }
