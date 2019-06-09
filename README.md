@@ -11,6 +11,12 @@ This early test implementation of Dayflower, uses a library called Aparapi. Apar
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Car.png "Dayflower Path Tracer")
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Water-6.png "Dayflower Path Tracer")
 
+### Algorithm Comparison
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Comparison-Ambient-Occlusion.png "Ambient Occlusion")
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Comparison-Ray-Caster.png "Ray Caster")
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Comparison-Ray-Tracer.png "Ray Tracer")
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Comparison-Path-Tracer.png "Path Tracer")
+
 _____________________________________________________________________________________
 
 Supported Features
