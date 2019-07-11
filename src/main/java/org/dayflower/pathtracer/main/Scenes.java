@@ -324,7 +324,7 @@ final class Scenes {
 		final Texture texture4 = new CheckerboardTexture(Color.GREEN, Color.WHITE);
 		final Texture texture5 = new CheckerboardTexture(Color.BLUE, Color.WHITE);
 		final Texture texture6 = new ConstantTexture(Color.GRAY);
-		final Texture texture7 = new ConstantTexture(Color.ORANGE);
+		final Texture texture7 = new ConstantTexture(Color.ORANGE);//new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.1F, 16);
 		final Texture texture8 = new ConstantTexture(Color.ORANGE);
 		final Texture texture9 = new ConstantTexture(Color.ORANGE);
 		final Texture texture10 = new ConstantTexture(Color.GRAY);

@@ -2039,6 +2039,148 @@ public final class RendererKernel extends AbstractRendererKernel {
 		return 27.0F * (n0 + n1 + n2 + n3 + n4);
 	}
 	
+	private float doPerformIntersectionTest(final int shapesOffsetToSkip, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
+//		Calculate the offset to the intersections array:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+//		Initialize the distance to the closest shape to INFINITY:
+		float minimumDistance = INFINITY;
+		
+//		Initialize the offset to the closest shape to -1:
+		int shapesOffset = -1;
+		
+//		Calculate the reciprocal of the ray direction vector:
+		final float directionReciprocalX = 1.0F / directionX;
+		final float directionReciprocalY = 1.0F / directionY;
+		final float directionReciprocalZ = 1.0F / directionZ;
+		
+//		Initialize the offset to the root of the BVH structure (which is 0):
+		int boundingVolumeHierarchyOffset = 0;
+		
+//		Loop through the BVH structure as long as the offset to the next node is not -1:
+		do {
+//			Retrieve the minimum point location of the current bounding box:
+			final float minimumX = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 2];
+			final float minimumY = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3];
+			final float minimumZ = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 4];
+			
+//			Retrieve the maximum point location of the current bounding box:
+			final float maximumX = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 5];
+			final float maximumY = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 6];
+			final float maximumZ = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 7];
+			
+//			Calculate the distance to the minimum point location of the bounding box:
+			final float t0X = (minimumX - originX) * directionReciprocalX;
+			final float t0Y = (minimumY - originY) * directionReciprocalY;
+			final float t0Z = (minimumZ - originZ) * directionReciprocalZ;
+			
+//			Calculate the distance to the maximum point location of the bounding box:
+			final float t1X = (maximumX - originX) * directionReciprocalX;
+			final float t1Y = (maximumY - originY) * directionReciprocalY;
+			final float t1Z = (maximumZ - originZ) * directionReciprocalZ;
+			
+//			Calculate the minimum and maximum X-components:
+			final float tMaximumX = max(t0X, t1X);
+			final float tMinimumX = min(t0X, t1X);
+			
+//			Calculate the minimum and maximum Y-components:
+			final float tMaximumY = max(t0Y, t1Y);
+			final float tMinimumY = min(t0Y, t1Y);
+			
+//			Calculate the minimum and maximum Z-components:
+			final float tMaximumZ = max(t0Z, t1Z);
+			final float tMinimumZ = min(t0Z, t1Z);
+			
+//			Calculate the minimum and maximum distance values of the X-, Y- and Z-components above:
+			final float tMaximum = min(tMaximumX, min(tMaximumY, tMaximumZ));
+			final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
+			
+//			Check if the maximum distance is greater than or equal to the minimum distance:
+			if(tMaximum < 0.0F || tMinimum > tMaximum || minimumDistance < tMinimum) {
+//				Retrieve the offset to the next node in the BVH structure, relative to the current one:
+				boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
+			} else {
+//				Retrieve the type of the current BVH node:
+				final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
+				
+				if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
+//					This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
+					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
+				} else {
+//					Retrieve the triangle count in the current BVH node:
+					final int triangleCount = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
+					
+					int i = 0;
+					
+//					Loop through all triangles in the current BVH node:
+					while(i < triangleCount) {
+//						Retrieve the offset to the current triangle:
+						final int offset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
+						
+						if(offset != shapesOffsetToSkip) {
+//							Perform an intersection test with the current triangle:
+							final float currentDistance = doIntersectTriangle(offset, originX, originY, originZ, directionX, directionY, directionZ);
+							
+//							Check if the current distance is less than the distance to the closest shape so far:
+							if(currentDistance < minimumDistance) {
+//								Update the distance to the closest shape with the current one:
+								minimumDistance = currentDistance;
+								
+//								Update the offset to the closest shape with the current one:
+								shapesOffset = offset;
+							}
+						}
+						
+						i++;
+					}
+					
+//					Retrieve the offset to the next node in the BVH structure, relative to the current one:
+					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
+				}
+				
+//				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
+				boundingVolumeHierarchyOffset = boundingVolumeHierarchyOffset + 0;
+			}
+		} while(boundingVolumeHierarchyOffset != -1);
+		
+//		Loop through any other shapes, that are not triangles:
+		for(int i = 0; i < this.shapeOffsetsLength; i++) {
+//			Retrieve the offset to the shape:
+			final int currentShapesOffset = this.shapeOffsets[i];
+			
+			if(currentShapesOffset != shapesOffsetToSkip) {
+//				Perform an intersection test with the current shape:
+				final float currentDistance = doIntersect(currentShapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
+				
+//				Check if the current distance is less than the distance to the closest shape so far:
+				if(currentDistance < minimumDistance) {
+//					Update the distance to the closest shape with the current one:
+					minimumDistance = currentDistance;
+					
+//					Update the offset to the closest shape with the current one:
+					shapesOffset = currentShapesOffset;
+				}
+			}
+		}
+		
+		if(minimumDistance < INFINITY && shapesOffset > -1) {
+//			Calculate the surface properties for the intersected shape:
+			doCalculateSurfaceProperties(minimumDistance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
+			
+//			Perform standard Normal Mapping:
+			doPerformNormalMapping(shapesOffset);
+			
+//			Perform Noise-based Normal Mapping:
+			doPerformNoiseBasedNormalMapping(shapesOffset);
+		} else {
+//			Reset the information in the intersections array:
+			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
+			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = -1;
+		}
+		
+		return minimumDistance;
+	}
+	
 	@SuppressWarnings("unused")
 	private float doPerlinNoise(final float x, final float y, final float z) {
 //		Calculate the floor of the X-, Y- and Z-coordinates:
@@ -2460,7 +2602,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 				directionY = direction1Y * direction1LengthReciprocal;
 				directionZ = direction1Z * direction1LengthReciprocal;
 				
-				final boolean isHit = doPerformIntersectionTestOnly(-1, originX, originY, originZ, directionX, directionY, directionZ);
+				final float t = doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
+				
+				final boolean isHit = t < 200.0F;
 				
 				final float r = isHit ? brightR : darkR;
 				final float g = isHit ? brightG : darkG;
@@ -4114,146 +4258,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.currentPixelColors[pixelIndex0] = pixelColorR;
 		this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
 		this.currentPixelColors[pixelIndex0 + 2] = pixelColorB;
-	}
-	
-	private void doPerformIntersectionTest(final int shapesOffsetToSkip, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
-//		Calculate the offset to the intersections array:
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		
-//		Initialize the distance to the closest shape to INFINITY:
-		float minimumDistance = INFINITY;
-		
-//		Initialize the offset to the closest shape to -1:
-		int shapesOffset = -1;
-		
-//		Calculate the reciprocal of the ray direction vector:
-		final float directionReciprocalX = 1.0F / directionX;
-		final float directionReciprocalY = 1.0F / directionY;
-		final float directionReciprocalZ = 1.0F / directionZ;
-		
-//		Initialize the offset to the root of the BVH structure (which is 0):
-		int boundingVolumeHierarchyOffset = 0;
-		
-//		Loop through the BVH structure as long as the offset to the next node is not -1:
-		do {
-//			Retrieve the minimum point location of the current bounding box:
-			final float minimumX = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 2];
-			final float minimumY = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 3];
-			final float minimumZ = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 4];
-			
-//			Retrieve the maximum point location of the current bounding box:
-			final float maximumX = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 5];
-			final float maximumY = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 6];
-			final float maximumZ = this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 7];
-			
-//			Calculate the distance to the minimum point location of the bounding box:
-			final float t0X = (minimumX - originX) * directionReciprocalX;
-			final float t0Y = (minimumY - originY) * directionReciprocalY;
-			final float t0Z = (minimumZ - originZ) * directionReciprocalZ;
-			
-//			Calculate the distance to the maximum point location of the bounding box:
-			final float t1X = (maximumX - originX) * directionReciprocalX;
-			final float t1Y = (maximumY - originY) * directionReciprocalY;
-			final float t1Z = (maximumZ - originZ) * directionReciprocalZ;
-			
-//			Calculate the minimum and maximum X-components:
-			final float tMaximumX = max(t0X, t1X);
-			final float tMinimumX = min(t0X, t1X);
-			
-//			Calculate the minimum and maximum Y-components:
-			final float tMaximumY = max(t0Y, t1Y);
-			final float tMinimumY = min(t0Y, t1Y);
-			
-//			Calculate the minimum and maximum Z-components:
-			final float tMaximumZ = max(t0Z, t1Z);
-			final float tMinimumZ = min(t0Z, t1Z);
-			
-//			Calculate the minimum and maximum distance values of the X-, Y- and Z-components above:
-			final float tMaximum = min(tMaximumX, min(tMaximumY, tMaximumZ));
-			final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
-			
-//			Check if the maximum distance is greater than or equal to the minimum distance:
-			if(tMaximum < 0.0F || tMinimum > tMaximum || minimumDistance < tMinimum) {
-//				Retrieve the offset to the next node in the BVH structure, relative to the current one:
-				boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
-			} else {
-//				Retrieve the type of the current BVH node:
-				final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
-				
-				if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
-//					This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
-					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
-				} else {
-//					Retrieve the triangle count in the current BVH node:
-					final int triangleCount = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
-					
-					int i = 0;
-					
-//					Loop through all triangles in the current BVH node:
-					while(i < triangleCount) {
-//						Retrieve the offset to the current triangle:
-						final int offset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
-						
-						if(offset != shapesOffsetToSkip) {
-//							Perform an intersection test with the current triangle:
-							final float currentDistance = doIntersectTriangle(offset, originX, originY, originZ, directionX, directionY, directionZ);
-							
-//							Check if the current distance is less than the distance to the closest shape so far:
-							if(currentDistance < minimumDistance) {
-//								Update the distance to the closest shape with the current one:
-								minimumDistance = currentDistance;
-								
-//								Update the offset to the closest shape with the current one:
-								shapesOffset = offset;
-							}
-						}
-						
-						i++;
-					}
-					
-//					Retrieve the offset to the next node in the BVH structure, relative to the current one:
-					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
-				}
-				
-//				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
-				boundingVolumeHierarchyOffset = boundingVolumeHierarchyOffset + 0;
-			}
-		} while(boundingVolumeHierarchyOffset != -1);
-		
-//		Loop through any other shapes, that are not triangles:
-		for(int i = 0; i < this.shapeOffsetsLength; i++) {
-//			Retrieve the offset to the shape:
-			final int currentShapesOffset = this.shapeOffsets[i];
-			
-			if(currentShapesOffset != shapesOffsetToSkip) {
-//				Perform an intersection test with the current shape:
-				final float currentDistance = doIntersect(currentShapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
-				
-//				Check if the current distance is less than the distance to the closest shape so far:
-				if(currentDistance < minimumDistance) {
-//					Update the distance to the closest shape with the current one:
-					minimumDistance = currentDistance;
-					
-//					Update the offset to the closest shape with the current one:
-					shapesOffset = currentShapesOffset;
-				}
-			}
-		}
-		
-		if(minimumDistance < INFINITY && shapesOffset > -1) {
-//			Calculate the surface properties for the intersected shape:
-			doCalculateSurfaceProperties(minimumDistance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
-			
-//			Perform standard Normal Mapping:
-			doPerformNormalMapping(shapesOffset);
-			
-//			Perform Noise-based Normal Mapping:
-			doPerformNoiseBasedNormalMapping(shapesOffset);
-		} else {
-//			Reset the information in the intersections array:
-			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
-			this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET] = -1;
-		}
 	}
 	
 	private void doPerformNoiseBasedNormalMapping(final int shapesOffset) {
