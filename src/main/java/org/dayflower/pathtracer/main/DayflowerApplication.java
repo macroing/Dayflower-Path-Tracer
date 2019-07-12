@@ -263,12 +263,13 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Tone Mapper" Menu:
 		final ToggleGroup toggleGroupToneMapper = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemToneMapperFilmicCurve = JavaFX.newRadioMenuItem("Filmic Curve", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionFilmicCurve(), true, toggleGroupToneMapper);
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurve1 = JavaFX.newRadioMenuItem("Filmic Curve v.1", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionFilmicCurve1(), false, toggleGroupToneMapper);
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurve2 = JavaFX.newRadioMenuItem("Filmic Curve v.2", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionFilmicCurve2(), true, toggleGroupToneMapper);
 		final RadioMenuItem radioMenuItemToneMapperLinear = JavaFX.newRadioMenuItem("Linear", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionLinear(), false, toggleGroupToneMapper);
 		final RadioMenuItem radioMenuItemToneMapperReinhard1 = JavaFX.newRadioMenuItem("Reinhard v.1", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionReinhard1(), false, toggleGroupToneMapper);
 		final RadioMenuItem radioMenuItemToneMapperReinhard2 = JavaFX.newRadioMenuItem("Reinhard v.2", e -> this.abstractRendererKernel.setToneMappingAndGammaCorrectionReinhard2(), false, toggleGroupToneMapper);
 		
-		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurve, radioMenuItemToneMapperLinear, radioMenuItemToneMapperReinhard1, radioMenuItemToneMapperReinhard2);
+		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurve1, radioMenuItemToneMapperFilmicCurve2, radioMenuItemToneMapperLinear, radioMenuItemToneMapperReinhard1, radioMenuItemToneMapperReinhard2);
 		
 		menuBar.getMenus().add(menuToneMapper);
 	}

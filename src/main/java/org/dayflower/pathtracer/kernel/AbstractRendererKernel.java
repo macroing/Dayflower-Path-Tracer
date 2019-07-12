@@ -609,9 +609,16 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve.
+	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve version 1.
 	 */
-	public void setToneMappingAndGammaCorrectionFilmicCurve() {
+	public void setToneMappingAndGammaCorrectionFilmicCurve1() {
+//		Do nothing.
+	}
+	
+	/**
+	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve version 2.
+	 */
+	public void setToneMappingAndGammaCorrectionFilmicCurve2() {
 //		Do nothing.
 	}
 	

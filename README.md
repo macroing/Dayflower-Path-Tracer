@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.0.34
+Dayflower - Path Tracer v.0.0.35
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
@@ -59,7 +59,8 @@ Supported Features
 | Texture                | Fractional Brownian Motion                               |
 | Texture                | Image                                                    |
 | Texture                | Surface Normal                                           |
-| Tone Mapper            | Filmic Curve                                             |
+| Tone Mapper            | Filmic Curve v.1                                         |
+| Tone Mapper            | Filmic Curve v.2                                         |
 | Tone Mapper            | Linear                                                   |
 | Tone Mapper            | Reinhard v.1                                             |
 | Tone Mapper            | Reinhard v.2                                             |
@@ -117,7 +118,8 @@ Supported Menu Controls
 | Scene > Enter Scene            | Enter the scene like an FPS-game                 |
 | Scene > Flat Shading           | Use Flat Shading for Triangles                   |
 | Scene > Gouraud Shading        | Use Gouraud Shading for Triangles                |
-| Tone Mapper > Filmic Curve     | Use the Filmic Curve Tone Mapper                 |
+| Tone Mapper > Filmic Curve v.1 | Use the Filmic Curve v.1 Tone Mapper             |
+| Tone Mapper > Filmic Curve v.2 | Use the Filmic Curve v.2 Tone Mapper             |
 | Tone Mapper > Linear           | Use the Linear Tone Mapper                       |
 | Tone Mapper > Reinhard v.1     | Use the Reindard v.1 Tone Mapper                 |
 | Tone Mapper > Reinhard v.2     | Use the Reinhard v.2 Tone Mapper                 |

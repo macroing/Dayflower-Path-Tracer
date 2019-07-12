@@ -74,10 +74,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private static final int SIZE_INTERSECTION = 22;
 	private static final int SIZE_PIXEL = 4;
 	private static final int SIZE_RAY = 6;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE = 1;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR = 2;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_1 = 3;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_2 = 4;
+	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1 = 1;
+	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2 = 2;
+	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR = 3;
+	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_1 = 4;
+	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_2 = 5;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -176,7 +177,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int shapeOffsetsLength;
 	private int sunAndSky = BOOLEAN_TRUE;
 	private int sunAndSkySamples;
-	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE;
+	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2;
 	private final int width;
 	@Constant
 	private final int[] permutations = {
@@ -1092,11 +1093,20 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
-	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve.
+	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve version 1.
 	 */
 	@Override
-	public void setToneMappingAndGammaCorrectionFilmicCurve() {
-		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE;
+	public void setToneMappingAndGammaCorrectionFilmicCurve1() {
+		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1;
+		this.isResetRequired = true;
+	}
+	
+	/**
+	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve version 2.
+	 */
+	@Override
+	public void setToneMappingAndGammaCorrectionFilmicCurve2() {
+		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2;
 		this.isResetRequired = true;
 	}
 	
@@ -2677,7 +2687,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			r = 1.0F - exp(-r * exposure);
 			g = 1.0F - exp(-g * exposure);
 			b = 1.0F - exp(-b * exposure);
-		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE) {
+		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1) {
 //			Calculate the maximum pixel color component values:
 			final float rMaximum = max(r - 0.004F, 0.0F);
 			final float gMaximum = max(g - 0.004F, 0.0F);
@@ -2687,6 +2697,17 @@ public final class RendererKernel extends AbstractRendererKernel {
 			r = (rMaximum * (6.2F * rMaximum + 0.5F)) / (rMaximum * (6.2F * rMaximum + 1.7F) + 0.06F);
 			g = (gMaximum * (6.2F * gMaximum + 0.5F)) / (gMaximum * (6.2F * gMaximum + 1.7F) + 0.06F);
 			b = (bMaximum * (6.2F * bMaximum + 0.5F)) / (bMaximum * (6.2F * bMaximum + 1.7F) + 0.06F);
+		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2) {
+			final float exposure = 0.5F;
+			
+			r *= exposure;
+			g *= exposure;
+			b *= exposure;
+			
+//			Perform Tone Mapping:
+			r = saturate((r * (2.51F * r + 0.03F)) / (r * (2.43F * r + 0.59F) + 0.14F), 0.0F, 1.0F);
+			g = saturate((g * (2.51F * g + 0.03F)) / (g * (2.43F * g + 0.59F) + 0.14F), 0.0F, 1.0F);
+			b = saturate((b * (2.51F * b + 0.03F)) / (b * (2.43F * b + 0.59F) + 0.14F), 0.0F, 1.0F);
 		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR) {
 //			Calculate the maximum component value of the 'normalized' accumulated pixel color component values:
 			final float maximumComponentValue = max(r, max(g, b));
@@ -2727,7 +2748,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			g += 1.0F;
 		}
 		
-		if(this.toneMappingAndGammaCorrection != TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE) {
+		if(this.toneMappingAndGammaCorrection != TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1) {
 //			Gamma correct the 'normalized' accumulated pixel color components using sRGB as color space:
 			r = r <= 0.0F ? 0.0F : r >= 1.0F ? 1.0F : r <= this.breakPoint ? r * this.slope : this.slopeMatch * pow(r, 1.0F / this.gamma) - this.segmentOffset;
 			g = g <= 0.0F ? 0.0F : g >= 1.0F ? 1.0F : g <= this.breakPoint ? g * this.slope : this.slopeMatch * pow(g, 1.0F / this.gamma) - this.segmentOffset;
@@ -2772,18 +2793,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
 		final float direction1X = direction0X * direction0LengthReciprocal;
 		final float direction1Y = direction0Y * direction0LengthReciprocal;
-		final float direction1Z = max(direction0Z * direction0LengthReciprocal, 0.001F);
-		final float direction1LengthReciprocal = rsqrt(direction1X * direction1X + direction1Y * direction1Y + direction1Z * direction1Z);
-		final float direction2X = direction1X * direction1LengthReciprocal;
-		final float direction2Y = direction1Y * direction1LengthReciprocal;
-		final float direction2Z = direction1Z * direction1LengthReciprocal;
+		final float direction1Z = direction0Z * direction0LengthReciprocal;
 		
 //		Calculate the dot product between the direction vector and the sun direction vector:
-		final float dotProduct = direction2X * this.sunDirectionX + direction2Y * this.sunDirectionY + direction2Z * this.sunDirectionZ;
+		final float dotProduct = direction1X * this.sunDirectionX + direction1Y * this.sunDirectionY + direction1Z * this.sunDirectionZ;
 		
 //		Calculate some theta angles:
 		final double theta0 = this.theta;
-		final double theta1 = acos(max(min(direction2Z, 1.0D), -1.0D));
+		final double theta1 = acos(max(min(direction1Z, 1.0D), -1.0D));
 		
 //		Calculate the cosines of the theta angles:
 		final double cosTheta0 = cos(theta0);
