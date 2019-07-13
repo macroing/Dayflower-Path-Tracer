@@ -55,7 +55,7 @@ Supported Features
 | Shape                  | Triangle Mesh                                              |
 | Sun and Sky Model      | Perez                                                      |
 | Texture                | Checkerboard                                               |
-| Texture                | Constant (Solid)                                           |
+| Texture                | Constant                                                   |
 | Texture                | Fractional Brownian Motion                                 |
 | Texture                | Image                                                      |
 | Texture                | Surface Normal                                             |
@@ -160,7 +160,7 @@ ant
 cd distribution/org.dayflower.pathtracer
 java -Djava.library.path=lib -jar org.dayflower.pathtracer.jar
 ```
-This project currently only works on Windows machines.
+This project currently only works properly on Windows machines. Aparapi needs to be compiled for other operating systems, in order to use GPU-rendering. CPU-rendering should work on other operating systems, however.
 
 ______________________________________________________________________________________
 
