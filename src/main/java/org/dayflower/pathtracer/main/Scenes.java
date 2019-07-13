@@ -468,7 +468,7 @@ final class Scenes {
 	}
 	
 	public static Scene newImageScene() {
-		final Texture textureGroundAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture textureGroundAlbedo = new ConstantTexture(Color.WHITE);
 		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
 		final Texture textureMonkeyAlbedo = new ConstantTexture(Color.GRAY);
 		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
@@ -483,8 +483,8 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Image_Scene");
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphereAlbedo, textureSphereNormal), 32.0F, new Point3F(-8.0F, 32.0F, 250.0F)));
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
+//		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphereAlbedo, textureSphereNormal), 32.0F, new Point3F(-8.0F, 32.0F, 250.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureGroundAlbedo, textureGroundNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(100.0F));

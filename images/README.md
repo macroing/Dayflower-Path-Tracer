@@ -43,6 +43,18 @@ Path Tracer
 #### Noise:
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/path-tracer/Dayflower-Path-Tracer-Normal-Mapping-Noise.png "Path Tracer - Normal Mapping - Noise")
 
+Ambient Occlusion
+----------
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/ambient-occlusion/Dayflower-Ambient-Occlusion.png "Ambient Occlusion")
+
+Ray Caster
+----------
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/ray-caster/Dayflower-Ray-Caster.png "Ray Caster")
+
+Ray Tracer
+----------
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/ray-tracer/Dayflower-Ray-Tracer.png "Ray Tracer")
+
 Algorithm Comparison
 --------------------
 #### Ambient Occlusion:
