@@ -21,7 +21,7 @@ Path Tracer
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/path-tracer/Dayflower-Path-Tracer-Material-Phong.png "Path Tracer - Material - Phong")
 
 ### Texture
-Checkerboard:
+#### Checkerboard:
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/path-tracer/Dayflower-Path-Tracer-Texture-Checkerboard.png "Path Tracer - Texture - Checkerboard")
 
 #### Constant:
