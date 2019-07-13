@@ -286,6 +286,16 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Returns the maximum distance for Ambient Occlusion.
+	 * 
+	 * @return the maximum distance for Ambient Occlusion
+	 */
+	@SuppressWarnings("static-method")
+	public float getMaximumDistanceAO() {
+		return 200.0F;
+	}
+	
+	/**
 	 * Returns the maximum depth for path termination.
 	 * 
 	 * @return the maximum depth for path termination
@@ -515,6 +525,15 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * @param lacunarity the new lacunarity
 	 */
 	public void setLacunarity(final float lacunarity) {
+//		Do nothing.
+	}
+	
+	/**
+	 * Sets the maximum distance for Ambient Occlusion.
+	 * 
+	 * @param maximumDistanceAO the new maximum distance for Ambient Occlusion
+	 */
+	public void setMaximumDistanceAO(final float maximumDistanceAO) {
 //		Do nothing.
 	}
 	

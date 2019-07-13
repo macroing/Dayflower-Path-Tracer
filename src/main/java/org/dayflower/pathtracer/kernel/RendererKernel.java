@@ -92,6 +92,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final float gamma;
 	private float jacobian;
 	private float lacunarity;
+	private float maximumDistanceAO;
 	private float orthoNormalBasisUX;
 	private float orthoNormalBasisUY;
 	private float orthoNormalBasisUZ;
@@ -211,6 +212,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		final RGBColorSpace rGBColorSpace = RGBColorSpace.SRGB;
 		
+		this.maximumDistanceAO = 200.0F;
 		this.breakPoint = rGBColorSpace.getBreakPoint();
 		this.gamma = rGBColorSpace.getGamma();
 		this.segmentOffset = rGBColorSpace.getSegmentOffset();
@@ -493,6 +495,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Override
 	public float getLacunarity() {
 		return this.lacunarity;
+	}
+	
+	/**
+	 * Returns the maximum distance for Ambient Occlusion.
+	 * 
+	 * @return the maximum distance for Ambient Occlusion
+	 */
+	@Override
+	public float getMaximumDistanceAO() {
+		return this.maximumDistanceAO;
 	}
 	
 	/**
@@ -983,6 +995,17 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Override
 	public void setLacunarity(final float lacunarity) {
 		this.lacunarity = MathF.max(lacunarity, 0.0F);
+	}
+	
+	/**
+	 * Sets the maximum distance for Ambient Occlusion.
+	 * 
+	 * @param maximumDistanceAO the new maximum distance for Ambient Occlusion
+	 */
+	@Override
+	public void setMaximumDistanceAO(final float maximumDistanceAO) {
+		this.maximumDistanceAO = maximumDistanceAO;
+		this.isResetRequired = true;
 	}
 	
 	/**
@@ -2614,7 +2637,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 				
 				final float t = doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
 				
-				final boolean isHit = t < 200.0F;
+				final boolean isHit = t < this.maximumDistanceAO;
 				
 				final float r = isHit ? brightR : darkR;
 				final float g = isHit ? brightG : darkG;
@@ -3849,7 +3872,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 					final boolean isIntersecting = doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
 					
 //					Test that an intersection was actually made, and if not, return black color (or possibly the background color):
-					if(isIntersecting) {
+					if(!isIntersecting) {
 //						Calculate the color for the sky in the current direction:
 						doCalculateColorForSky(directionX, directionY, directionZ);
 						
@@ -4261,7 +4284,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final boolean isIntersecting = doPerformIntersectionTestOnly(shapesOffsetToSkip, originX, originY, originZ, directionX, directionY, directionZ);
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
-		if(isIntersecting) {
+		if(!isIntersecting) {
 //			Calculate the color for the sky in the current direction:
 			doCalculateColorForSky(directionX, directionY, directionZ);
 			

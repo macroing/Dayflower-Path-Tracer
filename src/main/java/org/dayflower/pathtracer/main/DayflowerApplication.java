@@ -378,6 +378,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		tabPane.getTabs().add(tabSunAndSky);
 		
 //		Create the Tab with the settings for the renderers:
+		final Label labelAmbientOcclusion = new Label("Ambient Occlusion");
+		final Label labelMaximumDistance = new Label("Maximum Distance:");
 		final Label labelPathTracer = new Label("Path Tracer");
 		final Label labelMaximumRayDepth = new Label("Maximum Ray Depth:");
 		final Label labelRayMarcher = new Label("Ray Marcher");
@@ -386,11 +388,14 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final Label labelGain = new Label("Gain:");
 		final Label labelLacunarity = new Label("Lacunarity:");
 		
+		labelAmbientOcclusion.setFont(Font.font(16.0D));
+		labelAmbientOcclusion.setPadding(new Insets(0.0D, 0.0D, 10.0D, 0.0D));
 		labelPathTracer.setFont(Font.font(16.0D));
 		labelPathTracer.setPadding(new Insets(0.0D, 0.0D, 10.0D, 0.0D));
 		labelRayMarcher.setFont(Font.font(16.0D));
 		labelRayMarcher.setPadding(new Insets(10.0D, 0.0D, 10.0D, 0.0D));
 		
+		final Slider sliderMaximumDistance = JavaFX.newSlider(0.0D, 1000.0D, this.abstractRendererKernel.getMaximumDistanceAO(), 50.0D, 200.0D, true, true, true, this::doOnSliderMaximumDistance);
 		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, this.abstractRendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
 		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
 		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, this.abstractRendererKernel.getFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
@@ -400,7 +405,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final
 		VBox vBoxRenderer = new VBox();
 		vBoxRenderer.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxRenderer.getChildren().addAll(labelPathTracer, labelMaximumRayDepth, sliderMaximumRayDepth, labelRayMarcher, labelAmplitude, sliderAmplitude, labelFrequency, sliderFrequency, labelGain, sliderGain, labelLacunarity, sliderLacunarity);
+		vBoxRenderer.getChildren().addAll(labelAmbientOcclusion, labelMaximumDistance, sliderMaximumDistance, labelPathTracer, labelMaximumRayDepth, sliderMaximumRayDepth, labelRayMarcher, labelAmplitude, sliderAmplitude, labelFrequency, sliderFrequency, labelGain, sliderGain, labelLacunarity, sliderLacunarity);
 		
 		final
 		Tab tabRenderer = new Tab();
@@ -632,6 +637,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	@SuppressWarnings("unused")
 	private void doOnSliderLacunarity(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.abstractRendererKernel.setLacunarity(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderMaximumDistance(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.abstractRendererKernel.setMaximumDistanceAO(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
