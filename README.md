@@ -6,16 +6,9 @@ The engine primarily uses a rendering technique called Path Tracing, which is in
 
 This early test implementation of Dayflower uses a library called Aparapi. Aparapi is responsible for decompiling the Java bytecode into OpenCL C99 on the fly. The OpenCL C99 is then compiled into binary code and an attempt to execute it by the current GPU is made. If the GPU fails to execute the binary code, it should still run, but in a Java Thread pool on the CPU.
 
-### Images
-![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-House.png "Dayflower Path Tracer")
-![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Car.png "Dayflower Path Tracer")
-![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Water-6.png "Dayflower Path Tracer")
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/random/Dayflower-House.png "Dayflower Path Tracer")
 
-### Algorithm Comparison
-![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Comparison-Ambient-Occlusion.png "Ambient Occlusion")
-![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Comparison-Ray-Caster.png "Ray Caster")
-![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Comparison-Ray-Tracer.png "Ray Tracer")
-![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/Dayflower-Comparison-Path-Tracer.png "Path Tracer")
+For more images, please visit https://github.com/macroing/Dayflower-Path-Tracer/tree/master/images.
 
 ______________________________________________________________________________________
 

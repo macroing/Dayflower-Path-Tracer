@@ -75,6 +75,9 @@ final class Scenes {
 			case "House_Scene_3":
 			case "House_Scene_3.scene":
 				return newHouseScene3();
+			case "Image_Scene":
+			case "Image_Scene.scene":
+				return newImageScene();
 			case "Material_Showcase_Scene":
 			case "Material_Showcase_Scene.scene":
 				return newMaterialShowcaseScene();
@@ -460,6 +463,32 @@ final class Scenes {
 		scene.addShape(triangleFloor[1]);
 		scene.addShape(triangleRoof[0]);
 		scene.addShape(triangleRoof[1]);
+		
+		return scene;
+	}
+	
+	public static Scene newImageScene() {
+		final Texture textureGroundAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureMonkeyAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphereAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 4.0F, 4.0F);
+		final Texture textureSphereNormal = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
+		
+		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureMonkeyAlbedo, textureMonkeyNormal);
+		
+		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, Dayflower.getModelFilename("smoothMonkey2.obj"), 100.0F);
+		
+		final List<Triangle> triangles = mesh.getTriangles();
+		
+		final
+		Scene scene = new Scene("Image_Scene");
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphereAlbedo, textureSphereNormal), 32.0F, new Point3F(-8.0F, 32.0F, 250.0F)));
+		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
+		
+		for(final Triangle triangle : triangles) {
+			scene.addShape(triangle.translateY(100.0F));
+		}
 		
 		return scene;
 	}
