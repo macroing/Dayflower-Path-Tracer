@@ -8,7 +8,7 @@ This early test implementation of Dayflower uses a library called Aparapi. Apara
 
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/random/Dayflower-House.png "Dayflower Path Tracer")
 
-For more images, please visit https://github.com/macroing/Dayflower-Path-Tracer/tree/master/images.
+For more images, check out [images](https://github.com/macroing/Dayflower-Path-Tracer/tree/master/images).
 
 ______________________________________________________________________________________
 
