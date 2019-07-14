@@ -870,4 +870,16 @@ public final class Color {
 	public static int toR(final int rGB) {
 		return (rGB >> 16) & 0xFF;
 	}
+	
+	/**
+	 * Returns an {@code int} with the R-, G- and B-component values.
+	 * 
+	 * @param r the R-component value
+	 * @param g the G-component value
+	 * @param b the B-component value
+	 * @return an {@code int} with the R-, G- and B-component values
+	 */
+	public static int toRGB(final int r, final int g, final int b) {
+		return ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+	}
 }

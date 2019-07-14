@@ -90,6 +90,7 @@ Supported Menu Controls
 -----------------------
 | Menu Item                      | Description                                        |
 | ------------------------------ | -------------------------------------------------- |
+| File > Save                    | Saves the current image                            |
 | File > Exit                    | Exit                                               |
 | Camera > Walk Lock             | Toggle walk lock                                   |
 | Camera > Fisheye Camera Lens   | Use a Fisheye camera lens                          |

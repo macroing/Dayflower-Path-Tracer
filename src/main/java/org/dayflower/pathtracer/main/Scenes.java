@@ -99,16 +99,16 @@ final class Scenes {
 	}
 	
 	public static Scene newCarScene() {
-		final Texture textureGroundAlbedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.3F, 0.1F), Color.WHITE, 0.5F, 0.8F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture textureGroundAlbedo = new ConstantTexture(Color.GRAY);//new FractionalBrownianMotionTexture(new Color(0.5F, 0.3F, 0.1F), Color.WHITE, 0.5F, 0.8F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new ConstantTexture(Color.BLACK);
 		
 		final Texture textureCarAlbedo = new ConstantTexture(Color.GRAY);
 		final Texture textureCarNormalMap = new ConstantTexture(Color.BLACK);
 		final Texture textureCarWindGlass = new ConstantTexture(Color.WHITE);
-		final Texture textureCarBodyPaint = new ConstantTexture(Color.RED);
+		final Texture textureCarBodyPaint = new ConstantTexture(Color.GRAY);
 		final Texture textureCarChrome = new ConstantTexture(Color.GRAY);
 		final Texture textureCarDriver = new ConstantTexture(new Color(227, 161, 115));
-		final Texture textureCarDoorLine = new ConstantTexture(Color.RED);
+		final Texture textureCarDoorLine = new ConstantTexture(Color.GRAY);
 		final Texture textureCarTireBack = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
 		final Texture textureCarTireTread = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
 		final Texture textureCarTireSidewall = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
@@ -121,7 +121,7 @@ final class Scenes {
 		final Texture textureCarBlack = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
 		final Texture textureCarBottom = new ConstantTexture(new Color(0.1F, 0.1F, 0.1F));
 		
-		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureCarAlbedo, textureCarNormalMap);
+		final Surface surface = Surface.getInstance(new Color(0.01F, 0.01F, 0.01F), 0.0F, 0.0F, Material.PHONG_METAL, textureCarAlbedo, textureCarNormalMap);
 		
 		final Map<String, Surface> surfaces = new HashMap<>();
 		

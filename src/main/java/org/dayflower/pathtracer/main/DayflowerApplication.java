@@ -18,11 +18,22 @@
  */
 package org.dayflower.pathtracer.main;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
 
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -49,6 +60,7 @@ import com.amd.aparapi.Range;
 
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.application.JavaFX;
+import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.ConvolutionKernel;
@@ -202,9 +214,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	@Override
 	protected void configureMenuBar(final MenuBar menuBar) {
 //		Create the "File" Menu:
+		final MenuItem menuItemSave = JavaFX.newMenuItem("Save", this::doOnMenuItemSave);
 		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> exit());
 		
-		final Menu menuFile = JavaFX.newMenu("File", menuItemExit);
+		final Menu menuFile = JavaFX.newMenu("File", menuItemSave, menuItemExit);
 		
 		menuBar.getMenus().add(menuFile);
 		
@@ -587,6 +600,76 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private BufferedImage doCreateBufferedImage() {
+		final int width = getCanvasWidth();
+		final int height = getCanvasHeight();
+		
+		final BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		
+		final int[] data = DataBufferInt.class.cast(bufferedImage.getRaster().getDataBuffer()).getData();
+		
+		synchronized(this.pixels1) {
+			for(int i = 0, j = 0; i < data.length; i++, j += 4) {
+				final int r = this.pixels1[j + 2];
+				final int g = this.pixels1[j + 1];
+				final int b = this.pixels1[j + 0];
+				
+				final int rGB = Color.toRGB(r, g, b);
+				
+				data[i] = rGB;
+			}
+		}
+		
+		return bufferedImage;
+	}
+	
+	@SuppressWarnings("static-method")
+	private File doFindNextFile() {
+		final File directory = new File(Dayflower.getImageDirectory());
+		
+		int number = 0;
+		
+		if(directory.isDirectory()) {
+			final List<File> filesInDirectory = Arrays.asList(directory.listFiles());
+			final List<File> filesMatchingPattern = new ArrayList<>();
+			
+			final Pattern pattern = Pattern.compile("^Dayflower-Image-([0-9]+)\\.png$", Pattern.CASE_INSENSITIVE);
+			
+			for(final File fileInDirectory : filesInDirectory) {
+				if(fileInDirectory.isFile() && pattern.matcher(fileInDirectory.getName()).matches()) {
+					filesMatchingPattern.add(fileInDirectory);
+				}
+			}
+			
+			Collections.sort(filesMatchingPattern);
+			
+			boolean isNumberAvailable = true;
+			
+			do {
+				number++;
+				
+				isNumberAvailable = true;
+				
+				for(final File fileMatchingPattern : filesMatchingPattern) {
+					final Matcher matcher = pattern.matcher(fileMatchingPattern.getName());
+					
+					if(matcher.matches()) {
+						final String number0 = matcher.group(1);
+						final String number1 = Integer.toString(number);
+						
+						if(number0.equals(number1)) {
+							isNumberAvailable = false;
+						}
+					}
+				}
+			} while(!isNumberAvailable);
+		} else {
+			number++;
+		}
+		
+		return new File(Dayflower.getImageFile(number));
+	}
+	
 	@SuppressWarnings("unused")
 	private void doOnCheckBoxToggleClouds(final ActionEvent e) {
 		synchronized(this.pixels1) {
@@ -602,6 +685,25 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			this.abstractRendererKernel.toggleSunAndSky();
 			this.abstractRendererKernel.updateResetStatus();
 			this.abstractRendererKernel.reset();
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnMenuItemSave(final ActionEvent e) {
+		final File file = doFindNextFile();
+		
+		if(!file.getParentFile().exists()) {
+			file.getParentFile().mkdirs();
+		}
+		
+		System.out.println("Saving image to \"" + file.getAbsolutePath() + "\".");
+		
+		final BufferedImage bufferedImage = doCreateBufferedImage();
+		
+		try {
+			ImageIO.write(bufferedImage, "png", file);
+		} catch(final IOException e1) {
+//			Do nothing for now.
 		}
 	}
 	
