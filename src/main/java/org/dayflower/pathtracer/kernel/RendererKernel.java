@@ -170,7 +170,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final int imageHistogramHeight;
 	@SuppressWarnings("unused")
 	private final int imageHistogramWidth;
-	private int isNormalMapping = 0;
+	private int isNormalMapping = 1;
 	private int octaves;
 	private int renderer = RENDERER_PATH_TRACER;
 	private int selectedShapeIndex = -1;

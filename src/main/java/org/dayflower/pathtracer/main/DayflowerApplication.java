@@ -154,7 +154,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		Camera camera = this.camera;
 		camera.setApertureRadius(0.0F);
 		camera.setEye(55.0F, 42.0F, 155.6F);
-//		camera.setEye(-8.75F, 42.0F, 332.6F);
+		camera.setEye(-8.75F, 42.0F, 332.6F);
+		camera.setEye(295.0F, 42.0F, 332.6F);
 		camera.setFieldOfViewX(90.0F);
 		camera.setFocalDistance(30.0F);
 		camera.setPitch(AngleF.pitch(Vector3F.x()));
