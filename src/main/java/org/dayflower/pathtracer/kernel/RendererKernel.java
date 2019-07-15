@@ -4388,7 +4388,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final int type = (int)(this.shapes[shapesOffset]);
 			
 			if(type == CompiledScene.SPHERE_TYPE) {
-				final float v0X = -2.0F * PI * wY;
+				final float v0X = -2.0F * PI * wY;//wZ?
 				final float v0Y = 2.0F * PI * wX;
 				final float v0Z = 0.0F;
 				

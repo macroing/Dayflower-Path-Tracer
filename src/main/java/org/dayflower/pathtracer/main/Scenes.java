@@ -523,7 +523,7 @@ final class Scenes {
 		final Texture textureSphere10Normal = new ConstantTexture(Color.BLACK);
 		
 //		Normal Mapping showcase:
-		final Texture textureSphere11Albedo = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 4.0F, 4.0F);
+		final Texture textureSphere11Albedo = new ConstantTexture(Color.GRAY);//ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 4.0F, 4.0F);
 		final Texture textureSphere11Normal = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
 		final Texture textureSphere12Albedo = new ConstantTexture(Color.WHITE);
 		final Texture textureSphere12Normal = new ConstantTexture(Color.BLACK);
