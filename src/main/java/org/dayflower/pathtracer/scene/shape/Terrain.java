@@ -24,19 +24,19 @@ import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
 
 public final class Terrain extends Shape {
+	private final float frequency;
+	private final float gain;
 	private final float maximum;
 	private final float minimum;
-	private final float persistence;
-	private final float scale;
 	private final int octaves;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public Terrain(final Surface surface, final float persistence, final float scale, final float minimum, final float maximum, final int octaves) {
+	public Terrain(final Surface surface, final float frequency, final float gain, final float minimum, final float maximum, final int octaves) {
 		super(surface);
 		
-		this.persistence = persistence;
-		this.scale = scale;
+		this.frequency = frequency;
+		this.gain = gain;
 		this.minimum = minimum;
 		this.maximum = maximum;
 		this.octaves = octaves;
@@ -52,19 +52,27 @@ public final class Terrain extends Shape {
 			return false;
 		} else if(!Objects.equals(getSurface(), Terrain.class.cast(object).getSurface())) {
 			return false;
+		} else if(Float.compare(this.frequency, Terrain.class.cast(object).frequency) != 0) {
+			return false;
+		} else if(Float.compare(this.gain, Terrain.class.cast(object).gain) != 0) {
+			return false;
 		} else if(Float.compare(this.maximum, Terrain.class.cast(object).maximum) != 0) {
 			return false;
 		} else if(Float.compare(this.minimum, Terrain.class.cast(object).minimum) != 0) {
-			return false;
-		} else if(Float.compare(this.persistence, Terrain.class.cast(object).persistence) != 0) {
-			return false;
-		} else if(Float.compare(this.scale, Terrain.class.cast(object).scale) != 0) {
 			return false;
 		} else if(this.octaves != Terrain.class.cast(object).octaves) {
 			return false;
 		} else {
 			return true;
 		}
+	}
+	
+	public float getFrequency() {
+		return this.frequency;
+	}
+	
+	public float getGain() {
+		return this.gain;
 	}
 	
 	public float getMaximum() {
@@ -75,20 +83,12 @@ public final class Terrain extends Shape {
 		return this.minimum;
 	}
 	
-	public float getPersistence() {
-		return this.persistence;
-	}
-	
-	public float getScale() {
-		return this.scale;
-	}
-	
 	public int getOctaves() {
 		return this.octaves;
 	}
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(getSurface(), Float.valueOf(this.maximum), Float.valueOf(this.minimum), Float.valueOf(this.persistence), Float.valueOf(this.scale), Integer.valueOf(this.octaves));
+		return Objects.hash(getSurface(), Float.valueOf(this.frequency), Float.valueOf(this.gain), Float.valueOf(this.maximum), Float.valueOf(this.minimum), Integer.valueOf(this.octaves));
 	}
 }

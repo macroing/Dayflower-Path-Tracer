@@ -230,6 +230,12 @@ public final class CompiledScene {
 	public static final int SURFACE_SIZE = 8;
 	
 //	TODO: Add Javadocs.
+	public static final int TERRAIN_RELATIVE_OFFSET_FREQUENCY = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int TERRAIN_RELATIVE_OFFSET_GAIN = 3;
+	
+//	TODO: Add Javadocs.
 	public static final int TERRAIN_RELATIVE_OFFSET_MAXIMUM = 5;
 	
 //	TODO: Add Javadocs.
@@ -237,12 +243,6 @@ public final class CompiledScene {
 	
 //	TODO: Add Javadocs.
 	public static final int TERRAIN_RELATIVE_OFFSET_OCTAVES = 6;
-	
-//	TODO: Add Javadocs.
-	public static final int TERRAIN_RELATIVE_OFFSET_PERSISTENCE = 2;
-	
-//	TODO: Add Javadocs.
-	public static final int TERRAIN_RELATIVE_OFFSET_SCALE = 3;
 	
 //	TODO: Add Javadocs.
 	public static final int TERRAIN_SIZE = 7;
@@ -1004,8 +1004,8 @@ public final class CompiledScene {
 		return new float[] {
 			TERRAIN_TYPE,
 			doGetOffset(terrain.getSurface(), surfaces),
-			terrain.getPersistence(),
-			terrain.getScale(),
+			terrain.getFrequency(),
+			terrain.getGain(),
 			terrain.getMinimum(),
 			terrain.getMaximum(),
 			terrain.getOctaves()

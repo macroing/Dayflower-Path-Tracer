@@ -246,46 +246,6 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Returns the amplitude currently used.
-	 * 
-	 * @return the amplitude currently used
-	 */
-	@SuppressWarnings("static-method")
-	public float getAmplitude() {
-		return 1.0F;
-	}
-	
-	/**
-	 * Returns the frequency currently used.
-	 * 
-	 * @return the frequency currently used
-	 */
-	@SuppressWarnings("static-method")
-	public float getFrequency() {
-		return 1.0F;
-	}
-	
-	/**
-	 * Returns the gain currently used.
-	 * 
-	 * @return the gain currently used
-	 */
-	@SuppressWarnings("static-method")
-	public float getGain() {
-		return 1.0F;
-	}
-	
-	/**
-	 * Returns the lacunarity currently used.
-	 * 
-	 * @return the lacunarity currently used
-	 */
-	@SuppressWarnings("static-method")
-	public float getLacunarity() {
-		return 1.0F;
-	}
-	
-	/**
 	 * Returns the maximum distance for Ambient Occlusion.
 	 * 
 	 * @return the maximum distance for Ambient Occlusion
@@ -309,16 +269,6 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 */
 	public final int getHeight() {
 		return this.height;
-	}
-	
-	/**
-	 * Returns the octaves currently used.
-	 * 
-	 * @return the octaves currently used
-	 */
-	@SuppressWarnings("static-method")
-	public int getOctaves() {
-		return 1;
 	}
 	
 //	TODO: Add Javadocs!
@@ -457,15 +407,6 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Sets the amplitude to use.
-	 * 
-	 * @param amplitude the new amplitude
-	 */
-	public void setAmplitude(final float amplitude) {
-//		Do nothing.
-	}
-	
-	/**
 	 * Sets the maximum depth to be used for path termination.
 	 * 
 	 * @param depthMaximum the maximum depth
@@ -502,33 +443,6 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Sets the frequency to use.
-	 * 
-	 * @param frequency the new frequency
-	 */
-	public void setFrequency(final float frequency) {
-//		Do nothing.
-	}
-	
-	/**
-	 * Sets the gain to use.
-	 * 
-	 * @param gain the new gain
-	 */
-	public void setGain(final float gain) {
-//		Do nothing.
-	}
-	
-	/**
-	 * Sets the lacunarity to use.
-	 * 
-	 * @param lacunarity the new lacunarity
-	 */
-	public void setLacunarity(final float lacunarity) {
-//		Do nothing.
-	}
-	
-	/**
 	 * Sets the maximum distance for Ambient Occlusion.
 	 * 
 	 * @param maximumDistanceAO the new maximum distance for Ambient Occlusion
@@ -543,15 +457,6 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * @param isNormalMapping {@code true} if, and only if, Normal Mapping is activated, {@code false} otherwise
 	 */
 	public void setNormalMapping(final boolean isNormalMapping) {
-//		Do nothing.
-	}
-	
-	/**
-	 * Sets the octaves to use.
-	 * 
-	 * @param octaves the new octaves
-	 */
-	public void setOctaves(final int octaves) {
 //		Do nothing.
 	}
 	
