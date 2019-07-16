@@ -79,58 +79,58 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private boolean isResetRequired;
 	private byte[] pixels;
 	private final CompiledScene compiledScene;
-	private final float breakPoint;
-	private final float gamma;
-	private float jacobian;
+	private double sunAndSkyZenithRelativeLuminance;
+	private double sunAndSkyZenithX;
+	private double sunAndSkyZenithY;
+	@Constant
+	private final double[] sunAndSkyPerezRelativeLuminance;
+	@Constant
+	private final double[] sunAndSkyPerezX;
+	@Constant
+	private final double[] sunAndSkyPerezY;
+	private final float colorSpaceBreakPoint;
+	private final float colorSpaceGamma;
+	private final float colorSpaceSegmentOffset;
+	private final float colorSpaceSlope;
+	private final float colorSpaceSlopeMatch;
 	private float maximumDistanceAO;
-	private float orthoNormalBasisUX;
-	private float orthoNormalBasisUY;
-	private float orthoNormalBasisUZ;
-	private float orthoNormalBasisVX;
-	private float orthoNormalBasisVY;
-	private float orthoNormalBasisVZ;
-	private float orthoNormalBasisWX;
-	private float orthoNormalBasisWY;
-	private float orthoNormalBasisWZ;
-	private final float segmentOffset;
-	private final float slope;
-	private final float slopeMatch;
-	private float sunColorB;
-	private float sunColorG;
-	private float sunColorR;
-	private float sunDirectionWorldX;
-	private float sunDirectionWorldY;
-	private float sunDirectionWorldZ;
-	private float sunDirectionX;
-	private float sunDirectionY;
-	private float sunDirectionZ;
-	private float sunOriginX;
-	private float sunOriginY;
-	private float sunOriginZ;
-	private float theta;
-	private float turbidity;
-	private double zenithRelativeLuminance;
-	private double zenithX;
-	private double zenithY;
+	private float sunAndSkyJacobian;
+	private float sunAndSkyOrthoNormalBasisUX;
+	private float sunAndSkyOrthoNormalBasisUY;
+	private float sunAndSkyOrthoNormalBasisUZ;
+	private float sunAndSkyOrthoNormalBasisVX;
+	private float sunAndSkyOrthoNormalBasisVY;
+	private float sunAndSkyOrthoNormalBasisVZ;
+	private float sunAndSkyOrthoNormalBasisWX;
+	private float sunAndSkyOrthoNormalBasisWY;
+	private float sunAndSkyOrthoNormalBasisWZ;
+	private float sunAndSkySunColorB;
+	private float sunAndSkySunColorG;
+	private float sunAndSkySunColorR;
+	private float sunAndSkySunDirectionWorldX;
+	private float sunAndSkySunDirectionWorldY;
+	private float sunAndSkySunDirectionWorldZ;
+	private float sunAndSkySunDirectionX;
+	private float sunAndSkySunDirectionY;
+	private float sunAndSkySunDirectionZ;
+	private float sunAndSkySunOriginX;
+	private float sunAndSkySunOriginY;
+	private float sunAndSkySunOriginZ;
+	private float sunAndSkyTheta;
+	private float sunAndSkyTurbidity;
 	private final float[] accumulatedPixelColors;
 	@Constant
 	private final float[] boundingVolumeHierarchy;
 	@Constant
 	private final float[] cameraArray;
 	@Constant
-	private final float[] colHistogram;
+	private final float[] sunAndSkyColHistogram;
 	@Local
 	private float[] currentPixelColors;
 	@Constant
-	private final float[] imageHistogram;
+	private final float[] sunAndSkyImageHistogram;
 	@Local
 	private float[] intersections;
-	@Constant
-	private final double[] perezRelativeLuminance;
-	@Constant
-	private final double[] perezX;
-	@Constant
-	private final double[] perezY;
 	@Constant
 	private final float[] point2Fs;
 	@Constant
@@ -148,20 +148,18 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Constant
 	private final float[] vector3Fs;
 	private int clouds = BOOLEAN_FALSE;
-	private final int colHistogramLength;
 	private int depthMaximum = 5;
 	private int depthRussianRoulette = 5;
 	private int effectGrayScale;
 	private int effectSepiaTone;
-	private final int imageHistogramHeight;
-	@SuppressWarnings("unused")
-	private final int imageHistogramWidth;
 	private int isNormalMapping = 1;
 	private int renderer = RENDERER_PATH_TRACER;
 	private int selectedShapeIndex = -1;
 	private int shading = SHADING_GOURAUD;
 	private int shapeOffsetsLength;
-	private int sunAndSky = BOOLEAN_TRUE;
+	private int sunAndSkyActive = BOOLEAN_TRUE;
+	private int sunAndSkyColHistogramLength;
+	private int sunAndSkyImageHistogramHeight;
 	private int sunAndSkySamples;
 	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2;
 	private final int width;
@@ -190,23 +188,54 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		final RGBColorSpace rGBColorSpace = RGBColorSpace.SRGB;
 		
-		this.maximumDistanceAO = 200.0F;
-		this.breakPoint = rGBColorSpace.getBreakPoint();
-		this.gamma = rGBColorSpace.getGamma();
-		this.segmentOffset = rGBColorSpace.getSegmentOffset();
-		this.slope = rGBColorSpace.getSlope();
-		this.slopeMatch = rGBColorSpace.getSlopeMatch();
 		this.sky = Objects.requireNonNull(sky, "sky == null");
 		this.compiledScene = Objects.requireNonNull(compiledScene, "compiledScene == null");
-		this.orthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
-		this.orthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
-		this.orthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
-		this.orthoNormalBasisVX = sky.getOrthoNormalBasis().v.x;
-		this.orthoNormalBasisVY = sky.getOrthoNormalBasis().v.y;
-		this.orthoNormalBasisVZ = sky.getOrthoNormalBasis().v.z;
-		this.orthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
-		this.orthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
-		this.orthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
+		
+//		Initialize the color space variables:
+		this.colorSpaceBreakPoint = rGBColorSpace.getBreakPoint();
+		this.colorSpaceGamma = rGBColorSpace.getGamma();
+		this.colorSpaceSegmentOffset = rGBColorSpace.getSegmentOffset();
+		this.colorSpaceSlope = rGBColorSpace.getSlope();
+		this.colorSpaceSlopeMatch = rGBColorSpace.getSlopeMatch();
+		
+//		Initialize the sun and sky variables:
+		this.sunAndSkyColHistogram = sky.getColHistogram();
+		this.sunAndSkyColHistogramLength = this.sunAndSkyColHistogram.length;
+		this.sunAndSkyImageHistogram = sky.getImageHistogram();
+		this.sunAndSkyImageHistogramHeight = sky.getImageHistogramHeight();
+		this.sunAndSkyJacobian = sky.getJacobian();
+		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
+		this.sunAndSkyOrthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
+		this.sunAndSkyOrthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
+		this.sunAndSkyOrthoNormalBasisVX = sky.getOrthoNormalBasis().v.x;
+		this.sunAndSkyOrthoNormalBasisVY = sky.getOrthoNormalBasis().v.y;
+		this.sunAndSkyOrthoNormalBasisVZ = sky.getOrthoNormalBasis().v.z;
+		this.sunAndSkyOrthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
+		this.sunAndSkyOrthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
+		this.sunAndSkyOrthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
+		this.sunAndSkyPerezRelativeLuminance = sky.getPerezRelativeLuminance();
+		this.sunAndSkyPerezX = sky.getPerezX();
+		this.sunAndSkyPerezY = sky.getPerezY();
+		this.sunAndSkySamples = sky.getSamples();
+		this.sunAndSkySunColorR = sky.getSunColor().r;
+		this.sunAndSkySunColorG = sky.getSunColor().g;
+		this.sunAndSkySunColorB = sky.getSunColor().b;
+		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
+		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
+		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
+		this.sunAndSkySunDirectionX = sky.getSunDirection().x;
+		this.sunAndSkySunDirectionY = sky.getSunDirection().y;
+		this.sunAndSkySunDirectionZ = sky.getSunDirection().z;
+		this.sunAndSkySunOriginX = sky.getSunOrigin().x;
+		this.sunAndSkySunOriginY = sky.getSunOrigin().y;
+		this.sunAndSkySunOriginZ = sky.getSunOrigin().z;
+		this.sunAndSkyTheta = sky.getTheta();
+		this.sunAndSkyTurbidity = sky.getTurbidity();
+		this.sunAndSkyZenithRelativeLuminance = sky.getZenithRelativeLuminance();
+		this.sunAndSkyZenithX = sky.getZenithX();
+		this.sunAndSkyZenithY = sky.getZenithY();
+		
+		this.maximumDistanceAO = 200.0F;
 		this.width = width;
 		this.boundingVolumeHierarchy = this.compiledScene.getBoundingVolumeHierarchy();
 		this.cameraArray = this.compiledScene.getCamera();
@@ -220,33 +249,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.shapeOffsets = this.compiledScene.getShapeOffsets();
 		this.shapeOffsetsLength = this.shapeOffsets.length;
 		this.subSamples = new long[width * height];
-		this.sunDirectionWorldX = sky.getSunDirectionWorld().x;
-		this.sunDirectionWorldY = sky.getSunDirectionWorld().y;
-		this.sunDirectionWorldZ = sky.getSunDirectionWorld().z;
-		this.sunDirectionX = sky.getSunDirection().x;
-		this.sunDirectionY = sky.getSunDirection().y;
-		this.sunDirectionZ = sky.getSunDirection().z;
-		this.sunOriginX = sky.getSunOrigin().x;
-		this.sunOriginY = sky.getSunOrigin().y;
-		this.sunOriginZ = sky.getSunOrigin().z;
-		this.theta = sky.getTheta();
-		this.turbidity = sky.getTurbidity();
-		this.zenithRelativeLuminance = sky.getZenithRelativeLuminance();
-		this.zenithX = sky.getZenithX();
-		this.zenithY = sky.getZenithY();
-		this.perezRelativeLuminance = sky.getPerezRelativeLuminance();
-		this.perezX = sky.getPerezX();
-		this.perezY = sky.getPerezY();
-		this.imageHistogram = sky.getImageHistogram();
-		this.imageHistogramWidth = sky.getImageHistogramWidth();
-		this.imageHistogramHeight = sky.getImageHistogramHeight();
-		this.colHistogram = sky.getColHistogram();
-		this.jacobian = sky.getJacobian();
-		this.sunColorR = sky.getSunColor().r;
-		this.sunColorG = sky.getSunColor().g;
-		this.sunColorB = sky.getSunColor().b;
-		this.sunAndSkySamples = sky.getSamples();
-		this.colHistogramLength = this.colHistogram.length;
 	}
 	
 	/**
@@ -500,9 +502,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		put(this.cameraArray);
 		put(this.point2Fs);
 		put(this.point3Fs);
-		put(this.perezRelativeLuminance);
-		put(this.perezX);
-		put(this.perezY);
+		put(this.sunAndSkyPerezRelativeLuminance);
+		put(this.sunAndSkyPerezX);
+		put(this.sunAndSkyPerezY);
 		put(this.shapes);
 		put(this.surfaces);
 		put(this.textures);
@@ -510,8 +512,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		put(this.shapeOffsets);
 		put(this.shapeOffsetsForPrimaryRay);
 		put(this.subSamples);
-		put(this.imageHistogram);
-		put(this.colHistogram);
+		put(this.sunAndSkyImageHistogram);
+		put(this.sunAndSkyColHistogram);
 		
 		return this;
 	}
@@ -583,46 +585,46 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public RendererKernel updateSky() {
-		this.jacobian = this.sky.getJacobian();
-		this.orthoNormalBasisUX = this.sky.getOrthoNormalBasis().u.x;
-		this.orthoNormalBasisUY = this.sky.getOrthoNormalBasis().u.y;
-		this.orthoNormalBasisUZ = this.sky.getOrthoNormalBasis().u.z;
-		this.orthoNormalBasisVX = this.sky.getOrthoNormalBasis().v.x;
-		this.orthoNormalBasisVY = this.sky.getOrthoNormalBasis().v.y;
-		this.orthoNormalBasisVZ = this.sky.getOrthoNormalBasis().v.z;
-		this.orthoNormalBasisWX = this.sky.getOrthoNormalBasis().w.x;
-		this.orthoNormalBasisWY = this.sky.getOrthoNormalBasis().w.y;
-		this.orthoNormalBasisWZ = this.sky.getOrthoNormalBasis().w.z;
+		this.sunAndSkyJacobian = this.sky.getJacobian();
+		this.sunAndSkyOrthoNormalBasisUX = this.sky.getOrthoNormalBasis().u.x;
+		this.sunAndSkyOrthoNormalBasisUY = this.sky.getOrthoNormalBasis().u.y;
+		this.sunAndSkyOrthoNormalBasisUZ = this.sky.getOrthoNormalBasis().u.z;
+		this.sunAndSkyOrthoNormalBasisVX = this.sky.getOrthoNormalBasis().v.x;
+		this.sunAndSkyOrthoNormalBasisVY = this.sky.getOrthoNormalBasis().v.y;
+		this.sunAndSkyOrthoNormalBasisVZ = this.sky.getOrthoNormalBasis().v.z;
+		this.sunAndSkyOrthoNormalBasisWX = this.sky.getOrthoNormalBasis().w.x;
+		this.sunAndSkyOrthoNormalBasisWY = this.sky.getOrthoNormalBasis().w.y;
+		this.sunAndSkyOrthoNormalBasisWZ = this.sky.getOrthoNormalBasis().w.z;
 		this.sunAndSkySamples = this.sky.getSamples();
-		this.sunColorB = this.sky.getSunColor().b;
-		this.sunColorG = this.sky.getSunColor().g;
-		this.sunColorR = this.sky.getSunColor().r;
-		this.sunDirectionWorldX = this.sky.getSunDirectionWorld().x;
-		this.sunDirectionWorldY = this.sky.getSunDirectionWorld().y;
-		this.sunDirectionWorldZ = this.sky.getSunDirectionWorld().z;
-		this.sunDirectionX = this.sky.getSunDirection().x;
-		this.sunDirectionY = this.sky.getSunDirection().y;
-		this.sunDirectionZ = this.sky.getSunDirection().z;
-		this.sunOriginX = this.sky.getSunOrigin().x;
-		this.sunOriginY = this.sky.getSunOrigin().y;
-		this.sunOriginZ = this.sky.getSunOrigin().z;
-		this.theta = this.sky.getTheta();
-		this.turbidity = this.sky.getTurbidity();
-		this.zenithRelativeLuminance = this.sky.getZenithRelativeLuminance();
-		this.zenithX = this.sky.getZenithX();
-		this.zenithY = this.sky.getZenithY();
+		this.sunAndSkySunColorB = this.sky.getSunColor().b;
+		this.sunAndSkySunColorG = this.sky.getSunColor().g;
+		this.sunAndSkySunColorR = this.sky.getSunColor().r;
+		this.sunAndSkySunDirectionWorldX = this.sky.getSunDirectionWorld().x;
+		this.sunAndSkySunDirectionWorldY = this.sky.getSunDirectionWorld().y;
+		this.sunAndSkySunDirectionWorldZ = this.sky.getSunDirectionWorld().z;
+		this.sunAndSkySunDirectionX = this.sky.getSunDirection().x;
+		this.sunAndSkySunDirectionY = this.sky.getSunDirection().y;
+		this.sunAndSkySunDirectionZ = this.sky.getSunDirection().z;
+		this.sunAndSkySunOriginX = this.sky.getSunOrigin().x;
+		this.sunAndSkySunOriginY = this.sky.getSunOrigin().y;
+		this.sunAndSkySunOriginZ = this.sky.getSunOrigin().z;
+		this.sunAndSkyTheta = this.sky.getTheta();
+		this.sunAndSkyTurbidity = this.sky.getTurbidity();
+		this.sunAndSkyZenithRelativeLuminance = this.sky.getZenithRelativeLuminance();
+		this.sunAndSkyZenithX = this.sky.getZenithX();
+		this.sunAndSkyZenithY = this.sky.getZenithY();
 		
-		System.arraycopy(this.sky.getColHistogram(), 0, this.colHistogram, 0, this.colHistogram.length);
-		System.arraycopy(this.sky.getImageHistogram(), 0, this.imageHistogram, 0, this.imageHistogram.length);
-		System.arraycopy(this.sky.getPerezRelativeLuminance(), 0, this.perezRelativeLuminance, 0, this.perezRelativeLuminance.length);
-		System.arraycopy(this.sky.getPerezX(), 0, this.perezX, 0, this.perezX.length);
-		System.arraycopy(this.sky.getPerezY(), 0, this.perezY, 0, this.perezY.length);
+		System.arraycopy(this.sky.getColHistogram(), 0, this.sunAndSkyColHistogram, 0, this.sunAndSkyColHistogram.length);
+		System.arraycopy(this.sky.getImageHistogram(), 0, this.sunAndSkyImageHistogram, 0, this.sunAndSkyImageHistogram.length);
+		System.arraycopy(this.sky.getPerezRelativeLuminance(), 0, this.sunAndSkyPerezRelativeLuminance, 0, this.sunAndSkyPerezRelativeLuminance.length);
+		System.arraycopy(this.sky.getPerezX(), 0, this.sunAndSkyPerezX, 0, this.sunAndSkyPerezX.length);
+		System.arraycopy(this.sky.getPerezY(), 0, this.sunAndSkyPerezY, 0, this.sunAndSkyPerezY.length);
 		
-		put(this.colHistogram);
-		put(this.imageHistogram);
-		put(this.perezRelativeLuminance);
-		put(this.perezX);
-		put(this.perezY);
+		put(this.sunAndSkyColHistogram);
+		put(this.sunAndSkyImageHistogram);
+		put(this.sunAndSkyPerezRelativeLuminance);
+		put(this.sunAndSkyPerezX);
+		put(this.sunAndSkyPerezY);
 		
 		this.isResetRequired = true;
 		
@@ -1091,14 +1093,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
-	 * Toggles to the sun and sky.
+	 * Toggles the sun and sky.
 	 */
 	@Override
 	public void toggleSunAndSky() {
-		if(this.sunAndSky == BOOLEAN_FALSE) {
-			this.sunAndSky = BOOLEAN_TRUE;
+		if(this.sunAndSkyActive == BOOLEAN_FALSE) {
+			this.sunAndSkyActive = BOOLEAN_TRUE;
 		} else {
-			this.sunAndSky = BOOLEAN_FALSE;
+			this.sunAndSkyActive = BOOLEAN_FALSE;
 		}
 	}
 	
@@ -1767,9 +1769,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		g += albedoG * kaG * ia;
 		b += albedoB * kaB * ia;
 		
-		final float lPositionX = this.sunOriginX;
-		final float lPositionY = this.sunOriginY;
-		final float lPositionZ = this.sunOriginZ;
+		final float lPositionX = this.sunAndSkySunOriginX;
+		final float lPositionY = this.sunAndSkySunOriginY;
+		final float lPositionZ = this.sunAndSkySunOriginZ;
 		
 //		Compute L, the normalized direction vector from the intersection point to the point light:
 		final float lX = lPositionX - pX;
@@ -1846,9 +1848,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float woNormalizedY = woY * woLengthReciprocal;
 		final float woNormalizedZ = woZ * woLengthReciprocal;
 		
-		final float lPositionX = this.sunOriginX;
-		final float lPositionY = this.sunOriginY;
-		final float lPositionZ = this.sunOriginZ;
+		final float lPositionX = this.sunAndSkySunOriginX;
+		final float lPositionY = this.sunAndSkySunOriginY;
+		final float lPositionZ = this.sunAndSkySunOriginZ;
 		
 //		Compute L, the normalized direction vector from the intersection point to the point light:
 		final float lX = lPositionX - surfaceIntersectionPointX;
@@ -2171,10 +2173,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 		}
 		
 		if(this.toneMappingAndGammaCorrection != TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1) {
+			final float breakPoint = this.colorSpaceBreakPoint;
+			final float gamma = this.colorSpaceGamma;
+			final float segmentOffset = this.colorSpaceSegmentOffset;
+			final float slope = this.colorSpaceSlope;
+			final float slopeMatch = this.colorSpaceSlopeMatch;
+			
 //			Gamma correct the 'normalized' accumulated pixel color components using sRGB as color space:
-			r = r <= 0.0F ? 0.0F : r >= 1.0F ? 1.0F : r <= this.breakPoint ? r * this.slope : this.slopeMatch * pow(r, 1.0F / this.gamma) - this.segmentOffset;
-			g = g <= 0.0F ? 0.0F : g >= 1.0F ? 1.0F : g <= this.breakPoint ? g * this.slope : this.slopeMatch * pow(g, 1.0F / this.gamma) - this.segmentOffset;
-			b = b <= 0.0F ? 0.0F : b >= 1.0F ? 1.0F : b <= this.breakPoint ? b * this.slope : this.slopeMatch * pow(b, 1.0F / this.gamma) - this.segmentOffset;
+			r = r <= 0.0F ? 0.0F : r >= 1.0F ? 1.0F : r <= breakPoint ? r * slope : slopeMatch * pow(r, 1.0F / gamma) - segmentOffset;
+			g = g <= 0.0F ? 0.0F : g >= 1.0F ? 1.0F : g <= breakPoint ? g * slope : slopeMatch * pow(g, 1.0F / gamma) - segmentOffset;
+			b = b <= 0.0F ? 0.0F : b >= 1.0F ? 1.0F : b <= breakPoint ? b * slope : slopeMatch * pow(b, 1.0F / gamma) - segmentOffset;
 		}
 		
 //		Multiply the 'normalized' accumulated pixel color components with 255.0 and clamp them to the range [0.0, 255.0], so they can be displayed:
@@ -2191,11 +2199,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private void doCalculateColorForSky(final float directionX, final float directionY, final float directionZ) {
 //		Calculate the direction vector:
-		float direction0X = directionX * this.orthoNormalBasisUX + directionY * this.orthoNormalBasisUY + directionZ * this.orthoNormalBasisUZ;
-		float direction0Y = directionX * this.orthoNormalBasisVX + directionY * this.orthoNormalBasisVY + directionZ * this.orthoNormalBasisVZ;
-		float direction0Z = directionX * this.orthoNormalBasisWX + directionY * this.orthoNormalBasisWY + directionZ * this.orthoNormalBasisWZ;
+		float direction0X = directionX * this.sunAndSkyOrthoNormalBasisUX + directionY * this.sunAndSkyOrthoNormalBasisUY + directionZ * this.sunAndSkyOrthoNormalBasisUZ;
+		float direction0Y = directionX * this.sunAndSkyOrthoNormalBasisVX + directionY * this.sunAndSkyOrthoNormalBasisVY + directionZ * this.sunAndSkyOrthoNormalBasisVZ;
+		float direction0Z = directionX * this.sunAndSkyOrthoNormalBasisWX + directionY * this.sunAndSkyOrthoNormalBasisWY + directionZ * this.sunAndSkyOrthoNormalBasisWZ;
 		
-		if(direction0Z < 0.0F || this.sunAndSky == BOOLEAN_FALSE) {
+		if(direction0Z < 0.0F || this.sunAndSkyActive == BOOLEAN_FALSE) {
 //			Calculate the pixel index:
 			final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
 			
@@ -2218,10 +2226,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float direction1Z = direction0Z * direction0LengthReciprocal;
 		
 //		Calculate the dot product between the direction vector and the sun direction vector:
-		final float dotProduct = direction1X * this.sunDirectionX + direction1Y * this.sunDirectionY + direction1Z * this.sunDirectionZ;
+		final float dotProduct = direction1X * this.sunAndSkySunDirectionX + direction1Y * this.sunAndSkySunDirectionY + direction1Z * this.sunAndSkySunDirectionZ;
 		
 //		Calculate some theta angles:
-		final double theta0 = this.theta;
+		final double theta0 = this.sunAndSkyTheta;
 		final double theta1 = acos(max(min(direction1Z, 1.0D), -1.0D));
 		
 //		Calculate the cosines of the theta angles:
@@ -2236,32 +2244,32 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final double cosGamma = cos(gamma);
 		
 //		TODO: Write explanation!
-		final double perezRelativeLuminance0 = this.perezRelativeLuminance[0];
-		final double perezRelativeLuminance1 = this.perezRelativeLuminance[1];
-		final double perezRelativeLuminance2 = this.perezRelativeLuminance[2];
-		final double perezRelativeLuminance3 = this.perezRelativeLuminance[3];
-		final double perezRelativeLuminance4 = this.perezRelativeLuminance[4];
+		final double perezRelativeLuminance0 = this.sunAndSkyPerezRelativeLuminance[0];
+		final double perezRelativeLuminance1 = this.sunAndSkyPerezRelativeLuminance[1];
+		final double perezRelativeLuminance2 = this.sunAndSkyPerezRelativeLuminance[2];
+		final double perezRelativeLuminance3 = this.sunAndSkyPerezRelativeLuminance[3];
+		final double perezRelativeLuminance4 = this.sunAndSkyPerezRelativeLuminance[4];
 		
 //		TODO: Write explanation!
-		final double zenithRelativeLuminance = this.zenithRelativeLuminance;
+		final double zenithRelativeLuminance = this.sunAndSkyZenithRelativeLuminance;
 		
 //		TODO: Write explanation!
-		final double perezX0 = this.perezX[0];
-		final double perezX1 = this.perezX[1];
-		final double perezX2 = this.perezX[2];
-		final double perezX3 = this.perezX[3];
-		final double perezX4 = this.perezX[4];
+		final double perezX0 = this.sunAndSkyPerezX[0];
+		final double perezX1 = this.sunAndSkyPerezX[1];
+		final double perezX2 = this.sunAndSkyPerezX[2];
+		final double perezX3 = this.sunAndSkyPerezX[3];
+		final double perezX4 = this.sunAndSkyPerezX[4];
 		
 //		TODO: Write explanation!
-		final double perezY0 = this.perezY[0];
-		final double perezY1 = this.perezY[1];
-		final double perezY2 = this.perezY[2];
-		final double perezY3 = this.perezY[3];
-		final double perezY4 = this.perezY[4];
+		final double perezY0 = this.sunAndSkyPerezY[0];
+		final double perezY1 = this.sunAndSkyPerezY[1];
+		final double perezY2 = this.sunAndSkyPerezY[2];
+		final double perezY3 = this.sunAndSkyPerezY[3];
+		final double perezY4 = this.sunAndSkyPerezY[4];
 		
 //		TODO: Write explanation!
-		final double zenithX = this.zenithX;
-		final double zenithY = this.zenithY;
+		final double zenithX = this.sunAndSkyZenithX;
+		final double zenithY = this.sunAndSkyZenithY;
 		
 //		TODO: Write explanation!
 		final double relativeLuminanceDenominator = ((1.0D + perezRelativeLuminance0 * exp(perezRelativeLuminance1)) * (1.0D + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * theta0) + perezRelativeLuminance4 * cosTheta0 * cosTheta0));
@@ -2312,7 +2320,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //			final float u = phi1 / PI_MULTIPLIED_BY_TWO;
 //			final float v = theta / PI;
 			
-			final float frequency = (this.turbidity - 2.0F) * 8.0F;
+			final float frequency = (this.sunAndSkyTurbidity - 2.0F) * 8.0F;
 			final float rMultiplier = 1.0F;
 			final float gMultiplier = 1.0F;
 			final float bMultiplier = 1.0F;
@@ -2340,9 +2348,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float g = 0.0F;
 		float b = 0.0F;
 		
-		final float sunDirectionWorldX = this.sunDirectionWorldX;
-		final float sunDirectionWorldY = this.sunDirectionWorldY;
-		final float sunDirectionWorldZ = this.sunDirectionWorldZ;
+		final float sunDirectionWorldX = this.sunAndSkySunDirectionWorldX;
+		final float sunDirectionWorldY = this.sunAndSkySunDirectionWorldY;
+		final float sunDirectionWorldZ = this.sunAndSkySunDirectionWorldZ;
 		
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
@@ -2359,14 +2367,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float dotProductSunDirectionWorldSurfaceNormalShading = sunDirectionWorldX * surfaceNormalShadingX + sunDirectionWorldY * surfaceNormalShadingY + sunDirectionWorldZ * surfaceNormalShadingZ;
 		
 		if(dotProductSunDirectionWorldSurfaceNormal > 0.0F && dotProductSunDirectionWorldSurfaceNormalShading > 0.0F) {
-			r += this.sunColorR;
-			g += this.sunColorG;
-			b += this.sunColorB;
+			r += this.sunAndSkySunColorR;
+			g += this.sunAndSkySunColorG;
+			b += this.sunAndSkySunColorB;
 		}
 		
 		final int samples = this.sunAndSkySamples;
-		final int colHistogramLength = this.colHistogramLength;
-		final int imageHistogramHeight = this.imageHistogramHeight;
+		final int colHistogramLength = this.sunAndSkyColHistogramLength;
+		final int imageHistogramHeight = this.sunAndSkyImageHistogramHeight;
 		
 		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
 		
@@ -2376,7 +2384,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			
 			int x = 0;
 			
-			while(randomX >= this.colHistogram[x] && x < colHistogramLength - 1) {
+			while(randomX >= this.sunAndSkyColHistogram[x] && x < colHistogramLength - 1) {
 				x++;
 			}
 			
@@ -2385,20 +2393,20 @@ public final class RendererKernel extends AbstractRendererKernel {
 			
 			int y = rowHistogramStart;
 			
-			while(randomY >= this.imageHistogram[y] && y < rowHistogramEnd) {
+			while(randomY >= this.sunAndSkyImageHistogram[y] && y < rowHistogramEnd) {
 				y++;
 			}
 			
-			final float u = x == 0 ? randomX / this.colHistogram[0] : (randomX - this.colHistogram[x - 1]) / (this.colHistogram[x] - this.colHistogram[x - 1]);
-			final float v = y == 0 ? randomY / this.imageHistogram[rowHistogramStart] : (randomY - this.imageHistogram[y - 1]) / (this.imageHistogram[y] - this.imageHistogram[y - 1]);
+			final float u = x == 0 ? randomX / this.sunAndSkyColHistogram[0] : (randomX - this.sunAndSkyColHistogram[x - 1]) / (this.sunAndSkyColHistogram[x] - this.sunAndSkyColHistogram[x - 1]);
+			final float v = y == 0 ? randomY / this.sunAndSkyImageHistogram[rowHistogramStart] : (randomY - this.sunAndSkyImageHistogram[y - 1]) / (this.sunAndSkyImageHistogram[y] - this.sunAndSkyImageHistogram[y - 1]);
 			
-			final float px = x == 0 ? this.colHistogram[0] : this.colHistogram[x] - this.colHistogram[x - 1];
-			final float py = y == 0 ? this.imageHistogram[rowHistogramStart] : this.imageHistogram[y] - this.imageHistogram[y - 1];
+			final float px = x == 0 ? this.sunAndSkyColHistogram[0] : this.sunAndSkyColHistogram[x] - this.sunAndSkyColHistogram[x - 1];
+			final float py = y == 0 ? this.sunAndSkyImageHistogram[rowHistogramStart] : this.sunAndSkyImageHistogram[y] - this.sunAndSkyImageHistogram[y - 1];
 			
 			final float su = (x + u) / colHistogramLength;
 			final float sv = (y + v) / imageHistogramHeight;
 			
-			final float invP = sin(sv * PI) * this.jacobian / (samples * px * py);
+			final float invP = sin(sv * PI) * this.sunAndSkyJacobian / (samples * px * py);
 			
 			final float theta = u * PI_MULTIPLIED_BY_TWO;
 			final float phi = v * PI;

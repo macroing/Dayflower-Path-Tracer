@@ -596,7 +596,7 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Toggles to the sun and sky.
+	 * Toggles the sun and sky.
 	 */
 	public void toggleSunAndSky() {
 //		Do nothing.
