@@ -472,8 +472,8 @@ final class Scenes {
 		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
 		final Texture textureMonkeyAlbedo = new ConstantTexture(Color.GRAY);
 		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
-		final Texture textureSphereAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 4.0F, 4.0F);
-		final Texture textureSphereNormal = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
+//		final Texture textureSphereAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 4.0F, 4.0F);
+//		final Texture textureSphereNormal = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
 		
 		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureMonkeyAlbedo, textureMonkeyNormal);
 		
@@ -523,7 +523,7 @@ final class Scenes {
 		final Texture textureSphere10Normal = new ConstantTexture(Color.BLACK);
 		
 //		Normal Mapping showcase:
-		final Texture textureSphere11Albedo = new ConstantTexture(Color.GRAY);//ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 4.0F, 4.0F);
+		final Texture textureSphere11Albedo = new ConstantTexture(Color.GRAY);
 		final Texture textureSphere11Normal = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
 		final Texture textureSphere12Albedo = new ConstantTexture(Color.WHITE);
 		final Texture textureSphere12Normal = new ConstantTexture(Color.BLACK);
@@ -546,33 +546,6 @@ final class Scenes {
 		
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphere11Albedo, textureSphere11Normal), 16.5F, new Point3F(520.0F, 16.5F, 20.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 16.0F, Material.GLASS, textureSphere12Albedo, textureSphere12Normal), 16.5F, new Point3F(560.0F, 16.5F, 20.0F)));
-		
-		/*
-		final Texture texture0 = new ConstantTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));//new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 0.008F, 0.008F);
-		final Texture texture1 = new ConstantTexture(Color.WHITE);
-		final Texture texture2 = new ConstantTexture(Color.BLACK);
-		final Texture texture3 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 0.008F, 0.008F);
-		final Texture texture4 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")));
-		final Texture texture5 = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")));
-		final Texture texture6 = new CheckerboardTexture(Color.RED, Color.WHITE);
-		final Texture texture7 = new SurfaceNormalTexture();
-		final Texture texture8 = new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);
-		
-		final
-		Scene scene = new Scene("Material_Showcase_Scene");
-//		scene.addShape(new Terrain(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 0.5F, 0.8F, -2.0F, 0.0F, 2));
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, texture0, texture3), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture6, texture2), 16.5F, new Point3F(20.0F, 16.5F, 40.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3F(20.0F, 16.5F, 80.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture1, texture2), 16.5F, new Point3F(20.0F, 16.5F, 120.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture1, texture2), 16.5F, new Point3F(20.0F, 16.5F, 160.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(5.0F, 5.0F, 5.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture2), 16.5F, new Point3F(20.0F, 100.0F, 180.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture1, texture2), 16.5F, new Point3F(20.0F, 16.5F, 200.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, texture2, texture2), 16.5F, new Point3F(20.0F, 16.5F, 240.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture4, texture5), 16.5F, new Point3F(20.0F, 16.5F, 280.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture5), 16.5F, new Point3F(20.0F, 16.5F, 320.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture8, texture5), 16.5F, new Point3F(20.0F, 16.5F, 360.0F)));
-		*/
 		
 		return scene;
 	}
