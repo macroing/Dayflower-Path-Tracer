@@ -1,5 +1,5 @@
-Dayflower - Path Tracer v.0.0.36
-================================
+Dayflower - Path Tracer
+=======================
 Here you'll find various images showing the features in Dayflower - Path Tracer.
 
 Path Tracer

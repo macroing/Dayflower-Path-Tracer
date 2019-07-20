@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.0.36
+Dayflower - Path Tracer v.0.0.37
 ================================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
@@ -109,6 +109,7 @@ Supported Menu Controls
 | Renderer > Ray Marcher         | Use the Ray Marcher to render                      |
 | Renderer > Ray Tracer          | Use the Ray Tracer to render                       |
 | Scene > Normal Mapping         | Toggle Normal Mapping                              |
+| Scene > Wireframes             | Toggle Wireframes                                  |
 | Scene > Enter Scene            | Enter the scene like an FPS-game                   |
 | Scene > Flat Shading           | Use Flat Shading for Triangles                     |
 | Scene > Gouraud Shading        | Use Gouraud Shading for Triangles                  |

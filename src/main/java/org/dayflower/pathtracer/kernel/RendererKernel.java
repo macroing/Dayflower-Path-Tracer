@@ -152,7 +152,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int depthRussianRoulette = 5;
 	private int effectGrayScale;
 	private int effectSepiaTone;
-	private int isNormalMapping = 1;
+	private int isNormalMapping = BOOLEAN_TRUE;
+	private int isRenderingWireframes = BOOLEAN_FALSE;
 	private int renderer = RENDERER_PATH_TRACER;
 	private int selectedShapeIndex = -1;
 	private int shading = SHADING_GOURAUD;
@@ -380,6 +381,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Override
 	public boolean isRayTracing() {
 		return this.renderer == RENDERER_RAY_TRACER;
+	}
+	
+//	TODO: Add Javadocs!
+	@Override
+	public boolean isRenderingWireframes() {
+		return this.isRenderingWireframes != 0;
 	}
 	
 //	TODO: Add Javadocs!
@@ -801,6 +808,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 			} else {
 				doRayTracing();
 			}
+			
+			if(this.isRenderingWireframes != 0) {
+				doWireframeRendering();
+			}
 		} else {
 			final int pixelIndex0 = pixelIndex * SIZE_COLOR_RGB;
 			final int pixelIndex1 = getLocalId() * SIZE_COLOR_RGB;
@@ -944,6 +955,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 	@Override
 	public void setRayTracing(final boolean isRayTracing) {
 		this.renderer = isRayTracing ? RENDERER_RAY_TRACER : RENDERER_AMBIENT_OCCLUSION;
+		this.isResetRequired = true;
+	}
+	
+//	TODO: Add Javadocs!
+	@Override
+	public void setRenderingWireframes(final boolean isRenderingWireframes) {
+		this.isRenderingWireframes = isRenderingWireframes ? 1 : 0;
 		this.isResetRequired = true;
 	}
 	
@@ -2122,7 +2140,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			g = (gMaximum * (6.2F * gMaximum + 0.5F)) / (gMaximum * (6.2F * gMaximum + 1.7F) + 0.06F);
 			b = (bMaximum * (6.2F * bMaximum + 0.5F)) / (bMaximum * (6.2F * bMaximum + 1.7F) + 0.06F);
 		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2) {
-			final float exposure = 0.5F;
+			final float exposure = 1.0F;
 			
 			r *= exposure;
 			g *= exposure;
@@ -2175,14 +2193,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 		if(this.toneMappingAndGammaCorrection != TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1) {
 			final float breakPoint = this.colorSpaceBreakPoint;
 			final float gamma = this.colorSpaceGamma;
+			final float gammaReciprocal = 1.0F / gamma;
 			final float segmentOffset = this.colorSpaceSegmentOffset;
 			final float slope = this.colorSpaceSlope;
 			final float slopeMatch = this.colorSpaceSlopeMatch;
 			
 //			Gamma correct the 'normalized' accumulated pixel color components using sRGB as color space:
-			r = r <= 0.0F ? 0.0F : r >= 1.0F ? 1.0F : r <= breakPoint ? r * slope : slopeMatch * pow(r, 1.0F / gamma) - segmentOffset;
-			g = g <= 0.0F ? 0.0F : g >= 1.0F ? 1.0F : g <= breakPoint ? g * slope : slopeMatch * pow(g, 1.0F / gamma) - segmentOffset;
-			b = b <= 0.0F ? 0.0F : b >= 1.0F ? 1.0F : b <= breakPoint ? b * slope : slopeMatch * pow(b, 1.0F / gamma) - segmentOffset;
+			r = r <= 0.0F ? 0.0F : r >= 1.0F ? 1.0F : r <= breakPoint ? r * slope : slopeMatch * pow(r, gammaReciprocal) - segmentOffset;
+			g = g <= 0.0F ? 0.0F : g >= 1.0F ? 1.0F : g <= breakPoint ? g * slope : slopeMatch * pow(g, gammaReciprocal) - segmentOffset;
+			b = b <= 0.0F ? 0.0F : b >= 1.0F ? 1.0F : b <= breakPoint ? b * slope : slopeMatch * pow(b, gammaReciprocal) - segmentOffset;
 		}
 		
 //		Multiply the 'normalized' accumulated pixel color components with 255.0 and clamp them to the range [0.0, 255.0], so they can be displayed:
@@ -2969,7 +2988,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.temporaryColors[pixelIndex + 2] = b;
 	}
 	
-	@SuppressWarnings("unused")
 	private void doCalculateTextureColorForImageTexture(final int texturesOffset) {
 //		Get the intersections offset:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
@@ -3774,7 +3792,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		if(this.isNormalMapping == 1 && textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
 //			Calculate the texture color:
-			doCalculateTextureColorForImageTextureBilinearInterpolation(texturesOffset);
+			doCalculateTextureColorForImageTexture(texturesOffset);
 			
 //			Calculate the index into the temporaryColors array:
 			final int pixelIndex0 = getLocalId() * SIZE_COLOR_RGB;
@@ -4172,5 +4190,142 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.currentPixelColors[pixelIndex0] = pixelColorR;
 		this.currentPixelColors[pixelIndex0 + 1] = pixelColorG;
 		this.currentPixelColors[pixelIndex0 + 2] = pixelColorB;
+	}
+	
+	private void doWireframeRendering() {
+//		Calculate the current offsets to the intersections and rays arrays:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		final int raysOffset = getLocalId() * SIZE_RAY;
+		
+//		Retrieve the offsets of the ray origin and the ray direction:
+		final int offsetOrigin = raysOffset + RELATIVE_OFFSET_RAY_ORIGIN;
+		final int offsetDirection = raysOffset + RELATIVE_OFFSET_RAY_DIRECTION;
+		
+//		Initialize the origin from the primary ray:
+		float originX = this.rays[offsetOrigin];
+		float originY = this.rays[offsetOrigin + 1];
+		float originZ = this.rays[offsetOrigin + 2];
+		
+//		Initialize the direction from the primary ray:
+		float directionX = this.rays[offsetDirection];
+		float directionY = this.rays[offsetDirection + 1];
+		float directionZ = this.rays[offsetDirection + 2];
+		
+//		Retrieve the pixel index:
+		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
+		
+//		Perform an intersection test:
+		doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
+		
+//		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
+		final float distance = this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+		
+//		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
+		final int shapesOffset = (int)(this.intersections[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPES_OFFSET]);
+		
+		this.shapeOffsetsForPrimaryRay[getGlobalId()] = shapesOffset;
+		
+		final float lineWidth = PI * 0.5F / 4096.0F;
+		final float lineWidthCos = cos(lineWidth);
+		
+//		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
+		if(distance != INFINITY && shapesOffset != -1) {
+//			Retrieve the type of the shape:
+			final int type = (int)(this.shapes[shapesOffset]);
+			
+			if(type == CompiledScene.TRIANGLE_TYPE) {
+//				Retrieve the offsets of the surface intersection point and the points A, B and C in the intersections array:
+				final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+				final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
+				final int offsetB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
+				final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
+				
+				final float cameraOrthoNormalBasisUX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X];
+				final float cameraOrthoNormalBasisUY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y];
+				final float cameraOrthoNormalBasisUZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z];
+				final float cameraOrthoNormalBasisVX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X];
+				final float cameraOrthoNormalBasisVY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y];
+				final float cameraOrthoNormalBasisVZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z];
+				final float cameraOrthoNormalBasisWX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X];
+				final float cameraOrthoNormalBasisWY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y];
+				final float cameraOrthoNormalBasisWZ = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z];
+				
+//				Retrieve the surface intersection point from the intersections array:
+				final float surfaceIntersectionPointX = this.intersections[offsetIntersectionSurfaceIntersectionPoint];
+				final float surfaceIntersectionPointY = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 1];
+				final float surfaceIntersectionPointZ = this.intersections[offsetIntersectionSurfaceIntersectionPoint + 2];
+				final float surfaceIntersectionPointCameraX = surfaceIntersectionPointX * cameraOrthoNormalBasisUX + surfaceIntersectionPointY * cameraOrthoNormalBasisUY + surfaceIntersectionPointZ * cameraOrthoNormalBasisUZ;
+				final float surfaceIntersectionPointCameraY = surfaceIntersectionPointX * cameraOrthoNormalBasisVX + surfaceIntersectionPointY * cameraOrthoNormalBasisVY + surfaceIntersectionPointZ * cameraOrthoNormalBasisVZ;
+				final float surfaceIntersectionPointCameraZ = surfaceIntersectionPointX * cameraOrthoNormalBasisWX + surfaceIntersectionPointY * cameraOrthoNormalBasisWY + surfaceIntersectionPointZ * cameraOrthoNormalBasisWZ;
+				final float surfaceIntersectionPointCameraN = rsqrt(surfaceIntersectionPointCameraX * surfaceIntersectionPointCameraX + surfaceIntersectionPointCameraY * surfaceIntersectionPointCameraY + surfaceIntersectionPointCameraZ * surfaceIntersectionPointCameraZ);
+				
+//				Retrieve point A of the triangle:
+				final float aX = this.point3Fs[offsetA];
+				final float aY = this.point3Fs[offsetA + 1];
+				final float aZ = this.point3Fs[offsetA + 2];
+				final float aCameraX = aX * cameraOrthoNormalBasisUX + aY * cameraOrthoNormalBasisUY + aZ * cameraOrthoNormalBasisUZ;
+				final float aCameraY = aX * cameraOrthoNormalBasisVX + aY * cameraOrthoNormalBasisVY + aZ * cameraOrthoNormalBasisVZ;
+				final float aCameraZ = aX * cameraOrthoNormalBasisWX + aY * cameraOrthoNormalBasisWY + aZ * cameraOrthoNormalBasisWZ;
+				
+//				Retrieve point B of the triangle:
+				final float bX = this.point3Fs[offsetB];
+				final float bY = this.point3Fs[offsetB + 1];
+				final float bZ = this.point3Fs[offsetB + 2];
+				final float bCameraX = bX * cameraOrthoNormalBasisUX + bY * cameraOrthoNormalBasisUY + bZ * cameraOrthoNormalBasisUZ;
+				final float bCameraY = bX * cameraOrthoNormalBasisVX + bY * cameraOrthoNormalBasisVY + bZ * cameraOrthoNormalBasisVZ;
+				final float bCameraZ = bX * cameraOrthoNormalBasisWX + bY * cameraOrthoNormalBasisWY + bZ * cameraOrthoNormalBasisWZ;
+				
+//				Retrieve point C of the triangle:
+				final float cX = this.point3Fs[offsetC];
+				final float cY = this.point3Fs[offsetC + 1];
+				final float cZ = this.point3Fs[offsetC + 2];
+				final float cCameraX = cX * cameraOrthoNormalBasisUX + cY * cameraOrthoNormalBasisUY + cZ * cameraOrthoNormalBasisUZ;
+				final float cCameraY = cX * cameraOrthoNormalBasisVX + cY * cameraOrthoNormalBasisVY + cZ * cameraOrthoNormalBasisVZ;
+				final float cCameraZ = cX * cameraOrthoNormalBasisWX + cY * cameraOrthoNormalBasisWY + cZ * cameraOrthoNormalBasisWZ;
+				
+				final float distanceSquaredAC = ((aCameraX - cCameraX) * (aCameraX - cCameraX)) + ((aCameraY - cCameraY) * (aCameraY - cCameraY)) + ((aCameraZ - cCameraZ) * (aCameraZ - cCameraZ));
+				final float distanceSquaredBA = ((bCameraX - aCameraX) * (bCameraX - aCameraX)) + ((bCameraY - aCameraY) * (bCameraY - aCameraY)) + ((bCameraZ - aCameraZ) * (bCameraZ - aCameraZ));
+				final float distanceSquaredCB = ((cCameraX - bCameraX) * (cCameraX - bCameraX)) + ((cCameraY - bCameraY) * (cCameraY - bCameraY)) + ((cCameraZ - bCameraZ) * (cCameraZ - bCameraZ));
+				
+				final float tAC0 = ((surfaceIntersectionPointCameraX - aCameraX) * (cCameraX - aCameraX)) + ((surfaceIntersectionPointCameraY - aCameraY) * (cCameraY - aCameraY)) + ((surfaceIntersectionPointCameraZ - aCameraZ) * (cCameraZ - aCameraZ));
+				final float tAC1 = tAC0 / distanceSquaredAC;
+				final float tBA0 = ((surfaceIntersectionPointCameraX - bCameraX) * (aCameraX - bCameraX)) + ((surfaceIntersectionPointCameraY - bCameraY) * (aCameraY - bCameraY)) + ((surfaceIntersectionPointCameraZ - bCameraZ) * (aCameraZ - bCameraZ));
+				final float tBA1 = tBA0 / distanceSquaredBA;
+				final float tCB0 = ((surfaceIntersectionPointCameraX - cCameraX) * (bCameraX - cCameraX)) + ((surfaceIntersectionPointCameraY - cCameraY) * (bCameraY - cCameraY)) + ((surfaceIntersectionPointCameraZ - cCameraZ) * (bCameraZ - cCameraZ));
+				final float tCB1 = tCB0 / distanceSquaredCB;
+				
+				final float projectionACX = (1.0F - tAC1) * aCameraX + tAC1 * cCameraX;
+				final float projectionACY = (1.0F - tAC1) * aCameraY + tAC1 * cCameraY;
+				final float projectionACZ = (1.0F - tAC1) * aCameraZ + tAC1 * cCameraZ;
+				final float projectionACN = rsqrt(projectionACX * projectionACX + projectionACY * projectionACY + projectionACZ * projectionACZ);
+				final float projectionBAX = (1.0F - tBA1) * bCameraX + tBA1 * aCameraX;
+				final float projectionBAY = (1.0F - tBA1) * bCameraY + tBA1 * aCameraY;
+				final float projectionBAZ = (1.0F - tBA1) * bCameraZ + tBA1 * aCameraZ;
+				final float projectionBAN = rsqrt(projectionBAX * projectionBAX + projectionBAY * projectionBAY + projectionBAZ * projectionBAZ);
+				final float projectionCBX = (1.0F - tCB1) * cCameraX + tCB1 * bCameraX;
+				final float projectionCBY = (1.0F - tCB1) * cCameraY + tCB1 * bCameraY;
+				final float projectionCBZ = (1.0F - tCB1) * cCameraZ + tCB1 * bCameraZ;
+				final float projectionCBN = rsqrt(projectionCBX * projectionCBX + projectionCBY * projectionCBY + projectionCBZ * projectionCBZ);
+				
+				final float dotProductAC = projectionACX * surfaceIntersectionPointCameraX + projectionACY * surfaceIntersectionPointCameraY + projectionACZ * surfaceIntersectionPointCameraZ;
+				final float dotProductBA = projectionBAX * surfaceIntersectionPointCameraX + projectionBAY * surfaceIntersectionPointCameraY + projectionBAZ * surfaceIntersectionPointCameraZ;
+				final float dotProductCB = projectionCBX * surfaceIntersectionPointCameraX + projectionCBY * surfaceIntersectionPointCameraY + projectionCBZ * surfaceIntersectionPointCameraZ;
+				
+				if(dotProductAC * projectionACN * surfaceIntersectionPointCameraN >= lineWidthCos || dotProductBA * projectionBAN * surfaceIntersectionPointCameraN >= lineWidthCos || dotProductCB * projectionCBN * surfaceIntersectionPointCameraN >= lineWidthCos) {
+					final float r0 = this.currentPixelColors[pixelIndex + 0];
+					final float g0 = this.currentPixelColors[pixelIndex + 1];
+					final float b0 = this.currentPixelColors[pixelIndex + 2];
+					
+					final float r1 = r0 < 0.5F ? 1.0F : 0.0F;
+					final float g1 = g0 < 0.5F ? 1.0F : 0.0F;
+					final float b1 = b0 < 0.5F ? 1.0F : 0.0F;
+					
+//					Update the current pixel color:
+					this.currentPixelColors[pixelIndex + 0] = r1;
+					this.currentPixelColors[pixelIndex + 1] = g1;
+					this.currentPixelColors[pixelIndex + 2] = b1;
+				}
+			}
+		}
 	}
 }

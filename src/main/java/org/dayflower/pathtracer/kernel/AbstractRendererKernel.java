@@ -192,6 +192,12 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	
 //	TODO: Add Javadocs!
 	@SuppressWarnings("static-method")
+	public boolean isRenderingWireframes() {
+		return false;
+	}
+	
+//	TODO: Add Javadocs!
+	@SuppressWarnings("static-method")
 	public boolean isResetRequired() {
 		return false;
 	}
@@ -501,6 +507,11 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * @param isRayTracing the Ray Tracing state to set
 	 */
 	public void setRayTracing(final boolean isRayTracing) {
+//		Do nothing.
+	}
+	
+//	TODO: Add Javadocs!
+	public void setRenderingWireframes(@SuppressWarnings("unused") final boolean isRenderingWireframes) {
 //		Do nothing.
 	}
 	
