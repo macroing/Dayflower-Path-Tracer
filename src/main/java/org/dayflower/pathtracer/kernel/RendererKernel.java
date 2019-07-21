@@ -265,7 +265,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code scene} are {@code null}
 	 */
 	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final Scene scene) {
-		this(width, height, camera, sky, CompiledScene.compile(camera, scene));
+		this(width, height, camera, sky, CompiledScene.compile(scene));
 	}
 	
 	/**

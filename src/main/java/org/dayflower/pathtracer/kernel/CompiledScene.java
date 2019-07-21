@@ -538,12 +538,12 @@ public final class CompiledScene {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
-	public static CompiledScene compile(final Camera camera, final Scene scene) {
-		return compile(camera, scene, scene.getName());
+	public static CompiledScene compile(final Scene scene) {
+		return compile(scene, scene.getName());
 	}
 	
 //	TODO: Add Javadocs.
-	public static CompiledScene compile(final Camera camera, final Scene scene, final String name) {
+	public static CompiledScene compile(final Scene scene, final String name) {
 		final List<Point2F> point2Fs0 = doFindPoint2Fs(scene);
 		final List<Point3F> point3Fs0 = doFindPoint3Fs(scene);
 		final List<Surface> surfaces0 = doFindSurfaces(scene);
@@ -555,7 +555,7 @@ public final class CompiledScene {
 		final Map<Vector3F, Integer> vector3Fs1 = doCreateVector3FMapping(vector3Fs0);
 		
 		final float[] boundingVolumeHierarchy = doCompileBoundingVolumeHierarchy(scene);
-		final float[] camera0 = camera.getArray();
+		final float[] camera0 = scene.getCamera().getArray();
 		final float[] point2Fs = doCompilePoint2Fs(point2Fs0);
 		final float[] point3Fs = doCompilePoint3Fs(point3Fs0);
 		final float[] shapes = doCompileShapes(surfaces0, point2Fs1, point3Fs1, vector3Fs1, scene);

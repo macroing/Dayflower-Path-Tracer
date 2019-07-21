@@ -19,7 +19,6 @@
 package org.dayflower.pathtracer.main;
 
 import org.dayflower.pathtracer.kernel.CompiledScene;
-import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Scene;
 
 /**
@@ -41,29 +40,27 @@ public final class SceneCompiler {
 	 * @param args these arguments are not used
 	 */
 	public static void main(final String[] args) {
-		final Camera camera = new Camera();
-		
-		doCompileAndWriteScene(camera, Scenes.newCarScene());
-		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene());
-		doCompileAndWriteScene(camera, Scenes.newCornellBoxScene2());
-		doCompileAndWriteScene(camera, Scenes.newGirlScene());
-		doCompileAndWriteScene(camera, Scenes.newHouseScene());
-//		doCompileAndWriteScene(camera, Scenes.newHouseScene2());
-		doCompileAndWriteScene(camera, Scenes.newMaterialShowcaseScene());
-		doCompileAndWriteScene(camera, Scenes.newMonkeyScene());
-//		doCompileAndWriteScene(camera, Scenes.newSponzaScene());
-		doCompileAndWriteScene(camera, Scenes.newTerrainScene());
+		doCompileAndWriteScene(Scenes.newCarScene());
+		doCompileAndWriteScene(Scenes.newCornellBoxScene());
+		doCompileAndWriteScene(Scenes.newCornellBoxScene2());
+		doCompileAndWriteScene(Scenes.newGirlScene());
+		doCompileAndWriteScene(Scenes.newHouseScene());
+//		doCompileAndWriteScene(Scenes.newHouseScene2());
+		doCompileAndWriteScene(Scenes.newMaterialShowcaseScene());
+		doCompileAndWriteScene(Scenes.newMonkeyScene());
+//		doCompileAndWriteScene(Scenes.newSponzaScene());
+		doCompileAndWriteScene(Scenes.newTerrainScene());
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private static void doCompileAndWriteScene(final Camera camera, final Scene scene) {
+	private static void doCompileAndWriteScene(final Scene scene) {
 		System.out.printf("Compiling and writing scene \"%s\"...%n", scene.getName());
 		
 		final long currentTimeMillis0 = System.currentTimeMillis();
 		
 		final
-		CompiledScene compiledScene = CompiledScene.compile(camera, scene);
+		CompiledScene compiledScene = CompiledScene.compile(scene);
 		compiledScene.write();
 		
 		final long currentTimeMillis1 = System.currentTimeMillis();

@@ -31,7 +31,8 @@ import java.util.Objects;
  * @author J&#246;rgen Lundgren
  */
 public final class Scene {
-	private final List<Shape> shapes = new ArrayList<>();
+	private final Camera camera;
+	private final List<Shape> shapes;
 	private final String name;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,10 +46,21 @@ public final class Scene {
 	 * @throws NullPointerException thrown if, and only if, {@code name} is {@code null}
 	 */
 	public Scene(final String name) {
+		this.camera = new Camera();
+		this.shapes = new ArrayList<>();
 		this.name = Objects.requireNonNull(name, "name == null");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns the {@link Camera} instance used by this {@code Scene} instance.
+	 * 
+	 * @return the {@code Camera} instance used by this {@code Scene} instance
+	 */
+	public Camera getCamera() {
+		return this.camera;
+	}
 	
 	/**
 	 * Returns a {@code List} with all currently added {@link Shape}s.

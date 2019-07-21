@@ -490,6 +490,8 @@ final class Scenes {
 			scene.addShape(triangle.translateY(100.0F));
 		}
 		
+		scene.getCamera().setEye(-8.75F, 42.0F, 332.6F);
+		
 		return scene;
 	}
 	
@@ -546,6 +548,8 @@ final class Scenes {
 		
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphere11Albedo, textureSphere11Normal), 16.5F, new Point3F(520.0F, 16.5F, 20.0F)));
 		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 16.0F, Material.GLASS, textureSphere12Albedo, textureSphere12Normal), 16.5F, new Point3F(560.0F, 16.5F, 20.0F)));
+		
+		scene.getCamera().setEye(295.0F, 42.0F, 332.6F);
 		
 		return scene;
 	}

@@ -59,10 +59,6 @@ final class Dayflower {
 		return String.format("%s/image", doGetDirectory());
 	}
 	
-	public static String getImageFile(final int number) {
-		return String.format("%s/image/Dayflower-Image-%s.png", doGetDirectory(), Integer.toString(number));
-	}
-	
 	public static String getModelFilename(final String name) {
 		return String.format("%s/model/%s", doGetDirectory(), name);
 	}

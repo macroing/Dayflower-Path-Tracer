@@ -1,6 +1,7 @@
 2019-07-21  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* CHANGE:	The Bounding Volume Hierarchy (BVH) building algorithm has been optimized.
+	* CHANGE:	It's now possible to configure the camera for a specific scene.
 
 2019-07-20  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 

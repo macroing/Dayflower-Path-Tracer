@@ -22,16 +22,10 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -66,12 +60,12 @@ import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.ConvolutionKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
 import org.dayflower.pathtracer.math.AngleF;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.util.FPSCounter;
+import org.dayflower.pathtracer.util.Files;
 
 /**
  * An implementation of {@link AbstractApplication} that performs Path Tracing, Ray Casting or Ray Marching.
@@ -89,7 +83,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	private final AtomicLong currentTimeMillis = new AtomicLong(System.currentTimeMillis());
 	private byte[] pixels0;
 	private byte[] pixels1;
-	private final Camera camera = new Camera();
+//	private final Camera camera = new Camera();
 	private ConvolutionKernel convolutionKernel;
 	private final Label labelFPS = new Label("FPS: 0");
 	private final Label labelKernelTime = new Label("Kernel Time: 0 ms");
@@ -105,6 +99,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	private final Setting settingFilterGradientHorizontal = new Setting("Filter.Gradient.Horizontal");
 	private final Setting settingFilterGradientVertical = new Setting("Filter.Gradient.Vertical");
 	private final Setting settingFilterSharpen = new Setting("Filter.Sharpen");
+	private Scene scene;
 	private final Sky sky = new Sky();
 	private Slider sliderPitch;
 	private Slider sliderYaw;
@@ -125,15 +120,15 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	public void init() {
-		final Scene scene = Scenes.getSceneByName(Dayflower.getSceneName());
+		this.scene = Scenes.getSceneByName(Dayflower.getSceneName());
 		
-		final String sceneFilename = Dayflower.getSceneFilename(String.format("%s.scene", scene.getName()));
+		final String sceneFilename = Dayflower.getSceneFilename(String.format("%s.scene", this.scene.getName()));
 		
 		final File sceneFile = new File(sceneFilename);
 		
 		if(!sceneFile.isFile() || Dayflower.getSceneCompile()) {
 			final
-			CompiledScene compiledScene = CompiledScene.compile(this.camera, scene);
+			CompiledScene compiledScene = CompiledScene.compile(this.scene);
 			compiledScene.write(sceneFile);
 			
 			try {
@@ -148,20 +143,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		setKernelWidth(Dayflower.getKernelWidth());
 		setKernelHeight(Dayflower.getKernelHeight());
 		
-		this.abstractRendererKernel = new RendererKernel(getKernelWidth(), getKernelHeight(), this.camera, this.sky, sceneFilename, 1.0F);
+		this.abstractRendererKernel = new RendererKernel(getKernelWidth(), getKernelHeight(), this.scene.getCamera(), this.sky, sceneFilename, 1.0F);
 		
 		final
-		Camera camera = this.camera;
-		camera.setApertureRadius(0.0F);
-		camera.setEye(55.0F, 42.0F, 155.6F);
-		camera.setEye(-8.75F, 42.0F, 332.6F);
-		camera.setEye(295.0F, 42.0F, 332.6F);
-		camera.setFieldOfViewX(90.0F);
-		camera.setFocalDistance(30.0F);
-		camera.setPitch(AngleF.pitch(Vector3F.x()));
+		Camera camera = this.scene.getCamera();
 		camera.setResolution(getKernelWidth(), getKernelHeight());
-		camera.setWalkLockEnabled(true);
-		camera.setYaw(AngleF.yaw(Vector3F.y()));
 		camera.update();
 		camera.addCameraObserver(this);
 		
@@ -225,10 +211,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Camera" Menu:
 		final ToggleGroup toggleGroupCameraLens = new ToggleGroup();
 		
-		final CheckMenuItem checkMenuItemWalkLock = JavaFX.newCheckMenuItem("Walk Lock", e -> this.camera.setWalkLockEnabled(!this.camera.isWalkLockEnabled()), this.camera.isWalkLockEnabled());
+		final CheckMenuItem checkMenuItemWalkLock = JavaFX.newCheckMenuItem("Walk Lock", e -> this.scene.getCamera().setWalkLockEnabled(!this.scene.getCamera().isWalkLockEnabled()), this.scene.getCamera().isWalkLockEnabled());
 		
-		final RadioMenuItem radioMenuItemFisheye = JavaFX.newRadioMenuItem("Fisheye Camera Lens", e -> this.camera.setFisheyeCameraLens(true), this.camera.isFisheyeCameraLens(), toggleGroupCameraLens);
-		final RadioMenuItem radioMenuItemThin = JavaFX.newRadioMenuItem("Thin Camera Lens", e -> this.camera.setThinCameraLens(true), this.camera.isThinCameraLens(), toggleGroupCameraLens);
+		final RadioMenuItem radioMenuItemFisheye = JavaFX.newRadioMenuItem("Fisheye Camera Lens", e -> this.scene.getCamera().setFisheyeCameraLens(true), this.scene.getCamera().isFisheyeCameraLens(), toggleGroupCameraLens);
+		final RadioMenuItem radioMenuItemThin = JavaFX.newRadioMenuItem("Thin Camera Lens", e -> this.scene.getCamera().setThinCameraLens(true), this.scene.getCamera().isThinCameraLens(), toggleGroupCameraLens);
 		
 		final Menu menuCamera = JavaFX.newMenu("Camera", checkMenuItemWalkLock, radioMenuItemFisheye, radioMenuItemThin);
 		
@@ -344,11 +330,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final Label labelPitch = new Label("Pitch:");
 		final Label labelYaw = new Label("Yaw:");
 		
-		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, this.camera.getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
-		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, this.camera.getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
-		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, this.camera.getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
-		final Slider sliderPitch = JavaFX.newSlider(-90.0F, 90.0F, this.camera.getPitch().degrees, 10.0D, 20.0D, true, true, false, this::doOnSliderPitch);
-		final Slider sliderYaw = JavaFX.newSlider(0.0D, 360.0F, this.camera.getYaw().degrees, 20.0D, 40.0D, true, true, false, this::doOnSliderYaw);
+		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, this.scene.getCamera().getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
+		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, this.scene.getCamera().getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
+		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, this.scene.getCamera().getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
+		final Slider sliderPitch = JavaFX.newSlider(-90.0F, 90.0F, this.scene.getCamera().getPitch().degrees, 10.0D, 20.0D, true, true, false, this::doOnSliderPitch);
+		final Slider sliderYaw = JavaFX.newSlider(0.0D, 360.0F, this.scene.getCamera().getYaw().degrees, 20.0D, 40.0D, true, true, false, this::doOnSliderYaw);
 		
 		this.sliderPitch = sliderPitch;
 		this.sliderYaw = sliderYaw;
@@ -462,8 +448,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	protected void onMouseDragged(final float x, final float y) {
-		this.camera.changeYaw(AngleF.degrees(-x * 0.5F));
-		this.camera.changePitch(AngleF.degrees(-(y * 0.5F), -90.0F, 90.0F));
+		this.scene.getCamera().changeYaw(AngleF.degrees(-x * 0.5F));
+		this.scene.getCamera().changePitch(AngleF.degrees(-(y * 0.5F), -90.0F, 90.0F));
 	}
 	
 	/**
@@ -475,8 +461,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	@Override
 	protected void onMouseMoved(final float x, final float y) {
 		if(isMouseRecentering()) {
-			this.camera.changeYaw(AngleF.degrees(-x * 0.5F));
-			this.camera.changePitch(AngleF.degrees(-(y * 0.5F), -90.0F, 90.0F));
+			this.scene.getCamera().changeYaw(AngleF.degrees(-x * 0.5F));
+			this.scene.getCamera().changePitch(AngleF.degrees(-(y * 0.5F), -90.0F, 90.0F));
 		}
 	}
 	
@@ -500,7 +486,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final long minutes = (elapsedTimeMillis - (hours * 60L * 60L * 1000L)) / (60L * 1000L);
 		final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 		
-		final Camera camera = this.camera;
+		final Camera camera = this.scene.getCamera();
 		
 		final Float x = Float.valueOf(camera.getEyeX());
 		final Float y = Float.valueOf(camera.getEyeY());
@@ -521,7 +507,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	protected void update() {
 		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
 		
-		final Camera camera = this.camera;
+		final Camera camera = this.scene.getCamera();
 		
 		final float velocity = abstractRendererKernel.isRayMarching() ? 1.0F : 250.0F;
 		final float movement = getFPSCounter().getFrameTimeMillis() / 1000.0F * velocity;
@@ -625,53 +611,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		return bufferedImage;
 	}
 	
-	@SuppressWarnings("static-method")
-	private File doFindNextFile() {
-		final File directory = new File(Dayflower.getImageDirectory());
-		
-		int number = 0;
-		
-		if(directory.isDirectory()) {
-			final List<File> filesInDirectory = Arrays.asList(directory.listFiles());
-			final List<File> filesMatchingPattern = new ArrayList<>();
-			
-			final Pattern pattern = Pattern.compile("^Dayflower-Image-([0-9]+)\\.png$", Pattern.CASE_INSENSITIVE);
-			
-			for(final File fileInDirectory : filesInDirectory) {
-				if(fileInDirectory.isFile() && pattern.matcher(fileInDirectory.getName()).matches()) {
-					filesMatchingPattern.add(fileInDirectory);
-				}
-			}
-			
-			Collections.sort(filesMatchingPattern);
-			
-			boolean isNumberAvailable = true;
-			
-			do {
-				number++;
-				
-				isNumberAvailable = true;
-				
-				for(final File fileMatchingPattern : filesMatchingPattern) {
-					final Matcher matcher = pattern.matcher(fileMatchingPattern.getName());
-					
-					if(matcher.matches()) {
-						final String number0 = matcher.group(1);
-						final String number1 = Integer.toString(number);
-						
-						if(number0.equals(number1)) {
-							isNumberAvailable = false;
-						}
-					}
-				}
-			} while(!isNumberAvailable);
-		} else {
-			number++;
-		}
-		
-		return new File(Dayflower.getImageFile(number));
-	}
-	
 	@SuppressWarnings("unused")
 	private void doOnCheckBoxToggleClouds(final ActionEvent e) {
 		synchronized(this.pixels1) {
@@ -692,7 +631,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnMenuItemSave(final ActionEvent e) {
-		final File file = doFindNextFile();
+		final File directory = new File(Dayflower.getImageDirectory());
+		final File file = Files.findNextFile(directory, "Dayflower-Image-%s.png");
 		
 		if(!file.getParentFile().exists()) {
 			file.getParentFile().mkdirs();
@@ -716,17 +656,17 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderApertureRadius(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setApertureRadius(newValue.floatValue());
+		this.scene.getCamera().setApertureRadius(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderFieldOfView(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setFieldOfViewX(newValue.floatValue());
+		this.scene.getCamera().setFieldOfViewX(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderFocalDistance(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setFocalDistance(newValue.floatValue());
+		this.scene.getCamera().setFocalDistance(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
@@ -756,7 +696,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderPitch(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setPitch(AngleF.degrees(newValue.floatValue(), -90.0F, 90.0F));
+		this.scene.getCamera().setPitch(AngleF.degrees(newValue.floatValue(), -90.0F, 90.0F));
 	}
 	
 	@SuppressWarnings("unused")
@@ -785,7 +725,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderYaw(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.camera.setYaw(AngleF.degrees(newValue.floatValue()));
+		this.scene.getCamera().setYaw(AngleF.degrees(newValue.floatValue()));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

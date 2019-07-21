@@ -84,32 +84,32 @@ public abstract class AbstractApplication extends Application {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private final AtomicBoolean hasRequestedToExit = new AtomicBoolean();
-	private final AtomicBoolean hasUpdatedCursor = new AtomicBoolean();
-	private final AtomicBoolean isCursorHidden = new AtomicBoolean();
-	private final AtomicBoolean isMouseDragging = new AtomicBoolean();
-	private final AtomicBoolean isMouseRecentering = new AtomicBoolean();
-	private final AtomicInteger canvasHeight = new AtomicInteger(CANVAS_HEIGHT);
-	private final AtomicInteger canvasWidth = new AtomicInteger(CANVAS_WIDTH);
-	private final AtomicInteger kernelHeight = new AtomicInteger(KERNEL_HEIGHT);
-	private final AtomicInteger kernelWidth = new AtomicInteger(KERNEL_WIDTH);
-	private final AtomicInteger keysPressed = new AtomicInteger();
-	private final AtomicInteger mouseDraggedDeltaX = new AtomicInteger();
-	private final AtomicInteger mouseDraggedDeltaY = new AtomicInteger();
-	private final AtomicInteger mouseDraggedX = new AtomicInteger();
-	private final AtomicInteger mouseDraggedY = new AtomicInteger();
-	private final AtomicInteger mouseMovedDeltaX = new AtomicInteger();
-	private final AtomicInteger mouseMovedDeltaY = new AtomicInteger();
-	private final AtomicInteger mouseMovedX = new AtomicInteger();
-	private final AtomicInteger mouseMovedY = new AtomicInteger();
-	private final AtomicInteger mouseX = new AtomicInteger();
-	private final AtomicInteger mouseY = new AtomicInteger();
-	private final AtomicLong mouseMovementTime = new AtomicLong();
-	private final boolean[] isKeyPressed = new boolean[KeyCode.values().length];
-	private final boolean[] isKeyPressedOnce = new boolean[KeyCode.values().length];
-	private Canvas canvas;
-	private final FPSCounter fPSCounter = new FPSCounter();
-	private Robot robot;
+	private final AtomicBoolean hasRequestedToExit;
+	private final AtomicBoolean hasUpdatedCursor;
+	private final AtomicBoolean isCursorHidden;
+	private final AtomicBoolean isMouseDragging;
+	private final AtomicBoolean isMouseRecentering;
+	private final AtomicInteger canvasHeight;
+	private final AtomicInteger canvasWidth;
+	private final AtomicInteger kernelHeight;
+	private final AtomicInteger kernelWidth;
+	private final AtomicInteger keysPressed;
+	private final AtomicInteger mouseDraggedDeltaX;
+	private final AtomicInteger mouseDraggedDeltaY;
+	private final AtomicInteger mouseDraggedX;
+	private final AtomicInteger mouseDraggedY;
+	private final AtomicInteger mouseMovedDeltaX;
+	private final AtomicInteger mouseMovedDeltaY;
+	private final AtomicInteger mouseMovedX;
+	private final AtomicInteger mouseMovedY;
+	private final AtomicInteger mouseX;
+	private final AtomicInteger mouseY;
+	private final AtomicLong mouseMovementTime;
+	private final Canvas canvas;
+	private final FPSCounter fPSCounter;
+	private final Robot robot;
+	private final boolean[] isKeyPressed;
+	private final boolean[] isKeyPressedOnce;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -117,7 +117,32 @@ public abstract class AbstractApplication extends Application {
 	 * Constructs a new {@code AbstractApplication} with no title.
 	 */
 	protected AbstractApplication() {
-		
+		this.hasRequestedToExit = new AtomicBoolean();
+		this.hasUpdatedCursor = new AtomicBoolean();
+		this.isCursorHidden = new AtomicBoolean();
+		this.isMouseDragging = new AtomicBoolean();
+		this.isMouseRecentering = new AtomicBoolean();
+		this.canvasHeight = new AtomicInteger(CANVAS_HEIGHT);
+		this.canvasWidth = new AtomicInteger(CANVAS_WIDTH);
+		this.kernelHeight = new AtomicInteger(KERNEL_HEIGHT);
+		this.kernelWidth = new AtomicInteger(KERNEL_WIDTH);
+		this.keysPressed = new AtomicInteger();
+		this.mouseDraggedDeltaX = new AtomicInteger();
+		this.mouseDraggedDeltaY = new AtomicInteger();
+		this.mouseDraggedX = new AtomicInteger();
+		this.mouseDraggedY = new AtomicInteger();
+		this.mouseMovedDeltaX = new AtomicInteger();
+		this.mouseMovedDeltaY = new AtomicInteger();
+		this.mouseMovedX = new AtomicInteger();
+		this.mouseMovedY = new AtomicInteger();
+		this.mouseX = new AtomicInteger();
+		this.mouseY = new AtomicInteger();
+		this.mouseMovementTime = new AtomicLong();
+		this.isKeyPressed = new boolean[KeyCode.values().length];
+		this.isKeyPressedOnce = new boolean[KeyCode.values().length];
+		this.canvas = new Canvas();
+		this.fPSCounter = new FPSCounter();
+		this.robot = doCreateRobot();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,22 +154,23 @@ public abstract class AbstractApplication extends Application {
 	 */
 	@Override
 	public final void start(final Stage stage) {
-		this.robot = doCreateRobot();
-		
 		final
 		ImageView imageView = new ImageView();
 		imageView.setSmooth(true);
 		
-		this.canvas = new Canvas(getCanvasWidth(), getCanvasHeight());
-		this.canvas.addEventFilter(MouseEvent.ANY, e -> this.canvas.requestFocus());
-		this.canvas.addEventFilter(KeyEvent.ANY, e -> this.canvas.requestFocus());
-		this.canvas.setFocusTraversable(true);
-		this.canvas.setOnKeyPressed(this::doOnKeyPressed);
-		this.canvas.setOnKeyReleased(this::doOnKeyReleased);
-		this.canvas.setOnMouseDragged(this::doOnMouseDragged);
-		this.canvas.setOnMouseMoved(this::doOnMouseMoved);
-		this.canvas.setOnMousePressed(this::doOnMousePressed);
-		this.canvas.setOnMouseReleased(this::doOnMouseReleased);
+		final
+		Canvas canvas = this.canvas;
+		canvas.addEventFilter(MouseEvent.ANY, e -> canvas.requestFocus());
+		canvas.addEventFilter(KeyEvent.ANY, e -> canvas.requestFocus());
+		canvas.setHeight(getCanvasHeight());
+		canvas.setFocusTraversable(true);
+		canvas.setOnKeyPressed(this::doOnKeyPressed);
+		canvas.setOnKeyReleased(this::doOnKeyReleased);
+		canvas.setOnMouseDragged(this::doOnMouseDragged);
+		canvas.setOnMouseMoved(this::doOnMouseMoved);
+		canvas.setOnMousePressed(this::doOnMousePressed);
+		canvas.setOnMouseReleased(this::doOnMouseReleased);
+		canvas.setWidth(getCanvasWidth());
 		
 		final MenuBar menuBar = new MenuBar();
 		
@@ -158,7 +184,7 @@ public abstract class AbstractApplication extends Application {
 		final
 		BorderPane borderPane = new BorderPane();
 		borderPane.setTop(menuBar);
-		borderPane.setCenter(this.canvas);
+		borderPane.setCenter(canvas);
 		borderPane.setBottom(hBox);
 		borderPane.setLeft(tabPane);
 		
@@ -191,8 +217,6 @@ public abstract class AbstractApplication extends Application {
 		imageView.setViewport(new Rectangle2D(0.0D, 0.0D, getKernelWidth(), getKernelHeight()));
 		
 		configurePixels(pixels);
-		
-		final Canvas canvas = this.canvas;
 		
 		new AnimationTimer() {
 			@Override
@@ -276,6 +300,25 @@ public abstract class AbstractApplication extends Application {
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 		/**
+		 * Returns the name of this {@code Setting} instance.
+		 * 
+		 * @return the name of this {@code Setting} instance
+		 */
+		public String getName() {
+			return this.name;
+		}
+		
+		/**
+		 * Returns a {@code String} representation of this {@code Setting} instance.
+		 * 
+		 * @return a {@code String} representation of this {@code Setting} instance
+		 */
+		@Override
+		public String toString() {
+			return String.format("new Setting(\"%s\", %s)", getName(), Boolean.toString(isEnabled()));
+		}
+		
+		/**
 		 * Compares {@code object} to this {@code Setting} instance for equality.
 		 * <p>
 		 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Setting}, and their respective values are equal, {@code false} otherwise.
@@ -327,25 +370,6 @@ public abstract class AbstractApplication extends Application {
 		}
 		
 		/**
-		 * Returns the name of this {@code Setting} instance.
-		 * 
-		 * @return the name of this {@code Setting} instance
-		 */
-		public String getName() {
-			return this.name;
-		}
-		
-		/**
-		 * Returns a {@code String} representation of this {@code Setting} instance.
-		 * 
-		 * @return a {@code String} representation of this {@code Setting} instance
-		 */
-		@Override
-		public String toString() {
-			return String.format("new Setting(\"%s\", %s)", getName(), Boolean.toString(isEnabled()));
-		}
-		
-		/**
 		 * Disables this {@code Setting} instance.
 		 */
 		public void disable() {
@@ -379,6 +403,15 @@ public abstract class AbstractApplication extends Application {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Returns the {@link FPSCounter} associated with this {@code AbstractApplication}.
+	 * 
+	 * @return the {@code FPSCounter} associated with this {@code AbstractApplication}
+	 */
+	protected final FPSCounter getFPSCounter() {
+		return this.fPSCounter;
+	}
+	
+	/**
 	 * Returns {@code true} if, and only if, this {@code AbstractApplication} has been entered like an FPS-game, {@code false} otherwise.
 	 * <p>
 	 * To enter this {@code AbstractApplication} like an FPS-game, call {@link #enter()}.
@@ -396,7 +429,7 @@ public abstract class AbstractApplication extends Application {
 	/**
 	 * Returns {@code true} if, and only if, exit has been requested, {@code false} otherwise.
 	 * <p>
-	 * To request this {@code AbstractApplication} to exit, call {@link #exit}.
+	 * To request this {@code AbstractApplication} to exit, call {@link #exit()}.
 	 * 
 	 * @return {@code true} if, and only if, exit has been requested, {@code false} otherwise
 	 */
@@ -492,15 +525,6 @@ public abstract class AbstractApplication extends Application {
 	 */
 	protected final boolean isMouseRecentering() {
 		return this.isMouseRecentering.get();
-	}
-	
-	/**
-	 * Returns the {@link FPSCounter} associated with this {@code AbstractApplication}.
-	 * 
-	 * @return the {@code FPSCounter} associated with this {@code AbstractApplication}
-	 */
-	protected final FPSCounter getFPSCounter() {
-		return this.fPSCounter;
 	}
 	
 	/**

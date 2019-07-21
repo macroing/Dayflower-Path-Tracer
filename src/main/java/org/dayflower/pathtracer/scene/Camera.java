@@ -138,10 +138,10 @@ public final class Camera {
 		this.array = new float[SIZE];
 		this.cameraObservers = new ArrayList<>();
 		
-		setApertureRadius(0.4F);
+		setApertureRadius(0.0F);
 		setCameraLens(CAMERA_LENS_THIN);
 		setEye(55.0F, 42.0F, 155.6F);
-		setFieldOfViewX(40.0F);
+		setFieldOfViewX(90.0F);
 		setFocalDistance(30.0F);
 		setPitch(AngleF.pitch(Vector3F.x()));
 		setResolution(800.0F, 800.0F);
