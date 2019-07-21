@@ -1,0 +1,49 @@
+2019-07-21  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	The Bounding Volume Hierarchy (BVH) building algorithm has been optimized.
+
+2019-07-20  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		Wireframe rendering has been added. It's possible to enable or disable this feature with a menu item checkbox.
+	* CHANGE:	Image-based normal mapping does not use bilinear interpolation anymore.
+	* CHANGE:	The exposure of the new Filmic Curve tone mapper has been changed to 1.0.
+
+2019-07-16  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	Aparapi has been updated to a new version that supports arbitrary function implementation order.
+
+2019-07-14  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		A menu item for saving the current image to disk has been added. It does not overwrite existing files.
+	* CHANGE:	Normal mapping has been turned on by default.
+	* CHANGE:	The default camera position, or eye, has been updated. It now looks at all spheres in the default scene.
+
+2019-07-13  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		The maximum distance for the Ambient Occlusion renderer can now be changed by a slider.
+
+2019-07-12  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		A new Filmic Curve tone mapper has been added. It is enabled by default. The previous Filmic Curve tone mapper still exists.
+
+2019-07-11  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		The Ambient Occlusion renderer now supports a maximum distance. It is set to 200.0.
+
+2019-06-04  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	The Ray Caster, Ray Marcher and Ray Tracer renderers have been updated with a new better Phong reflection model shader.
+
+2019-06-02  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	The texture of the terrain for the Ray Marcher renderer has been updated. It uses a fractional Brownian motion (fBm) texture.
+
+2019-05-26  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	The algorithm of the Ray Tracer has been updated.
+	* REMOVE:	Ambient Occlusion rendering has been removed from the Ray Caster renderer.
+
+2019-01-02  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	The Bounding Volume Hierarchy (BVH) traversal algorithm has been optimized.
+	* REMOVE:	The Bloom effect has been removed.

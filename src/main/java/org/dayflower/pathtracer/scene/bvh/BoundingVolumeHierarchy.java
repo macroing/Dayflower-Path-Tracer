@@ -95,7 +95,7 @@ public final class BoundingVolumeHierarchy {
 	
 //	TODO: Add Javadocs.
 	public static final class LeafNode extends Node {
-		private final List<Triangle> triangles = new ArrayList<>(40);
+		private final List<Triangle> triangles = new ArrayList<>(10);
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
@@ -354,7 +354,7 @@ public final class BoundingVolumeHierarchy {
 			final float start = axis == 0 ? minimumX : axis == 1 ? minimumY : minimumZ;
 			final float stop = axis == 0 ? maximumX : axis == 1 ? maximumY : maximumZ;
 			
-			if(abs(stop - start) < 1.0e-3F) {//Used to be 1.0e-4F.
+			if(abs(stop - start) < 1.0e-4F) {
 				continue;
 			}
 			
