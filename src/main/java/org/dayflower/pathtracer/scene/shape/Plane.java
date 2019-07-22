@@ -32,6 +32,26 @@ import org.dayflower.pathtracer.scene.Surface;
  * @author J&#246;rgen Lundgren
  */
 public final class Plane extends Shape {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_A_POINT3S_OFFSET = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_B_POINT3S_OFFSET = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_C_POINT3S_OFFSET = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 3;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	/**
 	 * A {@link Point3F} denoting the point A.
 	 */
@@ -77,45 +97,6 @@ public final class Plane extends Shape {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Compares {@code object} to this {@code Plane} instance for equality.
-	 * <p>
-	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Plane}, and their respective values are equal, {@code false} otherwise.
-	 * 
-	 * @param object the {@code Object} to compare to this {@code Plane} instance for equality
-	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Plane}, and their respective values are equal, {@code false} otherwise
-	 */
-	@Override
-	public boolean equals(final Object object) {
-		if(object == this) {
-			return true;
-		} else if(!(object instanceof Plane)) {
-			return false;
-		} else if(!Objects.equals(getSurface(), Plane.class.cast(object).getSurface())) {
-			return false;
-		} else if(!Objects.equals(this.a, Plane.class.cast(object).a)) {
-			return false;
-		} else if(!Objects.equals(this.b, Plane.class.cast(object).b)) {
-			return false;
-		} else if(!Objects.equals(this.c, Plane.class.cast(object).c)) {
-			return false;
-		} else if(!Objects.equals(this.surfaceNormal, Plane.class.cast(object).surfaceNormal)) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-	
-	/**
-	 * Returns a hash code for this {@code Plane} instance.
-	 * 
-	 * @return a hash code for this {@code Plane} instance
-	 */
-	@Override
-	public int hashCode() {
-		return Objects.hash(getSurface(), this.a, this.b, this.c, this.surfaceNormal);
-	}
-	
-	/**
 	 * Returns the point A.
 	 * 
 	 * @return the point A
@@ -159,5 +140,54 @@ public final class Plane extends Shape {
 	 */
 	public Vector3F getSurfaceNormal() {
 		return this.surfaceNormal;
+	}
+	
+	/**
+	 * Compares {@code object} to this {@code Plane} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Plane}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Plane} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Plane}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Plane)) {
+			return false;
+		} else if(!Objects.equals(getSurface(), Plane.class.cast(object).getSurface())) {
+			return false;
+		} else if(!Objects.equals(this.a, Plane.class.cast(object).a)) {
+			return false;
+		} else if(!Objects.equals(this.b, Plane.class.cast(object).b)) {
+			return false;
+		} else if(!Objects.equals(this.c, Plane.class.cast(object).c)) {
+			return false;
+		} else if(!Objects.equals(this.surfaceNormal, Plane.class.cast(object).surfaceNormal)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
+	 * Returns the size of this {@code Plane} instance.
+	 * 
+	 * @return the size of this {@code Plane} instance
+	 */
+	@Override
+	public int getSize() {
+		return SIZE;
+	}
+	
+	/**
+	 * Returns a hash code for this {@code Plane} instance.
+	 * 
+	 * @return a hash code for this {@code Plane} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(getSurface(), this.a, this.b, this.c, this.surfaceNormal);
 	}
 }

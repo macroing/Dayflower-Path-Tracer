@@ -30,6 +30,17 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class ConstantTexture implements Texture {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_COLOR = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 2;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final Color color;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +106,40 @@ public final class ConstantTexture implements Texture {
 		} else {
 			return true;
 		}
+	}
+	
+	/**
+	 * Returns a {@code float} array representation of this {@code ConstantTexture} instance.
+	 * 
+	 * @return a {@code float} array representation of this {@code ConstantTexture} instance
+	 */
+	@Override
+	public float[] toArray() {
+		return new float[] {
+			getType(),
+			getSize(),
+			getColor().multiply(255.0F).toRGB()
+		};
+	}
+	
+	/**
+	 * Returns the size of this {@code ConstantTexture} instance.
+	 * 
+	 * @return the size of this {@code ConstantTexture} instance
+	 */
+	@Override
+	public int getSize() {
+		return SIZE;
+	}
+	
+	/**
+	 * Returns the type of this {@code ConstantTexture} instance.
+	 * 
+	 * @return the type of this {@code ConstantTexture} instance
+	 */
+	@Override
+	public int getType() {
+		return TYPE;
 	}
 	
 	/**

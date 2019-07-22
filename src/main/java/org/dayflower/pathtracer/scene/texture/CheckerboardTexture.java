@@ -18,6 +18,10 @@
  */
 package org.dayflower.pathtracer.scene.texture;
 
+import static org.dayflower.pathtracer.math.MathF.cos;
+import static org.dayflower.pathtracer.math.MathF.sin;
+import static org.dayflower.pathtracer.math.MathF.toRadians;
+
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
@@ -30,6 +34,32 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class CheckerboardTexture implements Texture {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_COLOR_0 = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_COLOR_1 = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_RADIANS_COS = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_RADIANS_SIN = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SCALE_U = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SCALE_V = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 8;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 1;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final Color color0;
 	private final Color color1;
 	private final float degrees;
@@ -230,6 +260,45 @@ public final class CheckerboardTexture implements Texture {
 	 */
 	public float getScaleV() {
 		return this.scaleV;
+	}
+	
+	/**
+	 * Returns a {@code float} array representation of this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return a {@code float} array representation of this {@code CheckerboardTexture} instance
+	 */
+	@Override
+	public float[] toArray() {
+		return new float[] {
+			getType(),
+			getSize(),
+			getColor0().multiply(255.0F).toRGB(),
+			getColor1().multiply(255.0F).toRGB(),
+			cos(toRadians(getDegrees())),
+			sin(toRadians(getDegrees())),
+			getScaleU(),
+			getScaleV()
+		};
+	}
+	
+	/**
+	 * Returns the size of this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return the size of this {@code CheckerboardTexture} instance
+	 */
+	@Override
+	public int getSize() {
+		return SIZE;
+	}
+	
+	/**
+	 * Returns the type of this {@code CheckerboardTexture} instance.
+	 * 
+	 * @return the type of this {@code CheckerboardTexture} instance
+	 */
+	@Override
+	public int getType() {
+		return TYPE;
 	}
 	
 	/**

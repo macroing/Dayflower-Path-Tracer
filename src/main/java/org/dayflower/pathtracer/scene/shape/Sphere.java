@@ -31,8 +31,22 @@ import org.dayflower.pathtracer.scene.Surface;
  * @author J&#246;rgen Lundgren
  */
 public final class Sphere extends Shape {
-	private final float radius;
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_POSITION_POINT3S_OFFSET = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_RADIUS = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 1;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final Point3F position;
+	private final float radius;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -42,18 +56,50 @@ public final class Sphere extends Shape {
 	 * If either {@code surface} or {@code position} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param surface a {@link Surface} denoting the surface of this {@code Sphere}
-	 * @param radius the radius of this {@code Sphere}
 	 * @param position the position of this {@code Sphere}
 	 * @throws NullPointerException thrown if, and only if, either {@code surface} or {@code position} are {@code null}
 	 */
-	public Sphere(final Surface surface, final float radius, final Point3F position) {
+	public Sphere(final Surface surface, final Point3F position) {
+		this(surface, position, 1.0F);
+	}
+	
+	/**
+	 * Constructs a new {@code Sphere} instance.
+	 * <p>
+	 * If either {@code surface} or {@code position} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param surface a {@link Surface} denoting the surface of this {@code Sphere}
+	 * @param position the position of this {@code Sphere}
+	 * @param radius the radius of this {@code Sphere}
+	 * @throws NullPointerException thrown if, and only if, either {@code surface} or {@code position} are {@code null}
+	 */
+	public Sphere(final Surface surface, final Point3F position, final float radius) {
 		super(surface);
 		
-		this.radius = radius;
 		this.position = Objects.requireNonNull(position, "position == null");
+		this.radius = radius;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns the center position of this {@code Sphere}.
+	 * 
+	 * @return the center position of this {@code Sphere}
+	 */
+	public Point3F getPosition() {
+		return this.position;
+	}
+	
+	/**
+	 * Returns a {@code String} representation of this {@code Sphere} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code Sphere} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("Sphere: [Position=%s], [Radius=%s]", this.position, Float.toString(this.radius));
+	}
 	
 	/**
 	 * Compares {@code object} to this {@code Sphere} instance for equality.
@@ -71,9 +117,9 @@ public final class Sphere extends Shape {
 			return false;
 		} else if(!Objects.equals(getSurface(), Sphere.class.cast(object).getSurface())) {
 			return false;
-		} else if(Float.compare(this.radius, Sphere.class.cast(object).radius) != 0) {
-			return false;
 		} else if(!Objects.equals(this.position, Sphere.class.cast(object).position)) {
+			return false;
+		} else if(Float.compare(this.radius, Sphere.class.cast(object).radius) != 0) {
 			return false;
 		} else {
 			return true;
@@ -126,31 +172,22 @@ public final class Sphere extends Shape {
 	}
 	
 	/**
+	 * Returns the size of this {@code Sphere} instance.
+	 * 
+	 * @return the size of this {@code Sphere} instance
+	 */
+	@Override
+	public int getSize() {
+		return SIZE;
+	}
+	
+	/**
 	 * Returns a hash code for this {@code Sphere} instance.
 	 * 
 	 * @return a hash code for this {@code Sphere} instance
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(getSurface(), Float.valueOf(this.radius), this.position);
-	}
-	
-	/**
-	 * Returns the center position of this {@code Sphere}.
-	 * 
-	 * @return the center position of this {@code Sphere}
-	 */
-	public Point3F getPosition() {
-		return this.position;
-	}
-	
-	/**
-	 * Returns a {@code String} representation of this {@code Sphere} instance.
-	 * 
-	 * @return a {@code String} representation of this {@code Sphere} instance
-	 */
-	@Override
-	public String toString() {
-		return String.format("Sphere: [Radius=%s], [Position=%s]", Float.toString(this.radius), this.position);
+		return Objects.hash(getSurface(), this.position, Float.valueOf(this.radius));
 	}
 }

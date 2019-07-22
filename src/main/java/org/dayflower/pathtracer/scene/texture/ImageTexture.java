@@ -18,6 +18,10 @@
  */
 package org.dayflower.pathtracer.scene.texture;
 
+import static org.dayflower.pathtracer.math.MathF.cos;
+import static org.dayflower.pathtracer.math.MathF.sin;
+import static org.dayflower.pathtracer.math.MathF.toRadians;
+
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
@@ -45,6 +49,32 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class ImageTexture implements Texture {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_DATA = 8;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_HEIGHT = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_RADIANS_COS = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_RADIANS_SIN = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SCALE_U = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SCALE_V = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_WIDTH = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 3;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final float degrees;
 	private final float height;
 	private final float scaleU;
@@ -170,12 +200,61 @@ public final class ImageTexture implements Texture {
 	}
 	
 	/**
+	 * Returns a {@code float} array representation of this {@code ImageTexture} instance.
+	 * 
+	 * @return a {@code float} array representation of this {@code ImageTexture} instance
+	 */
+	@Override
+	public float[] toArray() {
+		final int size = 8 + this.data.length;
+		
+		final float[] array = new float[size];
+		
+		array[0] = TYPE;
+		array[1] = size;
+		array[2] = cos(toRadians(getDegrees()));
+		array[3] = sin(toRadians(getDegrees()));
+		array[4] = getWidth();
+		array[5] = getHeight();
+		array[6] = getScaleU();
+		array[7] = getScaleV();
+		
+		final int[] data = this.data;
+		
+		for(int i = 0; i < data.length; i++) {
+			array[i + 8] = data[i];
+		}
+		
+		return array;
+	}
+	
+	/**
 	 * Returns the length of the data in this {@code ImageTexture} instance.
 	 * 
 	 * @return the length of the data in this {@code ImageTexture} instance
 	 */
 	public int getDataLength() {
 		return this.data.length;
+	}
+	
+	/**
+	 * Returns the size of this {@code ImageTexture} instance.
+	 * 
+	 * @return the size of this {@code ImageTexture} instance
+	 */
+	@Override
+	public int getSize() {
+		return 8 + this.data.length;
+	}
+	
+	/**
+	 * Returns the type of this {@code ImageTexture} instance.
+	 * 
+	 * @return the type of this {@code ImageTexture} instance
+	 */
+	@Override
+	public int getType() {
+		return TYPE;
 	}
 	
 	/**

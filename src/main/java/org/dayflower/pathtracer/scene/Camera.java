@@ -36,90 +36,183 @@ import java.util.Objects;
 import org.dayflower.pathtracer.math.AngleF;
 import org.dayflower.pathtracer.math.Vector3F;
 
-//TODO: Add Javadocs.
+/**
+ * A {@code Camera} represents a camera in the scene from which to render an image.
+ * <p>
+ * This {@code Camera} class uses a {@code float} array to store certain parameters. This {@code float} array can be accessed by calling {@link #getArray()}. It is never cloned, so use it with caution.
+ * <p>
+ * Because the {@code float} array is never cloned, changing its element values will change the state of this class, however, the {@link #hasUpdated()} method will not be aware of this state change. The preferred way to change the parameters, is to use
+ * the methods of this class.
+ * <p>
+ * When the pitch and yaw parameters have been changed, it's required to call the {@link #update()} method, which updates the OrthoNormal Basis.
+ * <p>
+ * The {@code float} array has the following format:
+ * <pre>
+ * {@code
+ * 00 array[ABSOLUTE_OFFSET_OF_APERTURE_RADIUS]:       Aperture Radius
+ * 01 array[ABSOLUTE_OFFSET_OF_EYE_X]:                 Eye X
+ * 02 array[ABSOLUTE_OFFSET_OF_EYE_Y]:                 Eye Y
+ * 03 array[ABSOLUTE_OFFSET_OF_EYE_Z]:                 Eye Z
+ * 04 array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X]:       Field of View X in Degrees
+ * 05 array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y]:       Field of View Y in Degrees
+ * 06 array[ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE]:        Focal Distance
+ * 07 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X]: OrthoNormal Basis U X
+ * 08 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y]: OrthoNormal Basis U Y
+ * 09 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z]: OrthoNormal Basis U Z
+ * 10 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X]: OrthoNormal Basis V X
+ * 11 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y]: OrthoNormal Basis V Y
+ * 12 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z]: OrthoNormal Basis V Z
+ * 13 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X]: OrthoNormal Basis W X
+ * 14 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y]: OrthoNormal Basis W Y
+ * 15 array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z]: OrthoNormal Basis W Z
+ * 16 array[ABSOLUTE_OFFSET_OF_RESOLUTION_X]:          Resolution X or Width
+ * 17 array[ABSOLUTE_OFFSET_OF_RESOLUTION_Y]:          Resolution Y or Height
+ * 18 array[ABSOLUTE_OFFSET_OF_CAMERA_LENS]:           Camera Lens (one of CAMERA_LENS_FISHEYE (2) and CAMERA_LENS_THIN (1))
+ * }
+ * </pre>
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Camera {
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Aperture Radius parameter in the {@code float} array. The value is {@code 0}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_APERTURE_RADIUS = 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Camera Lens parameter in the {@code float} array. The value is {@code 18}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_CAMERA_LENS = 18;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Eye parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_EYE = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Eye X parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_EYE_X = ABSOLUTE_OFFSET_OF_EYE + 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Eye Y parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_EYE_Y = ABSOLUTE_OFFSET_OF_EYE + 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Eye Z parameter in the {@code float} array. The value is {@code 3}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_EYE_Z = ABSOLUTE_OFFSET_OF_EYE + 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Field of View parameter in the {@code float} array. The value is {@code 4}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW = 4;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Field of View X parameter in the {@code float} array. The value is {@code 4}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X = ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW + 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Field of View Y parameter in the {@code float} array. The value is {@code 5}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y = ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW + 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Focal Distance parameter in the {@code float} array. The value is {@code 6}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE = 6;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis U parameter in the {@code float} array. The value is {@code 7}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U = 7;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis U X parameter in the {@code float} array. The value is {@code 7}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U + 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis U Y parameter in the {@code float} array. The value is {@code 8}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U + 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis U Z parameter in the {@code float} array. The value is {@code 9}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U + 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis V parameter in the {@code float} array. The value is {@code 10}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V = 10;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis V X parameter in the {@code float} array. The value is {@code 10}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V + 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis V Y parameter in the {@code float} array. The value is {@code 11}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V + 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis V Z parameter in the {@code float} array. The value is {@code 12}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V + 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis W parameter in the {@code float} array. The value is {@code 13}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W = 13;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis W X parameter in the {@code float} array. The value is {@code 13}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis W Y parameter in the {@code float} array. The value is {@code 14}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the OrthoNormal Basis W Z parameter in the {@code float} array. The value is {@code 15}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z = ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W + 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Resolution parameter in the {@code float} array. The value is {@code 16}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_RESOLUTION = 16;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Resolution X parameter in the {@code float} array. The value is {@code 16}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_RESOLUTION_X = ABSOLUTE_OFFSET_OF_RESOLUTION + 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The absolute offset of the Resolution Y parameter in the {@code float} array. The value is {@code 17}.
+	 */
 	public static final int ABSOLUTE_OFFSET_OF_RESOLUTION_Y = ABSOLUTE_OFFSET_OF_RESOLUTION + 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * A constant denoting the Camera Lens parameter value for a Fisheye camera lens. The value is {@code 2}.
+	 */
 	public static final int CAMERA_LENS_FISHEYE = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * A constant denoting the Camera Lens parameter value for a Thin camera lens. The value is {@code 1}.
+	 */
 	public static final int CAMERA_LENS_THIN = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * A constant containing the size of the {@code float} array. The size is {@code 19}.
+	 */
 	public static final int SIZE = 1 + 3 + 2 + 1 + 3 + 3 + 3 + 2 + 1;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +226,9 @@ public final class Camera {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new default {@code Camera} instance.
+	 */
 	public Camera() {
 		this.array = new float[SIZE];
 		this.cameraObservers = new ArrayList<>();
@@ -151,7 +246,13 @@ public final class Camera {
 		update();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Camera} instance given {@code array} as the {@code float} array to store certain parameters.
+	 * <p>
+	 * This constructor does not clone {@code array}.
+	 * 
+	 * @param array the {@code float} array to store certain parameters
+	 */
 	public Camera(final float[] array) {
 		this.array = array;
 		this.cameraObservers = new ArrayList<>();
@@ -159,147 +260,259 @@ public final class Camera {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns an {@link AngleF} with the current pitch angle.
+	 * 
+	 * @return an {@code AngleF} with the current pitch angle
+	 */
 	public AngleF getPitch() {
 		return this.pitch;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns an {@link AngleF} with the current yaw angle.
+	 * 
+	 * @return an {@code AngleF} with the current yaw angle
+	 */
 	public AngleF getYaw() {
 		return this.yaw;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, the state of this {@code Camera} instance has been updated, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the state of this {@code Camera} instance has been updated, {@code false} otherwise
+	 */
 	public boolean hasUpdated() {
 		return this.hasUpdated;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, the Camera Lens parameter is set to Fisheye camera lens, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the Camera Lens parameter is set to Fisheye camera lens, {@code false} otherwise
+	 */
 	public boolean isFisheyeCameraLens() {
 		return this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] == CAMERA_LENS_FISHEYE;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, the Camera Lens parameter is set to Thin camera lens, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the Camera Lens parameter is set to Thin camera lens, {@code false} otherwise
+	 */
 	public boolean isThinCameraLens() {
 		return this.array[ABSOLUTE_OFFSET_OF_CAMERA_LENS] == CAMERA_LENS_THIN;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns {@code true} if, and only if, walk lock is enabled, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, walk lock is enabled, {@code false} otherwise
+	 */
 	public boolean isWalkLockEnabled() {
 		return this.isWalkLockEnabled;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Aperture Radius parameter.
+	 * 
+	 * @return the value of the Aperture Radius parameter
+	 */
 	public float getApertureRadius() {
 		return this.array[ABSOLUTE_OFFSET_OF_APERTURE_RADIUS];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Eye X parameter.
+	 * 
+	 * @return the value of the Eye X parameter
+	 */
 	public float getEyeX() {
 		return this.array[ABSOLUTE_OFFSET_OF_EYE_X];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Eye Y parameter.
+	 * 
+	 * @return the value of the Eye Y parameter
+	 */
 	public float getEyeY() {
 		return this.array[ABSOLUTE_OFFSET_OF_EYE_Y];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Eye Z parameter.
+	 * 
+	 * @return the value of the Eye Z parameter
+	 */
 	public float getEyeZ() {
 		return this.array[ABSOLUTE_OFFSET_OF_EYE_Z];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Field of View X parameter.
+	 * 
+	 * @return the value of the Field of View X parameter
+	 */
 	public float getFieldOfViewX() {
 		return this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Field of View Y parameter.
+	 * 
+	 * @return the value of the Field of View Y parameter
+	 */
 	public float getFieldOfViewY() {
 		return this.array[ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Focal Distance parameter.
+	 * 
+	 * @return the value of the Focal Distance parameter
+	 */
 	public float getFocalDistance() {
 		return this.array[ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis U X parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis U X parameter
+	 */
 	public float getOrthoNormalBasisUX() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis U Y parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis U Y parameter
+	 */
 	public float getOrthoNormalBasisUY() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis U Z parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis U Z parameter
+	 */
 	public float getOrthoNormalBasisUZ() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis V X parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis V X parameter
+	 */
 	public float getOrthoNormalBasisVX() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis V Y parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis V Y parameter
+	 */
 	public float getOrthoNormalBasisVY() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis V Z parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis V Z parameter
+	 */
 	public float getOrthoNormalBasisVZ() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis W X parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis W X parameter
+	 */
 	public float getOrthoNormalBasisWX() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis W Y parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis W Y parameter
+	 */
 	public float getOrthoNormalBasisWY() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the OrthoNormal Basis W Z parameter.
+	 * 
+	 * @return the value of the OrthoNormal Basis W Z parameter
+	 */
 	public float getOrthoNormalBasisWZ() {
 		return this.array[ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Resolution X parameter.
+	 * 
+	 * @return the value of the Resolution X parameter
+	 */
 	public float getResolutionX() {
 		return this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_X];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the value of the Resolution Y parameter.
+	 * 
+	 * @return the value of the Resolution Y parameter
+	 */
 	public float getResolutionY() {
 		return this.array[ABSOLUTE_OFFSET_OF_RESOLUTION_Y];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@code float} array that stores certain parameters.
+	 * <p>
+	 * This method will return the actual array and not a clone of it.
+	 * 
+	 * @return the {@code float} array that stores certain parameters
+	 */
 	public float[] getArray() {
 		return this.array;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Adds {@code cameraObserver} to this {@code Camera} instance.
+	 * <p>
+	 * If {@code cameraObserver} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param cameraObserver the {@link CameraObserver} to add
+	 * @throws NullPointerException thrown if, and only if, {@code cameraObserver} is {@code null}
+	 */
 	public void addCameraObserver(final CameraObserver cameraObserver) {
 		this.cameraObservers.add(Objects.requireNonNull(cameraObserver, "cameraObserver == null"));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Changes the altitude of this {@code Camera} instance.
+	 * <p>
+	 * This method changes the Eye Y parameter.
+	 * 
+	 * @param y the value to add to the Eye Y parameter
+	 */
 	public void changeAltitude(final float y) {
 		setEye(getEyeX(), getEyeY() + y, getEyeZ());
 	}
 	
 //	TODO: Add Javadocs.
 	public void changePitch(final AngleF pitch) {
-		final float degrees = max(min(getPitch().degrees + pitch.degrees, 89.99F), -89.99F);
-		
-		setPitch(AngleF.degrees(degrees, -89.99F, 89.99F));
-//		setPitch(getPitch().add(pitch));
+		setPitch(AngleF.degrees(max(min(getPitch().degrees + pitch.degrees, 89.99F), -89.99F), -89.99F, 89.99F));
 	}
 	
 //	TODO: Add Javadocs.
@@ -316,14 +529,16 @@ public final class Camera {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Removes {@code cameraObserver} from this {@code Camera} instance.
+	 * <p>
+	 * If {@code cameraObserver} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param cameraObserver the {@link CameraObserver} to remove
+	 * @throws NullPointerException thrown if, and only if, {@code cameraObserver} is {@code null}
+	 */
 	public void removeCameraObserver(final CameraObserver cameraObserver) {
 		this.cameraObservers.remove(Objects.requireNonNull(cameraObserver, "cameraObserver == null"));
-	}
-	
-//	TODO: Add Javadocs.
-	public void resetUpdateStatus() {
-		this.hasUpdated = false;
 	}
 	
 //	TODO: Add Javadocs.
@@ -412,7 +627,9 @@ public final class Camera {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Updates the OrthoNormal Basis parameter using the current pitch and yaw angles and clears the update flag.
+	 */
 	public void update() {
 		final float pitch = getPitch().radians;
 		final float yaw = getYaw().radians;
@@ -424,6 +641,8 @@ public final class Camera {
 		doSetOrthoNormalBasisW(orthoNormalBasisWX, orthoNormalBasisWY, orthoNormalBasisWZ);
 		doCalculateOrthoNormalBasisU();
 		doCalculateOrthoNormalBasisV();
+		
+		this.hasUpdated = false;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -289,8 +289,8 @@ public final class AngleF {
 	}
 	
 //	TODO: Add Javadocs!
-	public static AngleF fieldOfView(final float focalLength, final float resolution) {
-		return radians(2.0F * atan(resolution * 0.5F / focalLength));
+	public static AngleF fieldOfView(final float focalDistance, final float resolution) {
+		return radians(2.0F * atan(resolution * 0.5F / focalDistance));
 	}
 	
 //	TODO: Add Javadocs!

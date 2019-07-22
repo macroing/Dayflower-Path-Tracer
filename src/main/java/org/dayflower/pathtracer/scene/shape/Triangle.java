@@ -35,6 +35,41 @@ import org.dayflower.pathtracer.scene.Surface;
  * @author J&#246;rgen Lundgren
  */
 public final class Triangle extends Shape {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_A_VECTOR3S_OFFSET = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_B_VECTOR3S_OFFSET = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_C_VECTOR3S_OFFSET = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_UV_A_POINT2S_OFFSET = 8;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_UV_B_POINT2S_OFFSET = 9;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_UV_C_POINT2S_OFFSET = 10;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 11;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 2;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	/**
 	 * The {@link Vertex} A.
 	 */
@@ -72,43 +107,6 @@ public final class Triangle extends Shape {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Compares {@code object} to this {@code Triangle} instance for equality.
-	 * <p>
-	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Triangle}, and their respective values are equal, {@code false} otherwise.
-	 * 
-	 * @param object the {@code Object} to compare to this {@code Triangle} instance for equality
-	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Triangle}, and their respective values are equal, {@code false} otherwise
-	 */
-	@Override
-	public boolean equals(final Object object) {
-		if(object == this) {
-			return true;
-		} else if(!(object instanceof Triangle)) {
-			return false;
-		} else if(!Objects.equals(getSurface(), Triangle.class.cast(object).getSurface())) {
-			return false;
-		} else if(!Objects.equals(this.a, Triangle.class.cast(object).a)) {
-			return false;
-		} else if(!Objects.equals(this.b, Triangle.class.cast(object).b)) {
-			return false;
-		} else if(!Objects.equals(this.c, Triangle.class.cast(object).c)) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-	
-	/**
-	 * Returns a hash code for this {@code Triangle} instance.
-	 * 
-	 * @return a hash code for this {@code Triangle} instance
-	 */
-	@Override
-	public int hashCode() {
-		return Objects.hash(getSurface(), this.a, this.b, this.c);
-	}
 	
 	/**
 	 * Returns a {@code String} representation of this {@code Triangle} instance.
@@ -253,6 +251,53 @@ public final class Triangle extends Shape {
 	 */
 	public Vertex getC() {
 		return this.c;
+	}
+	
+	/**
+	 * Compares {@code object} to this {@code Triangle} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Triangle}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Triangle} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Triangle}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Triangle)) {
+			return false;
+		} else if(!Objects.equals(getSurface(), Triangle.class.cast(object).getSurface())) {
+			return false;
+		} else if(!Objects.equals(this.a, Triangle.class.cast(object).a)) {
+			return false;
+		} else if(!Objects.equals(this.b, Triangle.class.cast(object).b)) {
+			return false;
+		} else if(!Objects.equals(this.c, Triangle.class.cast(object).c)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
+	 * Returns the size of this {@code Triangle} instance.
+	 * 
+	 * @return the size of this {@code Triangle} instance
+	 */
+	@Override
+	public int getSize() {
+		return SIZE;
+	}
+	
+	/**
+	 * Returns a hash code for this {@code Triangle} instance.
+	 * 
+	 * @return a hash code for this {@code Triangle} instance
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(getSurface(), this.a, this.b, this.c);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

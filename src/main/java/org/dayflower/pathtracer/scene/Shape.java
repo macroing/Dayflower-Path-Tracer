@@ -27,6 +27,14 @@ import java.util.Objects;
  * @author J&#246;rgen Lundgren
  */
 public abstract class Shape {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SURFACES_OFFSET = 1;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_TYPE = 0;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final Surface surface;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,4 +61,11 @@ public abstract class Shape {
 	public final Surface getSurface() {
 		return this.surface;
 	}
+	
+	/**
+	 * Returns the size of this {@code Shape} instance.
+	 * 
+	 * @return the size of this {@code Shape} instance
+	 */
+	public abstract int getSize();
 }

@@ -31,6 +31,38 @@ import org.dayflower.pathtracer.color.Color;
  * @author J&#246;rgen Lundgren
  */
 public final class Surface {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_EMISSION = 0;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_EMISSION_B = RELATIVE_OFFSET_EMISSION + 2;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_EMISSION_G = RELATIVE_OFFSET_EMISSION + 1;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_EMISSION_R = RELATIVE_OFFSET_EMISSION + 0;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_MATERIAL = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_NOISE_AMOUNT = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_NOISE_SCALE = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 8;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private static final Map<String, Surface> INSTANCES = new HashMap<>();
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

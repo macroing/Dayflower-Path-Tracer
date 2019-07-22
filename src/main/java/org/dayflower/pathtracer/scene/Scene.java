@@ -33,6 +33,7 @@ import java.util.Objects;
 public final class Scene {
 	private final Camera camera;
 	private final List<Shape> shapes;
+	private final Sky sky;
 	private final String name;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -48,6 +49,7 @@ public final class Scene {
 	public Scene(final String name) {
 		this.camera = new Camera();
 		this.shapes = new ArrayList<>();
+		this.sky = new Sky();
 		this.name = Objects.requireNonNull(name, "name == null");
 	}
 	
@@ -71,6 +73,15 @@ public final class Scene {
 	 */
 	public List<Shape> getShapes() {
 		return new ArrayList<>(this.shapes);
+	}
+	
+	/**
+	 * Returns the {@link Sky} instance used by this {@code Scene} instance.
+	 * 
+	 * @return the {@code Sky} instance used by this {@code Scene} instance
+	 */
+	public Sky getSky() {
+		return this.sky;
 	}
 	
 	/**

@@ -239,15 +239,15 @@ final class Scenes {
 		
 		final
 		Scene scene = new Scene("Cornell_Box_Scene");
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo0, textureNormal), 1.0e4F, new Point3F(1.0e4F + 1.0F, 40.8F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo1, textureNormal), 1.0e4F, new Point3F(-1.0e4F + 99.0F, 40.8F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo2, textureNormal), 1.0e4F, new Point3F(50.0F, 40.8F, 1.0e4F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo3, textureNormal), 1.0e4F, new Point3F(50.0F, 40.8F, -1.0e4F + 170.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo4, textureNormal), 1.0e4F, new Point3F(50.0F, 1.0e4F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo5, textureNormal), 1.0e4F, new Point3F(50.0F, -1.0e4F + 81.6F, 81.6F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.PHONG_METAL, textureAlbedo6, textureNormal), 16.5F, new Point3F(27.0F, 16.5F, 47.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, textureAlbedo7, textureNormal), 16.5F, new Point3F(73.0F, 16.5F, 78.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(12.0F, 12.0F, 12.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo8, textureNormal), 600.0F, new Point3F(50.0F, 681.6F - 0.27F, 81.6F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo0, textureNormal), new Point3F(1.0e4F + 1.0F, 40.8F, 81.6F), 1.0e4F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo1, textureNormal), new Point3F(-1.0e4F + 99.0F, 40.8F, 81.6F), 1.0e4F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.MIRROR, textureAlbedo2, textureNormal), new Point3F(50.0F, 40.8F, 1.0e4F), 1.0e4F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo3, textureNormal), new Point3F(50.0F, 40.8F, -1.0e4F + 170.0F), 1.0e4F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo4, textureNormal), new Point3F(50.0F, 1.0e4F, 81.6F), 1.0e4F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo5, textureNormal), new Point3F(50.0F, -1.0e4F + 81.6F, 81.6F), 1.0e4F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.PHONG_METAL, textureAlbedo6, textureNormal), new Point3F(27.0F, 16.5F, 47.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 4.0F, Material.GLASS, textureAlbedo7, textureNormal), new Point3F(73.0F, 16.5F, 78.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(12.0F, 12.0F, 12.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo8, textureNormal), new Point3F(50.0F, 681.6F - 0.27F, 81.6F), 600.0F));
 		
 		return scene;
 	}
@@ -304,11 +304,11 @@ final class Scenes {
 		final
 		Scene scene = new Scene("Girl_Scene");
 		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture3, texture4), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 40.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 80.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 120.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 160.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture7, texture4), 16.5F, new Point3F(20.0F, 16.5F, 200.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture7, texture4), new Point3F(20.0F, 16.5F, 40.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture4), new Point3F(20.0F, 16.5F, 80.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture7, texture4), new Point3F(20.0F, 16.5F, 120.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture7, texture4), new Point3F(20.0F, 16.5F, 160.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture7, texture4), new Point3F(20.0F, 16.5F, 200.0F), 16.5F));
 		
 		for(final Triangle triangle : triangles) {
 			scene.addShape(triangle.translateY(10.0F));
@@ -423,10 +423,10 @@ final class Scenes {
 		final
 		Scene scene = new Scene("House_Scene_3");
 		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 1.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3F(2.0F, 180.0F, 2.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 10.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3F(2.0F, 180.0F, 498.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 1.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3F(498.0F, 180.0F, 2.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 10.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), 10.0F, new Point3F(498.0F, 180.0F, 498.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 1.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3F(2.0F, 180.0F, 2.0F), 10.0F));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 10.0F, 1.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3F(2.0F, 180.0F, 498.0F), 10.0F));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(1.0F, 1.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3F(498.0F, 180.0F, 2.0F), 10.0F));
+		scene.addShape(new Sphere(Surface.getInstance(new Color(10.0F, 10.0F, 10.0F), 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGround, textureNormal), new Point3F(498.0F, 180.0F, 498.0F), 10.0F));
 		scene.addShape(trianglesWall0[0]);
 		scene.addShape(trianglesWall0[1]);
 		scene.addShape(trianglesWall1[0]);
@@ -534,20 +534,20 @@ final class Scenes {
 		Scene scene = new Scene("Material_Showcase_Scene");
 		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texturePlaneAlbedo, texturePlaneNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
 		
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureSphere01Albedo, textureSphere01Normal), 16.5F, new Point3F(40.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, textureSphere02Albedo, textureSphere02Normal), 16.5F, new Point3F(80.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere03Albedo, textureSphere03Normal), 16.5F, new Point3F(120.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphere04Albedo, textureSphere04Normal), 16.5F, new Point3F(160.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureSphere05Albedo, textureSphere05Normal), 16.5F, new Point3F(200.0F, 16.5F, 20.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, textureSphere01Albedo, textureSphere01Normal), new Point3F(40.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, textureSphere02Albedo, textureSphere02Normal), new Point3F(80.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere03Albedo, textureSphere03Normal), new Point3F(120.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphere04Albedo, textureSphere04Normal), new Point3F(160.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, textureSphere05Albedo, textureSphere05Normal), new Point3F(200.0F, 16.5F, 20.0F), 16.5F));
 		
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere06Albedo, textureSphere06Normal), 16.5F, new Point3F(280.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere07Albedo, textureSphere07Normal), 16.5F, new Point3F(320.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere08Albedo, textureSphere08Normal), 16.5F, new Point3F(360.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere09Albedo, textureSphere09Normal), 16.5F, new Point3F(400.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere10Albedo, textureSphere10Normal), 16.5F, new Point3F(440.0F, 16.5F, 20.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere06Albedo, textureSphere06Normal), new Point3F(280.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere07Albedo, textureSphere07Normal), new Point3F(320.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere08Albedo, textureSphere08Normal), new Point3F(360.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere09Albedo, textureSphere09Normal), new Point3F(400.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureSphere10Albedo, textureSphere10Normal), new Point3F(440.0F, 16.5F, 20.0F), 16.5F));
 		
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphere11Albedo, textureSphere11Normal), 16.5F, new Point3F(520.0F, 16.5F, 20.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 16.0F, Material.GLASS, textureSphere12Albedo, textureSphere12Normal), 16.5F, new Point3F(560.0F, 16.5F, 20.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphere11Albedo, textureSphere11Normal), new Point3F(520.0F, 16.5F, 20.0F), 16.5F));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 1.0F, 16.0F, Material.GLASS, textureSphere12Albedo, textureSphere12Normal), new Point3F(560.0F, 16.5F, 20.0F), 16.5F));
 		
 		scene.getCamera().setEye(295.0F, 42.0F, 332.6F);
 		
@@ -632,7 +632,7 @@ final class Scenes {
 		final
 		Scene scene = new Scene("Test_Scene");
 		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoGround, textureNormalGround), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(1.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoSphere, textureNormalSphere), 16.5F, new Point3F(20.0F, 16.5F, 40.0F)));
+		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedoSphere, textureNormalSphere), new Point3F(20.0F, 16.5F, 40.0F), 16.5F));
 		
 		return scene;
 	}

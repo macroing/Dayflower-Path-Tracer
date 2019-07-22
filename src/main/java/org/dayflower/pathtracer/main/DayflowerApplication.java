@@ -56,14 +56,15 @@ import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.application.JavaFX;
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
-import org.dayflower.pathtracer.kernel.CompiledScene;
 import org.dayflower.pathtracer.kernel.ConvolutionKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
 import org.dayflower.pathtracer.math.AngleF;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
-import org.dayflower.pathtracer.scene.Sky;
+import org.dayflower.pathtracer.scene.compiler.CompiledScene;
+import org.dayflower.pathtracer.scene.compiler.SceneCompiler;
+import org.dayflower.pathtracer.util.Clock;
 import org.dayflower.pathtracer.util.FPSCounter;
 import org.dayflower.pathtracer.util.Files;
 
@@ -79,30 +80,28 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private AbstractRendererKernel abstractRendererKernel;
-	private final AtomicInteger renderPass = new AtomicInteger();
-	private final AtomicLong currentTimeMillis = new AtomicLong(System.currentTimeMillis());
-	private byte[] pixels0;
-	private byte[] pixels1;
-//	private final Camera camera = new Camera();
+	private final AtomicInteger renderPass;
+	private final Clock clock;
 	private ConvolutionKernel convolutionKernel;
-	private final Label labelFPS = new Label("FPS: 0");
-	private final Label labelKernelTime = new Label("Kernel Time: 0 ms");
-	private final Label labelPosition = new Label("Position: [0.0, 0.0, 0.0]");
-	private final Label labelRenderPass = new Label("Pass: 0");
-	private final Label labelRenderTime = new Label("Time: 00:00:00");
-	private final Label labelSPS = new Label("SPS: 00000000");
+	private final Label labelFPS;
+	private final Label labelKernelTime;
+	private final Label labelPosition;
+	private final Label labelRenderPass;
+	private final Label labelRenderTime;
+	private final Label labelSPS;
 	private Range range;
 	private RendererRunnable rendererRunnable;
-	private final Setting settingFilterBlur = new Setting("Filter.Blur");
-	private final Setting settingFilterDetectEdges = new Setting("Filter.DetectEdges");
-	private final Setting settingFilterEmboss = new Setting("Filter.Emboss");
-	private final Setting settingFilterGradientHorizontal = new Setting("Filter.Gradient.Horizontal");
-	private final Setting settingFilterGradientVertical = new Setting("Filter.Gradient.Vertical");
-	private final Setting settingFilterSharpen = new Setting("Filter.Sharpen");
+	private final Setting settingFilterBlur;
+	private final Setting settingFilterDetectEdges;
+	private final Setting settingFilterEmboss;
+	private final Setting settingFilterGradientHorizontal;
+	private final Setting settingFilterGradientVertical;
+	private final Setting settingFilterSharpen;
 	private Scene scene;
-	private final Sky sky = new Sky();
 	private Slider sliderPitch;
 	private Slider sliderYaw;
+	private byte[] pixels0;
+	private byte[] pixels1;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -110,7 +109,20 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 * Constructs a new {@code TestApplication} instance.
 	 */
 	public DayflowerApplication() {
-		
+		this.renderPass = new AtomicInteger();
+		this.clock = new Clock();
+		this.labelFPS = new Label("FPS: 0");
+		this.labelKernelTime = new Label("Kernel Time: 0 ms");
+		this.labelPosition = new Label("Position: [0.0, 0.0, 0.0]");
+		this.labelRenderPass = new Label("Pass: 0");
+		this.labelRenderTime = new Label("Time: 00:00:00");
+		this.labelSPS = new Label("SPS: 00000000");
+		this.settingFilterBlur = new Setting("Filter.Blur");
+		this.settingFilterDetectEdges = new Setting("Filter.DetectEdges");
+		this.settingFilterEmboss = new Setting("Filter.Emboss");
+		this.settingFilterGradientHorizontal = new Setting("Filter.Gradient.Horizontal");
+		this.settingFilterGradientVertical = new Setting("Filter.Gradient.Vertical");
+		this.settingFilterSharpen = new Setting("Filter.Sharpen");
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +140,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		if(!sceneFile.isFile() || Dayflower.getSceneCompile()) {
 			final
-			CompiledScene compiledScene = CompiledScene.compile(this.scene);
+			CompiledScene compiledScene = new SceneCompiler().compile(this.scene);
 			compiledScene.write(sceneFile);
 			
 			try {
@@ -143,7 +155,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		setKernelWidth(Dayflower.getKernelWidth());
 		setKernelHeight(Dayflower.getKernelHeight());
 		
-		this.abstractRendererKernel = new RendererKernel(getKernelWidth(), getKernelHeight(), this.scene.getCamera(), this.sky, sceneFilename, 1.0F);
+		this.abstractRendererKernel = new RendererKernel(getKernelWidth(), getKernelHeight(), this.scene.getCamera(), this.scene.getSky(), sceneFilename);
 		
 		final
 		Camera camera = this.scene.getCamera();
@@ -358,10 +370,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final Label labelSunDirectionWorldZ = new Label("Sun Direction Z:");
 		final Label labelTurbidity = new Label("Turbidity:");
 		
-		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
-		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 1.0D, this.sky.getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
-		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, this.sky.getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
-		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, this.sky.getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
+		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, this.scene.getSky().getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
+		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 1.0D, this.scene.getSky().getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
+		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, this.scene.getSky().getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
+		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, this.scene.getSky().getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
 		final CheckBox checkBoxToggleSunAndSky = JavaFX.newCheckBox("Toggle Sun & Sky", this::doOnCheckBoxToggleSunAndSky, true);
 		final CheckBox checkBoxToggleClouds = JavaFX.newCheckBox("Toggle Clouds", this::doOnCheckBoxToggleClouds, false);
@@ -478,13 +490,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final int renderPass = this.renderPass.get();
 		
 		final long renderTimeMillis = this.rendererRunnable.getRenderTimeMillis();
-		final long elapsedTimeMillis = System.currentTimeMillis() - this.currentTimeMillis.get();
 		final long fPS = fPSCounter.getFPS();
 		final long sPS = fPS * getKernelWidth() * getKernelHeight();
-		
-		final long hours = elapsedTimeMillis / (60L * 60L * 1000L);
-		final long minutes = (elapsedTimeMillis - (hours * 60L * 60L * 1000L)) / (60L * 1000L);
-		final long seconds = (elapsedTimeMillis - ((hours * 60L * 60L * 1000L) + (minutes * 60L * 1000L))) / 1000L;
 		
 		final Camera camera = this.scene.getCamera();
 		
@@ -496,7 +503,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		this.labelKernelTime.setText(String.format("Kernel Time: %s ms", Long.valueOf(renderTimeMillis)));
 		this.labelPosition.setText(String.format("Position: [%s, %s, %s]", x, y, z));
 		this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass)));
-		this.labelRenderTime.setText(String.format("Time: %02d:%02d:%02d", Long.valueOf(hours), Long.valueOf(minutes), Long.valueOf(seconds)));
+		this.labelRenderTime.setText(String.format("Time: %s", this.clock.getTime()));
 		this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));
 	}
 	
@@ -574,14 +581,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		if(isMouseDragging() || isMouseMoving() && isMouseRecentering() || camera.hasUpdated() || abstractRendererKernel.isResetRequired()) {
 			synchronized(this.pixels1) {
-				camera.resetUpdateStatus();
-				
 				abstractRendererKernel.updateResetStatus();
 				abstractRendererKernel.reset();
 				
 				this.renderPass.set(0);
-				
-				this.currentTimeMillis.set(System.currentTimeMillis());
+				this.clock.restart();
 			}
 		}
 	}
@@ -701,25 +705,25 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldX(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.sky.setX(newValue.floatValue());
+		this.scene.getSky().setX(newValue.floatValue());
 		this.abstractRendererKernel.updateSky();
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldY(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.sky.setY(newValue.floatValue());
+		this.scene.getSky().setY(newValue.floatValue());
 		this.abstractRendererKernel.updateSky();
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldZ(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.sky.setZ(newValue.floatValue());
+		this.scene.getSky().setZ(newValue.floatValue());
 		this.abstractRendererKernel.updateSky();
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderTurbidity(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.sky.setTurbidity(newValue.floatValue());
+		this.scene.getSky().setTurbidity(newValue.floatValue());
 		this.abstractRendererKernel.updateSky();
 	}
 	

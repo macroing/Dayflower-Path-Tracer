@@ -25,5 +25,32 @@ package org.dayflower.pathtracer.scene;
  * @author J&#246;rgen Lundgren
  */
 public interface Texture {
-//	This is a marker interface.
+//	TODO: Add Javadocs.
+	int RELATIVE_OFFSET_SIZE = 1;
+	
+//	TODO: Add Javadocs.
+	int RELATIVE_OFFSET_TYPE = 0;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns a {@code float} array representation of this {@code Texture} instance.
+	 * 
+	 * @return a {@code float} array representation of this {@code Texture} instance
+	 */
+	float[] toArray();
+	
+	/**
+	 * Returns the size of this {@code Texture} instance.
+	 * 
+	 * @return the size of this {@code Texture} instance
+	 */
+	int getSize();
+	
+	/**
+	 * Returns the type of this {@code Texture} instance.
+	 * 
+	 * @return the type of this {@code Texture} instance
+	 */
+	int getType();
 }

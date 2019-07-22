@@ -28,7 +28,21 @@ import org.dayflower.pathtracer.math.MathF;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Scene;
+import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Sky;
+import org.dayflower.pathtracer.scene.Surface;
+import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
+import org.dayflower.pathtracer.scene.compiler.CompiledScene;
+import org.dayflower.pathtracer.scene.compiler.SceneCompiler;
+import org.dayflower.pathtracer.scene.shape.Plane;
+import org.dayflower.pathtracer.scene.shape.Sphere;
+import org.dayflower.pathtracer.scene.shape.Terrain;
+import org.dayflower.pathtracer.scene.shape.Triangle;
+import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
+import org.dayflower.pathtracer.scene.texture.ConstantTexture;
+import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
+import org.dayflower.pathtracer.scene.texture.ImageTexture;
+import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 
 /**
  * An extension of the {@code AbstractKernel} class that performs Path Tracing, Ray Casting and Ray Marching.
@@ -76,9 +90,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private final CompiledScene compiledScene;
+	private final Sky sky;
 	private boolean isResetRequired;
 	private byte[] pixels;
-	private final CompiledScene compiledScene;
 	private double sunAndSkyZenithRelativeLuminance;
 	private double sunAndSkyZenithX;
 	private double sunAndSkyZenithY;
@@ -168,7 +183,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private final int[] shapeOffsets;
 	private int[] shapeOffsetsForPrimaryRay;
 	private final long[] subSamples;
-	private final Sky sky;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -265,7 +279,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code scene} are {@code null}
 	 */
 	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final Scene scene) {
-		this(width, height, camera, sky, CompiledScene.compile(scene));
+		this(width, height, camera, sky, new SceneCompiler().compile(scene));
 	}
 	
 	/**
@@ -281,24 +295,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code filename} are {@code null}
 	 */
 	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final String filename) {
-		this(width, height, camera, sky, filename, 1.0F);
-	}
-	
-	/**
-	 * Constructs a new {@code RendererKernel} instance.
-	 * <p>
-	 * If either {@code camera}, {@code sky} or {@code filename} are {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param width the width to use
-	 * @param height the height to use
-	 * @param camera the {@link Camera} to use
-	 * @param sky the {@link Sky} to use
-	 * @param filename the filename of the file to read from
-	 * @param scale the scale to use in the scene
-	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code filename} are {@code null}
-	 */
-	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final String filename, final float scale) {
-		this(width, height, camera, sky, CompiledScene.read(camera, new File(Objects.requireNonNull(filename, "filename == null"))).scale(scale));
+		this(width, height, camera, sky, CompiledScene.read(camera, new File(Objects.requireNonNull(filename, "filename == null"))));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -551,7 +548,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		getCamera().ifPresent(camera -> {
 			camera.update();
-			camera.resetUpdateStatus();
 			
 			put(this.cameraArray);
 		});
@@ -1064,16 +1060,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int selectedShapeIndex = getSelectedShapeIndex();
 		
 		if(selectedShapeIndex != -1) {
-			final int surfacesOffset = (int)(this.shapes[selectedShapeIndex + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+			final int surfacesOffset = (int)(this.shapes[selectedShapeIndex + Shape.RELATIVE_OFFSET_SURFACES_OFFSET]);
 			
-			final int oldMaterialOrdinal = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL]);
+			final int oldMaterialOrdinal = (int)(this.surfaces[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
 			final Material[] materials = Material.values();
 			
 			if(oldMaterialOrdinal >= 0 && oldMaterialOrdinal < materials.length) {
 				final int newMaterialOrdinal = (oldMaterialOrdinal + 1) % materials.length;
 				
-				this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL] = newMaterialOrdinal;
+				this.surfaces[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL] = newMaterialOrdinal;
 				
 				put(this.surfaces);
 			}
@@ -1344,7 +1340,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //				Retrieve the type of the current BVH node:
 				final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
 				
-				if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
+				if(type == BoundingVolumeHierarchy.NODE_TYPE_TREE) {
 //					This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
 					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
 				} else {
@@ -1423,11 +1419,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Retrieve the type of the shape:
 		final int type = (int)(this.shapes[shapesOffset]);
 		
-		if(type == CompiledScene.PLANE_TYPE) {
+		if(type == Plane.TYPE) {
 			return doIntersectPlane(shapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
-		} else if(type == CompiledScene.SPHERE_TYPE) {
+		} else if(type == Sphere.TYPE) {
 			return doIntersectSphere(shapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
-		} else if(type == CompiledScene.TERRAIN_TYPE) {
+		} else if(type == Terrain.TYPE) {
 			return doIntersectTerrain(shapesOffset, originX, originY, originZ, directionX, directionY, directionZ);
 		}
 		
@@ -1437,7 +1433,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private float doIntersectPlane(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
 //		Calculate the offset to the surface normal of the plane:
-		final int offsetSurfaceNormal = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET]);
+		final int offsetSurfaceNormal = (int)(this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET]);
 		
 //		Retrieve the surface normal of the plane:
 		final float surfaceNormalX = this.vector3Fs[offsetSurfaceNormal];
@@ -1450,7 +1446,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Check that the dot product is not 0.0:
 		if(dotProduct < 0.0F || dotProduct > 0.0F) {
 //			Calculate the offset to the point denoted as A of the plane:
-			final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_A_POINT3S_OFFSET]);
+			final int offsetA = (int)(this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_A_POINT3S_OFFSET]);
 			
 //			Retrieve the X-, Y- and Z-coordinates of the point A:
 			final float aX = this.point3Fs[offsetA];
@@ -1472,7 +1468,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private float doIntersectSphere(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
 //		Calculate the offset to the center position of the sphere:
-		final int offsetPosition = (int)(this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_POINT3S_OFFSET]);
+		final int offsetPosition = (int)(this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION_POINT3S_OFFSET]);
 		
 //		Retrieve the center position of the sphere:
 		final float positionX = this.point3Fs[offsetPosition];
@@ -1480,7 +1476,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float positionZ = this.point3Fs[offsetPosition + 2];
 		
 //		Retrieve the radius of the sphere:
-		final float radius = this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_RADIUS];
+		final float radius = this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_RADIUS];
 		
 //		Calculate the direction to the sphere center:
 		final float x = positionX - originX;
@@ -1520,12 +1516,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	private float doIntersectTerrain(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
-		final float frequency = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_FREQUENCY];
-		final float gain = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_GAIN];
-		final float minimum = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_MINIMUM];
-		final float maximum = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_MAXIMUM];
+		final float frequency = this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_FREQUENCY];
+		final float gain = this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_GAIN];
+		final float minimum = this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_MINIMUM];
+		final float maximum = this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_MAXIMUM];
 		
-		final int octaves = (int)(this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_OCTAVES]);
+		final int octaves = (int)(this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_OCTAVES]);
 		
 		float t = 0.0F;
 		
@@ -1558,9 +1554,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private float doIntersectTriangle(final int shapesOffset, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ) {
 //		Calculate the offsets to the points A, B and C of the triangle:
-		final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
-		final int offsetB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
-		final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
+		final int offsetA = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
+		final int offsetB = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
+		final int offsetC = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
 		
 //		Retrieve point A of the triangle:
 		final float aX = this.point3Fs[offsetA];
@@ -1695,7 +1691,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //				Retrieve the type of the current BVH node:
 				final int type = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
 				
-				if(type == CompiledScene.BVH_NODE_TYPE_TREE) {
+				if(type == BoundingVolumeHierarchy.NODE_TYPE_TREE) {
 //					This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
 					boundingVolumeHierarchyOffset = (int)(this.boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
 				} else {
@@ -2454,13 +2450,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private void doCalculateSurfaceProperties(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int shapesOffset) {
 		final int type = (int)(this.shapes[shapesOffset]);
 		
-		if(type == CompiledScene.TRIANGLE_TYPE) {
+		if(type == Triangle.TYPE) {
 			doCalculateSurfacePropertiesForTriangle(distance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
-		} else if(type == CompiledScene.PLANE_TYPE) {
+		} else if(type == Plane.TYPE) {
 			doCalculateSurfacePropertiesForPlane(distance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
-		} else if(type == CompiledScene.SPHERE_TYPE) {
+		} else if(type == Sphere.TYPE) {
 			doCalculateSurfacePropertiesForSphere(distance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
-		} else if(type == CompiledScene.TERRAIN_TYPE) {
+		} else if(type == Terrain.TYPE) {
 			doCalculateSurfacePropertiesForTerrain(distance, originX, originY, originZ, directionX, directionY, directionZ, shapesOffset);
 		}
 	}
@@ -2472,10 +2468,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
 //		TODO: Write explanation!
-		final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_A_POINT3S_OFFSET]);
-		final int offsetB = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_B_POINT3S_OFFSET]);
-		final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_C_POINT3S_OFFSET]);
-		final int offsetSurfaceNormal = (int)(this.shapes[shapesOffset + CompiledScene.PLANE_RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET]);
+		final int offsetA = (int)(this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_A_POINT3S_OFFSET]);
+		final int offsetB = (int)(this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_B_POINT3S_OFFSET]);
+		final int offsetC = (int)(this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_C_POINT3S_OFFSET]);
+		final int offsetSurfaceNormal = (int)(this.shapes[shapesOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET]);
 		
 //		Retrieve the point A of the plane:
 		final float a0X = this.point3Fs[offsetA];
@@ -2603,7 +2599,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
 //		Retrieve the offset of the position:
-		final int offsetPosition = (int)(this.shapes[shapesOffset + CompiledScene.SPHERE_RELATIVE_OFFSET_POSITION_POINT3S_OFFSET]);
+		final int offsetPosition = (int)(this.shapes[shapesOffset + Sphere.RELATIVE_OFFSET_POSITION_POINT3S_OFFSET]);
 		
 //		Retrieve the X-, Y- and Z-components of the position:
 		final float x = this.point3Fs[offsetPosition];
@@ -2656,12 +2652,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	private void doCalculateSurfacePropertiesForTerrain(final float distance, final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final int shapesOffset) {
-		final float frequency = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_FREQUENCY];
-		final float gain = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_GAIN];
-		final float minimum = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_MINIMUM];
-		final float maximum = this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_MAXIMUM];
+		final float frequency = this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_FREQUENCY];
+		final float gain = this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_GAIN];
+		final float minimum = this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_MINIMUM];
+		final float maximum = this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_MAXIMUM];
 		
-		final int octaves = (int)(this.shapes[shapesOffset + CompiledScene.TERRAIN_RELATIVE_OFFSET_OCTAVES]);
+		final int octaves = (int)(this.shapes[shapesOffset + Terrain.RELATIVE_OFFSET_OCTAVES]);
 		
 		final float surfaceIntersectionPointX = originX + directionX * distance;
 		final float surfaceIntersectionPointY = originY + directionY * distance;
@@ -2708,15 +2704,15 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
 //		Retrieve the offsets for the positions, UV-coordinates and surface normals:
-		final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
-		final int offsetB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
-		final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
-		final int offsetUVA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_A_POINT2S_OFFSET]);
-		final int offsetUVB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_B_POINT2S_OFFSET]);
-		final int offsetUVC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_UV_C_POINT2S_OFFSET]);
-		final int offsetSurfaceNormalA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_A_VECTOR3S_OFFSET]);
-		final int offsetSurfaceNormalB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_B_VECTOR3S_OFFSET]);
-		final int offsetSurfaceNormalC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_SURFACE_NORMAL_C_VECTOR3S_OFFSET]);
+		final int offsetA = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
+		final int offsetB = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
+		final int offsetC = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
+		final int offsetUVA = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_A_POINT2S_OFFSET]);
+		final int offsetUVB = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_B_POINT2S_OFFSET]);
+		final int offsetUVC = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_UV_C_POINT2S_OFFSET]);
+		final int offsetSurfaceNormalA = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_SURFACE_NORMAL_A_VECTOR3S_OFFSET]);
+		final int offsetSurfaceNormalB = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_SURFACE_NORMAL_B_VECTOR3S_OFFSET]);
+		final int offsetSurfaceNormalC = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_SURFACE_NORMAL_C_VECTOR3S_OFFSET]);
 		
 //		Calculate the Barycentric-coordinates:
 		final float aX = this.point3Fs[offsetA];
@@ -2835,20 +2831,20 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	private void doCalculateTextureColor(final int relativeOffsetTextures, final int shapesOffset) {
-		final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+		final int surfacesOffset = (int)(this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_SURFACES_OFFSET]);
 		final int texturesOffset = (int)(this.surfaces[surfacesOffset + relativeOffsetTextures]);
 		final int textureType = (int)(this.textures[texturesOffset]);
 		
-		if(textureType == CompiledScene.CHECKERBOARD_TEXTURE_TYPE) {
+		if(textureType == CheckerboardTexture.TYPE) {
 			doCalculateTextureColorForCheckerboardTexture(texturesOffset);
-		} else if(textureType == CompiledScene.CONSTANT_TEXTURE_TYPE) {
+		} else if(textureType == ConstantTexture.TYPE) {
 			doCalculateTextureColorForConstantTexture(texturesOffset);
-		} else if(textureType == CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_TYPE) {
+		} else if(textureType == FractionalBrownianMotionTexture.TYPE) {
 			doCalculateTextureColorForFractionalBrownianMotionTexture(texturesOffset);
-		} else if(textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
+		} else if(textureType == ImageTexture.TYPE) {
 //			doCalculateTextureColorForImageTexture(texturesOffset);
 			doCalculateTextureColorForImageTextureBilinearInterpolation(texturesOffset);
-		} else if(textureType == CompiledScene.SURFACE_NORMAL_TEXTURE_TYPE) {
+		} else if(textureType == SurfaceNormalTexture.TYPE) {
 			doCalculateTextureColorForSurfaceNormalTexture(texturesOffset);
 		}
 	}
@@ -2859,8 +2855,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 //		TODO: Write explanation!
 		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
-		final int offsetColor0 = texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_0;
-		final int offsetColor1 = texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_COLOR_1;
+		final int offsetColor0 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_0;
+		final int offsetColor1 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_1;
 		
 //		TODO: Write explanation!
 		final float u = this.intersections[offsetUVCoordinates];
@@ -2879,12 +2875,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float color1B = ((color1RGB >>  0) & 0xFF) / 255.0F;
 		
 //		TODO: Write explanation!
-		final float sU = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_U];
-		final float sV = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_SCALE_V];
+		final float sU = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_SCALE_U];
+		final float sV = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_SCALE_V];
 		
 //		TODO: Write explanation!
-		final float cosAngle = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_COS];
-		final float sinAngle = this.textures[texturesOffset + CompiledScene.CHECKERBOARD_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN];
+		final float cosAngle = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_RADIANS_COS];
+		final float sinAngle = this.textures[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_RADIANS_SIN];
 		
 //		TODO: Write explanation!
 		final float textureU = modulo((u * cosAngle - v * sinAngle) * sU);
@@ -2926,7 +2922,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private void doCalculateTextureColorForConstantTexture(final int texturesOffset) {
 //		Retrieve the R-, G- and B-component values of the texture:
-		final int colorRGB = (int)(this.textures[texturesOffset + CompiledScene.CONSTANT_TEXTURE_RELATIVE_OFFSET_COLOR]);
+		final int colorRGB = (int)(this.textures[texturesOffset + ConstantTexture.RELATIVE_OFFSET_COLOR]);
 		
 		final float colorR = ((colorRGB >> 16) & 0xFF) / 255.0F;
 		final float colorG = ((colorRGB >>  8) & 0xFF) / 255.0F;
@@ -2946,11 +2942,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		final int offsetSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
 //		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
-		final int offsetAddend = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_ADDEND;
-		final int offsetMultiplier = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_MULTIPLIER;
-		final int offsetFrequency = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_SCALE;
-		final int offsetGain = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_PERSISTENCE;
-		final int offsetOctaves = texturesOffset + CompiledScene.FRACTIONAL_BROWNIAN_MOTION_TEXTURE_RELATIVE_OFFSET_OCTAVES;
+		final int offsetAddend = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_ADDEND;
+		final int offsetMultiplier = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_MULTIPLIER;
+		final int offsetFrequency = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_SCALE;
+		final int offsetGain = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_PERSISTENCE;
+		final int offsetOctaves = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_OCTAVES;
 		
 		final float x = this.intersections[offsetSurfaceIntersectionPoint];
 		final float y = this.intersections[offsetSurfaceIntersectionPoint + 1];
@@ -3000,16 +2996,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float v = this.intersections[offsetUVCoordinates + 1];
 		
 //		TODO: Write explanation!
-		final float width = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_WIDTH];
-		final float height = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_HEIGHT];
+		final float width = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
+		final float height = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
 		
 //		TODO: Write explanation!
-		final float scaleU = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_U];
-		final float scaleV = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_V];
+		final float scaleU = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
+		final float scaleV = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
 		
 //		TODO: Write explanation!
-		final float cosAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_COS];
-		final float sinAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN];
+		final float cosAngle = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
+		final float sinAngle = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
 		
 //		TODO: Write explanation!
 		final float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
@@ -3018,7 +3014,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		TODO: Write explanation!
 		final int index = (int)((y * width + x));
 		
-		final float color = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index];
+		final float color = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index];
 		
 		final int rGB = (int)(color);
 		
@@ -3041,12 +3037,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 		final float u = this.intersections[offsetUVCoordinates];
 		final float v = this.intersections[offsetUVCoordinates + 1];
-		final float width = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_WIDTH];
-		final float height = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_HEIGHT];
-		final float scaleU = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_U];
-		final float scaleV = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_SCALE_V];
-//		final float cosAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_COS];
-//		final float sinAngle = this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_RADIANS_SIN];
+		final float width = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
+		final float height = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
+		final float scaleU = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
+		final float scaleV = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
+//		final float cosAngle = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
+//		final float sinAngle = this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
 		
 //		float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
 //		float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
@@ -3088,10 +3084,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int index10 = iy0 * (int)(width) + ix1;
 		final int index11 = iy1 * (int)(width) + ix1;
 		
-		final int rGB00 = (int)(this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index00]);
-		final int rGB01 = (int)(this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index01]);
-		final int rGB10 = (int)(this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index10]);
-		final int rGB11 = (int)(this.textures[texturesOffset + CompiledScene.IMAGE_TEXTURE_RELATIVE_OFFSET_DATA + index11]);
+		final int rGB00 = (int)(this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index00]);
+		final int rGB01 = (int)(this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index01]);
+		final int rGB10 = (int)(this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index10]);
+		final int rGB11 = (int)(this.textures[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index11]);
 		
 		final float r00 = ((rGB00 >> 16) & 0xFF) / 255.0F;
 		final float g00 = ((rGB00 >> 8) & 0xFF) / 255.0F;
@@ -3234,7 +3230,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			}
 			
 //			Retrieve the offset to the surfaces array for the given shape:
-			final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+			final int surfacesOffset = (int)(this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_SURFACES_OFFSET]);
 			
 //			Update the offset of the shape to skip to the current offset:
 			shapesOffsetToSkip = shapesOffset;
@@ -3260,7 +3256,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final float surfaceNormalShadingZ = this.intersections[offsetIntersectionSurfaceNormalShading + 2];
 			
 //			Calculate the albedo texture color for the intersected shape:
-			doCalculateTextureColor(CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
+			doCalculateTextureColor(Surface.RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
 			
 //			Get the color of the shape from the albedo texture color that was looked up:
 			float albedoColorR = this.temporaryColors[pixelIndex0];
@@ -3268,7 +3264,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			float albedoColorB = this.temporaryColors[pixelIndex0 + 2];
 			
 //			Retrieve the offset of the emission:
-			final int offsetEmission = surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_EMISSION;
+			final int offsetEmission = surfacesOffset + Surface.RELATIVE_OFFSET_EMISSION;
 			
 //			Retrieve the emission from the intersected shape:
 			final float emissionR = this.surfaces[offsetEmission];
@@ -3325,7 +3321,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			}
 			
 //			Retrieve the material type of the intersected shape:
-			final int material = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL]);
+			final int material = (int)(this.surfaces[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
 //			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
 			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
@@ -3730,13 +3726,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
 		
 //		Retrieve the offset to the surfaces array:
-		final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+		final int surfacesOffset = (int)(this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_SURFACES_OFFSET]);
 		
 //		Retrieve the noise amount from the current shape:
-		final float amount = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_NOISE_AMOUNT];
+		final float amount = this.surfaces[surfacesOffset + Surface.RELATIVE_OFFSET_NOISE_AMOUNT];
 		
 //		Retrieve the noise scale from the current shape:
-		final float scale = this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_NOISE_SCALE];
+		final float scale = this.surfaces[surfacesOffset + Surface.RELATIVE_OFFSET_NOISE_SCALE];
 		
 //		Check that the noise amount and noise scale are greater than 0.0:
 		if(/*this.isNormalMapping == 1 &&*/ amount > 0.0F && scale > 0.0F) {
@@ -3783,14 +3779,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 	
 	private void doPerformNormalMapping(final int shapesOffset) {
 //		Retrieve the offset in the textures array and the type of the texture:
-		final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
-		final int texturesOffset = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL]);
+		final int surfacesOffset = (int)(this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_SURFACES_OFFSET]);
+		final int texturesOffset = (int)(this.surfaces[surfacesOffset + Surface.RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL]);
 		final int textureType = (int)(this.textures[texturesOffset]);
 		
 //		Get the intersections offset:
 		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
 		
-		if(this.isNormalMapping == 1 && textureType == CompiledScene.IMAGE_TEXTURE_TYPE) {
+		if(this.isNormalMapping == 1 && textureType == ImageTexture.TYPE) {
 //			Calculate the texture color:
 			doCalculateTextureColorForImageTexture(texturesOffset);
 			
@@ -3812,7 +3808,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			
 			final int type = (int)(this.shapes[shapesOffset]);
 			
-			if(type == CompiledScene.SPHERE_TYPE) {
+			if(type == Sphere.TYPE) {
 				final float v0X = -2.0F * PI * wY;//wZ?
 				final float v0Y = 2.0F * PI * wX;
 				final float v0Z = 0.0F;
@@ -3946,7 +3942,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		}
 		
 //		Calculate the albedo texture color for the intersected shape:
-		doCalculateTextureColor(CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
+		doCalculateTextureColor(Surface.RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
 		
 //		Get the color of the shape from the albedo texture color that was looked up:
 		float albedoColorR = this.temporaryColors[pixelIndex];
@@ -4133,13 +4129,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 			depthCurrent++;
 			
 //			Retrieve the offset to the surfaces array for the given shape:
-			final int surfacesOffset = (int)(this.shapes[shapesOffset + CompiledScene.SHAPE_RELATIVE_OFFSET_SURFACES_OFFSET]);
+			final int surfacesOffset = (int)(this.shapes[shapesOffset + Shape.RELATIVE_OFFSET_SURFACES_OFFSET]);
 			
 //			Retrieve the material type of the intersected shape:
-			final int material = (int)(this.surfaces[surfacesOffset + CompiledScene.SURFACE_RELATIVE_OFFSET_MATERIAL]);
+			final int material = (int)(this.surfaces[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
 //			Calculate the albedo texture color for the intersected shape:
-			doCalculateTextureColor(CompiledScene.SURFACE_RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
+			doCalculateTextureColor(Surface.RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO, shapesOffset);
 			
 //			Get the color of the shape from the albedo texture color that was looked up:
 			float albedoColorR = this.temporaryColors[pixelIndex0];
@@ -4233,12 +4229,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 //			Retrieve the type of the shape:
 			final int type = (int)(this.shapes[shapesOffset]);
 			
-			if(type == CompiledScene.TRIANGLE_TYPE) {
+			if(type == Triangle.TYPE) {
 //				Retrieve the offsets of the surface intersection point and the points A, B and C in the intersections array:
 				final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-				final int offsetA = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
-				final int offsetB = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
-				final int offsetC = (int)(this.shapes[shapesOffset + CompiledScene.TRIANGLE_RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
+				final int offsetA = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET]);
+				final int offsetB = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET]);
+				final int offsetC = (int)(this.shapes[shapesOffset + Triangle.RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET]);
 				
 				final float cameraOrthoNormalBasisUX = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X];
 				final float cameraOrthoNormalBasisUY = this.cameraArray[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y];

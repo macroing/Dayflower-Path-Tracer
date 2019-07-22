@@ -30,6 +30,29 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class FractionalBrownianMotionTexture implements Texture {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_ADDEND = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_MULTIPLIER = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_OCTAVES = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_PERSISTENCE = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_SCALE = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 5;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final Color addend;
 	private final Color multiplier;
 	private final float persistence;
@@ -108,9 +131,47 @@ public final class FractionalBrownianMotionTexture implements Texture {
 		return this.scale;
 	}
 	
+	/**
+	 * Returns a {@code float} array representation of this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return a {@code float} array representation of this {@code FractionalBrownianMotionTexture} instance
+	 */
+	@Override
+	public float[] toArray() {
+		return new float[] {
+			getType(),
+			getSize(),
+			getAddend().multiply(255.0F).toRGB(),
+			getMultiplier().multiply(255.0F).toRGB(),
+			getPersistence(),
+			getScale(),
+			getOctaves()
+		};
+	}
+	
 //	TODO: Add Javadocs.
 	public int getOctaves() {
 		return this.octaves;
+	}
+	
+	/**
+	 * Returns the size of this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return the size of this {@code FractionalBrownianMotionTexture} instance
+	 */
+	@Override
+	public int getSize() {
+		return SIZE;
+	}
+	
+	/**
+	 * Returns the type of this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return the type of this {@code FractionalBrownianMotionTexture} instance
+	 */
+	@Override
+	public int getType() {
+		return TYPE;
 	}
 	
 	/**

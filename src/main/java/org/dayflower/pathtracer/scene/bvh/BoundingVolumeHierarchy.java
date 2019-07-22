@@ -29,11 +29,20 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.util.Strings;
 
 //TODO: Add Javadocs.
 public final class BoundingVolumeHierarchy {
+//	TODO: Add Javadocs.
+	public static final int NODE_TYPE_LEAF = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int NODE_TYPE_TREE = 1;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final Node root;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,8 +117,10 @@ public final class BoundingVolumeHierarchy {
 		
 //		TODO: Add Javadocs.
 		@Override
-		public boolean isLeaf() {
-			return true;
+		public List<Node> toList(final List<Node> nodes) {
+			nodes.add(this);
+			
+			return nodes;
 		}
 		
 //		TODO: Add Javadocs.
@@ -127,6 +138,18 @@ public final class BoundingVolumeHierarchy {
 		@Override
 		public String toString(final int indentation) {
 			return String.format("%sLeafNode", Strings.repeat(" ", indentation));
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
+		public boolean isLeaf() {
+			return true;
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
+		public int getSize() {
+			return 9 + this.triangles.size();
 		}
 		
 //		TODO: Add Javadocs.
@@ -160,6 +183,17 @@ public final class BoundingVolumeHierarchy {
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+//		TODO: Add Javadocs.
+		public final List<Node> toList() {
+			return toList(new ArrayList<>());
+		}
+		
+//		TODO: Add Javadocs.
+		public abstract List<Node> toList(final List<Node> nodes);
+		
+//		TODO: Add Javadocs.
+		public abstract String toString(final int indentation);
 		
 //		TODO: Add Javadocs.
 		public abstract boolean isLeaf();
@@ -215,7 +249,7 @@ public final class BoundingVolumeHierarchy {
 		}
 		
 //		TODO: Add Javadocs.
-		public abstract String toString(final int indentation);
+		public abstract int getSize();
 		
 //		TODO: Add Javadocs.
 		public final void setMaximum(final float maximumX, final float maximumY, final float maximumZ) {
@@ -250,8 +284,21 @@ public final class BoundingVolumeHierarchy {
 		
 //		TODO: Add Javadocs.
 		@Override
-		public boolean isLeaf() {
-			return false;
+		public List<Node> toList(final List<Node> nodes) {
+			nodes.add(this);
+			
+			final Node left = this.left;
+			final Node right = this.right;
+			
+			if(left != null) {
+				left.toList(nodes);
+			}
+			
+			if(right != null) {
+				right.toList(nodes);
+			}
+			
+			return nodes;
 		}
 		
 //		TODO: Add Javadocs.
@@ -284,6 +331,31 @@ public final class BoundingVolumeHierarchy {
 			stringBuilder.append(String.format("%s}%n", Strings.repeat(" ", indentation)));
 			
 			return stringBuilder.toString();
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
+		public boolean isLeaf() {
+			return false;
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
+		public int getSize() {
+			int size = 9;
+			
+			final Node left = this.left;
+			final Node right = this.right;
+			
+			if(left != null) {
+				size += left.getSize();
+			}
+			
+			if(right != null) {
+				size += right.getSize();
+			}
+			
+			return size;
 		}
 		
 //		TODO: Add Javadocs.

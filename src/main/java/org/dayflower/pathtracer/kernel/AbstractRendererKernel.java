@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Sky;
+import org.dayflower.pathtracer.scene.compiler.CompiledScene;
 
 /**
  * An abstract extension of the {@code AbstractKernel} class that performs Path Tracing, Ray Casting and Ray Marching.

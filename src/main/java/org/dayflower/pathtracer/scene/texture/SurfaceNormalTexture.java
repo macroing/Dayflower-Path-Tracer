@@ -29,6 +29,17 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class SurfaceNormalTexture implements Texture {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_IS_TANGENT_SPACE = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 4;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final boolean isTangentSpace;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,6 +107,40 @@ public final class SurfaceNormalTexture implements Texture {
 	 */
 	public boolean isTangentSpace() {
 		return this.isTangentSpace;
+	}
+	
+	/**
+	 * Returns a {@code float} array representation of this {@code SurfaceNormalTexture} instance.
+	 * 
+	 * @return a {@code float} array representation of this {@code SurfaceNormalTexture} instance
+	 */
+	@Override
+	public float[] toArray() {
+		return new float[] {
+			getType(),
+			getSize(),
+			isTangentSpace() ? 1.0F : 0.0F
+		};
+	}
+	
+	/**
+	 * Returns the size of this {@code SurfaceNormalTexture} instance.
+	 * 
+	 * @return the size of this {@code SurfaceNormalTexture} instance
+	 */
+	@Override
+	public int getSize() {
+		return SIZE;
+	}
+	
+	/**
+	 * Returns the type of this {@code SurfaceNormalTexture} instance.
+	 * 
+	 * @return the type of this {@code SurfaceNormalTexture} instance
+	 */
+	@Override
+	public int getType() {
+		return TYPE;
 	}
 	
 	/**

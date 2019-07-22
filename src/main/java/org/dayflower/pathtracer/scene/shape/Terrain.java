@@ -24,6 +24,29 @@ import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
 
 public final class Terrain extends Shape {
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_FREQUENCY = 2;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_GAIN = 3;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_MAXIMUM = 5;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_MINIMUM = 4;
+	
+//	TODO: Add Javadocs.
+	public static final int RELATIVE_OFFSET_OCTAVES = 6;
+	
+//	TODO: Add Javadocs.
+	public static final int SIZE = 7;
+	
+//	TODO: Add Javadocs.
+	public static final int TYPE = 4;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final float frequency;
 	private final float gain;
 	private final float maximum;
@@ -85,6 +108,16 @@ public final class Terrain extends Shape {
 	
 	public int getOctaves() {
 		return this.octaves;
+	}
+	
+	/**
+	 * Returns the size of this {@code Terrain} instance.
+	 * 
+	 * @return the size of this {@code Terrain} instance
+	 */
+	@Override
+	public int getSize() {
+		return SIZE;
 	}
 	
 	@Override
