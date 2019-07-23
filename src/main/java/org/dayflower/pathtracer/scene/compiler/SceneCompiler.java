@@ -55,7 +55,7 @@ public final class SceneCompiler {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
-	public CompiledScene compile(final Scene scene) {
+	public static CompiledScene compile(final Scene scene) {
 		final List<Point2F> point2Fs0 = doFindPoint2Fs(scene);
 		final List<Point3F> point3Fs0 = doFindPoint3Fs(scene);
 		final List<Surface> surfaces0 = doFindSurfaces(scene);
@@ -84,7 +84,7 @@ public final class SceneCompiler {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private float[] doCompileBoundingVolumeHierarchy(final Scene scene) {
+	private static float[] doCompileBoundingVolumeHierarchy(final Scene scene) {
 		doReportProgress("Compiling BoundingVolumeHierarchy...");
 		
 		final List<Shape> shapes = scene.getShapes();
@@ -208,7 +208,7 @@ public final class SceneCompiler {
 		return boundingVolumeHierarchyArray;
 	}
 	
-	private float[] doCompilePoint2Fs(final List<Point2F> point2Fs) {
+	private static float[] doCompilePoint2Fs(final List<Point2F> point2Fs) {
 		doReportProgress("Compiling Point2Fs...");
 		
 		final float[] point2Fs0 = new float[point2Fs.size() * 2];
@@ -225,7 +225,7 @@ public final class SceneCompiler {
 		return point2Fs0;
 	}
 	
-	private float[] doCompilePoint3Fs(final List<Point3F> point3Fs) {
+	private static float[] doCompilePoint3Fs(final List<Point3F> point3Fs) {
 		doReportProgress("Compiling Point3Fs...");
 		
 		final float[] point3Fs0 = new float[point3Fs.size() * 3];
@@ -243,7 +243,7 @@ public final class SceneCompiler {
 		return point3Fs0;
 	}
 	
-	private float[] doCompileShapes(final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs, final Scene scene) {
+	private static float[] doCompileShapes(final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs, final Scene scene) {
 		doReportProgress("Compiling Shapes...");
 		
 		final List<Float> floats = new ArrayList<>();
@@ -267,7 +267,7 @@ public final class SceneCompiler {
 		return floatArray;
 	}
 	
-	private float[] doCompileSurfaces(final List<Surface> surfaces, final List<Texture> textures) {
+	private static float[] doCompileSurfaces(final List<Surface> surfaces, final List<Texture> textures) {
 		doReportProgress("Compiling Surfaces...");
 		
 		final List<Float> floats = new ArrayList<>();
@@ -291,7 +291,7 @@ public final class SceneCompiler {
 		return floatArray;
 	}
 	
-	private float[] doCompileTextures(final List<Texture> textures) {
+	private static float[] doCompileTextures(final List<Texture> textures) {
 		doReportProgress("Compiling Textures...");
 		
 		final List<Float> floats = new ArrayList<>();
@@ -315,7 +315,7 @@ public final class SceneCompiler {
 		return floatArray;
 	}
 	
-	private float[] doCompileVector3Fs(final List<Vector3F> vector3Fs) {
+	private static float[] doCompileVector3Fs(final List<Vector3F> vector3Fs) {
 		doReportProgress("Compiling Vector3Fs...");
 		
 		final float[] vector3Fs0 = new float[vector3Fs.size() * 3];
@@ -333,7 +333,7 @@ public final class SceneCompiler {
 		return vector3Fs0;
 	}
 	
-	private float[] doToFloatArray(final Shape shape, final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
+	private static float[] doToFloatArray(final Shape shape, final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
 		if(shape instanceof Plane) {
 			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces, point3Fs, vector3Fs);
 		} else if(shape instanceof Sphere) {
@@ -347,7 +347,7 @@ public final class SceneCompiler {
 		}
 	}
 	
-	private float[] doToFloatArray(final Surface surface, final List<Texture> textures) {
+	private static float[] doToFloatArray(final Surface surface, final List<Texture> textures) {
 		return new float[] {
 			surface.getEmission().r,
 			surface.getEmission().g,
@@ -360,7 +360,7 @@ public final class SceneCompiler {
 		};
 	}
 	
-	private float[] doToFloatArrayPlane(final Plane plane, final List<Surface> surfaces, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
+	private static float[] doToFloatArrayPlane(final Plane plane, final List<Surface> surfaces, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
 		return new float[] {
 			Plane.TYPE,
 			doGetOffset(plane.getSurface(), surfaces),
@@ -371,7 +371,7 @@ public final class SceneCompiler {
 		};
 	}
 	
-	private float[] doToFloatArraySphere(final Sphere sphere, final List<Surface> surfaces, final Map<Point3F, Integer> point3Fs) {
+	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Surface> surfaces, final Map<Point3F, Integer> point3Fs) {
 		return new float[] {
 			Sphere.TYPE,
 			doGetOffset(sphere.getSurface(), surfaces),
@@ -380,7 +380,7 @@ public final class SceneCompiler {
 		};
 	}
 	
-	private float[] doToFloatArrayTerrain(final Terrain terrain, final List<Surface> surfaces) {
+	private static float[] doToFloatArrayTerrain(final Terrain terrain, final List<Surface> surfaces) {
 		return new float[] {
 			Terrain.TYPE,
 			doGetOffset(terrain.getSurface(), surfaces),
@@ -392,7 +392,7 @@ public final class SceneCompiler {
 		};
 	}
 	
-	private float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
+	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
 		return new float[] {
 			Triangle.TYPE,
 			doGetOffset(triangle.getSurface(), surfaces),
@@ -408,7 +408,7 @@ public final class SceneCompiler {
 		};
 	}
 	
-	private int doGetOffset(final Shape shape, final List<Shape> shapes) {
+	private static int doGetOffset(final Shape shape, final List<Shape> shapes) {
 		for(int i = 0, j = 0; i < shapes.size(); i++) {
 			final Shape shape0 = shapes.get(i);
 			
@@ -422,7 +422,7 @@ public final class SceneCompiler {
 		throw new IllegalArgumentException(String.format("No such Shape found: %s", shape));
 	}
 	
-	private int doGetOffset(final Surface surface, final List<Surface> surfaces) {
+	private static int doGetOffset(final Surface surface, final List<Surface> surfaces) {
 		for(int i = 0, j = 0; i < surfaces.size(); i++) {
 			final Surface surface0 = surfaces.get(i);
 			
@@ -436,7 +436,7 @@ public final class SceneCompiler {
 		throw new IllegalArgumentException(String.format("No such Surface found: %s", surface));
 	}
 	
-	private int doGetOffset(final Texture texture, final List<Texture> textures) {
+	private static int doGetOffset(final Texture texture, final List<Texture> textures) {
 		for(int i = 0, j = 0; i < textures.size(); i++) {
 			final Texture texture0 = textures.get(i);
 			
@@ -450,7 +450,7 @@ public final class SceneCompiler {
 		throw new IllegalArgumentException(String.format("No such Texture found: %s", texture));
 	}
 	
-	private int doSize(final int type) {
+	private static int doSize(final int type) {
 		switch(type) {
 			case Plane.TYPE:
 				return Plane.SIZE;
@@ -465,7 +465,7 @@ public final class SceneCompiler {
 		}
 	}
 	
-	private int[] doCompileShapeOffsets(final Scene scene) {
+	private static int[] doCompileShapeOffsets(final Scene scene) {
 		final List<Shape> shapes = scene.getShapes();
 		
 		int count = 0;
@@ -489,7 +489,7 @@ public final class SceneCompiler {
 		return shapeOffsets;
 	}
 	
-	private List<Point2F> doFindPoint2Fs(final Scene scene) {
+	private static List<Point2F> doFindPoint2Fs(final Scene scene) {
 		final Set<Point2F> point2Fs = new LinkedHashSet<>();
 		
 		for(final Shape shape : scene.getShapes()) {
@@ -509,7 +509,7 @@ public final class SceneCompiler {
 		return new ArrayList<>(point2Fs);
 	}
 	
-	private List<Point3F> doFindPoint3Fs(final Scene scene) {
+	private static List<Point3F> doFindPoint3Fs(final Scene scene) {
 		final Set<Point3F> point3Fs = new LinkedHashSet<>();
 		
 		for(final Shape shape : scene.getShapes()) {
@@ -545,7 +545,7 @@ public final class SceneCompiler {
 		return new ArrayList<>(point3Fs);
 	}
 	
-	private List<Surface> doFindSurfaces(final Scene scene) {
+	private static List<Surface> doFindSurfaces(final Scene scene) {
 		final Set<Surface> surfaces = new LinkedHashSet<>();
 		
 		for(final Shape shape : scene.getShapes()) {
@@ -557,7 +557,7 @@ public final class SceneCompiler {
 		return new ArrayList<>(surfaces);
 	}
 	
-	private List<Texture> doFindTextures(final Scene scene) {
+	private static List<Texture> doFindTextures(final Scene scene) {
 		final Set<Texture> textures = new LinkedHashSet<>();
 		
 		for(final Shape shape : scene.getShapes()) {
@@ -573,7 +573,7 @@ public final class SceneCompiler {
 		return new ArrayList<>(textures);
 	}
 	
-	private List<Vector3F> doFindVector3Fs(final Scene scene) {
+	private static List<Vector3F> doFindVector3Fs(final Scene scene) {
 		final Set<Vector3F> vector3Fs = new LinkedHashSet<>();
 		
 		for(final Shape shape : scene.getShapes()) {
@@ -599,7 +599,7 @@ public final class SceneCompiler {
 		return new ArrayList<>(vector3Fs);
 	}
 	
-	private Map<Point2F, Integer> doCreatePoint2FMapping(final List<Point2F> point2Fs) {
+	private static Map<Point2F, Integer> doCreatePoint2FMapping(final List<Point2F> point2Fs) {
 		final Map<Point2F, Integer> point2FMapping = new HashMap<>();
 		
 		for(int i = 0, j = 0; i < point2Fs.size(); i++, j += 2) {
@@ -611,7 +611,7 @@ public final class SceneCompiler {
 		return point2FMapping;
 	}
 	
-	private Map<Point3F, Integer> doCreatePoint3FMapping(final List<Point3F> point3Fs) {
+	private static Map<Point3F, Integer> doCreatePoint3FMapping(final List<Point3F> point3Fs) {
 		final Map<Point3F, Integer> point3FMapping = new HashMap<>();
 		
 		for(int i = 0, j = 0; i < point3Fs.size(); i++, j += 3) {
@@ -623,7 +623,7 @@ public final class SceneCompiler {
 		return point3FMapping;
 	}
 	
-	private Map<Vector3F, Integer> doCreateVector3FMapping(final List<Vector3F> vector3Fs) {
+	private static Map<Vector3F, Integer> doCreateVector3FMapping(final List<Vector3F> vector3Fs) {
 		final Map<Vector3F, Integer> vector3FMapping = new HashMap<>();
 		
 		for(int i = 0, j = 0; i < vector3Fs.size(); i++, j += 3) {
@@ -635,7 +635,7 @@ public final class SceneCompiler {
 		return vector3FMapping;
 	}
 	
-	private void doReorderShapes(final float[] boundingVolumeHierarchy, final float[] shapes, final int[] shapeOffsets) {
+	private static void doReorderShapes(final float[] boundingVolumeHierarchy, final float[] shapes, final int[] shapeOffsets) {
 		doReportProgress("Reordering Shapes...");
 		
 		if(boundingVolumeHierarchy.length > 9) {
@@ -690,7 +690,7 @@ public final class SceneCompiler {
 		doReportProgress(" Done.\n");
 	}
 	
-	private void doReportProgress(final String message) {
+	private static void doReportProgress(final String message) {
 		System.out.print(message);
 	}
 }

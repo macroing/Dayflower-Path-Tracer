@@ -1,3 +1,7 @@
+2019-07-23  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	Optimize the rendering speed. Two of the arrays in RendererKernel have been changed to use private memory space, instead of local memory space.
+
 2019-07-21  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* CHANGE:	The Bounding Volume Hierarchy (BVH) building algorithm has been optimized.
