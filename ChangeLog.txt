@@ -1,6 +1,7 @@
 2019-07-23  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
-	* CHANGE:	Optimize the rendering speed. Two of the arrays in RendererKernel have been changed to use private memory space, instead of local memory space.
+	* CHANGE:	The rendering speed has been optimized. Two of the arrays in RendererKernel have been changed to use private memory space,
+				instead of local memory space. Doing the same change with the other arrays seems to undo this optimization.
 
 2019-07-21  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
