@@ -29,7 +29,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.util.Strings;
 
