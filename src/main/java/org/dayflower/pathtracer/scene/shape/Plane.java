@@ -23,7 +23,6 @@ import java.util.Objects;
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
-import org.dayflower.pathtracer.scene.Surface;
 
 /**
  * A {@link Shape} implementation that implements a plane.
@@ -31,21 +30,21 @@ import org.dayflower.pathtracer.scene.Surface;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Plane extends Shape {
+public final class Plane implements Shape {
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_A_POINT3S_OFFSET = 2;
+	public static final int RELATIVE_OFFSET_A_OFFSET = 0;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_B_POINT3S_OFFSET = 3;
+	public static final int RELATIVE_OFFSET_B_OFFSET = 1;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_C_POINT3S_OFFSET = 4;
+	public static final int RELATIVE_OFFSET_C_OFFSET = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_VECTOR3S_OFFSET = 5;
+	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_OFFSET = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int SIZE = 6;
+	public static final int SIZE = 4;
 	
 //	TODO: Add Javadocs.
 	public static final int TYPE = 3;
@@ -85,9 +84,7 @@ public final class Plane extends Shape {
 	 * @param c a {@code Point3} denoting the point A
 	 * @throws NullPointerException thrown if, and only if, either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}
 	 */
-	public Plane(final Surface surface, final Point3F a, final Point3F b, final Point3F c) {
-		super(surface);
-		
+	public Plane(final Point3F a, final Point3F b, final Point3F c) {
 		this.a = Objects.requireNonNull(a, "a == null");
 		this.b = Objects.requireNonNull(b, "b == null");
 		this.c = Objects.requireNonNull(c, "c == null");
@@ -130,7 +127,7 @@ public final class Plane extends Shape {
 	 */
 	@Override
 	public String toString() {
-		return String.format("Plane: [A=%s], [B=%s], [C=%s], [SurfaceNormal=%s]", this.a, this.b, this.c, this.surfaceNormal);
+		return String.format("new Plane(%s, %s, %s)", this.a, this.b, this.c);
 	}
 	
 	/**
@@ -156,8 +153,6 @@ public final class Plane extends Shape {
 			return true;
 		} else if(!(object instanceof Plane)) {
 			return false;
-		} else if(!Objects.equals(getSurface(), Plane.class.cast(object).getSurface())) {
-			return false;
 		} else if(!Objects.equals(this.a, Plane.class.cast(object).a)) {
 			return false;
 		} else if(!Objects.equals(this.b, Plane.class.cast(object).b)) {
@@ -182,12 +177,22 @@ public final class Plane extends Shape {
 	}
 	
 	/**
+	 * Returns the type of this {@code Plane} instance.
+	 * 
+	 * @return the type of this {@code Plane} instance
+	 */
+	@Override
+	public int getType() {
+		return TYPE;
+	}
+	
+	/**
 	 * Returns a hash code for this {@code Plane} instance.
 	 * 
 	 * @return a hash code for this {@code Plane} instance
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(getSurface(), this.a, this.b, this.c, this.surfaceNormal);
+		return Objects.hash(this.a, this.b, this.c, this.surfaceNormal);
 	}
 }

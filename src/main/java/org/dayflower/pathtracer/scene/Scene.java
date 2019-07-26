@@ -19,6 +19,7 @@
 package org.dayflower.pathtracer.scene;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,7 +33,7 @@ import java.util.Objects;
  */
 public final class Scene {
 	private final Camera camera;
-	private final List<Shape> shapes;
+	private final List<Primitive> primitives;
 	private final Sky sky;
 	private final String name;
 	
@@ -48,7 +49,7 @@ public final class Scene {
 	 */
 	public Scene(final String name) {
 		this.camera = new Camera();
-		this.shapes = new ArrayList<>();
+		this.primitives = new ArrayList<>();
 		this.sky = new Sky();
 		this.name = Objects.requireNonNull(name, "name == null");
 	}
@@ -65,14 +66,14 @@ public final class Scene {
 	}
 	
 	/**
-	 * Returns a {@code List} with all currently added {@link Shape}s.
+	 * Returns a {@code List} with all currently added {@link Primitive}s.
 	 * <p>
 	 * Modifying the returned {@code List} will not affect this {@code Scene} instance.
 	 * 
-	 * @return a {@code List} with all currently added {@code Shape}s
+	 * @return a {@code List} with all currently added {@code Primitive}s
 	 */
-	public List<Shape> getShapes() {
-		return new ArrayList<>(this.shapes);
+	public List<Primitive> getPrimitives() {
+		return new ArrayList<>(this.primitives);
 	}
 	
 	/**
@@ -94,14 +95,54 @@ public final class Scene {
 	}
 	
 	/**
-	 * Adds {@code shape} to this {@code Scene} instance.
+	 * Adds {@code primitive} to this {@code Scene} instance.
 	 * <p>
-	 * If {@code shape} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * If {@code primitive} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param shape the {@link Shape} to add
-	 * @throws NullPointerException thrown if, and only if, {@code shape} is {@code null}
+	 * @param primitive the {@link Primitive} to add
+	 * @throws NullPointerException thrown if, and only if, {@code primitive} is {@code null}
 	 */
-	public void addShape(final Shape shape) {
-		this.shapes.add(Objects.requireNonNull(shape, "shape == null"));
+	public void addPrimitive(final Primitive primitive) {
+		this.primitives.add(Objects.requireNonNull(primitive, "primitive == null"));
+	}
+	
+	/**
+	 * Adds all {@link Primitive}s in {@code primitives} to this {@code Scene} instance.
+	 * <p>
+	 * If either {@code primitives} or a {@code Primitive} in {@code primitives} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param primitives the {@code Primitive}s to add
+	 * @throws NullPointerException thrown if, and only if, either {@code primitives} or a {@code Primitive} in {@code primitives} are {@code null}
+	 */
+	public void addPrimitives(final Collection<Primitive> primitives) {
+		for(final Primitive primitive : primitives) {
+			addPrimitive(primitive);
+		}
+	}
+	
+	/**
+	 * Removes {@code primitive} from this {@code Scene} instance.
+	 * <p>
+	 * If {@code primitive} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param primitive the {@link Primitive} to remove
+	 * @throws NullPointerException thrown if, and only if, {@code primitive} is {@code null}
+	 */
+	public void removePrimitive(final Primitive primitive) {
+		this.primitives.remove(Objects.requireNonNull(primitive, "primitive == null"));
+	}
+	
+	/**
+	 * Removes all {@link Primitive}s in {@code primitives} from this {@code Scene} instance.
+	 * <p>
+	 * If either {@code primitives} or a {@code Primitive} in {@code primitives} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param primitives the {@code Primitive}s to remove
+	 * @throws NullPointerException thrown if, and only if, either {@code primitives} or a {@code Primitive} in {@code primitives} are {@code null}
+	 */
+	public void removePrimitives(final Collection<Primitive> primitives) {
+		for(final Primitive primitive : primitives) {
+			removePrimitive(primitive);
+		}
 	}
 }

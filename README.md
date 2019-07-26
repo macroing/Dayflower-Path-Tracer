@@ -1,5 +1,5 @@
-Dayflower - Path Tracer v.0.0.38
-================================
+Dayflower - Path Tracer v.0.1.0
+===============================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
 The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ambient Occlusion, Ray Casting, Ray Marching and Ray Tracing may be used.
@@ -170,16 +170,9 @@ In the ``settings.properties`` file you can change a few settings. The supported
 * ``scene.name`` - The name of the scene to use.
 
 The following is a list of scene names that can be used.
-* ``Car_Scene``
-* ``Cornell_Box_Scene``
-* ``Cornell_Box_Scene_2``
-* ``Girl_Scene``
 * ``House_Scene``
-* ``House_Scene_2``
-* ``House_Scene_3``
 * ``Material_Showcase_Scene`` (Default)
 * ``Monkey_Scene``
-* ``Terrain_Scene``
 
 ______________________________________________________________________________________
 

@@ -31,10 +31,10 @@ import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Material;
+import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
-import org.dayflower.pathtracer.scene.shape.Mesh;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Triangle;
@@ -44,6 +44,7 @@ import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
+import org.dayflower.pathtracer.scene.wavefront.ObjectLoader;
 
 final class Scenes {
 	private Scenes() {
@@ -52,6 +53,197 @@ final class Scenes {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	public static Scene getSceneByName(final String name) {
+		switch(name) {
+			case "House_Scene":
+			case "House_Scene.scene":
+				return newHouseScene();
+			case "Material_Showcase_Scene":
+			case "Material_Showcase_Scene.scene":
+				return newMaterialShowcaseScene();
+			case "Monkey_Scene":
+			case "Monkey_Scene.scene":
+				return newMonkeyScene();
+			default:
+				return newMaterialShowcaseScene();
+		}
+	}
+	
+	public static Scene newHouseScene() {
+//		Ground:
+		final Texture textureAlbedoPlane = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture textureEmissionPlane = new ConstantTexture(Color.BLACK);
+		final Texture textureNormalPlane = new ConstantTexture(Color.BLACK);
+		
+		final Texture textureAlbedo = new ConstantTexture(Color.WHITE);
+		final Texture textureEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_floor_texture = new CheckerboardTexture(Color.GRAY, Color.WHITE);
+		final Texture textureEmission_floor_texture = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_floor_texture = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_wire_115115115 = new ConstantTexture(Color.GRAY);
+		final Texture textureEmission_wire_115115115 = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_wire_115115115 = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_texture_1 = new CheckerboardTexture(Color.RED, Color.WHITE);
+		final Texture textureEmission_texture_1 = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_texture_1 = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_texture_2 = new CheckerboardTexture(Color.GREEN, Color.WHITE);
+		final Texture textureEmission_texture_2 = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_texture_2 = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_03___Default = new CheckerboardTexture(Color.BLUE, Color.WHITE);
+		final Texture textureEmission_03___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_03___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_crome = new ConstantTexture(Color.GRAY);
+		final Texture textureEmission_crome = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_crome = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_table_wood_texture = new ConstantTexture(Color.ORANGE);
+		final Texture textureEmission_table_wood_texture = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_table_wood_texture = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_sopha_wood_texture = new ConstantTexture(Color.ORANGE);
+		final Texture textureEmission_sopha_wood_texture = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_sopha_wood_texture = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_20___Default = new ConstantTexture(Color.ORANGE);
+		final Texture textureEmission_20___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_20___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureAlbedo_double_sopha_wood_right_texture = new ConstantTexture(Color.GRAY);
+		final Texture textureEmission_double_sopha_wood_right_texture = new ConstantTexture(Color.BLACK);
+		final Texture textureNormal_double_sopha_wood_right_texture = new ConstantTexture(Color.BLACK);
+		
+		final Surface surface = new Surface(Material.LAMBERTIAN_DIFFUSE, textureAlbedo, textureEmission, textureNormal);
+		final Surface surface_floor_texture = new Surface(Material.CLEAR_COAT, textureAlbedo_floor_texture, textureEmission_floor_texture, textureNormal_floor_texture);
+		final Surface surface_wire_115115115 = new Surface(Material.PHONG_METAL, textureAlbedo_wire_115115115, textureEmission_wire_115115115, textureNormal_wire_115115115);
+		final Surface surface_texture_1 = new Surface(Material.LAMBERTIAN_DIFFUSE, textureAlbedo_texture_1, textureEmission_texture_1, textureNormal_texture_1);
+		final Surface surface_texture_2 = new Surface(Material.LAMBERTIAN_DIFFUSE, textureAlbedo_texture_2, textureEmission_texture_2, textureNormal_texture_2);
+		final Surface surface_03___Default = new Surface(Material.LAMBERTIAN_DIFFUSE, textureAlbedo_03___Default, textureEmission_03___Default, textureNormal_03___Default);
+		final Surface surface_crome = new Surface(Material.LAMBERTIAN_DIFFUSE, textureAlbedo_crome, textureEmission_crome, textureNormal_crome);
+		final Surface surface_table_wood_texture = new Surface(Material.CLEAR_COAT, textureAlbedo_table_wood_texture, textureEmission_table_wood_texture, textureNormal_table_wood_texture);
+		final Surface surface_sopha_wood_texture = new Surface(Material.PHONG_METAL, textureAlbedo_sopha_wood_texture, textureEmission_sopha_wood_texture, textureNormal_sopha_wood_texture);
+		final Surface surface_20___Default = new Surface(Material.LAMBERTIAN_DIFFUSE, textureAlbedo_20___Default, textureEmission_20___Default, textureNormal_20___Default);
+		final Surface surface_double_sopha_wood_right_texture = new Surface(Material.PHONG_METAL, textureAlbedo_double_sopha_wood_right_texture, textureEmission_double_sopha_wood_right_texture, textureNormal_double_sopha_wood_right_texture);
+		
+		final Map<String, Surface> surfaces = new HashMap<>();
+		
+		surfaces.put("floor_texture", surface_floor_texture);
+		surfaces.put("wire_115115115", surface_wire_115115115);
+		surfaces.put("texture_1", surface_texture_1);
+		surfaces.put("texture_2", surface_texture_2);
+		surfaces.put("03___Default", surface_03___Default);
+		surfaces.put("crome", surface_crome);
+		surfaces.put("table_wood_texture", surface_table_wood_texture);
+		surfaces.put("sopha_wood_texture", surface_sopha_wood_texture);
+		surfaces.put("20___Default", surface_20___Default);
+		surfaces.put("double_sopha_wood_right_texture", surface_double_sopha_wood_right_texture);
+		
+		final List<Primitive> primitives = ObjectLoader.load(Dayflower.getModelFilename("house interior.obj"), 1.0F, (groupName, materialName) -> surfaces.getOrDefault(materialName, surface), 0.0F, 10.0F, 0.0F);
+		
+		final
+		Scene scene = new Scene("House_Scene");
+		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(Material.LAMBERTIAN_DIFFUSE, textureAlbedoPlane, textureEmissionPlane, textureNormalPlane, 0.0F, 0.0F)));
+		scene.addPrimitives(primitives);
+		
+		return scene;
+	}
+	
+	public static Scene newMaterialShowcaseScene() {
+//		Ground:
+		final Texture texturePlaneAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture texturePlaneEmission = new ConstantTexture(Color.BLACK);
+		final Texture texturePlaneNormal = new ConstantTexture(Color.BLACK);
+		
+//		Light:
+		final Texture textureLightAlbedo = new FractionalBrownianMotionTexture(new Color(0.25F, 0.125F, 0.0F), Color.WHITE, 0.5F, 0.1F, 16);
+		final Texture textureLightEmission = new FractionalBrownianMotionTexture(new Color(0.25F, 0.125F, 0.0F), Color.WHITE, 0.5F, 0.1F, 16);
+		final Texture textureLightNormal = new ConstantTexture(Color.BLACK);
+		
+//		Material showcase:
+		final Texture textureSphere01Albedo = new ConstantTexture(Color.GRAY);
+		final Texture textureSphere01Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere01Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere02Albedo = new ConstantTexture(Color.GRAY);
+		final Texture textureSphere02Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere02Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere03Albedo = new ConstantTexture(Color.GRAY);
+		final Texture textureSphere03Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere03Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere04Albedo = new ConstantTexture(Color.GRAY);
+		final Texture textureSphere04Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere04Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere05Albedo = new ConstantTexture(Color.GRAY);
+		final Texture textureSphere05Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere05Normal = new ConstantTexture(Color.BLACK);
+		
+//		Texture showcase:
+		final Texture textureSphere06Albedo = new CheckerboardTexture(Color.GRAY, Color.WHITE);
+		final Texture textureSphere06Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere06Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere07Albedo = new ConstantTexture(Color.RED);
+		final Texture textureSphere07Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere07Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere08Albedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);
+		final Texture textureSphere08Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere08Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere09Albedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 1.0F, 1.0F);
+		final Texture textureSphere09Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere09Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere10Albedo = new SurfaceNormalTexture();
+		final Texture textureSphere10Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere10Normal = new ConstantTexture(Color.BLACK);
+		
+//		Normal Mapping showcase:
+		final Texture textureSphere11Albedo = new ConstantTexture(Color.GRAY);
+		final Texture textureSphere11Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere11Normal = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
+		final Texture textureSphere12Albedo = new ConstantTexture(Color.WHITE);
+		final Texture textureSphere12Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere12Normal = new ConstantTexture(Color.BLACK);
+		
+		final
+		Scene scene = new Scene("Material_Showcase_Scene");
+		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(Material.LAMBERTIAN_DIFFUSE, texturePlaneAlbedo, texturePlaneEmission, texturePlaneNormal, 0.0F, 0.0F)));
+		
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F( 40.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.CLEAR_COAT,         textureSphere01Albedo, textureSphere01Emission, textureSphere01Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F( 80.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.GLASS,              textureSphere02Albedo, textureSphere02Emission, textureSphere02Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(120.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.LAMBERTIAN_DIFFUSE, textureSphere03Albedo, textureSphere03Emission, textureSphere03Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(160.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.MIRROR,             textureSphere04Albedo, textureSphere04Emission, textureSphere04Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(200.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.PHONG_METAL,        textureSphere05Albedo, textureSphere05Emission, textureSphere05Normal, 0.0F,  0.0F)));
+		
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(240.0F, 500.0F, 20.0F), 250.0F), new Surface(Material.LAMBERTIAN_DIFFUSE, textureLightAlbedo, textureLightEmission, textureLightNormal, 0.0F,  0.0F)));
+		
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(280.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.LAMBERTIAN_DIFFUSE, textureSphere06Albedo, textureSphere06Emission, textureSphere06Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(320.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.LAMBERTIAN_DIFFUSE, textureSphere07Albedo, textureSphere07Emission, textureSphere07Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(360.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.LAMBERTIAN_DIFFUSE, textureSphere08Albedo, textureSphere08Emission, textureSphere08Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(400.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.LAMBERTIAN_DIFFUSE, textureSphere09Albedo, textureSphere09Emission, textureSphere09Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(440.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.LAMBERTIAN_DIFFUSE, textureSphere10Albedo, textureSphere10Emission, textureSphere10Normal, 0.0F,  0.0F)));
+		
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(520.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.MIRROR,             textureSphere11Albedo, textureSphere11Emission, textureSphere11Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(560.0F,  16.5F, 20.0F),  16.5F), new Surface(Material.GLASS,              textureSphere12Albedo, textureSphere12Emission, textureSphere12Normal, 1.0F, 16.0F)));
+		
+		scene.getCamera().setEye(295.0F, 42.0F, 332.6F);
+		
+		return scene;
+	}
+	
+	public static Scene newMonkeyScene() {
+		final Texture textureGroundAlbedo = new ConstantTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));
+		final Texture textureGroundEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureMonkeyAlbedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.1F, 16);
+		final Texture textureMonkeyEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
+		
+		final Surface surface = new Surface(Material.PHONG_METAL, textureMonkeyAlbedo, textureMonkeyEmission, textureMonkeyNormal, 0.0F, 0.0F);
+		
+		final List<Primitive> primitives = ObjectLoader.load(Dayflower.getModelFilename("smoothMonkey2.obj"), 100.0F, (groupName, materialName) -> surface, 0.0F, 100.0F, 0.0F);
+		
+		final
+		Scene scene = new Scene("Monkey_Scene");
+		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(Material.MIRROR, textureGroundAlbedo, textureGroundEmission, textureGroundNormal, 1.0F, 4.0F)));
+		scene.addPrimitives(primitives);
+		
+		return scene;
+	}
+	
+	/*
 	public static Scene getSceneByName(final String name) {
 		switch(name) {
 			case "Car_Scene":
@@ -97,7 +289,9 @@ final class Scenes {
 				return newMaterialShowcaseScene();
 		}
 	}
+	*/
 	
+	/*
 	public static Scene newCarScene() {
 		final Texture textureGroundAlbedo = new ConstantTexture(Color.GRAY);//new FractionalBrownianMotionTexture(new Color(0.5F, 0.3F, 0.1F), Color.WHITE, 0.5F, 0.8F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormalMap = new ConstantTexture(Color.BLACK);
@@ -224,7 +418,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newCornellBoxScene() {
 		final Texture textureAlbedo0 = new ConstantTexture(new Color(0.75F, 0.25F, 0.25F));
 		final Texture textureAlbedo1 = new ConstantTexture(new Color(0.25F, 0.25F, 0.75F));
@@ -251,15 +447,16 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
-	public static Scene newCornellBoxScene2() {
-		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture textureGroundNormalMap = new ConstantTexture(Color.BLACK);
+//	public static Scene newCornellBoxScene2() {
+//		final Texture textureGroundAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+//		final Texture textureGroundNormalMap = new ConstantTexture(Color.BLACK);
 		
-		final Texture textureAlbedo0 = new ConstantTexture(Color.BLACK);
-		final Texture textureAlbedo1 = new ConstantTexture(new Color(1.0F, 0.0F, 0.0F));
+//		final Texture textureAlbedo0 = new ConstantTexture(Color.BLACK);
+//		final Texture textureAlbedo1 = new ConstantTexture(new Color(1.0F, 0.0F, 0.0F));
 		
-		final Surface surface0 = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo1, textureAlbedo0);
+//		final Surface surface0 = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureAlbedo1, textureAlbedo0);
 		
 		/*
 		 * doCreateTriangle(...):
@@ -270,14 +467,15 @@ final class Scenes {
 		 * - Surface Normal (X, Y, Z)
 		 */
 		
-		final
-		Scene scene = new Scene("Cornell_Box_Scene_2");
-		scene.addShape(doCreateTriangle(surface0, 0.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F));
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
+//		final
+//		Scene scene = new Scene("Cornell_Box_Scene_2");
+//		scene.addShape(doCreateTriangle(surface0, 0.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 500.0F, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F));
+//		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureGroundAlbedo, textureGroundNormalMap), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
 		
-		return scene;
-	}
+//		return scene;
+//	}
 	
+	/*
 	public static Scene newGirlScene() {
 		final Texture texture1 = new ConstantTexture(new Color(227, 161, 115));
 		final Texture texture2 = new ConstantTexture(new Color(0.8F, 0.1F, 0.8F));//new ConstantTexture(new Color(32, 53, 98));//new CheckerboardTexture(new Color(0.1F, 0.1F, 0.1F), Color.WHITE, 0.05F, 0.05F, 0.0F);
@@ -316,7 +514,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newHouseScene() {
 		final Texture textureAlbedo = new ConstantTexture(Color.WHITE);
 		final Texture textureNormal = new ConstantTexture(Color.BLACK);
@@ -361,7 +561,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newHouseScene2() {
 		final Texture textureAlbedo = new ConstantTexture(Color.WHITE);
 		final Texture textureGround = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
@@ -385,7 +587,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newHouseScene3() {
 		final Texture textureFloor = new CheckerboardTexture(Color.GRAY, Color.WHITE);
 		final Texture textureGround = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
@@ -466,7 +670,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newImageScene() {
 		final Texture textureGroundAlbedo = new ConstantTexture(Color.WHITE);
 		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
@@ -494,7 +700,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newMaterialShowcaseScene() {
 //		Ground:
 		final Texture texturePlaneAlbedo = new ConstantTexture(Color.GRAY);
@@ -553,7 +761,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newMonkeyScene() {
 		final Texture textureGroundAlbedo = new ConstantTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));//new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.5F), Color.WHITE, 0.5F, 0.05F, 16);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
@@ -576,7 +786,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newSponzaScene() {
 		final Texture textureAlbedo = new ConstantTexture(Color.GRAY);
 		final Texture textureNormal = new ConstantTexture(Color.BLACK);
@@ -599,7 +811,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newTerrainScene() {
 		final Texture textureAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureNormal = new ConstantTexture(Color.BLACK);
@@ -622,7 +836,9 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
+	/*
 	public static Scene newTestScene() {
 		final Texture textureAlbedoGround = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.08F, 0.08F);//new ConstantTexture(Color.WHITE);
 		final Texture textureNormalGround = new ConstantTexture(Color.BLACK);
@@ -636,9 +852,82 @@ final class Scenes {
 		
 		return scene;
 	}
+	*/
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private static Triangle doCreateTriangle(final float textureCoordinateAX, final float textureCoordinateAY, final float positionAX, final float positionAY, final float positionAZ, final float surfaceNormalAX, final float surfaceNormalAY, final float surfaceNormalAZ, final float textureCoordinateBX, final float textureCoordinateBY, final float positionBX, final float positionBY, final float positionBZ, final float surfaceNormalBX, final float surfaceNormalBY, final float surfaceNormalBZ, final float textureCoordinateCX, final float textureCoordinateCY, final float positionCX, final float positionCY, final float positionCZ, final float surfaceNormalCX, final float surfaceNormalCY, final float surfaceNormalCZ) {
+		final Vertex a = new Vertex(new Point2F(textureCoordinateAX, textureCoordinateAY), new Point3F(positionAX, positionAY, positionAZ), new Vector3F(surfaceNormalAX, surfaceNormalAY, surfaceNormalAZ));
+		final Vertex b = new Vertex(new Point2F(textureCoordinateBX, textureCoordinateBY), new Point3F(positionBX, positionBY, positionBZ), new Vector3F(surfaceNormalBX, surfaceNormalBY, surfaceNormalBZ));
+		final Vertex c = new Vertex(new Point2F(textureCoordinateCX, textureCoordinateCY), new Point3F(positionCX, positionCY, positionCZ), new Vector3F(surfaceNormalCX, surfaceNormalCY, surfaceNormalCZ));
+		
+		return new Triangle(a, b, c);
+	}
+	
+	private static Triangle[] doCreateRectangleXY(final float x0, final float y0, final float x1, final float y1, final float z) {
+		final float minX = min(x0, x1);
+		final float minY = min(y0, y1);
+		
+		final float maxX = max(x0, x1);
+		final float maxY = max(y0, y1);
+		
+		final Point3F position0 = new Point3F(minX, maxY, z);
+		final Point3F position1 = new Point3F(minX, minY, z);
+		final Point3F position2 = new Point3F(maxX, minY, z);
+		final Point3F position3 = new Point3F(maxX, maxY, z);
+		
+		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
+		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
+		
+		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, minX, maxY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, minX, minY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, maxX, minY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
+		final Triangle triangle1 = doCreateTriangle(1.0F, 1.0F, maxX, minY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, maxX, maxY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, minX, maxY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		
+		return new Triangle[] {triangle0, triangle1};
+	}
+	
+	private static Triangle[] doCreateRectangleXZ(final float x0, final float z0, final float x1, final float z1, final float y) {
+		final float minX = min(x0, x1);
+		final float minZ = min(z0, z1);
+		
+		final float maxX = max(x0, x1);
+		final float maxZ = max(z0, z1);
+		
+		final Point3F position0 = new Point3F(minX, y, maxZ);
+		final Point3F position1 = new Point3F(minX, y, minZ);
+		final Point3F position2 = new Point3F(maxX, y, minZ);
+		final Point3F position3 = new Point3F(maxX, y, maxZ);
+		
+		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
+		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
+		
+		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, minX, y, maxZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, minX, y, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, maxX, y, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
+		final Triangle triangle1 = doCreateTriangle(1.0F, 1.0F, maxX, y, minZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, maxX, y, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, minX, y, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		
+		return new Triangle[] {triangle0, triangle1};
+	}
+	
+	private static Triangle[] doCreateRectangleYZ(final float y0, final float z0, final float y1, final float z1, final float x) {
+		final float minY = min(y0, y1);
+		final float minZ = min(z0, z1);
+		
+		final float maxY = max(y0, y1);
+		final float maxZ = max(z0, z1);
+		
+		final Point3F position0 = new Point3F(x, minY, maxZ);
+		final Point3F position1 = new Point3F(x, minY, minZ);
+		final Point3F position2 = new Point3F(x, maxY, minZ);
+		final Point3F position3 = new Point3F(x, maxY, maxZ);
+		
+		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
+		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
+		
+		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, x, minY, maxZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, x, minY, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, x, maxY, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
+		final Triangle triangle1 = doCreateTriangle(1.0F, 1.0F, x, maxY, minZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, x, maxY, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, x, minY, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		
+		return new Triangle[] {triangle0, triangle1};
+	}
+	
+	/*
 	private static Triangle doCreateTriangle(final Surface surface, final float textureCoordinateAX, final float textureCoordinateAY, final float positionAX, final float positionAY, final float positionAZ, final float surfaceNormalAX, final float surfaceNormalAY, final float surfaceNormalAZ, final float textureCoordinateBX, final float textureCoordinateBY, final float positionBX, final float positionBY, final float positionBZ, final float surfaceNormalBX, final float surfaceNormalBY, final float surfaceNormalBZ, final float textureCoordinateCX, final float textureCoordinateCY, final float positionCX, final float positionCY, final float positionCZ, final float surfaceNormalCX, final float surfaceNormalCY, final float surfaceNormalCZ) {
 		final Vertex a = new Vertex(new Point2F(textureCoordinateAX, textureCoordinateAY), new Point3F(positionAX, positionAY, positionAZ), new Vector3F(surfaceNormalAX, surfaceNormalAY, surfaceNormalAZ));
 		final Vertex b = new Vertex(new Point2F(textureCoordinateBX, textureCoordinateBY), new Point3F(positionBX, positionBY, positionBZ), new Vector3F(surfaceNormalBX, surfaceNormalBY, surfaceNormalBZ));
@@ -646,7 +935,9 @@ final class Scenes {
 		
 		return new Triangle(surface, a, b, c);
 	}
+	*/
 	
+	/*
 	private static Triangle[] doCreateRectangleXY(final Surface surface, final float x0, final float y0, final float x1, final float y1, final float z) {
 		final float minX = min(x0, x1);
 		final float minY = min(y0, y1);
@@ -667,7 +958,9 @@ final class Scenes {
 		
 		return new Triangle[] {triangle0, triangle1};
 	}
+	*/
 	
+	/*
 	private static Triangle[] doCreateRectangleXZ(final Surface surface, final float x0, final float z0, final float x1, final float z1, final float y) {
 		final float minX = min(x0, x1);
 		final float minZ = min(z0, z1);
@@ -688,7 +981,9 @@ final class Scenes {
 		
 		return new Triangle[] {triangle0, triangle1};
 	}
+	*/
 	
+	/*
 	private static Triangle[] doCreateRectangleYZ(final Surface surface, final float y0, final float z0, final float y1, final float z1, final float x) {
 		final float minY = min(y0, y1);
 		final float minZ = min(z0, z1);
@@ -709,4 +1004,5 @@ final class Scenes {
 		
 		return new Triangle[] {triangle0, triangle1};
 	}
+	*/
 }

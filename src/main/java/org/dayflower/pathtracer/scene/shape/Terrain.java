@@ -21,26 +21,26 @@ package org.dayflower.pathtracer.scene.shape;
 import java.util.Objects;
 
 import org.dayflower.pathtracer.scene.Shape;
-import org.dayflower.pathtracer.scene.Surface;
 
-public final class Terrain extends Shape {
+//TODO: Add Javadocs.
+public final class Terrain implements Shape {
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_FREQUENCY = 2;
+	public static final int RELATIVE_OFFSET_FREQUENCY = 0;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_GAIN = 3;
+	public static final int RELATIVE_OFFSET_GAIN = 1;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_MAXIMUM = 5;
+	public static final int RELATIVE_OFFSET_MAXIMUM = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_MINIMUM = 4;
+	public static final int RELATIVE_OFFSET_MINIMUM = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_OCTAVES = 6;
+	public static final int RELATIVE_OFFSET_OCTAVES = 4;
 	
 //	TODO: Add Javadocs.
-	public static final int SIZE = 7;
+	public static final int SIZE = 5;
 	
 //	TODO: Add Javadocs.
 	public static final int TYPE = 4;
@@ -55,9 +55,8 @@ public final class Terrain extends Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public Terrain(final Surface surface, final float frequency, final float gain, final float minimum, final float maximum, final int octaves) {
-		super(surface);
-		
+//	TODO: Add Javadocs.
+	public Terrain(final float frequency, final float gain, final float minimum, final float maximum, final int octaves) {
 		this.frequency = frequency;
 		this.gain = gain;
 		this.minimum = minimum;
@@ -67,13 +66,12 @@ public final class Terrain extends Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+//	TODO: Add Javadocs.
 	@Override
 	public boolean equals(final Object object) {
 		if(object == this) {
 			return true;
 		} else if(!(object instanceof Terrain)) {
-			return false;
-		} else if(!Objects.equals(getSurface(), Terrain.class.cast(object).getSurface())) {
 			return false;
 		} else if(Float.compare(this.frequency, Terrain.class.cast(object).frequency) != 0) {
 			return false;
@@ -90,22 +88,27 @@ public final class Terrain extends Shape {
 		}
 	}
 	
+//	TODO: Add Javadocs.
 	public float getFrequency() {
 		return this.frequency;
 	}
 	
+//	TODO: Add Javadocs.
 	public float getGain() {
 		return this.gain;
 	}
 	
+//	TODO: Add Javadocs.
 	public float getMaximum() {
 		return this.maximum;
 	}
 	
+//	TODO: Add Javadocs.
 	public float getMinimum() {
 		return this.minimum;
 	}
 	
+//	TODO: Add Javadocs.
 	public int getOctaves() {
 		return this.octaves;
 	}
@@ -120,8 +123,19 @@ public final class Terrain extends Shape {
 		return SIZE;
 	}
 	
+	/**
+	 * Returns the type of this {@code Terrain} instance.
+	 * 
+	 * @return the type of this {@code Terrain} instance
+	 */
+	@Override
+	public int getType() {
+		return TYPE;
+	}
+	
+//	TODO: Add Javadocs.
 	@Override
 	public int hashCode() {
-		return Objects.hash(getSurface(), Float.valueOf(this.frequency), Float.valueOf(this.gain), Float.valueOf(this.maximum), Float.valueOf(this.minimum), Integer.valueOf(this.octaves));
+		return Objects.hash(Float.valueOf(this.frequency), Float.valueOf(this.gain), Float.valueOf(this.maximum), Float.valueOf(this.minimum), Integer.valueOf(this.octaves));
 	}
 }

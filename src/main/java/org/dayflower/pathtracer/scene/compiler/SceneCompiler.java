@@ -28,6 +28,7 @@ import java.util.Set;
 import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.math.Vector3F;
+import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Surface;
@@ -36,10 +37,12 @@ import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.LeafNode;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.TreeNode;
+import org.dayflower.pathtracer.scene.shape.Mesh;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
+import org.dayflower.pathtracer.util.Arrays2;
 
 /**
  * A class that compiles {@link Scene}s so they can be used by Dayflower - Path Tracer.
@@ -56,61 +59,364 @@ public final class SceneCompiler {
 	
 //	TODO: Add Javadocs.
 	public static CompiledScene compile(final Scene scene) {
-		final List<Point2F> point2Fs0 = doFindPoint2Fs(scene);
-		final List<Point3F> point3Fs0 = doFindPoint3Fs(scene);
-		final List<Surface> surfaces0 = doFindSurfaces(scene);
-		final List<Texture> textures0 = doFindTextures(scene);
-		final List<Vector3F> vector3Fs0 = doFindVector3Fs(scene);
+//		Retrieve all unique Primitives:
+		final List<Primitive> uniquePrimitives = doFindUniquePrimitives(scene);
 		
-		final Map<Point2F, Integer> point2Fs1 = doCreatePoint2FMapping(point2Fs0);
-		final Map<Point3F, Integer> point3Fs1 = doCreatePoint3FMapping(point3Fs0);
-		final Map<Vector3F, Integer> vector3Fs1 = doCreateVector3FMapping(vector3Fs0);
+//		Retrieve all unique Shapes:
+		final List<Mesh> uniqueMeshes = doFindUniqueMeshes(uniquePrimitives);
+		final List<Plane> uniquePlanes = doFindUniquePlanes(uniquePrimitives);
+		final List<Sphere> uniqueSpheres = doFindUniqueSpheres(uniquePrimitives);
+		final List<Terrain> uniqueTerrains = doFindUniqueTerrains(uniquePrimitives);
+		final List<Triangle> uniqueTriangles = doFindUniqueTriangles(uniquePrimitives);
 		
-		final float[] boundingVolumeHierarchy = doCompileBoundingVolumeHierarchy(scene);
-		final float[] camera0 = scene.getCamera().getArray();
-		final float[] point2Fs = doCompilePoint2Fs(point2Fs0);
-		final float[] point3Fs = doCompilePoint3Fs(point3Fs0);
-		final float[] shapes = doCompileShapes(surfaces0, point2Fs1, point3Fs1, vector3Fs1, scene);
-		final float[] surfaces = doCompileSurfaces(surfaces0, textures0);
-		final float[] textures = doCompileTextures(textures0);
-		final float[] vector3Fs = doCompileVector3Fs(vector3Fs0);
+//		Retrieve all unique BoundingVolumeHierarchy root-Nodes:
+		final List<Node> uniqueBoundingVolumeHierarchyRootNodes = doFindUniqueBoundingVolumeHierarchyRootNodes(uniqueMeshes);
 		
-		final int[] shapeOffsets = doCompileShapeOffsets(scene);
+//		Retrieve all unique Surfaces:
+		final List<Surface> uniqueSurfaces = doFindUniqueSurfaces(uniquePrimitives);
 		
-		doReorderShapes(boundingVolumeHierarchy, shapes, shapeOffsets);
+//		Retrieve all unique Textures:
+		final List<Texture> uniqueTextures = doFindUniqueTextures(uniqueSurfaces);
 		
-		return new CompiledScene(scene.getName(), boundingVolumeHierarchy, camera0, point2Fs, point3Fs, shapes, surfaces, textures, vector3Fs, shapeOffsets);
+//		Retrieve all unique Point2Fs, Point3Fs and Vector3Fs:
+		final List<Point2F> uniquePoint2Fs = doFindUniquePoint2Fs(uniquePrimitives);
+		final List<Point3F> uniquePoint3Fs = doFindUniquePoint3Fs(uniquePrimitives);
+		final List<Vector3F> uniqueVector3Fs = doFindUniqueVector3Fs(uniquePrimitives);
+		
+//		Create mappings from Shapes to Integer indices:
+		final Map<Plane, Integer> planeMappings = doCreatePlaneMappings(uniquePlanes);
+		final Map<Sphere, Integer> sphereMappings = doCreateSphereMappings(uniqueSpheres);
+		final Map<Terrain, Integer> terrainMappings = doCreateTerrainMappings(uniqueTerrains);
+		final Map<Triangle, Integer> triangleMappings = doCreateTriangleMappings(uniqueTriangles);
+		
+//		Create mappings from Surfaces to Integer indices:
+		final Map<Surface, Integer> surfaceMappings = doCreateSurfaceMappings(uniqueSurfaces);
+		
+//		Create mappings from Textures to Integer indices:
+		final Map<Texture, Integer> textureMappings = doCreateTextureMappings(uniqueTextures);
+		
+//		Create mappings from Point2Fs, Point3Fs and Vector3Fs to Integer indices:
+		final Map<Point2F, Integer> point2FMappings = doCreatePoint2FMappings(uniquePoint2Fs);
+		final Map<Point3F, Integer> point3FMappings = doCreatePoint3FMappings(uniquePoint3Fs);
+		final Map<Vector3F, Integer> vector3FMappings = doCreateVector3FMappings(uniqueVector3Fs);
+		
+//		Compile the scene:
+		final float[] boundingVolumeHierarchies = doCompileBoundingVolumeHierarchies(uniqueBoundingVolumeHierarchyRootNodes, triangleMappings);
+		final float[] camera = scene.getCamera().getArray();
+		final float[] planes = doCompilePlanes(uniquePlanes, point3FMappings, vector3FMappings);
+		final float[] point2Fs = doCompilePoint2Fs(uniquePoint2Fs);
+		final float[] point3Fs = doCompilePoint3Fs(uniquePoint3Fs);
+		final float[] primitives = doCompilePrimitives(uniquePrimitives, uniqueMeshes, uniqueBoundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings);
+		final float[] spheres = doCompileSpheres(uniqueSpheres, point3FMappings);
+		final float[] surfaces = doCompileSurfaces(uniqueSurfaces, textureMappings);
+		final float[] terrains = doCompileTerrains(uniqueTerrains);
+		final float[] textures = doCompileTextures(uniqueTextures);
+		final float[] triangles = doCompileTriangles(uniqueTriangles, point2FMappings, point3FMappings, vector3FMappings);
+		final float[] vector3Fs = doCompileVector3Fs(uniqueVector3Fs);
+		
+		return new CompiledScene(scene.getName(), boundingVolumeHierarchies, camera, planes, point2Fs, point3Fs, primitives, spheres, surfaces, terrains, textures, triangles, vector3Fs);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private static float[] doCompileBoundingVolumeHierarchy(final Scene scene) {
-		doReportProgress("Compiling BoundingVolumeHierarchy...");
+	private static List<Node> doFindUniqueBoundingVolumeHierarchyRootNodes(final List<Mesh> meshes) {
+		return meshes.stream().map(mesh -> BoundingVolumeHierarchy.createBoundingVolumeHierarchy(mesh.getTriangles()).getRoot()).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Mesh> doFindUniqueMeshes(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Mesh).map(primitive -> Mesh.class.cast(primitive.getShape())).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Plane> doFindUniquePlanes(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Plane).map(primitive -> Plane.class.cast(primitive.getShape())).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Point2F> doFindUniquePoint2Fs(final List<Primitive> primitives) {
+		final Set<Point2F> uniquePoint2Fs = new LinkedHashSet<>();
 		
-		final List<Shape> shapes = scene.getShapes();
-		final List<Triangle> triangles = new ArrayList<>();
-		
-		for(final Shape shape : shapes) {
-			if(shape instanceof Triangle) {
-				triangles.add(Triangle.class.cast(shape));
+		for(final Primitive primitive : primitives) {
+			final Shape shape = primitive.getShape();
+			
+			if(shape instanceof Mesh) {
+				final Mesh mesh = Mesh.class.cast(shape);
+				
+				for(final Triangle triangle : mesh.getTriangles()) {
+					final Point2F a = triangle.getA().getTextureCoordinates();
+					final Point2F b = triangle.getB().getTextureCoordinates();
+					final Point2F c = triangle.getC().getTextureCoordinates();
+					
+					uniquePoint2Fs.add(a);
+					uniquePoint2Fs.add(b);
+					uniquePoint2Fs.add(c);
+				}
+			} else if(shape instanceof Triangle) {
+				final Triangle triangle = Triangle.class.cast(shape);
+				
+				final Point2F a = triangle.getA().getTextureCoordinates();
+				final Point2F b = triangle.getB().getTextureCoordinates();
+				final Point2F c = triangle.getC().getTextureCoordinates();
+				
+				uniquePoint2Fs.add(a);
+				uniquePoint2Fs.add(b);
+				uniquePoint2Fs.add(c);
 			}
 		}
 		
-		if(triangles.size() == 0) {
-			doReportProgress(" Done.\n");
+		return new ArrayList<>(uniquePoint2Fs);
+	}
+	
+	private static List<Point3F> doFindUniquePoint3Fs(final List<Primitive> primitives) {
+		final Set<Point3F> uniquePoint3Fs = new LinkedHashSet<>();
+		
+		for(final Primitive primitive : primitives) {
+			final Shape shape = primitive.getShape();
 			
-			return new float[] {BoundingVolumeHierarchy.NODE_TYPE_LEAF, -1.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
+			if(shape instanceof Mesh) {
+				final Mesh mesh = Mesh.class.cast(shape);
+				
+				for(final Triangle triangle : mesh.getTriangles()) {
+					final Point3F a = triangle.getA().getPosition();
+					final Point3F b = triangle.getB().getPosition();
+					final Point3F c = triangle.getC().getPosition();
+					
+					uniquePoint3Fs.add(a);
+					uniquePoint3Fs.add(b);
+					uniquePoint3Fs.add(c);
+				}
+			} else if(shape instanceof Plane) {
+				final Plane plane = Plane.class.cast(shape);
+				
+				final Point3F a = plane.getA();
+				final Point3F b = plane.getB();
+				final Point3F c = plane.getC();
+				
+				uniquePoint3Fs.add(a);
+				uniquePoint3Fs.add(b);
+				uniquePoint3Fs.add(c);
+			} else if(shape instanceof Sphere) {
+				final Sphere sphere = Sphere.class.cast(shape);
+				
+				final Point3F position = sphere.getPosition();
+				
+				uniquePoint3Fs.add(position);
+			} else if(shape instanceof Triangle) {
+				final Triangle triangle = Triangle.class.cast(shape);
+				
+				final Point3F a = triangle.getA().getPosition();
+				final Point3F b = triangle.getB().getPosition();
+				final Point3F c = triangle.getC().getPosition();
+				
+				uniquePoint3Fs.add(a);
+				uniquePoint3Fs.add(b);
+				uniquePoint3Fs.add(c);
+			}
 		}
 		
-		final BoundingVolumeHierarchy boundingVolumeHierarchy = BoundingVolumeHierarchy.createBoundingVolumeHierarchy(triangles);
+		return new ArrayList<>(uniquePoint3Fs);
+	}
+	
+	private static List<Primitive> doFindUniquePrimitives(final Scene scene) {
+		return scene.getPrimitives().stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Sphere> doFindUniqueSpheres(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Sphere).map(primitive -> Sphere.class.cast(primitive.getShape())).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Surface> doFindUniqueSurfaces(final List<Primitive> primitives) {
+		return primitives.stream().map(primitive -> primitive.getSurface()).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Terrain> doFindUniqueTerrains(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Terrain).map(primitive -> Terrain.class.cast(primitive.getShape())).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Texture> doFindUniqueTextures(final List<Surface> surfaces) {
+		final Set<Texture> uniqueTextures = new LinkedHashSet<>();
 		
-		final Node root = boundingVolumeHierarchy.getRoot();
+		for(final Surface surface : surfaces) {
+			final Texture textureAlbedo = surface.getTextureAlbedo();
+			final Texture textureEmission = surface.getTextureEmission();
+			final Texture textureNormal = surface.getTextureNormal();
+			
+			uniqueTextures.add(textureAlbedo);
+			uniqueTextures.add(textureEmission);
+			uniqueTextures.add(textureNormal);
+		}
 		
-		final int size = root.getSize();
+		return new ArrayList<>(uniqueTextures);
+	}
+	
+	private static List<Triangle> doFindUniqueTriangles(final List<Primitive> primitives) {
+		final Set<Triangle> uniqueTriangles = new LinkedHashSet<>();
 		
-		final float[] boundingVolumeHierarchyArray = new float[size];
+		for(final Primitive primitive : primitives) {
+			final Shape shape = primitive.getShape();
+			
+			if(shape instanceof Mesh) {
+				final Mesh mesh = Mesh.class.cast(shape);
+				
+				for(final Triangle triangle : mesh.getTriangles()) {
+					uniqueTriangles.add(triangle);
+				}
+			} else if(shape instanceof Triangle) {
+				uniqueTriangles.add(Triangle.class.cast(shape));
+			}
+		}
 		
-		final List<Node> nodes = root.toList();
+		return new ArrayList<>(uniqueTriangles);
+	}
+	
+	private static List<Vector3F> doFindUniqueVector3Fs(final List<Primitive> primitives) {
+		final Set<Vector3F> uniqueVector3Fs = new LinkedHashSet<>();
+		
+		for(final Primitive primitive : primitives) {
+			final Shape shape = primitive.getShape();
+			
+			if(shape instanceof Mesh) {
+				final Mesh mesh = Mesh.class.cast(shape);
+				
+				for(final Triangle triangle : mesh.getTriangles()) {
+					final Vector3F a = triangle.getA().getNormal();
+					final Vector3F b = triangle.getB().getNormal();
+					final Vector3F c = triangle.getC().getNormal();
+					
+					uniqueVector3Fs.add(a);
+					uniqueVector3Fs.add(b);
+					uniqueVector3Fs.add(c);
+				}
+			} else if(shape instanceof Plane) {
+				final Plane plane = Plane.class.cast(shape);
+				
+				final Vector3F surfaceNormal = plane.getSurfaceNormal();
+				
+				uniqueVector3Fs.add(surfaceNormal);
+			} else if(shape instanceof Triangle) {
+				final Triangle triangle = Triangle.class.cast(shape);
+				
+				final Vector3F a = triangle.getA().getNormal();
+				final Vector3F b = triangle.getB().getNormal();
+				final Vector3F c = triangle.getC().getNormal();
+				
+				uniqueVector3Fs.add(a);
+				uniqueVector3Fs.add(b);
+				uniqueVector3Fs.add(c);
+			}
+		}
+		
+		return new ArrayList<>(uniqueVector3Fs);
+	}
+	
+	private static Map<Plane, Integer> doCreatePlaneMappings(final List<Plane> planes) {
+		final Map<Plane, Integer> planeMappings = new HashMap<>();
+		
+		for(int i = 0; i < planes.size(); i++) {
+			planeMappings.put(planes.get(i), Integer.valueOf(i * Plane.SIZE));
+		}
+		
+		return planeMappings;
+	}
+	
+	private static Map<Point2F, Integer> doCreatePoint2FMappings(final List<Point2F> point2Fs) {
+		final Map<Point2F, Integer> point2FMappings = new HashMap<>();
+		
+		for(int i = 0; i < point2Fs.size(); i++) {
+			point2FMappings.put(point2Fs.get(i), Integer.valueOf(i * 2));
+		}
+		
+		return point2FMappings;
+	}
+	
+	private static Map<Point3F, Integer> doCreatePoint3FMappings(final List<Point3F> point3Fs) {
+		final Map<Point3F, Integer> point3FMappings = new HashMap<>();
+		
+		for(int i = 0; i < point3Fs.size(); i++) {
+			point3FMappings.put(point3Fs.get(i), Integer.valueOf(i * 3));
+		}
+		
+		return point3FMappings;
+	}
+	
+	private static Map<Sphere, Integer> doCreateSphereMappings(final List<Sphere> spheres) {
+		final Map<Sphere, Integer> sphereMappings = new HashMap<>();
+		
+		for(int i = 0; i < spheres.size(); i++) {
+			sphereMappings.put(spheres.get(i), Integer.valueOf(i * Sphere.SIZE));
+		}
+		
+		return sphereMappings;
+	}
+	
+	private static Map<Surface, Integer> doCreateSurfaceMappings(final List<Surface> surfaces) {
+		final Map<Surface, Integer> surfaceMappings = new HashMap<>();
+		
+		for(int i = 0; i < surfaces.size(); i++) {
+			surfaceMappings.put(surfaces.get(i), Integer.valueOf(i * Surface.SIZE));
+		}
+		
+		return surfaceMappings;
+	}
+	
+	private static Map<Terrain, Integer> doCreateTerrainMappings(final List<Terrain> terrains) {
+		final Map<Terrain, Integer> terrainMappings = new HashMap<>();
+		
+		for(int i = 0; i < terrains.size(); i++) {
+			terrainMappings.put(terrains.get(i), Integer.valueOf(i * Terrain.SIZE));
+		}
+		
+		return terrainMappings;
+	}
+	
+	private static Map<Texture, Integer> doCreateTextureMappings(final List<Texture> textures) {
+		final Map<Texture, Integer> textureMappings = new HashMap<>();
+		
+		for(int i = 0, j = 0; i < textures.size(); i++) {
+			final Texture texture = textures.get(i);
+			
+			textureMappings.put(texture, Integer.valueOf(j));
+			
+			j += texture.getSize();
+		}
+		
+		return textureMappings;
+	}
+	
+	private static Map<Triangle, Integer> doCreateTriangleMappings(final List<Triangle> triangles) {
+		final Map<Triangle, Integer> triangleMappings = new HashMap<>();
+		
+		for(int i = 0; i < triangles.size(); i++) {
+			triangleMappings.put(triangles.get(i), Integer.valueOf(i * Triangle.SIZE));
+		}
+		
+		return triangleMappings;
+	}
+	
+	private static Map<Vector3F, Integer> doCreateVector3FMappings(final List<Vector3F> vector3Fs) {
+		final Map<Vector3F, Integer> vector3FMappings = new HashMap<>();
+		
+		for(int i = 0; i < vector3Fs.size(); i++) {
+			vector3FMappings.put(vector3Fs.get(i), Integer.valueOf(i * 3));
+		}
+		
+		return vector3FMappings;
+	}
+	
+	private static float[] doCompileBoundingVolumeHierarchies(final List<Node> boundingVolumeHierarchyRootNodes, final Map<Triangle, Integer> triangleMappings) {
+		doReportProgress("Compiling Bounding Volume Hierarchies...");
+		
+		final float[] compiledBoundingVolumeHierarchies = Arrays2.toFloatArray(boundingVolumeHierarchyRootNodes, mesh -> doCompileBoundingVolumeHierarchy(mesh, triangleMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledBoundingVolumeHierarchies.length > 0 ? compiledBoundingVolumeHierarchies : new float[1];
+	}
+	
+	private static float[] doCompileBoundingVolumeHierarchy(final Node boundingVolumeHierarchyRootNode, final Map<Triangle, Integer> triangleMappings) {
+		final int size = boundingVolumeHierarchyRootNode.getSize();
+		
+		final float[] boundingVolumeHierarchy = new float[size];
+		
+		final List<Node> nodes = boundingVolumeHierarchyRootNode.toList();
 		
 		final int[] offsets = new int[nodes.size()];
 		
@@ -134,30 +440,30 @@ public final class SceneCompiler {
 				
 				final int depth = leafNode.getDepth();
 				
-				int next = -1;
+				int nextIndex = -1;
 				
 				for(int k = i + 1; k < nodes.size(); k++) {
-					final Node node0 = nodes.get(k);
+					final Node currentNode = nodes.get(k);
 					
-					if(node0.getDepth() <= depth) {
-						next = offsets[k];
+					if(currentNode.getDepth() <= depth) {
+						nextIndex = offsets[k];
 						
 						break;
 					}
 				}
 				
-				boundingVolumeHierarchyArray[j + 0] = BoundingVolumeHierarchy.NODE_TYPE_LEAF;
-				boundingVolumeHierarchyArray[j + 1] = next;
-				boundingVolumeHierarchyArray[j + 2] = leafNode.getMinimumX();
-				boundingVolumeHierarchyArray[j + 3] = leafNode.getMinimumY();
-				boundingVolumeHierarchyArray[j + 4] = leafNode.getMinimumZ();
-				boundingVolumeHierarchyArray[j + 5] = leafNode.getMaximumX();
-				boundingVolumeHierarchyArray[j + 6] = leafNode.getMaximumY();
-				boundingVolumeHierarchyArray[j + 7] = leafNode.getMaximumZ();
-				boundingVolumeHierarchyArray[j + 8] = leafNode.getTriangles().size();
+				boundingVolumeHierarchy[j + 0] = BoundingVolumeHierarchy.NODE_TYPE_LEAF;
+				boundingVolumeHierarchy[j + 1] = nextIndex;
+				boundingVolumeHierarchy[j + 2] = leafNode.getMinimumX();
+				boundingVolumeHierarchy[j + 3] = leafNode.getMinimumY();
+				boundingVolumeHierarchy[j + 4] = leafNode.getMinimumZ();
+				boundingVolumeHierarchy[j + 5] = leafNode.getMaximumX();
+				boundingVolumeHierarchy[j + 6] = leafNode.getMaximumY();
+				boundingVolumeHierarchy[j + 7] = leafNode.getMaximumZ();
+				boundingVolumeHierarchy[j + 8] = leafNode.getTriangles().size();
 				
 				for(int k = 0; k < leafNode.getTriangles().size(); k++) {
-					boundingVolumeHierarchyArray[j + 9 + k] = doGetOffset(leafNode.getTriangles().get(k), shapes);
+					boundingVolumeHierarchy[j + 9 + k] = doGetTriangleOffset(leafNode.getTriangles().get(k), triangleMappings);
 				}
 				
 				j += 9 + leafNode.getTriangles().size();
@@ -166,224 +472,158 @@ public final class SceneCompiler {
 				
 				final int depth = treeNode.getDepth();
 				
-				int next = -1;
+				int nextIndex = -1;
 				int leftIndex = -1;
 				
 				for(int k = i + 1; k < nodes.size(); k++) {
-					final Node node0 = nodes.get(k);
+					final Node currentNode = nodes.get(k);
 					
-					if(node0.getDepth() <= depth) {
-						next = offsets[k];
+					if(currentNode.getDepth() <= depth) {
+						nextIndex = offsets[k];
 						
 						break;
 					}
 				}
 				
 				for(int k = i + 1; k < nodes.size(); k++) {
-					final Node node0 = nodes.get(k);
+					final Node currentNode = nodes.get(k);
 					
-					if(node0.getDepth() == depth + 1) {
+					if(currentNode.getDepth() == depth + 1) {
 						leftIndex = offsets[k];
 						
 						break;
 					}
 				}
 				
-				boundingVolumeHierarchyArray[j + 0] = BoundingVolumeHierarchy.NODE_TYPE_TREE;
-				boundingVolumeHierarchyArray[j + 1] = next;
-				boundingVolumeHierarchyArray[j + 2] = treeNode.getMinimumX();
-				boundingVolumeHierarchyArray[j + 3] = treeNode.getMinimumY();
-				boundingVolumeHierarchyArray[j + 4] = treeNode.getMinimumZ();
-				boundingVolumeHierarchyArray[j + 5] = treeNode.getMaximumX();
-				boundingVolumeHierarchyArray[j + 6] = treeNode.getMaximumY();
-				boundingVolumeHierarchyArray[j + 7] = treeNode.getMaximumZ();
-				boundingVolumeHierarchyArray[j + 8] = leftIndex;
+				boundingVolumeHierarchy[j + 0] = BoundingVolumeHierarchy.NODE_TYPE_TREE;
+				boundingVolumeHierarchy[j + 1] = nextIndex;
+				boundingVolumeHierarchy[j + 2] = treeNode.getMinimumX();
+				boundingVolumeHierarchy[j + 3] = treeNode.getMinimumY();
+				boundingVolumeHierarchy[j + 4] = treeNode.getMinimumZ();
+				boundingVolumeHierarchy[j + 5] = treeNode.getMaximumX();
+				boundingVolumeHierarchy[j + 6] = treeNode.getMaximumY();
+				boundingVolumeHierarchy[j + 7] = treeNode.getMaximumZ();
+				boundingVolumeHierarchy[j + 8] = leftIndex;
 				
 				j += 9;
 			}
 		}
 		
+		return boundingVolumeHierarchy;
+	}
+	
+	private static float[] doCompilePlane(final Plane plane, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
+		return new float[] {
+			doGetPoint3FOffset(plane.getA(), point3FMappings),
+			doGetPoint3FOffset(plane.getB(), point3FMappings),
+			doGetPoint3FOffset(plane.getC(), point3FMappings),
+			doGetVector3FOffset(plane.getSurfaceNormal(), vector3FMappings)
+		};
+	}
+	
+	private static float[] doCompilePlanes(final List<Plane> planes, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
+		doReportProgress("Compiling Planes...");
+		
+		final float[] compiledPlanes = Arrays2.toFloatArray(planes, plane -> doCompilePlane(plane, point3FMappings, vector3FMappings));
+		
 		doReportProgress(" Done.\n");
 		
-		return boundingVolumeHierarchyArray;
+		return compiledPlanes.length > 0 ? compiledPlanes : new float[1];
 	}
 	
 	private static float[] doCompilePoint2Fs(final List<Point2F> point2Fs) {
 		doReportProgress("Compiling Point2Fs...");
 		
-		final float[] point2Fs0 = new float[point2Fs.size() * 2];
+		final float[] compiledPoint2Fs = new float[point2Fs.size() * 2];
 		
-		for(int i = 0, j = 0; i < point2Fs.size(); i++, j += 2) {
+		for(int i = 0; i < point2Fs.size(); i++) {
 			final Point2F point2F = point2Fs.get(i);
 			
-			point2Fs0[j + 0] = point2F.x;
-			point2Fs0[j + 1] = point2F.y;
+			compiledPoint2Fs[i * 2 + 0] = point2F.x;
+			compiledPoint2Fs[i * 2 + 1] = point2F.y;
 		}
 		
 		doReportProgress(" Done.\n");
 		
-		return point2Fs0;
+		return compiledPoint2Fs.length > 0 ? compiledPoint2Fs : new float[1];
 	}
 	
 	private static float[] doCompilePoint3Fs(final List<Point3F> point3Fs) {
 		doReportProgress("Compiling Point3Fs...");
 		
-		final float[] point3Fs0 = new float[point3Fs.size() * 3];
+		final float[] compiledPoint3Fs = new float[point3Fs.size() * 3];
 		
-		for(int i = 0, j = 0; i < point3Fs.size(); i++, j += 3) {
+		for(int i = 0; i < point3Fs.size(); i++) {
 			final Point3F point3F = point3Fs.get(i);
 			
-			point3Fs0[j + 0] = point3F.x;
-			point3Fs0[j + 1] = point3F.y;
-			point3Fs0[j + 2] = point3F.z;
+			compiledPoint3Fs[i * 3 + 0] = point3F.x;
+			compiledPoint3Fs[i * 3 + 1] = point3F.y;
+			compiledPoint3Fs[i * 3 + 2] = point3F.z;
 		}
 		
 		doReportProgress(" Done.\n");
 		
-		return point3Fs0;
+		return compiledPoint3Fs.length > 0 ? compiledPoint3Fs : new float[1];
 	}
 	
-	private static float[] doCompileShapes(final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs, final Scene scene) {
-		doReportProgress("Compiling Shapes...");
-		
-		final List<Float> floats = new ArrayList<>();
-		
-		for(final Shape shape : scene.getShapes()) {
-			final float[] floatArray = doToFloatArray(shape, surfaces, point2Fs, point3Fs, vector3Fs);
-			
-			for(final float value : floatArray) {
-				floats.add(Float.valueOf(value));
-			}
-		}
-		
-		final float[] floatArray = new float[floats.size()];
-		
-		for(int i = 0; i < floats.size(); i++) {
-			floatArray[i] = floats.get(i).floatValue();
-		}
-		
-		doReportProgress(" Done.\n");
-		
-		return floatArray;
-	}
-	
-	private static float[] doCompileSurfaces(final List<Surface> surfaces, final List<Texture> textures) {
-		doReportProgress("Compiling Surfaces...");
-		
-		final List<Float> floats = new ArrayList<>();
-		
-		for(final Surface surface : surfaces) {
-			final float[] floatArray = doToFloatArray(surface, textures);
-			
-			for(final float value : floatArray) {
-				floats.add(Float.valueOf(value));
-			}
-		}
-		
-		final float[] floatArray = new float[floats.size()];
-		
-		for(int i = 0; i < floats.size(); i++) {
-			floatArray[i] = floats.get(i).floatValue();
-		}
-		
-		doReportProgress(" Done.\n");
-		
-		return floatArray;
-	}
-	
-	private static float[] doCompileTextures(final List<Texture> textures) {
-		doReportProgress("Compiling Textures...");
-		
-		final List<Float> floats = new ArrayList<>();
-		
-		for(final Texture texture : textures) {
-			final float[] floatArray = texture.toArray();
-			
-			for(final float value : floatArray) {
-				floats.add(Float.valueOf(value));
-			}
-		}
-		
-		final float[] floatArray = new float[floats.size()];
-		
-		for(int i = 0; i < floats.size(); i++) {
-			floatArray[i] = floats.get(i).floatValue();
-		}
-		
-		doReportProgress(" Done.\n");
-		
-		return floatArray;
-	}
-	
-	private static float[] doCompileVector3Fs(final List<Vector3F> vector3Fs) {
-		doReportProgress("Compiling Vector3Fs...");
-		
-		final float[] vector3Fs0 = new float[vector3Fs.size() * 3];
-		
-		for(int i = 0, j = 0; i < vector3Fs.size(); i++, j += 3) {
-			final Vector3F vector3F = vector3Fs.get(i);
-			
-			vector3Fs0[j + 0] = vector3F.x;
-			vector3Fs0[j + 1] = vector3F.y;
-			vector3Fs0[j + 2] = vector3F.z;
-		}
-		
-		doReportProgress(" Done.\n");
-		
-		return vector3Fs0;
-	}
-	
-	private static float[] doToFloatArray(final Shape shape, final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
-		if(shape instanceof Plane) {
-			return doToFloatArrayPlane(Plane.class.cast(shape), surfaces, point3Fs, vector3Fs);
-		} else if(shape instanceof Sphere) {
-			return doToFloatArraySphere(Sphere.class.cast(shape), surfaces, point3Fs);
-		} else if(shape instanceof Terrain) {
-			return doToFloatArrayTerrain(Terrain.class.cast(shape), surfaces);
-		} else if(shape instanceof Triangle) {
-			return doToFloatArrayTriangle(Triangle.class.cast(shape), surfaces, point2Fs, point3Fs, vector3Fs);
-		} else {
-			throw new IllegalArgumentException(String.format("The Shape provided is not supported: %s", shape));
-		}
-	}
-	
-	private static float[] doToFloatArray(final Surface surface, final List<Texture> textures) {
+	private static float[] doCompilePrimitive(final Primitive primitive, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Surface, Integer> surfaceMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
 		return new float[] {
-			surface.getEmission().r,
-			surface.getEmission().g,
-			surface.getEmission().b,
+			primitive.getShape().getType(),
+			doGetShapeOffset(primitive.getShape(), meshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, terrainMappings, triangleMappings),
+			doGetSurfaceOffset(primitive.getSurface(), surfaceMappings)
+		};
+	}
+	
+	private static float[] doCompilePrimitives(final List<Primitive> primitives, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Surface, Integer> surfaceMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
+		doReportProgress("Compiling Primitives...");
+		
+		final float[] compiledPrimitives = Arrays2.toFloatArray(primitives, primitive -> doCompilePrimitive(primitive, meshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledPrimitives.length > 0 ? compiledPrimitives : new float[1];
+	}
+	
+	private static float[] doCompileSphere(final Sphere sphere, final Map<Point3F, Integer> point3FMappings) {
+		return new float[] {
+			doGetPoint3FOffset(sphere.getPosition(), point3FMappings),
+			sphere.getRadius()
+		};
+	}
+	
+	private static float[] doCompileSpheres(final List<Sphere> spheres, final Map<Point3F, Integer> point3FMappings) {
+		doReportProgress("Compiling Spheres...");
+		
+		final float[] compiledSpheres = Arrays2.toFloatArray(spheres, sphere -> doCompileSphere(sphere, point3FMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledSpheres.length > 0 ? compiledSpheres : new float[1];
+	}
+	
+	private static float[] doCompileSurface(final Surface surface, final Map<Texture, Integer> textureMappings) {
+		return new float[] {
 			surface.getMaterial().ordinal(),
-			doGetOffset(surface.getTextureAlbedo(), textures),
-			doGetOffset(surface.getTextureNormal(), textures),
+			doGetTextureOffset(surface.getTextureAlbedo(), textureMappings),
+			doGetTextureOffset(surface.getTextureEmission(), textureMappings),
+			doGetTextureOffset(surface.getTextureNormal(), textureMappings),
 			surface.getNoiseAmount(),
 			surface.getNoiseScale()
 		};
 	}
 	
-	private static float[] doToFloatArrayPlane(final Plane plane, final List<Surface> surfaces, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
-		return new float[] {
-			Plane.TYPE,
-			doGetOffset(plane.getSurface(), surfaces),
-			point3Fs.get(plane.getA()).intValue(),
-			point3Fs.get(plane.getB()).intValue(),
-			point3Fs.get(plane.getC()).intValue(),
-			vector3Fs.get(plane.getSurfaceNormal()).intValue()
-		};
+	private static float[] doCompileSurfaces(final List<Surface> surfaces, final Map<Texture, Integer> textureMappings) {
+		doReportProgress("Compiling Surfaces...");
+		
+		final float[] compiledSurfaces = Arrays2.toFloatArray(surfaces, surface -> doCompileSurface(surface, textureMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledSurfaces.length > 0 ? compiledSurfaces : new float[1];
 	}
 	
-	private static float[] doToFloatArraySphere(final Sphere sphere, final List<Surface> surfaces, final Map<Point3F, Integer> point3Fs) {
+	private static float[] doCompileTerrain(final Terrain terrain) {
 		return new float[] {
-			Sphere.TYPE,
-			doGetOffset(sphere.getSurface(), surfaces),
-			sphere.getRadius(),
-			point3Fs.get(sphere.getPosition()).intValue()
-		};
-	}
-	
-	private static float[] doToFloatArrayTerrain(final Terrain terrain, final List<Surface> surfaces) {
-		return new float[] {
-			Terrain.TYPE,
-			doGetOffset(terrain.getSurface(), surfaces),
 			terrain.getFrequency(),
 			terrain.getGain(),
 			terrain.getMinimum(),
@@ -392,302 +632,134 @@ public final class SceneCompiler {
 		};
 	}
 	
-	private static float[] doToFloatArrayTriangle(final Triangle triangle, final List<Surface> surfaces, final Map<Point2F, Integer> point2Fs, final Map<Point3F, Integer> point3Fs, final Map<Vector3F, Integer> vector3Fs) {
+	private static float[] doCompileTerrains(final List<Terrain> terrains) {
+		doReportProgress("Compiling Terrains...");
+		
+		final float[] compiledTerrains = Arrays2.toFloatArray(terrains, terrain -> doCompileTerrain(terrain));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledTerrains.length > 0 ? compiledTerrains : new float[1];
+	}
+	
+	private static float[] doCompileTextures(final List<Texture> textures) {
+		doReportProgress("Compiling Textures...");
+		
+		final float[] compiledTextures = Arrays2.toFloatArray(textures, texture -> texture.toArray());
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledTextures.length > 0 ? compiledTextures : new float[1];
+	}
+	
+	private static float[] doCompileTriangle(final Triangle triangle, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
 		return new float[] {
-			Triangle.TYPE,
-			doGetOffset(triangle.getSurface(), surfaces),
-			point3Fs.get(triangle.getA().position).intValue(),
-			point3Fs.get(triangle.getB().position).intValue(),
-			point3Fs.get(triangle.getC().position).intValue(),
-			vector3Fs.get(triangle.getA().normal).intValue(),
-			vector3Fs.get(triangle.getB().normal).intValue(),
-			vector3Fs.get(triangle.getC().normal).intValue(),
-			point2Fs.get(triangle.getA().textureCoordinates).intValue(),
-			point2Fs.get(triangle.getB().textureCoordinates).intValue(),
-			point2Fs.get(triangle.getC().textureCoordinates).intValue()
+			doGetPoint3FOffset(triangle.getA().getPosition(), point3FMappings),
+			doGetPoint3FOffset(triangle.getB().getPosition(), point3FMappings),
+			doGetPoint3FOffset(triangle.getC().getPosition(), point3FMappings),
+			doGetVector3FOffset(triangle.getA().getNormal(), vector3FMappings),
+			doGetVector3FOffset(triangle.getB().getNormal(), vector3FMappings),
+			doGetVector3FOffset(triangle.getC().getNormal(), vector3FMappings),
+			doGetPoint2FOffset(triangle.getA().getTextureCoordinates(), point2FMappings),
+			doGetPoint2FOffset(triangle.getB().getTextureCoordinates(), point2FMappings),
+			doGetPoint2FOffset(triangle.getC().getTextureCoordinates(), point2FMappings)
 		};
 	}
 	
-	private static int doGetOffset(final Shape shape, final List<Shape> shapes) {
-		for(int i = 0, j = 0; i < shapes.size(); i++) {
-			final Shape shape0 = shapes.get(i);
-			
-			if(shape.equals(shape0)) {
-				return j;
-			}
-			
-			j += shape0.getSize();
-		}
+	private static float[] doCompileTriangles(final List<Triangle> triangles, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
+		doReportProgress("Compiling Triangles...");
 		
-		throw new IllegalArgumentException(String.format("No such Shape found: %s", shape));
+		final float[] compiledTriangles = Arrays2.toFloatArray(triangles, triangle -> doCompileTriangle(triangle, point2FMappings, point3FMappings, vector3FMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledTriangles.length > 0 ? compiledTriangles : new float[1];
 	}
 	
-	private static int doGetOffset(final Surface surface, final List<Surface> surfaces) {
-		for(int i = 0, j = 0; i < surfaces.size(); i++) {
-			final Surface surface0 = surfaces.get(i);
-			
-			if(surface.equals(surface0)) {
-				return j;
-			}
-			
-			j += Surface.SIZE;
-		}
+	private static float[] doCompileVector3Fs(final List<Vector3F> vector3Fs) {
+		doReportProgress("Compiling Vector3Fs...");
 		
-		throw new IllegalArgumentException(String.format("No such Surface found: %s", surface));
-	}
-	
-	private static int doGetOffset(final Texture texture, final List<Texture> textures) {
-		for(int i = 0, j = 0; i < textures.size(); i++) {
-			final Texture texture0 = textures.get(i);
-			
-			if(texture.equals(texture0)) {
-				return j;
-			}
-			
-			j += texture0.getSize();
-		}
+		final float[] compiledVector3Fs = new float[vector3Fs.size() * 3];
 		
-		throw new IllegalArgumentException(String.format("No such Texture found: %s", texture));
-	}
-	
-	private static int doSize(final int type) {
-		switch(type) {
-			case Plane.TYPE:
-				return Plane.SIZE;
-			case Sphere.TYPE:
-				return Sphere.SIZE;
-			case Terrain.TYPE:
-				return Terrain.SIZE;
-			case Triangle.TYPE:
-				return Triangle.SIZE;
-			default:
-				throw new IllegalArgumentException(String.format("No such Shape found: %s", Integer.toString(type)));
-		}
-	}
-	
-	private static int[] doCompileShapeOffsets(final Scene scene) {
-		final List<Shape> shapes = scene.getShapes();
-		
-		int count = 0;
-		
-		for(final Shape shape : shapes) {
-			if(!(shape instanceof Triangle)) {
-				count++;
-			}
-		}
-		
-		final int[] shapeOffsets = new int[count];
-		
-		int index = 0;
-		
-		for(final Shape shape : shapes) {
-			if(!(shape instanceof Triangle)) {
-				shapeOffsets[index++] = doGetOffset(shape, shapes);
-			}
-		}
-		
-		return shapeOffsets;
-	}
-	
-	private static List<Point2F> doFindPoint2Fs(final Scene scene) {
-		final Set<Point2F> point2Fs = new LinkedHashSet<>();
-		
-		for(final Shape shape : scene.getShapes()) {
-			if(shape instanceof Triangle) {
-				final Triangle triangle = Triangle.class.cast(shape);
-				
-				final Point2F a = triangle.getA().getTextureCoordinates();
-				final Point2F b = triangle.getB().getTextureCoordinates();
-				final Point2F c = triangle.getC().getTextureCoordinates();
-				
-				point2Fs.add(a);
-				point2Fs.add(b);
-				point2Fs.add(c);
-			}
-		}
-		
-		return new ArrayList<>(point2Fs);
-	}
-	
-	private static List<Point3F> doFindPoint3Fs(final Scene scene) {
-		final Set<Point3F> point3Fs = new LinkedHashSet<>();
-		
-		for(final Shape shape : scene.getShapes()) {
-			if(shape instanceof Plane) {
-				final Plane plane = Plane.class.cast(shape);
-				
-				final Point3F a = plane.getA();
-				final Point3F b = plane.getB();
-				final Point3F c = plane.getC();
-				
-				point3Fs.add(a);
-				point3Fs.add(b);
-				point3Fs.add(c);
-			} else if(shape instanceof Sphere) {
-				final Sphere sphere = Sphere.class.cast(shape);
-				
-				final Point3F position = sphere.getPosition();
-				
-				point3Fs.add(position);
-			} else if(shape instanceof Triangle) {
-				final Triangle triangle = Triangle.class.cast(shape);
-				
-				final Point3F a = triangle.getA().getPosition();
-				final Point3F b = triangle.getB().getPosition();
-				final Point3F c = triangle.getC().getPosition();
-				
-				point3Fs.add(a);
-				point3Fs.add(b);
-				point3Fs.add(c);
-			}
-		}
-		
-		return new ArrayList<>(point3Fs);
-	}
-	
-	private static List<Surface> doFindSurfaces(final Scene scene) {
-		final Set<Surface> surfaces = new LinkedHashSet<>();
-		
-		for(final Shape shape : scene.getShapes()) {
-			final Surface surface = shape.getSurface();
-			
-			surfaces.add(surface);
-		}
-		
-		return new ArrayList<>(surfaces);
-	}
-	
-	private static List<Texture> doFindTextures(final Scene scene) {
-		final Set<Texture> textures = new LinkedHashSet<>();
-		
-		for(final Shape shape : scene.getShapes()) {
-			final Surface surface = shape.getSurface();
-			
-			final Texture textureAlbedo = surface.getTextureAlbedo();
-			final Texture textureNormal = surface.getTextureNormal();
-			
-			textures.add(textureAlbedo);
-			textures.add(textureNormal);
-		}
-		
-		return new ArrayList<>(textures);
-	}
-	
-	private static List<Vector3F> doFindVector3Fs(final Scene scene) {
-		final Set<Vector3F> vector3Fs = new LinkedHashSet<>();
-		
-		for(final Shape shape : scene.getShapes()) {
-			if(shape instanceof Plane) {
-				final Plane plane = Plane.class.cast(shape);
-				
-				final Vector3F surfaceNormal = plane.getSurfaceNormal();
-				
-				vector3Fs.add(surfaceNormal);
-			} else if(shape instanceof Triangle) {
-				final Triangle triangle = Triangle.class.cast(shape);
-				
-				final Vector3F a = triangle.getA().getNormal();
-				final Vector3F b = triangle.getB().getNormal();
-				final Vector3F c = triangle.getC().getNormal();
-				
-				vector3Fs.add(a);
-				vector3Fs.add(b);
-				vector3Fs.add(c);
-			}
-		}
-		
-		return new ArrayList<>(vector3Fs);
-	}
-	
-	private static Map<Point2F, Integer> doCreatePoint2FMapping(final List<Point2F> point2Fs) {
-		final Map<Point2F, Integer> point2FMapping = new HashMap<>();
-		
-		for(int i = 0, j = 0; i < point2Fs.size(); i++, j += 2) {
-			final Point2F point2F = point2Fs.get(i);
-			
-			point2FMapping.put(point2F, Integer.valueOf(j));
-		}
-		
-		return point2FMapping;
-	}
-	
-	private static Map<Point3F, Integer> doCreatePoint3FMapping(final List<Point3F> point3Fs) {
-		final Map<Point3F, Integer> point3FMapping = new HashMap<>();
-		
-		for(int i = 0, j = 0; i < point3Fs.size(); i++, j += 3) {
-			final Point3F point3F = point3Fs.get(i);
-			
-			point3FMapping.put(point3F, Integer.valueOf(j));
-		}
-		
-		return point3FMapping;
-	}
-	
-	private static Map<Vector3F, Integer> doCreateVector3FMapping(final List<Vector3F> vector3Fs) {
-		final Map<Vector3F, Integer> vector3FMapping = new HashMap<>();
-		
-		for(int i = 0, j = 0; i < vector3Fs.size(); i++, j += 3) {
+		for(int i = 0; i < vector3Fs.size(); i++) {
 			final Vector3F vector3F = vector3Fs.get(i);
 			
-			vector3FMapping.put(vector3F, Integer.valueOf(j));
-		}
-		
-		return vector3FMapping;
-	}
-	
-	private static void doReorderShapes(final float[] boundingVolumeHierarchy, final float[] shapes, final int[] shapeOffsets) {
-		doReportProgress("Reordering Shapes...");
-		
-		if(boundingVolumeHierarchy.length > 9) {
-			final float[] shapes0 = shapes;
-			final float[] shapes1 = new float[shapes0.length];
-			
-			int boundingVolumeHierarchyOffset = 0;
-			int shapes1Offset = 0;
-			
-			while(boundingVolumeHierarchyOffset != -1) {
-				final int type = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset]);
-				
-				if(type == BoundingVolumeHierarchy.NODE_TYPE_TREE) {
-					boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]);
-				} else if(type == BoundingVolumeHierarchy.NODE_TYPE_LEAF) {
-					for(int i = 0; i < (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 8]); i++) {
-						final int index = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i]);
-						final int type0 = (int)(shapes0[index + Shape.RELATIVE_OFFSET_TYPE]);
-						final int size = doSize(type0);
-						
-						System.arraycopy(shapes0, index, shapes1, shapes1Offset, size);
-						
-						boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 9 + i] = shapes1Offset;
-						
-						shapes1Offset += size;
-					}
-					
-					boundingVolumeHierarchyOffset = (int)(boundingVolumeHierarchy[boundingVolumeHierarchyOffset + 1]);
-				}
-			}
-			
-			for(int i = 0, j = 0, k = 0; i < shapes0.length; i += j) {
-				final int type = (int)(shapes0[i + Shape.RELATIVE_OFFSET_TYPE]);
-				final int size = doSize(type);
-				
-				j = size;
-				
-				if(type != Triangle.TYPE) {
-					System.arraycopy(shapes0, i, shapes1, shapes1Offset, size);
-					
-					shapeOffsets[k] = shapes1Offset;
-					
-					shapes1Offset += size;
-					
-					k++;
-				}
-			}
-			
-			System.arraycopy(shapes1, 0, shapes0, 0, shapes1.length);
+			compiledVector3Fs[i * 3 + 0] = vector3F.x;
+			compiledVector3Fs[i * 3 + 1] = vector3F.y;
+			compiledVector3Fs[i * 3 + 2] = vector3F.z;
 		}
 		
 		doReportProgress(" Done.\n");
+		
+		return compiledVector3Fs.length > 0 ? compiledVector3Fs : new float[1];
+	}
+	
+	private static int doGetBoundingVolumeHierarchyRootNodeOffset(final Mesh mesh, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes) {
+		for(int i = 0, j = 0; i < meshes.size(); i++) {
+			final Mesh currentMesh = meshes.get(i);
+			
+			final Node currentBoundingVolumeHierarchyRootNode = boundingVolumeHierarchyRootNodes.get(i);
+			
+			if(mesh.equals(currentMesh)) {
+				return j;
+			}
+			
+			j += currentBoundingVolumeHierarchyRootNode.getSize();
+		}
+		
+		throw new IllegalArgumentException(String.format("No such Mesh found: %s", mesh));
+	}
+	
+	private static int doGetPlaneOffset(final Plane plane, final Map<Plane, Integer> planeMappings) {
+		return planeMappings.get(plane).intValue();
+	}
+	
+	private static int doGetPoint2FOffset(final Point2F point2F, final Map<Point2F, Integer> point2FMappings) {
+		return point2FMappings.get(point2F).intValue();
+	}
+	
+	private static int doGetPoint3FOffset(final Point3F point3F, final Map<Point3F, Integer> point3FMappings) {
+		return point3FMappings.get(point3F).intValue();
+	}
+	
+	private static int doGetShapeOffset(final Shape shape, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
+		if(shape instanceof Mesh) {
+			return doGetBoundingVolumeHierarchyRootNodeOffset(Mesh.class.cast(shape), meshes, boundingVolumeHierarchyRootNodes);
+		} else if(shape instanceof Plane) {
+			return doGetPlaneOffset(Plane.class.cast(shape), planeMappings);
+		} else if(shape instanceof Sphere) {
+			return doGetSphereOffset(Sphere.class.cast(shape), sphereMappings);
+		} else if(shape instanceof Terrain) {
+			return doGetTerrainOffset(Terrain.class.cast(shape), terrainMappings);
+		} else if(shape instanceof Triangle) {
+			return doGetTriangleOffset(Triangle.class.cast(shape), triangleMappings);
+		} else {
+			throw new IllegalArgumentException(String.format("No such Shape found: %s", shape));
+		}
+	}
+	
+	private static int doGetSphereOffset(final Sphere sphere, final Map<Sphere, Integer> sphereMappings) {
+		return sphereMappings.get(sphere).intValue();
+	}
+	
+	private static int doGetSurfaceOffset(final Surface surface, final Map<Surface, Integer> surfaceMappings) {
+		return surfaceMappings.get(surface).intValue();
+	}
+	
+	private static int doGetTerrainOffset(final Terrain terrain, final Map<Terrain, Integer> terrainMappings) {
+		return terrainMappings.get(terrain).intValue();
+	}
+	
+	private static int doGetTextureOffset(final Texture texture, final Map<Texture, Integer> textureMappings) {
+		return textureMappings.get(texture).intValue();
+	}
+	
+	private static int doGetTriangleOffset(final Triangle triangle, final Map<Triangle, Integer> triangleMappings) {
+		return triangleMappings.get(triangle).intValue();
+	}
+	
+	private static int doGetVector3FOffset(final Vector3F vector3F, final Map<Vector3F, Integer> vector3FMappings) {
+		return vector3FMappings.get(vector3F).intValue();
 	}
 	
 	private static void doReportProgress(final String message) {

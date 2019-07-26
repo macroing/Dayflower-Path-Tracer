@@ -57,6 +57,26 @@ public final class BoundingVolumeHierarchy {
 		return this.root;
 	}
 	
+//	TODO: Add Javadocs.
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof BoundingVolumeHierarchy)) {
+			return false;
+		} else if(!Objects.equals(this.root, BoundingVolumeHierarchy.class.cast(object).root)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+//	TODO: Add Javadocs.
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.root);
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
@@ -104,12 +124,15 @@ public final class BoundingVolumeHierarchy {
 //	TODO: Add Javadocs.
 	public static final class LeafNode extends Node {
 		private final List<Triangle> triangles = new ArrayList<>(10);
+		private int size;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 //		TODO: Add Javadocs.
 		public LeafNode(final int depth) {
 			super(depth);
+			
+			this.size = 9;
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,6 +164,32 @@ public final class BoundingVolumeHierarchy {
 		
 //		TODO: Add Javadocs.
 		@Override
+		public boolean equals(final Object object) {
+			if(object == this) {
+				return true;
+			} else if(!(object instanceof LeafNode)) {
+				return false;
+			} else if(Float.compare(getMaximumX(), LeafNode.class.cast(object).getMaximumX()) != 0) {
+				return false;
+			} else if(Float.compare(getMaximumY(), LeafNode.class.cast(object).getMaximumY()) != 0) {
+				return false;
+			} else if(Float.compare(getMaximumZ(), LeafNode.class.cast(object).getMaximumZ()) != 0) {
+				return false;
+			} else if(Float.compare(getMinimumX(), LeafNode.class.cast(object).getMinimumX()) != 0) {
+				return false;
+			} else if(Float.compare(getMinimumY(), LeafNode.class.cast(object).getMinimumY()) != 0) {
+				return false;
+			} else if(Float.compare(getMinimumZ(), LeafNode.class.cast(object).getMinimumZ()) != 0) {
+				return false;
+			} else if(!Objects.equals(this.triangles, LeafNode.class.cast(object).triangles)) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
 		public boolean isLeaf() {
 			return true;
 		}
@@ -148,17 +197,27 @@ public final class BoundingVolumeHierarchy {
 //		TODO: Add Javadocs.
 		@Override
 		public int getSize() {
-			return 9 + this.triangles.size();
+			return this.size;
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
+		public int hashCode() {
+			return Objects.hash(Float.valueOf(getMaximumX()), Float.valueOf(getMaximumY()), Float.valueOf(getMaximumZ()), Float.valueOf(getMinimumX()), Float.valueOf(getMinimumY()), Float.valueOf(getMinimumZ()), this.triangles);
 		}
 		
 //		TODO: Add Javadocs.
 		public void addTriangle(final Triangle triangle) {
-			this.triangles.add(Objects.requireNonNull(triangle, "triangle == null"));
+			if(this.triangles.add(Objects.requireNonNull(triangle, "triangle == null"))) {
+				this.size += 1;
+			}
 		}
 		
 //		TODO: Add Javadocs.
 		public void removeTriangle(final Triangle triangle) {
-			this.triangles.remove(Objects.requireNonNull(triangle, "triangle == null"));
+			if(this.triangles.remove(Objects.requireNonNull(triangle, "triangle == null"))) {
+				this.size -= 1;
+			}
 		}
 	}
 	
@@ -271,12 +330,15 @@ public final class BoundingVolumeHierarchy {
 	public static final class TreeNode extends Node {
 		private Node left;
 		private Node right;
+		private int size;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 //		TODO: Add Javadocs.
 		public TreeNode(final int depth) {
 			super(depth);
+			
+			this.size = 9;
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -334,6 +396,34 @@ public final class BoundingVolumeHierarchy {
 		
 //		TODO: Add Javadocs.
 		@Override
+		public boolean equals(final Object object) {
+			if(object == this) {
+				return true;
+			} else if(!(object instanceof TreeNode)) {
+				return false;
+			} else if(Float.compare(getMaximumX(), TreeNode.class.cast(object).getMaximumX()) != 0) {
+				return false;
+			} else if(Float.compare(getMaximumY(), TreeNode.class.cast(object).getMaximumY()) != 0) {
+				return false;
+			} else if(Float.compare(getMaximumZ(), TreeNode.class.cast(object).getMaximumZ()) != 0) {
+				return false;
+			} else if(Float.compare(getMinimumX(), TreeNode.class.cast(object).getMinimumX()) != 0) {
+				return false;
+			} else if(Float.compare(getMinimumY(), TreeNode.class.cast(object).getMinimumY()) != 0) {
+				return false;
+			} else if(Float.compare(getMinimumZ(), TreeNode.class.cast(object).getMinimumZ()) != 0) {
+				return false;
+			} else if(!Objects.equals(this.left, TreeNode.class.cast(object).left)) {
+				return false;
+			} else if(!Objects.equals(this.right, TreeNode.class.cast(object).right)) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
 		public boolean isLeaf() {
 			return false;
 		}
@@ -341,30 +431,27 @@ public final class BoundingVolumeHierarchy {
 //		TODO: Add Javadocs.
 		@Override
 		public int getSize() {
-			int size = 9;
-			
-			final Node left = this.left;
-			final Node right = this.right;
-			
-			if(left != null) {
-				size += left.getSize();
-			}
-			
-			if(right != null) {
-				size += right.getSize();
-			}
-			
-			return size;
+			return this.size;
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
+		public int hashCode() {
+			return Objects.hash(Float.valueOf(getMaximumX()), Float.valueOf(getMaximumY()), Float.valueOf(getMaximumZ()), Float.valueOf(getMinimumX()), Float.valueOf(getMinimumY()), Float.valueOf(getMinimumZ()), this.left, this.right);
 		}
 		
 //		TODO: Add Javadocs.
 		public void setLeft(final Node left) {
+			this.size -= this.left != null ? this.left.getSize() : 0;
 			this.left = Objects.requireNonNull(left, "left == null");
+			this.size += this.left != null ? this.left.getSize() : 0;
 		}
 		
 //		TODO: Add Javadocs.
 		public void setRight(final Node right) {
+			this.size -= this.right != null ? this.right.getSize() : 0;
 			this.right = Objects.requireNonNull(right, "right == null");
+			this.size += this.right != null ? this.right.getSize() : 0;
 		}
 	}
 	

@@ -1,3 +1,9 @@
+2019-07-26  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	The scene model and the renderer have been rewritten almost entirely, in order to optimize the memory requirement.
+	* CHANGE:	The emission color of surfaces have been replaced with emission textures. This allows for partially emissive objects, or objects that vary in color over the surface.
+	* REMOVE:	All scenes except House_Scene, Material_Showcase_Scene and Monkey_Scene have been removed temporarily. They need to be re-implemented because of the scene model change.
+
 2019-07-23  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* CHANGE:	The rendering speed has been optimized. Two of the arrays in RendererKernel have been changed to use private memory space, instead of local memory space. Doing the same change with the other arrays seems to undo this optimization.

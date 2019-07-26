@@ -18,11 +18,7 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
-
-import org.dayflower.pathtracer.color.Color;
 
 /**
  * A {@code Surface} is a model of a surface with different properties.
@@ -32,71 +28,53 @@ import org.dayflower.pathtracer.color.Color;
  */
 public final class Surface {
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_EMISSION = 0;
+	public static final int RELATIVE_OFFSET_MATERIAL = 0;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_EMISSION_B = RELATIVE_OFFSET_EMISSION + 2;
+	public static final int RELATIVE_OFFSET_NOISE_AMOUNT = 4;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_EMISSION_G = RELATIVE_OFFSET_EMISSION + 1;
+	public static final int RELATIVE_OFFSET_NOISE_SCALE = 5;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_EMISSION_R = RELATIVE_OFFSET_EMISSION + 0;
+	public static final int RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET = 1;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_MATERIAL = 3;
+	public static final int RELATIVE_OFFSET_TEXTURE_EMISSION_OFFSET = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_NOISE_AMOUNT = 6;
+	public static final int RELATIVE_OFFSET_TEXTURE_NORMAL_OFFSET = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_NOISE_SCALE = 7;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_TEXTURES_OFFSET_ALBEDO = 4;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_TEXTURES_OFFSET_NORMAL = 5;
-	
-//	TODO: Add Javadocs.
-	public static final int SIZE = 8;
+	public static final int SIZE = 6;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private static final Map<String, Surface> INSTANCES = new HashMap<>();
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private final Color emission;
 	private final Material material;
 	private final Texture textureAlbedo;
+	private final Texture textureEmission;
 	private final Texture textureNormal;
 	private final float noiseAmount;
 	private final float noiseScale;
-	private final int hashCode;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private Surface(final Color emission, final float noiseAmount, final float noiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal) {
-		this.emission = emission;
+//	TODO: Add Javadocs.
+	public Surface(final Material material, final Texture textureAlbedo, final Texture textureEmission, final Texture textureNormal) {
+		this(material, textureAlbedo, textureEmission, textureNormal, 0.0F, 0.0F);
+	}
+	
+//	TODO: Add Javadocs.
+	public Surface(final Material material, final Texture textureAlbedo, final Texture textureEmission, final Texture textureNormal, final float noiseAmount, final float noiseScale) {
+		this.material = Objects.requireNonNull(material, "material == null");
+		this.textureAlbedo = Objects.requireNonNull(textureAlbedo, "textureAlbedo == null");
+		this.textureEmission = Objects.requireNonNull(textureEmission, "textureEmission == null");
+		this.textureNormal = Objects.requireNonNull(textureNormal, "textureNormal == null");
 		this.noiseAmount = noiseAmount;
 		this.noiseScale = noiseScale;
-		this.material = material;
-		this.textureAlbedo = textureAlbedo;
-		this.textureNormal = textureNormal;
-		this.hashCode = Objects.hash(this.emission, Float.valueOf(this.noiseAmount), Float.valueOf(this.noiseScale), this.material, this.textureAlbedo, this.textureNormal);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Returns the emission of this {@code Surface} instance.
-	 * 
-	 * @return the emission of this {@code Surface} instance
-	 */
-	public Color getEmission() {
-		return this.emission;
-	}
 	
 	/**
 	 * Returns the {@link Material} of this {@code Surface} instance.
@@ -114,7 +92,7 @@ public final class Surface {
 	 */
 	@Override
 	public String toString() {
-		return String.format("new Surface(%s, %s, %s, %s, %s, %s)", this.emission, Float.toString(this.noiseAmount), Float.toString(this.noiseScale), this.material, this.textureAlbedo, this.textureNormal);
+		return String.format("new Surface(%s, %s, %s, %s, %s, %s)", this.material, this.textureAlbedo, this.textureEmission, this.textureNormal, Float.toString(this.noiseAmount), Float.toString(this.noiseScale));
 	}
 	
 	/**
@@ -124,6 +102,15 @@ public final class Surface {
 	 */
 	public Texture getTextureAlbedo() {
 		return this.textureAlbedo;
+	}
+	
+	/**
+	 * Returns the Emission {@link Texture} of this {@code Surface} instance.
+	 * 
+	 * @return the Emission {@link Texture} of this {@code Surface} instance
+	 */
+	public Texture getTextureEmission() {
+		return this.textureEmission;
 	}
 	
 	/**
@@ -145,16 +132,25 @@ public final class Surface {
 	 */
 	@Override
 	public boolean equals(final Object object) {
-		return object == this;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, this {@code Surface} instance is emissive, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, this {@code Surface} instance is emissive, {@code false} otherwise
-	 */
-	public boolean isEmissive() {
-		return !this.emission.isBlack();
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Surface)) {
+			return false;
+		} else if(!Objects.equals(this.material, Surface.class.cast(object).material)) {
+			return false;
+		} else if(!Objects.equals(this.textureAlbedo, Surface.class.cast(object).textureAlbedo)) {
+			return false;
+		} else if(!Objects.equals(this.textureEmission, Surface.class.cast(object).textureEmission)) {
+			return false;
+		} else if(!Objects.equals(this.textureNormal, Surface.class.cast(object).textureNormal)) {
+			return false;
+		} else if(Float.compare(this.noiseAmount, Surface.class.cast(object).noiseAmount) != 0) {
+			return false;
+		} else if(Float.compare(this.noiseScale, Surface.class.cast(object).noiseScale) != 0) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
 	/**
@@ -182,37 +178,6 @@ public final class Surface {
 	 */
 	@Override
 	public int hashCode() {
-		return this.hashCode;
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Returns a {@code Surface} instance.
-	 * <p>
-	 * If either {@code emission}, {@code material}, {@code textureAlbedo} or {@code textureNormal} are {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param emission the emission of the {@code Surface}
-	 * @param noiseAmount the Noise amount of the {@code Surface}
-	 * @param noiseScale the Noise scale of the {@code Surface}
-	 * @param material the {@link Material} of the {@code Surface}
-	 * @param textureAlbedo the Albedo {@link Texture} of the {@code Surface}
-	 * @param textureNormal the Normal Map {@code Texture} of the {@code Surface}
-	 * @return a {@code Surface} instance
-	 * @throws NullPointerException thrown if, and only if, either {@code emission}, {@code material}, {@code textureAlbedo} or {@code textureNormal} are {@code null}
-	 */
-	public static Surface getInstance(final Color emission, final float noiseAmount, final float noiseScale, final Material material, final Texture textureAlbedo, final Texture textureNormal) {
-		final int hashCodeEmission = emission.hashCode();
-		final int hashCodeNoiseAmount = Float.hashCode(noiseAmount);
-		final int hashCodeNoiseScale = Float.hashCode(noiseScale);
-		final int hashCodeMaterial = material.hashCode();
-		final int hashCodeTextureAlbedo = textureAlbedo.hashCode();
-		final int hashCodeTextureNormal = textureNormal.hashCode();
-		
-		final String key = "Surface" + hashCodeEmission + hashCodeNoiseAmount + hashCodeNoiseScale + hashCodeMaterial + hashCodeTextureAlbedo + hashCodeTextureNormal;
-		
-		synchronized(INSTANCES) {
-			return INSTANCES.computeIfAbsent(key, key0 -> new Surface(emission, noiseAmount, noiseScale, material, textureAlbedo, textureNormal));
-		}
+		return Objects.hash(this.material, this.textureAlbedo, this.textureEmission, this.textureNormal, Float.valueOf(this.noiseAmount), Float.valueOf(this.noiseScale));
 	}
 }

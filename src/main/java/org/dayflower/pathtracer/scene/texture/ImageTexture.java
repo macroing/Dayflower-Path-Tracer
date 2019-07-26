@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.imageio.ImageIO;
 
@@ -345,6 +346,32 @@ public final class ImageTexture implements Texture {
 		final int height = bufferedImage.getHeight();
 		
 		final int[] data = doGetDataFrom(bufferedImage);
+		
+		return new ImageTexture(degrees, width, height, scaleU, scaleV, data);
+	}
+	
+	/**
+	 * Returns a randomly generated {@code ImageTexture} based on its width and height.
+	 * 
+	 * @param width the width of the {@code ImageTexture}
+	 * @param height the height of the {@code ImageTexture}
+	 * @param degrees an angle in degrees to rotate the {@code ImageTexture}
+	 * @param scaleU the scale factor in the U-direction
+	 * @param scaleV the scale factor in the V-direction
+	 * @return a randomly generated {@code ImageTexture} based on its width and height
+	 */
+	public static ImageTexture random(final int width, final int height, final float degrees, final float scaleU, final float scaleV) {
+		final int[] data = new int[width * height];
+		
+		for(int i = 0; i < data.length; i++) {
+			final int r = ThreadLocalRandom.current().nextInt(0, 256);
+			final int g = ThreadLocalRandom.current().nextInt(0, 256);
+			final int b = ThreadLocalRandom.current().nextInt(0, 256);
+			
+			final int rGB = Color.toRGB(r, g, b);
+			
+			data[i] = rGB;
+		}
 		
 		return new ImageTexture(degrees, width, height, scaleU, scaleV, data);
 	}

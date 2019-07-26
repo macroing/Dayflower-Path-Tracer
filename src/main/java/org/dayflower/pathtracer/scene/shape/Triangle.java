@@ -34,36 +34,36 @@ import org.dayflower.pathtracer.scene.Surface;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Triangle extends Shape {
+public final class Triangle implements Shape {
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_POINT_A_POINT3S_OFFSET = 2;
+	public static final int RELATIVE_OFFSET_A_POSITION_OFFSET = 0;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_POINT_B_POINT3S_OFFSET = 3;
+	public static final int RELATIVE_OFFSET_A_SURFACE_NORMAL_OFFSET = 3;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_POINT_C_POINT3S_OFFSET = 4;
+	public static final int RELATIVE_OFFSET_A_TEXTURE_COORDINATES_OFFSET = 6;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_A_VECTOR3S_OFFSET = 5;
+	public static final int RELATIVE_OFFSET_B_POSITION_OFFSET = 1;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_B_VECTOR3S_OFFSET = 6;
+	public static final int RELATIVE_OFFSET_B_SURFACE_NORMAL_OFFSET = 4;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_C_VECTOR3S_OFFSET = 7;
+	public static final int RELATIVE_OFFSET_B_TEXTURE_COORDINATES_OFFSET = 7;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_UV_A_POINT2S_OFFSET = 8;
+	public static final int RELATIVE_OFFSET_C_POSITION_OFFSET = 2;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_UV_B_POINT2S_OFFSET = 9;
+	public static final int RELATIVE_OFFSET_C_SURFACE_NORMAL_OFFSET = 5;
 	
 //	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_UV_C_POINT2S_OFFSET = 10;
+	public static final int RELATIVE_OFFSET_C_TEXTURE_COORDINATES_OFFSET = 8;
 	
 //	TODO: Add Javadocs.
-	public static final int SIZE = 11;
+	public static final int SIZE = 9;
 	
 //	TODO: Add Javadocs.
 	public static final int TYPE = 2;
@@ -98,9 +98,7 @@ public final class Triangle extends Shape {
 	 * @param c a {@code Vertex} denoted by C
 	 * @throws NullPointerException thrown if, and only if, either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}
 	 */
-	public Triangle(final Surface surface, final Vertex a, final Vertex b, final Vertex c) {
-		super(surface);
-		
+	public Triangle(final Vertex a, final Vertex b, final Vertex c) {
 		this.a = Objects.requireNonNull(a, "a == null");
 		this.b = Objects.requireNonNull(b, "b == null");
 		this.c = Objects.requireNonNull(c, "c == null");
@@ -115,7 +113,7 @@ public final class Triangle extends Shape {
 	 */
 	@Override
 	public String toString() {
-		return String.format("Triangle: [A=%s], [B=%s], [C=%s]", this.a, this.b, this.c);
+		return String.format("new Triangle(%s, %s, %s)", this.a, this.b, this.c);
 	}
 	
 	/**
@@ -133,7 +131,7 @@ public final class Triangle extends Shape {
 	public Triangle rotate(final Vector3F w, final Vector3F v) {
 		final Matrix44F m = Matrix44F.rotate(w, v);
 		
-		return new Triangle(getSurface(), getA().transform(m), getB().transform(m), getC().transform(m));
+		return new Triangle(getA().transform(m), getB().transform(m), getC().transform(m));
 	}
 	
 	/**
@@ -173,7 +171,7 @@ public final class Triangle extends Shape {
 		final float c1Y = centerY + (c0Y - centerY) * s;
 		final float c1Z = centerZ + (c0Z - centerZ) * s;
 		
-		return new Triangle(getSurface(), this.a.setPosition(new Point3F(a1X, a1Y, a1Z)), this.b.setPosition(new Point3F(b1X, b1Y, b1Z)), this.c.setPosition(new Point3F(c1X, c1Y, c1Z)));
+		return new Triangle(this.a.setPosition(new Point3F(a1X, a1Y, a1Z)), this.b.setPosition(new Point3F(b1X, b1Y, b1Z)), this.c.setPosition(new Point3F(c1X, c1Y, c1Z)));
 	}
 	
 	/**
@@ -199,7 +197,7 @@ public final class Triangle extends Shape {
 	 * @return a new translated version of this {@code Triangle} instance
 	 */
 	public Triangle translateX(final float x) {
-		return new Triangle(getSurface(), getA().translateX(x), getB().translateX(x), getC().translateX(x));
+		return new Triangle(getA().translateX(x), getB().translateX(x), getC().translateX(x));
 	}
 	
 	/**
@@ -211,7 +209,7 @@ public final class Triangle extends Shape {
 	 * @return a new translated version of this {@code Triangle} instance
 	 */
 	public Triangle translateY(final float y) {
-		return new Triangle(getSurface(), getA().translateY(y), getB().translateY(y), getC().translateY(y));
+		return new Triangle(getA().translateY(y), getB().translateY(y), getC().translateY(y));
 	}
 	
 	/**
@@ -223,7 +221,7 @@ public final class Triangle extends Shape {
 	 * @return a new translated version of this {@code Triangle} instance
 	 */
 	public Triangle translateZ(final float z) {
-		return new Triangle(getSurface(), getA().translateZ(z), getB().translateZ(z), getC().translateZ(z));
+		return new Triangle(getA().translateZ(z), getB().translateZ(z), getC().translateZ(z));
 	}
 	
 	/**
@@ -267,8 +265,6 @@ public final class Triangle extends Shape {
 			return true;
 		} else if(!(object instanceof Triangle)) {
 			return false;
-		} else if(!Objects.equals(getSurface(), Triangle.class.cast(object).getSurface())) {
-			return false;
 		} else if(!Objects.equals(this.a, Triangle.class.cast(object).a)) {
 			return false;
 		} else if(!Objects.equals(this.b, Triangle.class.cast(object).b)) {
@@ -291,13 +287,23 @@ public final class Triangle extends Shape {
 	}
 	
 	/**
+	 * Returns the type of this {@code Triangle} instance.
+	 * 
+	 * @return the type of this {@code Triangle} instance
+	 */
+	@Override
+	public int getType() {
+		return TYPE;
+	}
+	
+	/**
 	 * Returns a hash code for this {@code Triangle} instance.
 	 * 
 	 * @return a hash code for this {@code Triangle} instance
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(getSurface(), this.a, this.b, this.c);
+		return Objects.hash(this.a, this.b, this.c);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -452,7 +458,7 @@ public final class Triangle extends Shape {
 		 */
 		@Override
 		public String toString() {
-			return String.format("Vertex: [TextureCoordinates=%s], [Position=%s], [Normal=%s]", this.textureCoordinates, this.position, this.normal);
+			return String.format("new Vertex(%s, %s, %s)", this.textureCoordinates, this.position, this.normal);
 		}
 		
 		/**

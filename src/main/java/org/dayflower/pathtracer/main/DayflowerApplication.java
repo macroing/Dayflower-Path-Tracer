@@ -583,15 +583,15 @@ public final class DayflowerApplication extends AbstractApplication implements C
 				final int mouseY = getMouseY();
 				final int index = mouseY * getKernelWidth() + mouseX;
 				
-				final int[] shapeOffsetsForPrimaryRay = rendererKernel.getShapeOffsetsForPrimaryRay();
+				final int[] primitiveOffsetsForPrimaryRay = rendererKernel.getPrimitiveOffsetsForPrimaryRay();
 				
-				if(index >= 0 && index < shapeOffsetsForPrimaryRay.length) {
-					final int selectedShapeIndex = shapeOffsetsForPrimaryRay[index];
+				if(index >= 0 && index < primitiveOffsetsForPrimaryRay.length) {
+					final int selectedPrimitiveOffset = primitiveOffsetsForPrimaryRay[index];
 					
-					if(selectedShapeIndex == rendererKernel.getSelectedShapeIndex()) {
-						rendererKernel.setSelectedShapeIndex(-1);
+					if(selectedPrimitiveOffset == rendererKernel.getSelectedPrimitiveOffset()) {
+						rendererKernel.setSelectedPrimitiveOffset(-1);
 					} else {
-						rendererKernel.setSelectedShapeIndex(selectedShapeIndex);
+						rendererKernel.setSelectedPrimitiveOffset(selectedPrimitiveOffset);
 					}
 				}
 			}
