@@ -21,7 +21,6 @@ package org.dayflower.pathtracer.kernel;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
@@ -30,7 +29,6 @@ import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
-import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
@@ -139,17 +137,13 @@ public final class RendererKernel extends AbstractKernel {
 	private final float[] colorAverageSamples;
 	private float[] colorCurrentSamples_$local$;
 	private float[] colorTemporarySamples_$private$3 = new float[SIZE_COLOR_RGB];
-	private final float[] sceneBoundingVolumeHierarchies_$constant$;
 	private final float[] sceneCamera_$constant$;
-	private final float[] scenePlanes_$constant$;
 	private final float[] scenePoint2Fs_$constant$;
 	private final float[] scenePoint3Fs_$constant$;
-	private final float[] scenePrimitives_$constant$;
 	private final float[] sceneSpheres_$constant$;
 	private final float[] sceneSurfaces_$constant$;
 	private final float[] sceneTerrains_$constant$;
 	private final float[] sceneTextures_$constant$;
-	private final float[] sceneTriangles_$constant$;
 	private final float[] sceneVector3Fs_$constant$;
 	private final float[] sunAndSkyColHistogram_$constant$;
 	private final float[] sunAndSkyImageHistogram_$constant$;
@@ -174,6 +168,10 @@ public final class RendererKernel extends AbstractKernel {
 	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2;
 	private final int width;
 	private int[] primitiveOffsetsForPrimaryRay;
+	private final int[] sceneBoundingVolumeHierarchies_$constant$;
+	private final int[] scenePlanes_$constant$;
+	private final int[] scenePrimitives_$constant$;
+	private final int[] sceneTriangles_$constant$;
 	private final long[] subSamples;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,20 +209,19 @@ public final class RendererKernel extends AbstractKernel {
 		this.colorSpaceSlopeMatch = rGBColorSpace.getSlopeMatch();
 		
 //		Initialize the scene variables:
-		this.sceneBoundingVolumeHierarchies_$constant$ = compiledScene.getBoundingVolumeHierarchies();
 		this.sceneCamera_$constant$ = compiledScene.getCamera();
-		this.scenePlanes_$constant$ = compiledScene.getPlanes();
 		this.scenePoint2Fs_$constant$ = compiledScene.getPoint2Fs();
 		this.scenePoint3Fs_$constant$ = compiledScene.getPoint3Fs();
-		this.scenePrimitives_$constant$ = compiledScene.getPrimitives();
-		this.scenePrimitivesCount = this.scenePrimitives_$constant$.length / Primitive.SIZE;
-		
 		this.sceneSpheres_$constant$ = compiledScene.getSpheres();
 		this.sceneSurfaces_$constant$ = compiledScene.getSurfaces();
 		this.sceneTerrains_$constant$ = compiledScene.getTerrains();
 		this.sceneTextures_$constant$ = compiledScene.getTextures();
-		this.sceneTriangles_$constant$ = compiledScene.getTriangles();
 		this.sceneVector3Fs_$constant$ = compiledScene.getVector3Fs();
+		this.sceneBoundingVolumeHierarchies_$constant$ = compiledScene.getBoundingVolumeHierarchies();
+		this.scenePlanes_$constant$ = compiledScene.getPlanes();
+		this.scenePrimitives_$constant$ = compiledScene.getPrimitives();
+		this.scenePrimitivesCount = this.scenePrimitives_$constant$.length / Primitive.SIZE;
+		this.sceneTriangles_$constant$ = compiledScene.getTriangles();
 		
 //		Initialize the sun and sky variables:
 		this.sunAndSkyColHistogram_$constant$ = sky.getColHistogram();
@@ -1062,7 +1059,7 @@ public final class RendererKernel extends AbstractKernel {
 		final int selectedPrimitiveOffset = getSelectedPrimitiveOffset();
 		
 		if(selectedPrimitiveOffset != -1) {
-			final int surfacesOffset = (int)(this.scenePrimitives_$constant$[selectedPrimitiveOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET]);
+			final int surfacesOffset = this.scenePrimitives_$constant$[selectedPrimitiveOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 			
 			final int oldMaterialOrdinal = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
@@ -1319,8 +1316,8 @@ public final class RendererKernel extends AbstractKernel {
 			
 			final int currentPrimitiveOffset = i * Primitive.SIZE;
 			
-			int currentShapeType = (int)(this.scenePrimitives_$constant$[currentPrimitiveOffset + Primitive.RELATIVE_OFFSET_SHAPE_TYPE]);
-			int currentShapeOffset = (int)(this.scenePrimitives_$constant$[currentPrimitiveOffset + Primitive.RELATIVE_OFFSET_SHAPE_OFFSET]);
+			int currentShapeType = this.scenePrimitives_$constant$[currentPrimitiveOffset + Primitive.RELATIVE_OFFSET_SHAPE_TYPE];
+			int currentShapeOffset = this.scenePrimitives_$constant$[currentPrimitiveOffset + Primitive.RELATIVE_OFFSET_SHAPE_OFFSET];
 			
 			if(currentShapeType == Mesh.TYPE) {
 //				Initialize the offset to the root of the BVH structure:
@@ -1329,15 +1326,18 @@ public final class RendererKernel extends AbstractKernel {
 				
 //				Loop through the BVH structure as long as the offset to the next node is not -1:
 				while(boundingVolumeHierarchyRelativeOffset != -1) {
+					final int minimumOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 2];
+					final int maximumOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 3];
+					
 //					Retrieve the minimum point location of the current bounding box:
-					final float minimumX = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 2];
-					final float minimumY = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 3];
-					final float minimumZ = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 4];
+					final float minimumX = this.scenePoint3Fs_$constant$[minimumOffset + 0];
+					final float minimumY = this.scenePoint3Fs_$constant$[minimumOffset + 1];
+					final float minimumZ = this.scenePoint3Fs_$constant$[minimumOffset + 2];
 					
 //					Retrieve the maximum point location of the current bounding box:
-					final float maximumX = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 5];
-					final float maximumY = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 6];
-					final float maximumZ = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 7];
+					final float maximumX = this.scenePoint3Fs_$constant$[maximumOffset + 0];
+					final float maximumY = this.scenePoint3Fs_$constant$[maximumOffset + 1];
+					final float maximumZ = this.scenePoint3Fs_$constant$[maximumOffset + 2];
 					
 //					Calculate the distance to the minimum point location of the bounding box:
 					final float t0X = (minimumX - originX) * directionReciprocalX;
@@ -1368,28 +1368,28 @@ public final class RendererKernel extends AbstractKernel {
 //					Check if the maximum distance is greater than or equal to the minimum distance:
 					if(tMaximum < 0.0F || tMinimum > tMaximum || closestDistance < tMinimum) {
 //						Retrieve the offset to the next node in the BVH structure, relative to the current one:
-						boundingVolumeHierarchyRelativeOffset = (int)(this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 1]);
+						boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 1];
 					} else {
 //						Retrieve the type of the current BVH node:
-						final int type = (int)(this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset]);
+						final int type = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset];
 						
 						if(type == BoundingVolumeHierarchy.NODE_TYPE_TREE) {
 //							This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
-							boundingVolumeHierarchyRelativeOffset = (int)(this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 8]);
+							boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 4];
 						} else {
 //							Retrieve the triangle count in the current BVH node:
-							final int triangleCount = (int)(this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 8]);
+							final int triangleCount = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 4];
 							
 							int j = 0;
 							
 //							Loop through all triangles in the current BVH node:
 							while(j < triangleCount) {
 //								Retrieve the offset to the current triangle:
-								final int currentTriangleOffset = (int)(this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 9 + j]);
+								final int currentTriangleOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 5 + j];
 								
-								final int offsetAPosition = (int)(this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET]);
-								final int offsetBPosition = (int)(this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET]);
-								final int offsetCPosition = (int)(this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET]);
+								final int offsetAPosition = this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET];
+								final int offsetBPosition = this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET];
+								final int offsetCPosition = this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET];
 								
 								final float aPositionX = this.scenePoint3Fs_$constant$[offsetAPosition + 0];
 								final float aPositionY = this.scenePoint3Fs_$constant$[offsetAPosition + 1];
@@ -1420,13 +1420,13 @@ public final class RendererKernel extends AbstractKernel {
 							}
 							
 //							Retrieve the offset to the next node in the BVH structure, relative to the current one:
-							boundingVolumeHierarchyRelativeOffset = (int)(this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 1]);
+							boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 1];
 						}
 					}
 				}
 			} else if(currentShapeType == Plane.TYPE) {
-				final int offsetA = (int)(this.scenePlanes_$constant$[currentShapeOffset + Plane.RELATIVE_OFFSET_A_OFFSET]);
-				final int offsetSurfaceNormal = (int)(this.scenePlanes_$constant$[currentShapeOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL_OFFSET]);
+				final int offsetA = this.scenePlanes_$constant$[currentShapeOffset + Plane.RELATIVE_OFFSET_A_OFFSET];
+				final int offsetSurfaceNormal = this.scenePlanes_$constant$[currentShapeOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL_OFFSET];
 				
 				final float aX = this.scenePoint3Fs_$constant$[offsetA + 0];
 				final float aY = this.scenePoint3Fs_$constant$[offsetA + 1];
@@ -1457,9 +1457,9 @@ public final class RendererKernel extends AbstractKernel {
 				
 				currentDistance = doIntersectTerrain(originX, originY, originZ, directionX, directionY, directionZ, frequency, gain, minimum, maximum, octaves);
 			} else if(currentShapeType == Triangle.TYPE) {
-				final int offsetAPosition = (int)(this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET]);
-				final int offsetBPosition = (int)(this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET]);
-				final int offsetCPosition = (int)(this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET]);
+				final int offsetAPosition = this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET];
+				final int offsetBPosition = this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET];
+				final int offsetCPosition = this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET];
 				
 				final float aPositionX = this.scenePoint3Fs_$constant$[offsetAPosition + 0];
 				final float aPositionY = this.scenePoint3Fs_$constant$[offsetAPosition + 1];
@@ -1494,10 +1494,10 @@ public final class RendererKernel extends AbstractKernel {
 				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_OFFSET] = closestShapeOffset;
 				
 				if(closestShapeType == Plane.TYPE) {
-					final int offsetA = (int)(this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_A_OFFSET]);
-					final int offsetB = (int)(this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_B_OFFSET]);
-					final int offsetC = (int)(this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_C_OFFSET]);
-					final int offsetSurfaceNormal = (int)(this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL_OFFSET]);
+					final int offsetA = this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_A_OFFSET];
+					final int offsetB = this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_B_OFFSET];
+					final int offsetC = this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_C_OFFSET];
+					final int offsetSurfaceNormal = this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL_OFFSET];
 					
 					final float aX = this.scenePoint3Fs_$constant$[offsetA + 0];
 					final float aY = this.scenePoint3Fs_$constant$[offsetA + 1];
@@ -1532,17 +1532,17 @@ public final class RendererKernel extends AbstractKernel {
 					
 					doCalculateSurfacePropertiesForTerrain(originX, originY, originZ, directionX, directionY, directionZ, closestDistance, frequency, gain, minimum, maximum, octaves);
 				} else if(closestShapeType == Triangle.TYPE) {
-					final int offsetAPosition = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET]);
-					final int offsetBPosition = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET]);
-					final int offsetCPosition = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET]);
+					final int offsetAPosition = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET];
+					final int offsetBPosition = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET];
+					final int offsetCPosition = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET];
 					
-					final int offsetASurfaceNormal = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_SURFACE_NORMAL_OFFSET]);
-					final int offsetBSurfaceNormal = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_SURFACE_NORMAL_OFFSET]);
-					final int offsetCSurfaceNormal = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_SURFACE_NORMAL_OFFSET]);
+					final int offsetASurfaceNormal = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_SURFACE_NORMAL_OFFSET];
+					final int offsetBSurfaceNormal = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_SURFACE_NORMAL_OFFSET];
+					final int offsetCSurfaceNormal = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_SURFACE_NORMAL_OFFSET];
 					
-					final int offsetATextureCoordinates = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_TEXTURE_COORDINATES_OFFSET]);
-					final int offsetBTextureCoordinates = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_TEXTURE_COORDINATES_OFFSET]);
-					final int offsetCTextureCoordinates = (int)(this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_TEXTURE_COORDINATES_OFFSET]);
+					final int offsetATextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_TEXTURE_COORDINATES_OFFSET];
+					final int offsetBTextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_TEXTURE_COORDINATES_OFFSET];
+					final int offsetCTextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_TEXTURE_COORDINATES_OFFSET];
 					
 					final float aPositionX = this.scenePoint3Fs_$constant$[offsetAPosition + 0];
 					final float aPositionY = this.scenePoint3Fs_$constant$[offsetAPosition + 1];
@@ -2685,7 +2685,7 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private void doCalculateTextureColor(final int relativeOffsetTextures, final int primitivesOffset) {
-		final int surfacesOffset = (int)(this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET]);
+		final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 		final int texturesOffset = (int)(this.sceneSurfaces_$constant$[surfacesOffset + relativeOffsetTextures]);
 		final int textureType = (int)(this.sceneTextures_$constant$[texturesOffset]);
 		
@@ -3065,7 +3065,7 @@ public final class RendererKernel extends AbstractKernel {
 			}
 			
 //			Retrieve the offset to the surfaces array for the given shape:
-			final int surfacesOffset = (int)(this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET]);
+			final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 			
 //			Update the offset of the shape to skip to the current offset:
 //			shapesOffsetToSkip = shapesOffset;
@@ -3561,7 +3561,7 @@ public final class RendererKernel extends AbstractKernel {
 		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
 		
 //		Retrieve the offset to the surfaces array:
-		final int surfacesOffset = (int)(this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET]);
+		final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 		
 //		Retrieve the noise amount from the current shape:
 		final float amount = this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_NOISE_AMOUNT];
@@ -3614,7 +3614,7 @@ public final class RendererKernel extends AbstractKernel {
 	
 	private void doPerformNormalMappingViaImageTexture(final int primitivesOffset) {
 //		Retrieve the offset in the textures array and the type of the texture:
-		final int surfacesOffset = (int)(this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET]);
+		final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 		final int texturesOffset = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_TEXTURE_NORMAL_OFFSET]);
 		final int textureType = (int)(this.sceneTextures_$constant$[texturesOffset]);
 		
@@ -3638,7 +3638,7 @@ public final class RendererKernel extends AbstractKernel {
 			final float wY = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
 			final float wZ = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
 			
-			final int type = (int)(this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SHAPE_TYPE]);
+			final int type = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SHAPE_TYPE];
 			
 			if(type == Sphere.TYPE) {
 				final float v0X = -2.0F * PI * wY;//wZ?
@@ -3938,7 +3938,7 @@ public final class RendererKernel extends AbstractKernel {
 			depthCurrent++;
 			
 //			Retrieve the offset to the surfaces array for the given primitive:
-			final int surfacesOffset = (int)(this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET]);
+			final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 			
 //			Retrieve the material type of the intersected primitive:
 			final int material = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
@@ -4035,9 +4035,9 @@ public final class RendererKernel extends AbstractKernel {
 			if(shapeType == Triangle.TYPE) {
 //				Retrieve the offsets of the surface intersection point and the points A, B and C in the intersections array:
 				final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-				final int offsetA = (int)(this.sceneTriangles_$constant$[shapeOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET]);
-				final int offsetB = (int)(this.sceneTriangles_$constant$[shapeOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET]);
-				final int offsetC = (int)(this.sceneTriangles_$constant$[shapeOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET]);
+				final int offsetA = this.sceneTriangles_$constant$[shapeOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET];
+				final int offsetB = this.sceneTriangles_$constant$[shapeOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET];
+				final int offsetC = this.sceneTriangles_$constant$[shapeOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET];
 				
 //				Retrieve the camera orthonormal basis:
 				final float cameraOrthoNormalBasisUX = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_U_X];

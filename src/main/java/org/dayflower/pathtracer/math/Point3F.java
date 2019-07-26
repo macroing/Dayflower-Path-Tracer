@@ -297,6 +297,20 @@ public final class Point3F {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Returns the center {@code Point3F} given the bounds represented by {@code a} and {@code b}.
+	 * <p>
+	 * If either {@code a} or {@code b} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param a one of the {@code Point3F}s defining the bounds
+	 * @param b one of the {@code Point3F}s defining the bounds
+	 * @return the center {@code Point3F} given the bounds represented by {@code a} and {@code b}
+	 * @throws NullPointerException thrown if, and only if, either {@code a} or {@code b} are {@code null}
+	 */
+	public static Point3F center(final Point3F a, final Point3F b) {
+		return new Point3F((a.x + b.x) * 0.5F, (a.y + b.y) * 0.5F, (a.z + b.z) * 0.5F);  
+	}
+	
+	/**
 	 * Returns the maximum {@code Point3F}.
 	 * 
 	 * @return the maximum {@code Point3F}

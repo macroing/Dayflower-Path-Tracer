@@ -59,6 +59,8 @@ public final class SceneCompiler {
 	
 //	TODO: Add Javadocs.
 	public static CompiledScene compile(final Scene scene) {
+		final long currentTimeMillis0 = System.currentTimeMillis();
+		
 //		Retrieve all unique Primitives:
 		final List<Primitive> uniquePrimitives = doFindUniquePrimitives(scene);
 		
@@ -80,7 +82,7 @@ public final class SceneCompiler {
 		
 //		Retrieve all unique Point2Fs, Point3Fs and Vector3Fs:
 		final List<Point2F> uniquePoint2Fs = doFindUniquePoint2Fs(uniquePrimitives);
-		final List<Point3F> uniquePoint3Fs = doFindUniquePoint3Fs(uniquePrimitives);
+		final List<Point3F> uniquePoint3Fs = doFindUniquePoint3Fs(uniqueBoundingVolumeHierarchyRootNodes, uniquePrimitives);
 		final List<Vector3F> uniqueVector3Fs = doFindUniqueVector3Fs(uniquePrimitives);
 		
 //		Create mappings from Shapes to Integer indices:
@@ -101,20 +103,26 @@ public final class SceneCompiler {
 		final Map<Vector3F, Integer> vector3FMappings = doCreateVector3FMappings(uniqueVector3Fs);
 		
 //		Compile the scene:
-		final float[] boundingVolumeHierarchies = doCompileBoundingVolumeHierarchies(uniqueBoundingVolumeHierarchyRootNodes, triangleMappings);
 		final float[] camera = scene.getCamera().getArray();
-		final float[] planes = doCompilePlanes(uniquePlanes, point3FMappings, vector3FMappings);
 		final float[] point2Fs = doCompilePoint2Fs(uniquePoint2Fs);
 		final float[] point3Fs = doCompilePoint3Fs(uniquePoint3Fs);
-		final float[] primitives = doCompilePrimitives(uniquePrimitives, uniqueMeshes, uniqueBoundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings);
 		final float[] spheres = doCompileSpheres(uniqueSpheres, point3FMappings);
 		final float[] surfaces = doCompileSurfaces(uniqueSurfaces, textureMappings);
 		final float[] terrains = doCompileTerrains(uniqueTerrains);
 		final float[] textures = doCompileTextures(uniqueTextures);
-		final float[] triangles = doCompileTriangles(uniqueTriangles, point2FMappings, point3FMappings, vector3FMappings);
 		final float[] vector3Fs = doCompileVector3Fs(uniqueVector3Fs);
 		
-		return new CompiledScene(scene.getName(), boundingVolumeHierarchies, camera, planes, point2Fs, point3Fs, primitives, spheres, surfaces, terrains, textures, triangles, vector3Fs);
+		final int[] boundingVolumeHierarchies = doCompileBoundingVolumeHierarchies(uniqueBoundingVolumeHierarchyRootNodes, point3FMappings, triangleMappings);
+		final int[] planes = doCompilePlanes(uniquePlanes, point3FMappings, vector3FMappings);
+		final int[] primitives = doCompilePrimitives(uniquePrimitives, uniqueMeshes, uniqueBoundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings);
+		final int[] triangles = doCompileTriangles(uniqueTriangles, point2FMappings, point3FMappings, vector3FMappings);
+		
+		final long currentTimeMillis1 = System.currentTimeMillis();
+		final long currentTimeMillis2 = currentTimeMillis1 - currentTimeMillis0;
+		
+		doReportProgress("Compilation took " + currentTimeMillis2 + " ms.");
+		
+		return new CompiledScene(scene.getName(), camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, triangles);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -165,8 +173,12 @@ public final class SceneCompiler {
 		return new ArrayList<>(uniquePoint2Fs);
 	}
 	
-	private static List<Point3F> doFindUniquePoint3Fs(final List<Primitive> primitives) {
+	private static List<Point3F> doFindUniquePoint3Fs(final List<Node> uniqueBoundingVolumeHierarchyRootNodes, final List<Primitive> primitives) {
 		final Set<Point3F> uniquePoint3Fs = new LinkedHashSet<>();
+		
+		for(final Node uniqueBoundingVolumeHierarchyRootNode : uniqueBoundingVolumeHierarchyRootNodes) {
+			uniqueBoundingVolumeHierarchyRootNode.addBounds(uniquePoint3Fs);
+		}
 		
 		for(final Primitive primitive : primitives) {
 			final Shape shape = primitive.getShape();
@@ -401,136 +413,6 @@ public final class SceneCompiler {
 		return vector3FMappings;
 	}
 	
-	private static float[] doCompileBoundingVolumeHierarchies(final List<Node> boundingVolumeHierarchyRootNodes, final Map<Triangle, Integer> triangleMappings) {
-		doReportProgress("Compiling Bounding Volume Hierarchies...");
-		
-		final float[] compiledBoundingVolumeHierarchies = Arrays2.toFloatArray(boundingVolumeHierarchyRootNodes, mesh -> doCompileBoundingVolumeHierarchy(mesh, triangleMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledBoundingVolumeHierarchies.length > 0 ? compiledBoundingVolumeHierarchies : new float[1];
-	}
-	
-	private static float[] doCompileBoundingVolumeHierarchy(final Node boundingVolumeHierarchyRootNode, final Map<Triangle, Integer> triangleMappings) {
-		final int size = boundingVolumeHierarchyRootNode.getSize();
-		
-		final float[] boundingVolumeHierarchy = new float[size];
-		
-		final List<Node> nodes = boundingVolumeHierarchyRootNode.toList();
-		
-		final int[] offsets = new int[nodes.size()];
-		
-		for(int i = 0, j = 0; i < nodes.size(); i++) {
-			offsets[i] = j;
-			
-			final Node node = nodes.get(i);
-			
-			if(node instanceof LeafNode) {
-				j += 9 + LeafNode.class.cast(node).getTriangles().size();
-			} else if(node instanceof TreeNode) {
-				j += 9;
-			}
-		}
-		
-		for(int i = 0, j = 0; i < nodes.size(); i++) {
-			final Node node = nodes.get(i);
-			
-			if(node instanceof LeafNode) {
-				final LeafNode leafNode = LeafNode.class.cast(node);
-				
-				final int depth = leafNode.getDepth();
-				
-				int nextIndex = -1;
-				
-				for(int k = i + 1; k < nodes.size(); k++) {
-					final Node currentNode = nodes.get(k);
-					
-					if(currentNode.getDepth() <= depth) {
-						nextIndex = offsets[k];
-						
-						break;
-					}
-				}
-				
-				boundingVolumeHierarchy[j + 0] = BoundingVolumeHierarchy.NODE_TYPE_LEAF;
-				boundingVolumeHierarchy[j + 1] = nextIndex;
-				boundingVolumeHierarchy[j + 2] = leafNode.getMinimumX();
-				boundingVolumeHierarchy[j + 3] = leafNode.getMinimumY();
-				boundingVolumeHierarchy[j + 4] = leafNode.getMinimumZ();
-				boundingVolumeHierarchy[j + 5] = leafNode.getMaximumX();
-				boundingVolumeHierarchy[j + 6] = leafNode.getMaximumY();
-				boundingVolumeHierarchy[j + 7] = leafNode.getMaximumZ();
-				boundingVolumeHierarchy[j + 8] = leafNode.getTriangles().size();
-				
-				for(int k = 0; k < leafNode.getTriangles().size(); k++) {
-					boundingVolumeHierarchy[j + 9 + k] = doGetTriangleOffset(leafNode.getTriangles().get(k), triangleMappings);
-				}
-				
-				j += 9 + leafNode.getTriangles().size();
-			} else if(node instanceof TreeNode) {
-				final TreeNode treeNode = TreeNode.class.cast(node);
-				
-				final int depth = treeNode.getDepth();
-				
-				int nextIndex = -1;
-				int leftIndex = -1;
-				
-				for(int k = i + 1; k < nodes.size(); k++) {
-					final Node currentNode = nodes.get(k);
-					
-					if(currentNode.getDepth() <= depth) {
-						nextIndex = offsets[k];
-						
-						break;
-					}
-				}
-				
-				for(int k = i + 1; k < nodes.size(); k++) {
-					final Node currentNode = nodes.get(k);
-					
-					if(currentNode.getDepth() == depth + 1) {
-						leftIndex = offsets[k];
-						
-						break;
-					}
-				}
-				
-				boundingVolumeHierarchy[j + 0] = BoundingVolumeHierarchy.NODE_TYPE_TREE;
-				boundingVolumeHierarchy[j + 1] = nextIndex;
-				boundingVolumeHierarchy[j + 2] = treeNode.getMinimumX();
-				boundingVolumeHierarchy[j + 3] = treeNode.getMinimumY();
-				boundingVolumeHierarchy[j + 4] = treeNode.getMinimumZ();
-				boundingVolumeHierarchy[j + 5] = treeNode.getMaximumX();
-				boundingVolumeHierarchy[j + 6] = treeNode.getMaximumY();
-				boundingVolumeHierarchy[j + 7] = treeNode.getMaximumZ();
-				boundingVolumeHierarchy[j + 8] = leftIndex;
-				
-				j += 9;
-			}
-		}
-		
-		return boundingVolumeHierarchy;
-	}
-	
-	private static float[] doCompilePlane(final Plane plane, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
-		return new float[] {
-			doGetPoint3FOffset(plane.getA(), point3FMappings),
-			doGetPoint3FOffset(plane.getB(), point3FMappings),
-			doGetPoint3FOffset(plane.getC(), point3FMappings),
-			doGetVector3FOffset(plane.getSurfaceNormal(), vector3FMappings)
-		};
-	}
-	
-	private static float[] doCompilePlanes(final List<Plane> planes, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
-		doReportProgress("Compiling Planes...");
-		
-		final float[] compiledPlanes = Arrays2.toFloatArray(planes, plane -> doCompilePlane(plane, point3FMappings, vector3FMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledPlanes.length > 0 ? compiledPlanes : new float[1];
-	}
-	
 	private static float[] doCompilePoint2Fs(final List<Point2F> point2Fs) {
 		doReportProgress("Compiling Point2Fs...");
 		
@@ -564,24 +446,6 @@ public final class SceneCompiler {
 		doReportProgress(" Done.\n");
 		
 		return compiledPoint3Fs.length > 0 ? compiledPoint3Fs : new float[1];
-	}
-	
-	private static float[] doCompilePrimitive(final Primitive primitive, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Surface, Integer> surfaceMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
-		return new float[] {
-			primitive.getShape().getType(),
-			doGetShapeOffset(primitive.getShape(), meshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, terrainMappings, triangleMappings),
-			doGetSurfaceOffset(primitive.getSurface(), surfaceMappings)
-		};
-	}
-	
-	private static float[] doCompilePrimitives(final List<Primitive> primitives, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Surface, Integer> surfaceMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
-		doReportProgress("Compiling Primitives...");
-		
-		final float[] compiledPrimitives = Arrays2.toFloatArray(primitives, primitive -> doCompilePrimitive(primitive, meshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledPrimitives.length > 0 ? compiledPrimitives : new float[1];
 	}
 	
 	private static float[] doCompileSphere(final Sphere sphere, final Map<Point3F, Integer> point3FMappings) {
@@ -650,30 +514,6 @@ public final class SceneCompiler {
 		doReportProgress(" Done.\n");
 		
 		return compiledTextures.length > 0 ? compiledTextures : new float[1];
-	}
-	
-	private static float[] doCompileTriangle(final Triangle triangle, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
-		return new float[] {
-			doGetPoint3FOffset(triangle.getA().getPosition(), point3FMappings),
-			doGetPoint3FOffset(triangle.getB().getPosition(), point3FMappings),
-			doGetPoint3FOffset(triangle.getC().getPosition(), point3FMappings),
-			doGetVector3FOffset(triangle.getA().getNormal(), vector3FMappings),
-			doGetVector3FOffset(triangle.getB().getNormal(), vector3FMappings),
-			doGetVector3FOffset(triangle.getC().getNormal(), vector3FMappings),
-			doGetPoint2FOffset(triangle.getA().getTextureCoordinates(), point2FMappings),
-			doGetPoint2FOffset(triangle.getB().getTextureCoordinates(), point2FMappings),
-			doGetPoint2FOffset(triangle.getC().getTextureCoordinates(), point2FMappings)
-		};
-	}
-	
-	private static float[] doCompileTriangles(final List<Triangle> triangles, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
-		doReportProgress("Compiling Triangles...");
-		
-		final float[] compiledTriangles = Arrays2.toFloatArray(triangles, triangle -> doCompileTriangle(triangle, point2FMappings, point3FMappings, vector3FMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledTriangles.length > 0 ? compiledTriangles : new float[1];
 	}
 	
 	private static float[] doCompileVector3Fs(final List<Vector3F> vector3Fs) {
@@ -760,6 +600,182 @@ public final class SceneCompiler {
 	
 	private static int doGetVector3FOffset(final Vector3F vector3F, final Map<Vector3F, Integer> vector3FMappings) {
 		return vector3FMappings.get(vector3F).intValue();
+	}
+	
+	private static int[] doCompileBoundingVolumeHierarchies(final List<Node> boundingVolumeHierarchyRootNodes, final Map<Point3F, Integer> point3FMappings, final Map<Triangle, Integer> triangleMappings) {
+		doReportProgress("Compiling Bounding Volume Hierarchies...");
+		
+		final int[] compiledBoundingVolumeHierarchies = Arrays2.toIntArray(boundingVolumeHierarchyRootNodes, mesh -> doCompileBoundingVolumeHierarchy(mesh, point3FMappings, triangleMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledBoundingVolumeHierarchies.length > 0 ? compiledBoundingVolumeHierarchies : new int[1];
+	}
+	
+	private static int[] doCompileBoundingVolumeHierarchy(final Node boundingVolumeHierarchyRootNode, final Map<Point3F, Integer> point3FMappings, final Map<Triangle, Integer> triangleMappings) {
+		final int size = boundingVolumeHierarchyRootNode.getSize();
+		
+		final int[] boundingVolumeHierarchy = new int[size];
+		
+		final List<Node> nodes = boundingVolumeHierarchyRootNode.toList();
+		
+		final int[] offsets = new int[nodes.size()];
+		
+		for(int i = 0, j = 0; i < nodes.size(); i++) {
+			offsets[i] = j;
+			
+			final Node node = nodes.get(i);
+			
+			if(node instanceof LeafNode) {
+				j += 5 + LeafNode.class.cast(node).getTriangles().size();
+			} else if(node instanceof TreeNode) {
+				j += 5;
+			}
+		}
+		
+		for(int i = 0, j = 0; i < nodes.size(); i++) {
+			final Node node = nodes.get(i);
+			
+			if(node instanceof LeafNode) {
+				final LeafNode leafNode = LeafNode.class.cast(node);
+				
+				final int depth = leafNode.getDepth();
+				
+				int nextIndex = -1;
+				
+				for(int k = i + 1; k < nodes.size(); k++) {
+					final Node currentNode = nodes.get(k);
+					
+					if(currentNode.getDepth() <= depth) {
+						nextIndex = offsets[k];
+						
+						break;
+					}
+				}
+				
+				final Point3F maximum = leafNode.getMaximum();
+				final Point3F minimum = leafNode.getMinimum();
+				
+				final int maximumOffset = doGetPoint3FOffset(maximum, point3FMappings);
+				final int minimumOffset = doGetPoint3FOffset(minimum, point3FMappings);
+				
+				boundingVolumeHierarchy[j + 0] = BoundingVolumeHierarchy.NODE_TYPE_LEAF;
+				boundingVolumeHierarchy[j + 1] = nextIndex;
+				boundingVolumeHierarchy[j + 2] = minimumOffset;
+				boundingVolumeHierarchy[j + 3] = maximumOffset;
+				boundingVolumeHierarchy[j + 4] = leafNode.getTriangles().size();
+				
+				for(int k = 0; k < leafNode.getTriangles().size(); k++) {
+					boundingVolumeHierarchy[j + 5 + k] = doGetTriangleOffset(leafNode.getTriangles().get(k), triangleMappings);
+				}
+				
+				j += 5 + leafNode.getTriangles().size();
+			} else if(node instanceof TreeNode) {
+				final TreeNode treeNode = TreeNode.class.cast(node);
+				
+				final int depth = treeNode.getDepth();
+				
+				int nextIndex = -1;
+				int leftIndex = -1;
+				
+				for(int k = i + 1; k < nodes.size(); k++) {
+					final Node currentNode = nodes.get(k);
+					
+					if(currentNode.getDepth() <= depth) {
+						nextIndex = offsets[k];
+						
+						break;
+					}
+				}
+				
+				for(int k = i + 1; k < nodes.size(); k++) {
+					final Node currentNode = nodes.get(k);
+					
+					if(currentNode.getDepth() == depth + 1) {
+						leftIndex = offsets[k];
+						
+						break;
+					}
+				}
+				
+				final Point3F maximum = treeNode.getMaximum();
+				final Point3F minimum = treeNode.getMinimum();
+				
+				final int maximumOffset = doGetPoint3FOffset(maximum, point3FMappings);
+				final int minimumOffset = doGetPoint3FOffset(minimum, point3FMappings);
+				
+				boundingVolumeHierarchy[j + 0] = BoundingVolumeHierarchy.NODE_TYPE_TREE;
+				boundingVolumeHierarchy[j + 1] = nextIndex;
+				boundingVolumeHierarchy[j + 2] = minimumOffset;
+				boundingVolumeHierarchy[j + 3] = maximumOffset;
+				boundingVolumeHierarchy[j + 4] = leftIndex;
+				
+				j += 5;
+			}
+		}
+		
+		return boundingVolumeHierarchy;
+	}
+	
+	private static int[] doCompilePlane(final Plane plane, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
+		return new int[] {
+			doGetPoint3FOffset(plane.getA(), point3FMappings),
+			doGetPoint3FOffset(plane.getB(), point3FMappings),
+			doGetPoint3FOffset(plane.getC(), point3FMappings),
+			doGetVector3FOffset(plane.getSurfaceNormal(), vector3FMappings)
+		};
+	}
+	
+	private static int[] doCompilePlanes(final List<Plane> planes, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
+		doReportProgress("Compiling Planes...");
+		
+		final int[] compiledPlanes = Arrays2.toIntArray(planes, plane -> doCompilePlane(plane, point3FMappings, vector3FMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledPlanes.length > 0 ? compiledPlanes : new int[1];
+	}
+	
+	private static int[] doCompilePrimitive(final Primitive primitive, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Surface, Integer> surfaceMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
+		return new int[] {
+			primitive.getShape().getType(),
+			doGetShapeOffset(primitive.getShape(), meshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, terrainMappings, triangleMappings),
+			doGetSurfaceOffset(primitive.getSurface(), surfaceMappings)
+		};
+	}
+	
+	private static int[] doCompilePrimitives(final List<Primitive> primitives, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Surface, Integer> surfaceMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
+		doReportProgress("Compiling Primitives...");
+		
+		final int[] compiledPrimitives = Arrays2.toIntArray(primitives, primitive -> doCompilePrimitive(primitive, meshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledPrimitives.length > 0 ? compiledPrimitives : new int[1];
+	}
+	
+	private static int[] doCompileTriangle(final Triangle triangle, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
+		return new int[] {
+			doGetPoint3FOffset(triangle.getA().getPosition(), point3FMappings),
+			doGetPoint3FOffset(triangle.getB().getPosition(), point3FMappings),
+			doGetPoint3FOffset(triangle.getC().getPosition(), point3FMappings),
+			doGetVector3FOffset(triangle.getA().getNormal(), vector3FMappings),
+			doGetVector3FOffset(triangle.getB().getNormal(), vector3FMappings),
+			doGetVector3FOffset(triangle.getC().getNormal(), vector3FMappings),
+			doGetPoint2FOffset(triangle.getA().getTextureCoordinates(), point2FMappings),
+			doGetPoint2FOffset(triangle.getB().getTextureCoordinates(), point2FMappings),
+			doGetPoint2FOffset(triangle.getC().getTextureCoordinates(), point2FMappings)
+		};
+	}
+	
+	private static int[] doCompileTriangles(final List<Triangle> triangles, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
+		doReportProgress("Compiling Triangles...");
+		
+		final int[] compiledTriangles = Arrays2.toIntArray(triangles, triangle -> doCompileTriangle(triangle, point2FMappings, point3FMappings, vector3FMappings));
+		
+		doReportProgress(" Done.\n");
+		
+		return compiledTriangles.length > 0 ? compiledTriangles : new int[1];
 	}
 	
 	private static void doReportProgress(final String message) {

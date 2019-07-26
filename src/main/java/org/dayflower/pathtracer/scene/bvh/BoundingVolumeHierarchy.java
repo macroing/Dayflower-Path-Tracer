@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.scene.shape.Triangle;
@@ -132,7 +133,7 @@ public final class BoundingVolumeHierarchy {
 		public LeafNode(final int depth) {
 			super(depth);
 			
-			this.size = 9;
+			this.size = 5;
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,6 +208,16 @@ public final class BoundingVolumeHierarchy {
 		}
 		
 //		TODO: Add Javadocs.
+		@Override
+		public void addBounds(final Set<Point3F> point3Fs) {
+			final Point3F maximum = new Point3F(getMaximumX(), getMaximumY(), getMaximumZ());
+			final Point3F minimum = new Point3F(getMinimumX(), getMinimumY(), getMinimumZ());
+			
+			point3Fs.add(maximum);
+			point3Fs.add(minimum);
+		}
+		
+//		TODO: Add Javadocs.
 		public void addTriangle(final Triangle triangle) {
 			if(this.triangles.add(Objects.requireNonNull(triangle, "triangle == null"))) {
 				this.size += 1;
@@ -249,6 +260,21 @@ public final class BoundingVolumeHierarchy {
 		
 //		TODO: Add Javadocs.
 		public abstract List<Node> toList(final List<Node> nodes);
+		
+//		TODO: Add Javadocs.
+		public final Point3F getCenter() {
+			return new Point3F(getCenterX(), getCenterY(), getCenterZ());
+		}
+		
+//		TODO: Add Javadocs.
+		public final Point3F getMaximum() {
+			return new Point3F(getMaximumX(), getMaximumY(), getMaximumZ());
+		}
+		
+//		TODO: Add Javadocs.
+		public final Point3F getMinimum() {
+			return new Point3F(getMinimumX(), getMinimumY(), getMinimumZ());
+		}
 		
 //		TODO: Add Javadocs.
 		public abstract String toString(final int indentation);
@@ -310,6 +336,9 @@ public final class BoundingVolumeHierarchy {
 		public abstract int getSize();
 		
 //		TODO: Add Javadocs.
+		public abstract void addBounds(final Set<Point3F> point3Fs);
+		
+//		TODO: Add Javadocs.
 		public final void setMaximum(final float maximumX, final float maximumY, final float maximumZ) {
 			this.maximumX = maximumX;
 			this.maximumY = maximumY;
@@ -338,7 +367,7 @@ public final class BoundingVolumeHierarchy {
 		public TreeNode(final int depth) {
 			super(depth);
 			
-			this.size = 9;
+			this.size = 5;
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -438,6 +467,27 @@ public final class BoundingVolumeHierarchy {
 		@Override
 		public int hashCode() {
 			return Objects.hash(Float.valueOf(getMaximumX()), Float.valueOf(getMaximumY()), Float.valueOf(getMaximumZ()), Float.valueOf(getMinimumX()), Float.valueOf(getMinimumY()), Float.valueOf(getMinimumZ()), this.left, this.right);
+		}
+		
+//		TODO: Add Javadocs.
+		@Override
+		public void addBounds(final Set<Point3F> point3Fs) {
+			final Point3F maximum = new Point3F(getMaximumX(), getMaximumY(), getMaximumZ());
+			final Point3F minimum = new Point3F(getMinimumX(), getMinimumY(), getMinimumZ());
+			
+			point3Fs.add(maximum);
+			point3Fs.add(minimum);
+			
+			final Node left = this.left;
+			final Node right = this.right;
+			
+			if(left != null) {
+				left.addBounds(point3Fs);
+			}
+			
+			if(right != null) {
+				right.addBounds(point3Fs);
+			}
 		}
 		
 //		TODO: Add Javadocs.

@@ -34,27 +34,6 @@ public final class Arrays2 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	TODO: Add Javadocs.
-	public static <T> float[] toFloatArray(final List<T> list, final Function<T, float[]> function) {
-		final List<Float> floatList = new ArrayList<>();
-		
-		for(final T listElement : list) {
-			final float[] floatArray = function.apply(listElement);
-			
-			for(final float floatValue : floatArray) {
-				floatList.add(Float.valueOf(floatValue));
-			}
-		}
-		
-		final float[] floatArray = new float[floatList.size()];
-		
-		for(int i = 0; i < floatList.size(); i++) {
-			floatArray[i] = floatList.get(i).floatValue();
-		}
-		
-		return floatArray;
-	}
-	
-//	TODO: Add Javadocs.
 	public static float[] readFloatArray(final DataInputStream dataInputStream) throws IOException {
 		final int length = dataInputStream.readInt();
 		
@@ -79,6 +58,27 @@ public final class Arrays2 {
 	}
 	
 //	TODO: Add Javadocs.
+	public static <T> float[] toFloatArray(final List<T> list, final Function<T, float[]> function) {
+		final List<Float> floatList = new ArrayList<>();
+		
+		for(final T listElement : list) {
+			final float[] floatArray = function.apply(listElement);
+			
+			for(final float floatValue : floatArray) {
+				floatList.add(Float.valueOf(floatValue));
+			}
+		}
+		
+		final float[] floatArray = new float[floatList.size()];
+		
+		for(int i = 0; i < floatList.size(); i++) {
+			floatArray[i] = floatList.get(i).floatValue();
+		}
+		
+		return floatArray;
+	}
+	
+//	TODO: Add Javadocs.
 	public static int[] readIntArray(final DataInputStream dataInputStream) throws IOException {
 		final int length = dataInputStream.readInt();
 		
@@ -89,6 +89,27 @@ public final class Arrays2 {
 		}
 		
 		return array;
+	}
+	
+//	TODO: Add Javadocs.
+	public static <T> int[] toIntArray(final List<T> list, final Function<T, int[]> function) {
+		final List<Integer> integerList = new ArrayList<>();
+		
+		for(final T listElement : list) {
+			final int[] intArray = function.apply(listElement);
+			
+			for(final int intValue : intArray) {
+				integerList.add(Integer.valueOf(intValue));
+			}
+		}
+		
+		final int[] intArray = new int[integerList.size()];
+		
+		for(int i = 0; i < integerList.size(); i++) {
+			intArray[i] = integerList.get(i).intValue();
+		}
+		
+		return intArray;
 	}
 	
 //	TODO: Add Javadocs.
