@@ -30,6 +30,8 @@ Supported Features
 | Effect                 | Grayscale - Luminosity                                     |
 | Effect                 | Sepia Tone                                                 |
 | Effect                 | Sharpen                                                    |
+| Light                  | Perez Sun and Sky Model                                    |
+| Light                  | Primitive-based Area Light via an Emission Texture         |
 | Material               | Diffuse using Lambertian reflectance                       |
 | Material               | Clear Coat with Fresnel                                    |
 | Material               | Glass with Fresnel                                         |
@@ -46,7 +48,6 @@ Supported Features
 | Shape                  | Sphere                                                     |
 | Shape                  | Triangle                                                   |
 | Shape                  | Triangle Mesh                                              |
-| Sun and Sky Model      | Perez                                                      |
 | Texture                | Checkerboard                                               |
 | Texture                | Constant                                                   |
 | Texture                | Fractional Brownian Motion                                 |
