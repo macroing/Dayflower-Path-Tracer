@@ -236,6 +236,16 @@ public final class CheckerboardTexture implements Texture {
 	}
 	
 	/**
+	 * Returns {@code true} if, and only if, this {@code CheckerboardTexture} instance is emissive, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, this {@code CheckerboardTexture} instance is emissive, {@code false} otherwise
+	 */
+	@Override
+	public boolean isEmissive() {
+		return !this.color0.isBlack() || !this.color1.isBlack();
+	}
+	
+	/**
 	 * Returns the angle in degrees that this {@code CheckerboardTexture} instance should be rotated.
 	 * 
 	 * @return the angle in degrees that this {@code CheckerboardTexture} instance should be rotated

@@ -156,6 +156,22 @@ public final class ImageTexture implements Texture {
 	}
 	
 	/**
+	 * Returns {@code true} if, and only if, this {@code ImageTexture} instance is emissive, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, this {@code ImageTexture} instance is emissive, {@code false} otherwise
+	 */
+	@Override
+	public boolean isEmissive() {
+		for(final int dataElement : this.data) {
+			if(dataElement > 0) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Returns the angle in degrees that this {@code ImageTexture} instance should be rotated.
 	 * 
 	 * @return the angle in degrees that this {@code ImageTexture} instance should be rotated

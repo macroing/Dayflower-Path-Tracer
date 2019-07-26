@@ -101,6 +101,16 @@ public final class SurfaceNormalTexture implements Texture {
 	}
 	
 	/**
+	 * Returns {@code true} if, and only if, this {@code SurfaceNormalTexture} instance is emissive, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, this {@code SurfaceNormalTexture} instance is emissive, {@code false} otherwise
+	 */
+	@Override
+	public boolean isEmissive() {
+		return true;
+	}
+	
+	/**
 	 * Returns {@code true} if, and only if, this {@code SurfaceNormalTexture} shows the surface normal in tangent space, {@code false} otherwise.
 	 * 
 	 * @return {@code true} if, and only if, this {@code SurfaceNormalTexture} shows the surface normal in tangent space, {@code false} otherwise

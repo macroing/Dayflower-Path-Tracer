@@ -63,6 +63,7 @@ public final class SceneCompiler {
 		
 //		Retrieve all unique Primitives:
 		final List<Primitive> uniquePrimitives = doFindUniquePrimitives(scene);
+		final List<Primitive> uniquePrimitivesEmittingLight = doFindUniquePrimitivesEmittingLight(uniquePrimitives);
 		
 //		Retrieve all unique Shapes:
 		final List<Mesh> uniqueMeshes = doFindUniqueMeshes(uniquePrimitives);
@@ -97,6 +98,9 @@ public final class SceneCompiler {
 //		Create mappings from Textures to Integer indices:
 		final Map<Texture, Integer> textureMappings = doCreateTextureMappings(uniqueTextures);
 		
+//		Create mappings from Primitives to Integer indices:
+		final Map<Primitive, Integer> primitiveMappings = doCreatePrimitiveMappings(uniquePrimitives);
+		
 //		Create mappings from Point2Fs, Point3Fs and Vector3Fs to Integer indices:
 		final Map<Point2F, Integer> point2FMappings = doCreatePoint2FMappings(uniquePoint2Fs);
 		final Map<Point3F, Integer> point3FMappings = doCreatePoint3FMappings(uniquePoint3Fs);
@@ -115,6 +119,7 @@ public final class SceneCompiler {
 		final int[] boundingVolumeHierarchies = doCompileBoundingVolumeHierarchies(uniqueBoundingVolumeHierarchyRootNodes, point3FMappings, triangleMappings);
 		final int[] planes = doCompilePlanes(uniquePlanes, point3FMappings, vector3FMappings);
 		final int[] primitives = doCompilePrimitives(uniquePrimitives, uniqueMeshes, uniqueBoundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings);
+		final int[] primitivesEmittingLight = doCompilePrimitivesEmittingLight(uniquePrimitivesEmittingLight, primitiveMappings);
 		final int[] triangles = doCompileTriangles(uniqueTriangles, point2FMappings, point3FMappings, vector3FMappings);
 		
 		final long currentTimeMillis1 = System.currentTimeMillis();
@@ -122,7 +127,7 @@ public final class SceneCompiler {
 		
 		doReportProgress("Compilation took " + currentTimeMillis2 + " ms.");
 		
-		return new CompiledScene(scene.getName(), camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, triangles);
+		return new CompiledScene(scene.getName(), camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, primitivesEmittingLight, triangles);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +234,10 @@ public final class SceneCompiler {
 	
 	private static List<Primitive> doFindUniquePrimitives(final Scene scene) {
 		return scene.getPrimitives().stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Primitive> doFindUniquePrimitivesEmittingLight(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getSurface().getTextureEmission().isEmissive()).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
 	private static List<Sphere> doFindUniqueSpheres(final List<Primitive> primitives) {
@@ -347,6 +356,16 @@ public final class SceneCompiler {
 		}
 		
 		return point3FMappings;
+	}
+	
+	private static Map<Primitive, Integer> doCreatePrimitiveMappings(final List<Primitive> primitives) {
+		final Map<Primitive, Integer> primitiveMappings = new HashMap<>();
+		
+		for(int i = 0; i < primitives.size(); i++) {
+			primitiveMappings.put(primitives.get(i), Integer.valueOf(i * Primitive.SIZE));
+		}
+		
+		return primitiveMappings;
 	}
 	
 	private static Map<Sphere, Integer> doCreateSphereMappings(final List<Sphere> spheres) {
@@ -752,6 +771,18 @@ public final class SceneCompiler {
 		doReportProgress(" Done.\n");
 		
 		return compiledPrimitives.length > 0 ? compiledPrimitives : new int[1];
+	}
+	
+	private static int[] doCompilePrimitivesEmittingLight(final List<Primitive> primitivesEmittingLight, final Map<Primitive, Integer> primitiveMappings) {
+		final int[] compiledPrimitivesEmittingLight = new int[primitivesEmittingLight.size() + 1];
+		
+		compiledPrimitivesEmittingLight[0] = primitivesEmittingLight.size();
+		
+		for(int i = 0; i < primitivesEmittingLight.size(); i++) {
+			compiledPrimitivesEmittingLight[i + 1] = primitiveMappings.get(primitivesEmittingLight.get(i)).intValue();
+		}
+		
+		return compiledPrimitivesEmittingLight;
 	}
 	
 	private static int[] doCompileTriangle(final Triangle triangle, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {

@@ -159,6 +159,7 @@ public final class RendererKernel extends AbstractKernel {
 	private int isRenderingWireframes = BOOLEAN_FALSE;
 	private int renderer = RENDERER_PATH_TRACER;
 	private final int scenePrimitivesCount;
+	private final int scenePrimitivesEmittingLightCount;
 	private int selectedPrimitiveOffset = -1;
 	private int shading = SHADING_GOURAUD;
 	private int sunAndSkyActive = BOOLEAN_TRUE;
@@ -171,6 +172,7 @@ public final class RendererKernel extends AbstractKernel {
 	private final int[] sceneBoundingVolumeHierarchies_$constant$;
 	private final int[] scenePlanes_$constant$;
 	private final int[] scenePrimitives_$constant$;
+	private final int[] scenePrimitivesEmittingLight_$constant$;
 	private final int[] sceneTriangles_$constant$;
 	private final long[] subSamples;
 	
@@ -221,6 +223,8 @@ public final class RendererKernel extends AbstractKernel {
 		this.scenePlanes_$constant$ = compiledScene.getPlanes();
 		this.scenePrimitives_$constant$ = compiledScene.getPrimitives();
 		this.scenePrimitivesCount = this.scenePrimitives_$constant$.length / Primitive.SIZE;
+		this.scenePrimitivesEmittingLight_$constant$ = compiledScene.getPrimitivesEmittingLight();
+		this.scenePrimitivesEmittingLightCount = this.scenePrimitivesEmittingLight_$constant$[0];
 		this.sceneTriangles_$constant$ = compiledScene.getTriangles();
 		
 //		Initialize the sun and sky variables:
@@ -348,6 +352,7 @@ public final class RendererKernel extends AbstractKernel {
 		put(this.scenePoint2Fs_$constant$);
 		put(this.scenePoint3Fs_$constant$);
 		put(this.scenePrimitives_$constant$);
+		put(this.scenePrimitivesEmittingLight_$constant$);
 		put(this.sceneSpheres_$constant$);
 		put(this.sceneSurfaces_$constant$);
 		put(this.sceneTerrains_$constant$);

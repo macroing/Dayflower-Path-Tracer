@@ -109,6 +109,16 @@ public final class ConstantTexture implements Texture {
 	}
 	
 	/**
+	 * Returns {@code true} if, and only if, this {@code ConstantTexture} instance is emissive, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, this {@code ConstantTexture} instance is emissive, {@code false} otherwise
+	 */
+	@Override
+	public boolean isEmissive() {
+		return !this.color.isBlack();
+	}
+	
+	/**
 	 * Returns a {@code float} array representation of this {@code ConstantTexture} instance.
 	 * 
 	 * @return a {@code float} array representation of this {@code ConstantTexture} instance

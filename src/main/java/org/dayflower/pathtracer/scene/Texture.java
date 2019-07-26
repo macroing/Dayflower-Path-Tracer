@@ -34,6 +34,13 @@ public interface Texture {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Returns {@code true} if, and only if, this {@code Texture} instance is emissive, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, this {@code Texture} instance is emissive, {@code false} otherwise
+	 */
+	boolean isEmissive();
+	
+	/**
 	 * Returns a {@code float} array representation of this {@code Texture} instance.
 	 * 
 	 * @return a {@code float} array representation of this {@code Texture} instance

@@ -121,6 +121,16 @@ public final class FractionalBrownianMotionTexture implements Texture {
 		}
 	}
 	
+	/**
+	 * Returns {@code true} if, and only if, this {@code FractionalBrownianMotionTexture} instance is emissive, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, this {@code FractionalBrownianMotionTexture} instance is emissive, {@code false} otherwise
+	 */
+	@Override
+	public boolean isEmissive() {
+		return !this.addend.isBlack() || !this.multiplier.isBlack();
+	}
+	
 //	TODO: Add Javadocs.
 	public float getPersistence() {
 		return this.persistence;
