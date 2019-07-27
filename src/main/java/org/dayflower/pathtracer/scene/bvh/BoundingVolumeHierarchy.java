@@ -24,10 +24,10 @@ import static org.dayflower.pathtracer.math.MathF.min;
 
 import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.scene.shape.Triangle;
@@ -209,7 +209,7 @@ public final class BoundingVolumeHierarchy {
 		
 //		TODO: Add Javadocs.
 		@Override
-		public void addBounds(final Set<Point3F> point3Fs) {
+		public void addBounds(final Collection<Point3F> point3Fs) {
 			final Point3F maximum = new Point3F(getMaximumX(), getMaximumY(), getMaximumZ());
 			final Point3F minimum = new Point3F(getMinimumX(), getMinimumY(), getMinimumZ());
 			
@@ -336,7 +336,7 @@ public final class BoundingVolumeHierarchy {
 		public abstract int getSize();
 		
 //		TODO: Add Javadocs.
-		public abstract void addBounds(final Set<Point3F> point3Fs);
+		public abstract void addBounds(final Collection<Point3F> point3Fs);
 		
 //		TODO: Add Javadocs.
 		public final void setMaximum(final float maximumX, final float maximumY, final float maximumZ) {
@@ -471,7 +471,7 @@ public final class BoundingVolumeHierarchy {
 		
 //		TODO: Add Javadocs.
 		@Override
-		public void addBounds(final Set<Point3F> point3Fs) {
+		public void addBounds(final Collection<Point3F> point3Fs) {
 			final Point3F maximum = new Point3F(getMaximumX(), getMaximumY(), getMaximumZ());
 			final Point3F minimum = new Point3F(getMinimumX(), getMinimumY(), getMinimumZ());
 			

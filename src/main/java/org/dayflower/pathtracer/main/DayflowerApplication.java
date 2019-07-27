@@ -63,6 +63,7 @@ import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.compiler.CompiledScene;
+import org.dayflower.pathtracer.scene.compiler.PrintingSceneCompilerObserver;
 import org.dayflower.pathtracer.scene.compiler.SceneCompiler;
 import org.dayflower.pathtracer.util.Timer;
 import org.dayflower.pathtracer.util.FPSCounter;
@@ -140,7 +141,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		if(!sceneFile.isFile() || Dayflower.getSceneCompile()) {
 			final
-			CompiledScene compiledScene = SceneCompiler.compile(this.scene);
+			SceneCompiler sceneCompiler = new SceneCompiler();
+			sceneCompiler.addSceneCompilerObserver(new PrintingSceneCompilerObserver());
+			
+			final
+			CompiledScene compiledScene = sceneCompiler.compile(this.scene);
 			compiledScene.write(sceneFile);
 			
 			try {

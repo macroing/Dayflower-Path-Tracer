@@ -23,9 +23,15 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
-//TODO: Add Javadocs.
+/**
+ * A class that consists exclusively of static methods that operates on or returns arrays of various types.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Arrays2 {
 	private Arrays2() {
 		
@@ -33,7 +39,20 @@ public final class Arrays2 {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Reads {@code float} values from {@code dataInputStream} and adds them to a {@code float[]}.
+	 * <p>
+	 * Returns the {@code float[]}.
+	 * <p>
+	 * If {@code dataInputStream} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code IOException} will be thrown.
+	 * 
+	 * @param dataInputStream the {@code DataInputStream} to read from
+	 * @return the {@code float[]}
+	 * @throws IOException thrown if, and only if, an I/O error occurs
+	 * @throws NullPointerException thrown if, and only if, {@code dataInputStream} is {@code null}
+	 */
 	public static float[] readFloatArray(final DataInputStream dataInputStream) throws IOException {
 		final int length = dataInputStream.readInt();
 		
@@ -46,7 +65,23 @@ public final class Arrays2 {
 		return array;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Reads {@code float} values from {@code dataInputStream} and adds them to {@code array}.
+	 * <p>
+	 * Returns {@code array}.
+	 * <p>
+	 * If {@code dataInputStream} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code IOException} will be thrown.
+	 * <p>
+	 * If {@code array.length} is less than the length read from {@code dataInputStream}, an {@code ArrayIndexOutOfBoundsException} will be thrown.
+	 * 
+	 * @param dataInputStream the {@code DataInputStream} to read from
+	 * @return {@code array}
+	 * @throws ArrayIndexOutOfBoundsException thrown if, and only if, {@code array.length} is less than the length read from {@code dataInputStream}
+	 * @throws IOException thrown if, and only if, an I/O error occurs
+	 * @throws NullPointerException thrown if, and only if, {@code dataInputStream} is {@code null}
+	 */
 	public static float[] readFloatArray(final DataInputStream dataInputStream, final float[] array) throws IOException {
 		final int length = dataInputStream.readInt();
 		
@@ -57,8 +92,43 @@ public final class Arrays2 {
 		return array;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a larger {@code float[]} by merging smaller {@code float[]} together.
+	 * <p>
+	 * Calling this method is equivalent to {@code toFloatArray(list, function, 0)}.
+	 * <p>
+	 * If either {@code list} or {@code function} are {@code null}, or {@code function} returns {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an element in {@code list} is {@code null}, a {@code NullPointerException} might be thrown. But no guarantees can be made. This is up to {@code function}.
+	 * 
+	 * @param list a {@code List}
+	 * @param function a {@code Function} mapping {@code List}s elements to {@code float[]}
+	 * @return a larger {@code float[]} by merging smaller {@code float[]} together
+	 * @throws NullPointerException thrown if, and only if, either {@code list} or {@code function} are {@code null}, or {@code function} returns {@code null}
+	 */
 	public static <T> float[] toFloatArray(final List<T> list, final Function<T, float[]> function) {
+		return toFloatArray(list, function, 0);
+	}
+	
+	/**
+	 * Returns a larger {@code float[]} by merging smaller {@code float[]} together.
+	 * <p>
+	 * If either {@code list} or {@code function} are {@code null}, or {@code function} returns {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an element in {@code list} is {@code null}, a {@code NullPointerException} might be thrown. But no guarantees can be made. This is up to {@code function}.
+	 * <p>
+	 * If the length of the larger {@code float[]} is less than {@code minimumLength}, a new empty {@code float[]} with {@code minimumLength} as length will be returned.
+	 * 
+	 * @param list a {@code List}
+	 * @param function a {@code Function} mapping {@code List}s elements to {@code float[]}
+	 * @param minimumLength the minimum length of the {@code float[]} to return
+	 * @return a larger {@code float[]} by merging smaller {@code float[]} together
+	 * @throws NullPointerException thrown if, and only if, either {@code list} or {@code function} are {@code null}, or {@code function} returns {@code null}
+	 */
+	public static <T> float[] toFloatArray(final List<T> list, final Function<T, float[]> function, final int minimumLength) {
+		Objects.requireNonNull(list, "list == null");
+		Objects.requireNonNull(function, "function == null");
+		
 		final List<Float> floatList = new ArrayList<>();
 		
 		for(final T listElement : list) {
@@ -75,10 +145,23 @@ public final class Arrays2 {
 			floatArray[i] = floatList.get(i).floatValue();
 		}
 		
-		return floatArray;
+		return floatArray.length >= minimumLength ? floatArray : new float[minimumLength];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Reads {@code int} values from {@code dataInputStream} and adds them to an {@code int[]}.
+	 * <p>
+	 * Returns the {@code int[]}.
+	 * <p>
+	 * If {@code dataInputStream} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code IOException} will be thrown.
+	 * 
+	 * @param dataInputStream the {@code DataInputStream} to read from
+	 * @return the {@code int[]}
+	 * @throws IOException thrown if, and only if, an I/O error occurs
+	 * @throws NullPointerException thrown if, and only if, {@code dataInputStream} is {@code null}
+	 */
 	public static int[] readIntArray(final DataInputStream dataInputStream) throws IOException {
 		final int length = dataInputStream.readInt();
 		
@@ -91,8 +174,40 @@ public final class Arrays2 {
 		return array;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a larger {@code int[]} by merging smaller {@code int[]} together.
+	 * <p>
+	 * Calling this method is equivalent to {@code toIntArray(list, function, 0)}.
+	 * <p>
+	 * If either {@code list} or {@code function} are {@code null}, or {@code function} returns {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an element in {@code list} is {@code null}, a {@code NullPointerException} might be thrown. But no guarantees can be made. This is up to {@code function}.
+	 * 
+	 * @param list a {@code List}
+	 * @param function a {@code Function} mapping {@code List}s elements to {@code int[]}
+	 * @return a larger {@code int[]} by merging smaller {@code int[]} together
+	 * @throws NullPointerException thrown if, and only if, either {@code list} or {@code function} are {@code null}, or {@code function} returns {@code null}
+	 */
 	public static <T> int[] toIntArray(final List<T> list, final Function<T, int[]> function) {
+		return toIntArray(list, function, 0);
+	}
+	
+	/**
+	 * Returns a larger {@code int[]} by merging smaller {@code int[]} together.
+	 * <p>
+	 * If either {@code list} or {@code function} are {@code null}, or {@code function} returns {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an element in {@code list} is {@code null}, a {@code NullPointerException} might be thrown. But no guarantees can be made. This is up to {@code function}.
+	 * <p>
+	 * If the length of the larger {@code int[]} is less than {@code minimumLength}, a new empty {@code int[]} with {@code minimumLength} as length will be returned.
+	 * 
+	 * @param list a {@code List}
+	 * @param function a {@code Function} mapping {@code List}s elements to {@code int[]}
+	 * @param minimumLength the minimum length of the {@code int[]} to return
+	 * @return a larger {@code int[]} by merging smaller {@code int[]} together
+	 * @throws NullPointerException thrown if, and only if, either {@code list} or {@code function} are {@code null}, or {@code function} returns {@code null}
+	 */
+	public static <T> int[] toIntArray(final List<T> list, final Function<T, int[]> function, final int minimumLength) {
 		final List<Integer> integerList = new ArrayList<>();
 		
 		for(final T listElement : list) {
@@ -109,10 +224,21 @@ public final class Arrays2 {
 			intArray[i] = integerList.get(i).intValue();
 		}
 		
-		return intArray;
+		return intArray.length >= minimumLength ? intArray : new int[minimumLength];
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Writes the {@code float} values of {@code array} into {@code dataOutputStream}.
+	 * <p>
+	 * If either {@code dataOutputStream} or {@code array} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code IOException} will be thrown.
+	 * 
+	 * @param dataOutputStream the {@code DataOutputStream} to write to
+	 * @param array the {@code float[]} with the {@code float} values to write to {@code dataOutputStream}
+	 * @throws IOException thrown if, and only if, an I/O error occurs
+	 * @throws NullPointerException thrown if, and only if, either {@code dataOutputStream} or {@code array} are {@code null}
+	 */
 	public static void writeFloatArray(final DataOutputStream dataOutputStream, final float[] array) throws IOException {
 		dataOutputStream.writeInt(array.length);
 		
@@ -121,7 +247,18 @@ public final class Arrays2 {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Writes the {@code int} values of {@code array} into {@code dataOutputStream}.
+	 * <p>
+	 * If either {@code dataOutputStream} or {@code array} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code IOException} will be thrown.
+	 * 
+	 * @param dataOutputStream the {@code DataOutputStream} to write to
+	 * @param array the {@code int[]} with the {@code int} values to write to {@code dataOutputStream}
+	 * @throws IOException thrown if, and only if, an I/O error occurs
+	 * @throws NullPointerException thrown if, and only if, either {@code dataOutputStream} or {@code array} are {@code null}
+	 */
 	public static void writeIntArray(final DataOutputStream dataOutputStream, final int[] array) throws IOException {
 		dataOutputStream.writeInt(array.length);
 		

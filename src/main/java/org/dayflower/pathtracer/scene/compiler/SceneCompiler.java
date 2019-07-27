@@ -20,10 +20,9 @@ package org.dayflower.pathtracer.scene.compiler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
@@ -51,40 +50,97 @@ import org.dayflower.pathtracer.util.Arrays2;
  * @author J&#246;rgen Lundgren
  */
 public final class SceneCompiler {
+	private final List<SceneCompilerObserver> sceneCompilerObservers;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Constructs a new {@code SceneCompiler} instance.
+	 */
 	public SceneCompiler() {
-		
+		this.sceneCompilerObservers = new ArrayList<>();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
-	public static CompiledScene compile(final Scene scene) {
-		final long currentTimeMillis0 = System.currentTimeMillis();
+	/**
+	 * Compiles {@code scene} into a {@link CompiledScene} instance.
+	 * <p>
+	 * Returns a {@code CompiledScene} instance.
+	 * <p>
+	 * If {@code scene} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param scene the {@code Scene} to compile
+	 * @return a {@code CompiledScene} instance
+	 * @throws NullPointerException thrown if, and only if, {@code scene} is {@code null}
+	 */
+	public CompiledScene compile(final Scene scene) {
+		final long currentTimeMillis = System.currentTimeMillis();
+		
+		doOnCompilationStart(scene, System.currentTimeMillis() - currentTimeMillis);
+		
+//		Retrieve all Primitives:
+		final List<Primitive> allPrimitives = doFindAllPrimitives(scene);
+		
+//		Retrieve all Shapes:
+		final List<Mesh> allMeshes = doFindAllMeshes(allPrimitives);
+		final List<Plane> allPlanes = doFindAllPlanes(allPrimitives);
+		final List<Sphere> allSpheres = doFindAllSpheres(allPrimitives);
+		final List<Terrain> allTerrains = doFindAllTerrains(allPrimitives);
+		final List<Triangle> allTriangles = doFindAllTriangles(allPrimitives);
+		
+//		Retrieve all BoundingVolumeHierarchy root-Nodes:
+		final List<Node> allBoundingVolumeHierarchyRootNodes = doFindAllBoundingVolumeHierarchyRootNodes(allMeshes);
+		
+//		Retrieve all Surfaces:
+		final List<Surface> allSurfaces = doFindAllSurfaces(allPrimitives);
+		
+//		Retrieve all Textures:
+		final List<Texture> allTextures = doFindAllTextures(allSurfaces);
+		
+//		Retrieve all Point2Fs, Point3Fs and Vector3Fs:
+		final List<Point2F> allPoint2Fs = doFindAllPoint2Fs(allPrimitives);
+		final List<Point3F> allPoint3Fs = doFindAllPoint3Fs(allBoundingVolumeHierarchyRootNodes, allPrimitives);
+		final List<Vector3F> allVector3Fs = doFindAllVector3Fs(allPrimitives);
 		
 //		Retrieve all unique Primitives:
-		final List<Primitive> uniquePrimitives = doFindUniquePrimitives(scene);
-		final List<Primitive> uniquePrimitivesEmittingLight = doFindUniquePrimitivesEmittingLight(uniquePrimitives);
+		final List<Primitive> uniquePrimitives = doFindUniquePrimitives(allPrimitives);
+		final List<Primitive> uniquePrimitivesEmittingLight = doFindPrimitivesEmittingLight(uniquePrimitives);
 		
 //		Retrieve all unique Shapes:
-		final List<Mesh> uniqueMeshes = doFindUniqueMeshes(uniquePrimitives);
-		final List<Plane> uniquePlanes = doFindUniquePlanes(uniquePrimitives);
-		final List<Sphere> uniqueSpheres = doFindUniqueSpheres(uniquePrimitives);
-		final List<Terrain> uniqueTerrains = doFindUniqueTerrains(uniquePrimitives);
-		final List<Triangle> uniqueTriangles = doFindUniqueTriangles(uniquePrimitives);
+		final List<Mesh> uniqueMeshes = doFindUniqueMeshes(allMeshes);
+		final List<Plane> uniquePlanes = doFindUniquePlanes(allPlanes);
+		final List<Sphere> uniqueSpheres = doFindUniqueSpheres(allSpheres);
+		final List<Terrain> uniqueTerrains = doFindUniqueTerrains(allTerrains);
+		final List<Triangle> uniqueTriangles = doFindUniqueTriangles(allTriangles);
 		
 //		Retrieve all unique BoundingVolumeHierarchy root-Nodes:
-		final List<Node> uniqueBoundingVolumeHierarchyRootNodes = doFindUniqueBoundingVolumeHierarchyRootNodes(uniqueMeshes);
+		final List<Node> uniqueBoundingVolumeHierarchyRootNodes = doFindUniqueBoundingVolumeHierarchyRootNodes(allBoundingVolumeHierarchyRootNodes);
 		
 //		Retrieve all unique Surfaces:
-		final List<Surface> uniqueSurfaces = doFindUniqueSurfaces(uniquePrimitives);
+		final List<Surface> uniqueSurfaces = doFindUniqueSurfaces(allSurfaces);
 		
 //		Retrieve all unique Textures:
-		final List<Texture> uniqueTextures = doFindUniqueTextures(uniqueSurfaces);
+		final List<Texture> uniqueTextures = doFindUniqueTextures(allTextures);
 		
 //		Retrieve all unique Point2Fs, Point3Fs and Vector3Fs:
-		final List<Point2F> uniquePoint2Fs = doFindUniquePoint2Fs(uniquePrimitives);
-		final List<Point3F> uniquePoint3Fs = doFindUniquePoint3Fs(uniqueBoundingVolumeHierarchyRootNodes, uniquePrimitives);
-		final List<Vector3F> uniqueVector3Fs = doFindUniqueVector3Fs(uniquePrimitives);
+		final List<Point2F> uniquePoint2Fs = doFindUniquePoint2Fs(allPoint2Fs);
+		final List<Point3F> uniquePoint3Fs = doFindUniquePoint3Fs(allPoint3Fs);
+		final List<Vector3F> uniqueVector3Fs = doFindUniqueVector3Fs(allVector3Fs);
+		
+//		Notify all SceneCompilerObservers of all vs. unique structures:
+		doOnComparisonPrimitive(scene, System.currentTimeMillis() - currentTimeMillis, allPrimitives.size(), uniquePrimitives.size());
+		doOnComparisonMesh(scene, System.currentTimeMillis() - currentTimeMillis, allMeshes.size(), uniqueMeshes.size());
+		doOnComparisonPlane(scene, System.currentTimeMillis() - currentTimeMillis, allPlanes.size(), uniquePlanes.size());
+		doOnComparisonSphere(scene, System.currentTimeMillis() - currentTimeMillis, allSpheres.size(), uniqueSpheres.size());
+		doOnComparisonTerrain(scene, System.currentTimeMillis() - currentTimeMillis, allTerrains.size(), uniqueTerrains.size());
+		doOnComparisonTriangle(scene, System.currentTimeMillis() - currentTimeMillis, allTriangles.size(), uniqueTriangles.size());
+		doOnComparisonBoundingVolumeHierarchyRootNode(scene, System.currentTimeMillis() - currentTimeMillis, allBoundingVolumeHierarchyRootNodes.size(), uniqueBoundingVolumeHierarchyRootNodes.size());
+		doOnComparisonSurface(scene, System.currentTimeMillis() - currentTimeMillis, allSurfaces.size(), uniqueSurfaces.size());
+		doOnComparisonTexture(scene, System.currentTimeMillis() - currentTimeMillis, allTextures.size(), uniqueTextures.size());
+		doOnComparisonPoint2F(scene, System.currentTimeMillis() - currentTimeMillis, allPoint2Fs.size(), uniquePoint2Fs.size());
+		doOnComparisonPoint3F(scene, System.currentTimeMillis() - currentTimeMillis, allPoint3Fs.size(), uniquePoint3Fs.size());
+		doOnComparisonVector3F(scene, System.currentTimeMillis() - currentTimeMillis, allVector3Fs.size(), uniqueVector3Fs.size());
 		
 //		Create mappings from Shapes to Integer indices:
 		final Map<Plane, Integer> planeMappings = doCreatePlaneMappings(uniquePlanes);
@@ -122,30 +178,109 @@ public final class SceneCompiler {
 		final int[] primitivesEmittingLight = doCompilePrimitivesEmittingLight(uniquePrimitivesEmittingLight, primitiveMappings);
 		final int[] triangles = doCompileTriangles(uniqueTriangles, point2FMappings, point3FMappings, vector3FMappings);
 		
-		final long currentTimeMillis1 = System.currentTimeMillis();
-		final long currentTimeMillis2 = currentTimeMillis1 - currentTimeMillis0;
-		
-		doReportProgress("Compilation took " + currentTimeMillis2 + " ms.");
+		doOnCompilationEnd(scene, System.currentTimeMillis() - currentTimeMillis);
 		
 		return new CompiledScene(scene.getName(), camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, primitivesEmittingLight, triangles);
 	}
 	
+	/**
+	 * Adds {@code sceneCompilerObserver} to this {@code SceneCompiler} instance.
+	 * <p>
+	 * If {@code sceneCompilerObserver} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param sceneCompilerObserver the {@link SceneCompilerObserver} to add
+	 * @throws NullPointerException thrown if, and only if, {@code sceneCompilerObserver} is {@code null}
+	 */
+	public void addSceneCompilerObserver(final SceneCompilerObserver sceneCompilerObserver) {
+		this.sceneCompilerObservers.add(Objects.requireNonNull(sceneCompilerObserver, "sceneCompilerObserver == null"));
+	}
+	
+	/**
+	 * Removes {@code sceneCompilerObserver} from this {@code SceneCompiler} instance.
+	 * <p>
+	 * If {@code sceneCompilerObserver} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param sceneCompilerObserver the {@link SceneCompilerObserver} to remove
+	 * @throws NullPointerException thrown if, and only if, {@code sceneCompilerObserver} is {@code null}
+	 */
+	public void removeSceneCompilerObserver(final SceneCompilerObserver sceneCompilerObserver) {
+		this.sceneCompilerObservers.remove(Objects.requireNonNull(sceneCompilerObserver, "sceneCompilerObserver == null"));
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private static List<Node> doFindUniqueBoundingVolumeHierarchyRootNodes(final List<Mesh> meshes) {
+	private void doOnComparisonBoundingVolumeHierarchyRootNode(final Scene scene, final long milliseconds, final int boundingVolumeHierarchyRootNodeCountAll, final int boundingVolumeHierarchyRootNodeCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonBoundingVolumeHierarchyRootNode(scene, milliseconds, boundingVolumeHierarchyRootNodeCountAll, boundingVolumeHierarchyRootNodeCountUnique));
+	}
+	
+	private void doOnComparisonMesh(final Scene scene, final long milliseconds, final int meshCountAll, final int meshCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonMesh(scene, milliseconds, meshCountAll, meshCountUnique));
+	}
+	
+	private void doOnComparisonPlane(final Scene scene, final long milliseconds, final int planeCountAll, final int planeCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonPlane(scene, milliseconds, planeCountAll, planeCountUnique));
+	}
+	
+	private void doOnComparisonPoint2F(final Scene scene, final long milliseconds, final int point2FCountAll, final int point2FCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonPoint2F(scene, milliseconds, point2FCountAll, point2FCountUnique));
+	}
+	
+	private void doOnComparisonPoint3F(final Scene scene, final long milliseconds, final int point3FCountAll, final int point3FCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonPoint3F(scene, milliseconds, point3FCountAll, point3FCountUnique));
+	}
+	
+	private void doOnComparisonPrimitive(final Scene scene, final long milliseconds, final int primitiveCountAll, final int primitiveCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonPrimitive(scene, milliseconds, primitiveCountAll, primitiveCountUnique));
+	}
+	
+	private void doOnComparisonSphere(final Scene scene, final long milliseconds, final int sphereCountAll, final int sphereCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonSphere(scene, milliseconds, sphereCountAll, sphereCountUnique));
+	}
+	
+	private void doOnComparisonSurface(final Scene scene, final long milliseconds, final int surfaceCountAll, final int surfaceCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonSurface(scene, milliseconds, surfaceCountAll, surfaceCountUnique));
+	}
+	
+	private void doOnComparisonTerrain(final Scene scene, final long milliseconds, final int terrainCountAll, final int terrainCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonTerrain(scene, milliseconds, terrainCountAll, terrainCountUnique));
+	}
+	
+	private void doOnComparisonTexture(final Scene scene, final long milliseconds, final int textureCountAll, final int textureCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonTexture(scene, milliseconds, textureCountAll, textureCountUnique));
+	}
+	
+	private void doOnComparisonTriangle(final Scene scene, final long milliseconds, final int triangleCountAll, final int triangleCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonTriangle(scene, milliseconds, triangleCountAll, triangleCountUnique));
+	}
+	
+	private void doOnComparisonVector3F(final Scene scene, final long milliseconds, final int vector3FCountAll, final int vector3FCountUnique) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onComparisonVector3F(scene, milliseconds, vector3FCountAll, vector3FCountUnique));
+	}
+	
+	private void doOnCompilationEnd(final Scene scene, final long milliseconds) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onCompilationEnd(scene, milliseconds));
+	}
+	
+	private void doOnCompilationStart(final Scene scene, final long milliseconds) {
+		this.sceneCompilerObservers.forEach(sceneCompilerObserver -> sceneCompilerObserver.onCompilationStart(scene, milliseconds));
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static List<Node> doFindAllBoundingVolumeHierarchyRootNodes(final List<Mesh> meshes) {
 		return meshes.stream().map(mesh -> BoundingVolumeHierarchy.createBoundingVolumeHierarchy(mesh.getTriangles()).getRoot()).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
-	private static List<Mesh> doFindUniqueMeshes(final List<Primitive> primitives) {
-		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Mesh).map(primitive -> Mesh.class.cast(primitive.getShape())).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	private static List<Mesh> doFindAllMeshes(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Mesh).map(primitive -> Mesh.class.cast(primitive.getShape())).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
-	private static List<Plane> doFindUniquePlanes(final List<Primitive> primitives) {
-		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Plane).map(primitive -> Plane.class.cast(primitive.getShape())).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	private static List<Plane> doFindAllPlanes(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Plane).map(primitive -> Plane.class.cast(primitive.getShape())).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
-	private static List<Point2F> doFindUniquePoint2Fs(final List<Primitive> primitives) {
-		final Set<Point2F> uniquePoint2Fs = new LinkedHashSet<>();
+	private static List<Point2F> doFindAllPoint2Fs(final List<Primitive> primitives) {
+		final List<Point2F> allPoint2Fs = new ArrayList<>();
 		
 		for(final Primitive primitive : primitives) {
 			final Shape shape = primitive.getShape();
@@ -158,9 +293,9 @@ public final class SceneCompiler {
 					final Point2F b = triangle.getB().getTextureCoordinates();
 					final Point2F c = triangle.getC().getTextureCoordinates();
 					
-					uniquePoint2Fs.add(a);
-					uniquePoint2Fs.add(b);
-					uniquePoint2Fs.add(c);
+					allPoint2Fs.add(a);
+					allPoint2Fs.add(b);
+					allPoint2Fs.add(c);
 				}
 			} else if(shape instanceof Triangle) {
 				final Triangle triangle = Triangle.class.cast(shape);
@@ -169,20 +304,20 @@ public final class SceneCompiler {
 				final Point2F b = triangle.getB().getTextureCoordinates();
 				final Point2F c = triangle.getC().getTextureCoordinates();
 				
-				uniquePoint2Fs.add(a);
-				uniquePoint2Fs.add(b);
-				uniquePoint2Fs.add(c);
+				allPoint2Fs.add(a);
+				allPoint2Fs.add(b);
+				allPoint2Fs.add(c);
 			}
 		}
 		
-		return new ArrayList<>(uniquePoint2Fs);
+		return allPoint2Fs;
 	}
 	
-	private static List<Point3F> doFindUniquePoint3Fs(final List<Node> uniqueBoundingVolumeHierarchyRootNodes, final List<Primitive> primitives) {
-		final Set<Point3F> uniquePoint3Fs = new LinkedHashSet<>();
+	private static List<Point3F> doFindAllPoint3Fs(final List<Node> uniqueBoundingVolumeHierarchyRootNodes, final List<Primitive> primitives) {
+		final List<Point3F> allPoint3Fs = new ArrayList<>();
 		
 		for(final Node uniqueBoundingVolumeHierarchyRootNode : uniqueBoundingVolumeHierarchyRootNodes) {
-			uniqueBoundingVolumeHierarchyRootNode.addBounds(uniquePoint3Fs);
+			uniqueBoundingVolumeHierarchyRootNode.addBounds(allPoint3Fs);
 		}
 		
 		for(final Primitive primitive : primitives) {
@@ -196,9 +331,9 @@ public final class SceneCompiler {
 					final Point3F b = triangle.getB().getPosition();
 					final Point3F c = triangle.getC().getPosition();
 					
-					uniquePoint3Fs.add(a);
-					uniquePoint3Fs.add(b);
-					uniquePoint3Fs.add(c);
+					allPoint3Fs.add(a);
+					allPoint3Fs.add(b);
+					allPoint3Fs.add(c);
 				}
 			} else if(shape instanceof Plane) {
 				final Plane plane = Plane.class.cast(shape);
@@ -207,15 +342,15 @@ public final class SceneCompiler {
 				final Point3F b = plane.getB();
 				final Point3F c = plane.getC();
 				
-				uniquePoint3Fs.add(a);
-				uniquePoint3Fs.add(b);
-				uniquePoint3Fs.add(c);
+				allPoint3Fs.add(a);
+				allPoint3Fs.add(b);
+				allPoint3Fs.add(c);
 			} else if(shape instanceof Sphere) {
 				final Sphere sphere = Sphere.class.cast(shape);
 				
 				final Point3F position = sphere.getPosition();
 				
-				uniquePoint3Fs.add(position);
+				allPoint3Fs.add(position);
 			} else if(shape instanceof Triangle) {
 				final Triangle triangle = Triangle.class.cast(shape);
 				
@@ -223,53 +358,49 @@ public final class SceneCompiler {
 				final Point3F b = triangle.getB().getPosition();
 				final Point3F c = triangle.getC().getPosition();
 				
-				uniquePoint3Fs.add(a);
-				uniquePoint3Fs.add(b);
-				uniquePoint3Fs.add(c);
+				allPoint3Fs.add(a);
+				allPoint3Fs.add(b);
+				allPoint3Fs.add(c);
 			}
 		}
 		
-		return new ArrayList<>(uniquePoint3Fs);
+		return allPoint3Fs;
 	}
 	
-	private static List<Primitive> doFindUniquePrimitives(final Scene scene) {
-		return scene.getPrimitives().stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	private static List<Primitive> doFindAllPrimitives(final Scene scene) {
+		return scene.getPrimitives().stream().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
-	private static List<Primitive> doFindUniquePrimitivesEmittingLight(final List<Primitive> primitives) {
-		return primitives.stream().filter(primitive -> primitive.getSurface().getTextureEmission().isEmissive()).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	private static List<Sphere> doFindAllSpheres(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Sphere).map(primitive -> Sphere.class.cast(primitive.getShape())).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
-	private static List<Sphere> doFindUniqueSpheres(final List<Primitive> primitives) {
-		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Sphere).map(primitive -> Sphere.class.cast(primitive.getShape())).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	private static List<Surface> doFindAllSurfaces(final List<Primitive> primitives) {
+		return primitives.stream().map(primitive -> primitive.getSurface()).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
-	private static List<Surface> doFindUniqueSurfaces(final List<Primitive> primitives) {
-		return primitives.stream().map(primitive -> primitive.getSurface()).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	private static List<Terrain> doFindAllTerrains(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Terrain).map(primitive -> Terrain.class.cast(primitive.getShape())).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
-	private static List<Terrain> doFindUniqueTerrains(final List<Primitive> primitives) {
-		return primitives.stream().filter(primitive -> primitive.getShape() instanceof Terrain).map(primitive -> Terrain.class.cast(primitive.getShape())).distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-	}
-	
-	private static List<Texture> doFindUniqueTextures(final List<Surface> surfaces) {
-		final Set<Texture> uniqueTextures = new LinkedHashSet<>();
+	private static List<Texture> doFindAllTextures(final List<Surface> surfaces) {
+		final List<Texture> allTextures = new ArrayList<>();
 		
 		for(final Surface surface : surfaces) {
 			final Texture textureAlbedo = surface.getTextureAlbedo();
 			final Texture textureEmission = surface.getTextureEmission();
 			final Texture textureNormal = surface.getTextureNormal();
 			
-			uniqueTextures.add(textureAlbedo);
-			uniqueTextures.add(textureEmission);
-			uniqueTextures.add(textureNormal);
+			allTextures.add(textureAlbedo);
+			allTextures.add(textureEmission);
+			allTextures.add(textureNormal);
 		}
 		
-		return new ArrayList<>(uniqueTextures);
+		return allTextures;
 	}
 	
-	private static List<Triangle> doFindUniqueTriangles(final List<Primitive> primitives) {
-		final Set<Triangle> uniqueTriangles = new LinkedHashSet<>();
+	private static List<Triangle> doFindAllTriangles(final List<Primitive> primitives) {
+		final List<Triangle> allTriangles = new ArrayList<>();
 		
 		for(final Primitive primitive : primitives) {
 			final Shape shape = primitive.getShape();
@@ -278,18 +409,18 @@ public final class SceneCompiler {
 				final Mesh mesh = Mesh.class.cast(shape);
 				
 				for(final Triangle triangle : mesh.getTriangles()) {
-					uniqueTriangles.add(triangle);
+					allTriangles.add(triangle);
 				}
 			} else if(shape instanceof Triangle) {
-				uniqueTriangles.add(Triangle.class.cast(shape));
+				allTriangles.add(Triangle.class.cast(shape));
 			}
 		}
 		
-		return new ArrayList<>(uniqueTriangles);
+		return allTriangles;
 	}
 	
-	private static List<Vector3F> doFindUniqueVector3Fs(final List<Primitive> primitives) {
-		final Set<Vector3F> uniqueVector3Fs = new LinkedHashSet<>();
+	private static List<Vector3F> doFindAllVector3Fs(final List<Primitive> primitives) {
+		final List<Vector3F> allVector3Fs = new ArrayList<>();
 		
 		for(final Primitive primitive : primitives) {
 			final Shape shape = primitive.getShape();
@@ -302,16 +433,16 @@ public final class SceneCompiler {
 					final Vector3F b = triangle.getB().getNormal();
 					final Vector3F c = triangle.getC().getNormal();
 					
-					uniqueVector3Fs.add(a);
-					uniqueVector3Fs.add(b);
-					uniqueVector3Fs.add(c);
+					allVector3Fs.add(a);
+					allVector3Fs.add(b);
+					allVector3Fs.add(c);
 				}
 			} else if(shape instanceof Plane) {
 				final Plane plane = Plane.class.cast(shape);
 				
 				final Vector3F surfaceNormal = plane.getSurfaceNormal();
 				
-				uniqueVector3Fs.add(surfaceNormal);
+				allVector3Fs.add(surfaceNormal);
 			} else if(shape instanceof Triangle) {
 				final Triangle triangle = Triangle.class.cast(shape);
 				
@@ -319,13 +450,65 @@ public final class SceneCompiler {
 				final Vector3F b = triangle.getB().getNormal();
 				final Vector3F c = triangle.getC().getNormal();
 				
-				uniqueVector3Fs.add(a);
-				uniqueVector3Fs.add(b);
-				uniqueVector3Fs.add(c);
+				allVector3Fs.add(a);
+				allVector3Fs.add(b);
+				allVector3Fs.add(c);
 			}
 		}
 		
-		return new ArrayList<>(uniqueVector3Fs);
+		return allVector3Fs;
+	}
+	
+	private static List<Primitive> doFindPrimitivesEmittingLight(final List<Primitive> primitives) {
+		return primitives.stream().filter(primitive -> primitive.getSurface().getTextureEmission().isEmissive()).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Node> doFindUniqueBoundingVolumeHierarchyRootNodes(final List<Node> boundingVolumeHierarchyRootNodes) {
+		return boundingVolumeHierarchyRootNodes.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Mesh> doFindUniqueMeshes(final List<Mesh> meshes) {
+		return meshes.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Plane> doFindUniquePlanes(final List<Plane> planes) {
+		return planes.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Point2F> doFindUniquePoint2Fs(final List<Point2F> point2Fs) {
+		return point2Fs.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Point3F> doFindUniquePoint3Fs(final List<Point3F> point3Fs) {
+		return point3Fs.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Primitive> doFindUniquePrimitives(final List<Primitive> primitives) {
+		return primitives.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Sphere> doFindUniqueSpheres(final List<Sphere> spheres) {
+		return spheres.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Surface> doFindUniqueSurfaces(final List<Surface> surfaces) {
+		return surfaces.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Terrain> doFindUniqueTerrains(final List<Terrain> terrains) {
+		return terrains.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Texture> doFindUniqueTextures(final List<Texture> textures) {
+		return textures.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Triangle> doFindUniqueTriangles(final List<Triangle> triangles) {
+		return triangles.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+	}
+	
+	private static List<Vector3F> doFindUniqueVector3Fs(final List<Vector3F> vector3Fs) {
+		return vector3Fs.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
 	}
 	
 	private static Map<Plane, Integer> doCreatePlaneMappings(final List<Plane> planes) {
@@ -433,8 +616,6 @@ public final class SceneCompiler {
 	}
 	
 	private static float[] doCompilePoint2Fs(final List<Point2F> point2Fs) {
-		doReportProgress("Compiling Point2Fs...");
-		
 		final float[] compiledPoint2Fs = new float[point2Fs.size() * 2];
 		
 		for(int i = 0; i < point2Fs.size(); i++) {
@@ -444,14 +625,10 @@ public final class SceneCompiler {
 			compiledPoint2Fs[i * 2 + 1] = point2F.y;
 		}
 		
-		doReportProgress(" Done.\n");
-		
 		return compiledPoint2Fs.length > 0 ? compiledPoint2Fs : new float[1];
 	}
 	
 	private static float[] doCompilePoint3Fs(final List<Point3F> point3Fs) {
-		doReportProgress("Compiling Point3Fs...");
-		
 		final float[] compiledPoint3Fs = new float[point3Fs.size() * 3];
 		
 		for(int i = 0; i < point3Fs.size(); i++) {
@@ -461,8 +638,6 @@ public final class SceneCompiler {
 			compiledPoint3Fs[i * 3 + 1] = point3F.y;
 			compiledPoint3Fs[i * 3 + 2] = point3F.z;
 		}
-		
-		doReportProgress(" Done.\n");
 		
 		return compiledPoint3Fs.length > 0 ? compiledPoint3Fs : new float[1];
 	}
@@ -475,13 +650,7 @@ public final class SceneCompiler {
 	}
 	
 	private static float[] doCompileSpheres(final List<Sphere> spheres, final Map<Point3F, Integer> point3FMappings) {
-		doReportProgress("Compiling Spheres...");
-		
-		final float[] compiledSpheres = Arrays2.toFloatArray(spheres, sphere -> doCompileSphere(sphere, point3FMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledSpheres.length > 0 ? compiledSpheres : new float[1];
+		return Arrays2.toFloatArray(spheres, sphere -> doCompileSphere(sphere, point3FMappings), 1);
 	}
 	
 	private static float[] doCompileSurface(final Surface surface, final Map<Texture, Integer> textureMappings) {
@@ -496,13 +665,7 @@ public final class SceneCompiler {
 	}
 	
 	private static float[] doCompileSurfaces(final List<Surface> surfaces, final Map<Texture, Integer> textureMappings) {
-		doReportProgress("Compiling Surfaces...");
-		
-		final float[] compiledSurfaces = Arrays2.toFloatArray(surfaces, surface -> doCompileSurface(surface, textureMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledSurfaces.length > 0 ? compiledSurfaces : new float[1];
+		return Arrays2.toFloatArray(surfaces, surface -> doCompileSurface(surface, textureMappings), 1);
 	}
 	
 	private static float[] doCompileTerrain(final Terrain terrain) {
@@ -516,28 +679,14 @@ public final class SceneCompiler {
 	}
 	
 	private static float[] doCompileTerrains(final List<Terrain> terrains) {
-		doReportProgress("Compiling Terrains...");
-		
-		final float[] compiledTerrains = Arrays2.toFloatArray(terrains, terrain -> doCompileTerrain(terrain));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledTerrains.length > 0 ? compiledTerrains : new float[1];
+		return Arrays2.toFloatArray(terrains, terrain -> doCompileTerrain(terrain), 1);
 	}
 	
 	private static float[] doCompileTextures(final List<Texture> textures) {
-		doReportProgress("Compiling Textures...");
-		
-		final float[] compiledTextures = Arrays2.toFloatArray(textures, texture -> texture.toArray());
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledTextures.length > 0 ? compiledTextures : new float[1];
+		return Arrays2.toFloatArray(textures, texture -> texture.toArray(), 1);
 	}
 	
 	private static float[] doCompileVector3Fs(final List<Vector3F> vector3Fs) {
-		doReportProgress("Compiling Vector3Fs...");
-		
 		final float[] compiledVector3Fs = new float[vector3Fs.size() * 3];
 		
 		for(int i = 0; i < vector3Fs.size(); i++) {
@@ -547,8 +696,6 @@ public final class SceneCompiler {
 			compiledVector3Fs[i * 3 + 1] = vector3F.y;
 			compiledVector3Fs[i * 3 + 2] = vector3F.z;
 		}
-		
-		doReportProgress(" Done.\n");
 		
 		return compiledVector3Fs.length > 0 ? compiledVector3Fs : new float[1];
 	}
@@ -622,13 +769,7 @@ public final class SceneCompiler {
 	}
 	
 	private static int[] doCompileBoundingVolumeHierarchies(final List<Node> boundingVolumeHierarchyRootNodes, final Map<Point3F, Integer> point3FMappings, final Map<Triangle, Integer> triangleMappings) {
-		doReportProgress("Compiling Bounding Volume Hierarchies...");
-		
-		final int[] compiledBoundingVolumeHierarchies = Arrays2.toIntArray(boundingVolumeHierarchyRootNodes, mesh -> doCompileBoundingVolumeHierarchy(mesh, point3FMappings, triangleMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledBoundingVolumeHierarchies.length > 0 ? compiledBoundingVolumeHierarchies : new int[1];
+		return Arrays2.toIntArray(boundingVolumeHierarchyRootNodes, mesh -> doCompileBoundingVolumeHierarchy(mesh, point3FMappings, triangleMappings), 1);
 	}
 	
 	private static int[] doCompileBoundingVolumeHierarchy(final Node boundingVolumeHierarchyRootNode, final Map<Point3F, Integer> point3FMappings, final Map<Triangle, Integer> triangleMappings) {
@@ -746,13 +887,7 @@ public final class SceneCompiler {
 	}
 	
 	private static int[] doCompilePlanes(final List<Plane> planes, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
-		doReportProgress("Compiling Planes...");
-		
-		final int[] compiledPlanes = Arrays2.toIntArray(planes, plane -> doCompilePlane(plane, point3FMappings, vector3FMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledPlanes.length > 0 ? compiledPlanes : new int[1];
+		return Arrays2.toIntArray(planes, plane -> doCompilePlane(plane, point3FMappings, vector3FMappings), 1);
 	}
 	
 	private static int[] doCompilePrimitive(final Primitive primitive, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Surface, Integer> surfaceMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
@@ -764,13 +899,7 @@ public final class SceneCompiler {
 	}
 	
 	private static int[] doCompilePrimitives(final List<Primitive> primitives, final List<Mesh> meshes, final List<Node> boundingVolumeHierarchyRootNodes, final Map<Plane, Integer> planeMappings, final Map<Sphere, Integer> sphereMappings, final Map<Surface, Integer> surfaceMappings, final Map<Terrain, Integer> terrainMappings, final Map<Triangle, Integer> triangleMappings) {
-		doReportProgress("Compiling Primitives...");
-		
-		final int[] compiledPrimitives = Arrays2.toIntArray(primitives, primitive -> doCompilePrimitive(primitive, meshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledPrimitives.length > 0 ? compiledPrimitives : new int[1];
+		return Arrays2.toIntArray(primitives, primitive -> doCompilePrimitive(primitive, meshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings), 1);
 	}
 	
 	private static int[] doCompilePrimitivesEmittingLight(final List<Primitive> primitivesEmittingLight, final Map<Primitive, Integer> primitiveMappings) {
@@ -800,16 +929,6 @@ public final class SceneCompiler {
 	}
 	
 	private static int[] doCompileTriangles(final List<Triangle> triangles, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
-		doReportProgress("Compiling Triangles...");
-		
-		final int[] compiledTriangles = Arrays2.toIntArray(triangles, triangle -> doCompileTriangle(triangle, point2FMappings, point3FMappings, vector3FMappings));
-		
-		doReportProgress(" Done.\n");
-		
-		return compiledTriangles.length > 0 ? compiledTriangles : new int[1];
-	}
-	
-	private static void doReportProgress(final String message) {
-		System.out.print(message);
+		return Arrays2.toIntArray(triangles, triangle -> doCompileTriangle(triangle, point2FMappings, point3FMappings, vector3FMappings), 1);
 	}
 }

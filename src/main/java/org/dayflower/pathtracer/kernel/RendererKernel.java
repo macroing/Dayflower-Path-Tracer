@@ -283,7 +283,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code scene} are {@code null}
 	 */
 	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final Scene scene) {
-		this(width, height, camera, sky, SceneCompiler.compile(scene));
+		this(width, height, camera, sky, new SceneCompiler().compile(scene));
 	}
 	
 	/**
@@ -1331,8 +1331,12 @@ public final class RendererKernel extends AbstractKernel {
 				
 //				Loop through the BVH structure as long as the offset to the next node is not -1:
 				while(boundingVolumeHierarchyRelativeOffset != -1) {
-					final int minimumOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 2];
-					final int maximumOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 3];
+//					Calculate the current offset in the BVH structure:
+					final int boundingVolumeHierarchyOffset = boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset;
+					
+//					Retrieve the offsets to the points defining the minimum and maximum locations of the current bounding box:
+					final int minimumOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 2];
+					final int maximumOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 3];
 					
 //					Retrieve the minimum point location of the current bounding box:
 					final float minimumX = this.scenePoint3Fs_$constant$[minimumOffset + 0];
@@ -1373,24 +1377,24 @@ public final class RendererKernel extends AbstractKernel {
 //					Check if the maximum distance is greater than or equal to the minimum distance:
 					if(tMaximum < 0.0F || tMinimum > tMaximum || closestDistance < tMinimum) {
 //						Retrieve the offset to the next node in the BVH structure, relative to the current one:
-						boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 1];
+						boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 1];
 					} else {
 //						Retrieve the type of the current BVH node:
-						final int type = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset];
+						final int type = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset];
 						
 						if(type == BoundingVolumeHierarchy.NODE_TYPE_TREE) {
 //							This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
-							boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 4];
+							boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 4];
 						} else {
 //							Retrieve the triangle count in the current BVH node:
-							final int triangleCount = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 4];
+							final int triangleCount = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 4];
 							
 							int j = 0;
 							
 //							Loop through all triangles in the current BVH node:
 							while(j < triangleCount) {
 //								Retrieve the offset to the current triangle:
-								final int currentTriangleOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 5 + j];
+								final int currentTriangleOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 5 + j];
 								
 								final int offsetAPosition = this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET];
 								final int offsetBPosition = this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET];
@@ -1425,7 +1429,7 @@ public final class RendererKernel extends AbstractKernel {
 							}
 							
 //							Retrieve the offset to the next node in the BVH structure, relative to the current one:
-							boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset + 1];
+							boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 1];
 						}
 					}
 				}

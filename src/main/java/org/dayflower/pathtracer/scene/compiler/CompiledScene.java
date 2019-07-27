@@ -29,10 +29,29 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
 
+import org.dayflower.pathtracer.math.Point2F;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Camera;
+import org.dayflower.pathtracer.scene.Primitive;
+import org.dayflower.pathtracer.scene.Scene;
+import org.dayflower.pathtracer.scene.Surface;
+import org.dayflower.pathtracer.scene.Texture;
+import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
+import org.dayflower.pathtracer.scene.shape.Terrain;
+import org.dayflower.pathtracer.scene.shape.Plane;
+import org.dayflower.pathtracer.scene.shape.Sphere;
+import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.util.Arrays2;
 
-//TODO: Add Javadocs.
+/**
+ * A {@code CompiledScene} represents a compiled version of a {@link Scene} instance.
+ * <p>
+ * To compile a {@link Scene} into a {@code CompiledScene}, use {@link SceneCompiler} and its {@link SceneCompiler#compile(Scene) compile(Scene)} method.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class CompiledScene {
 	private final String name;
 	private final float[] camera;
@@ -51,7 +70,27 @@ public final class CompiledScene {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code CompiledScene} instance.
+	 * <p>
+	 * If at least one of the parameters are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param name the name of this {@code CompiledScene} instance
+	 * @param camera the array containing the compiled {@link Camera} instance
+	 * @param point2Fs the array containing all the compiled {@link Point2F} instances
+	 * @param point3Fs the array containing all the compiled {@link Point3F} instances
+	 * @param spheres the array containing all the compiled {@link Sphere} instances
+	 * @param surfaces the array containing all the compiled {@link Surface} instances
+	 * @param terrains the array containing all the compiled {@link Terrain} instances
+	 * @param textures the array containing all the compiled {@link Texture} instances
+	 * @param vector3Fs the array containing all the compiled {@link Vector3F} instances
+	 * @param boundingVolumeHierarchies the array containing all the compiled {@link BoundingVolumeHierarchy} instances
+	 * @param planes the array containing all the compiled {@link Plane} instances
+	 * @param primitives the array containing all the compiled {@link Primitive} instances
+	 * @param primitivesEmittingLight the array containing all the compiled {@link Primitive} instances that emits light
+	 * @param triangles the array containing all the compiled {@link Triangle} instances
+	 * @throws NullPointerException thrown if, and only if, at least one of the parameters are {@code null}
+	 */
 	public CompiledScene(final String name, final float[] camera, final float[] point2Fs, final float[] point3Fs, final float[] spheres, final float[] surfaces, final float[] terrains, final float[] textures, final float[] vector3Fs, final int[] boundingVolumeHierarchies, final int[] planes, final int[] primitives, final int[] primitivesEmittingLight, final int[] triangles) {
 		this.name = Objects.requireNonNull(name, "name == null");
 		this.camera = Objects.requireNonNull(camera, "camera == null");
@@ -71,82 +110,143 @@ public final class CompiledScene {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
-	public Camera toCamera() {
-		return new Camera(this.camera.clone());
-	}
-	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the name of this {@code CompiledScene} instance.
+	 * 
+	 * @return the name of this {@code CompiledScene} instance
+	 */
 	public String getName() {
 		return this.name;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing the compiled {@link Camera} instance.
+	 * 
+	 * @return the array containing the compiled {@code Camera} instance
+	 */
 	public float[] getCamera() {
 		return this.camera;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Point2F} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Point2F} instances
+	 */
 	public float[] getPoint2Fs() {
 		return this.point2Fs;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Point3F} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Point3F} instances
+	 */
 	public float[] getPoint3Fs() {
 		return this.point3Fs;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Sphere} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Sphere} instances
+	 */
 	public float[] getSpheres() {
 		return this.spheres;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Surface} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Surface} instances
+	 */
 	public float[] getSurfaces() {
 		return this.surfaces;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Terrain} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Terrain} instances
+	 */
 	public float[] getTerrains() {
 		return this.terrains;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Texture} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Texture} instances
+	 */
 	public float[] getTextures() {
 		return this.textures;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Vector3F} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Vector3F} instances
+	 */
 	public float[] getVector3Fs() {
 		return this.vector3Fs;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link BoundingVolumeHierarchy} instances.
+	 * 
+	 * @return the array containing all the compiled {@code BoundingVolumeHierarchy} instances
+	 */
 	public int[] getBoundingVolumeHierarchies() {
 		return this.boundingVolumeHierarchies;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Plane} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Plane} instances
+	 */
 	public int[] getPlanes() {
 		return this.planes;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Primitive} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Primitive} instances
+	 */
 	public int[] getPrimitives() {
 		return this.primitives;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Primitive} instances that emits light.
+	 * 
+	 * @return the array containing all the compiled {@code Primitive} instances that emits light
+	 */
 	public int[] getPrimitivesEmittingLight() {
 		return this.primitivesEmittingLight;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the array containing all the compiled {@link Triangle} instances.
+	 * 
+	 * @return the array containing all the compiled {@code Triangle} instances
+	 */
 	public int[] getTriangles() {
 		return this.triangles;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Writes this {@code CompiledScene} instance to {@code dataOutputStream}.
+	 * <p>
+	 * If {@code dataOutputStream} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param dataOutputStream the {@code DataOutputStream} to write to
+	 * @throws NullPointerException thrown if, and only if, {@code dataOutputStream} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
+	 */
 	public void write(final DataOutputStream dataOutputStream) {
 		try {
 			dataOutputStream.writeUTF(this.name);
@@ -169,7 +269,17 @@ public final class CompiledScene {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Writes this {@code CompiledScene} instance to the file represented by {@code file}.
+	 * <p>
+	 * If {@code file} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param file a {@code File} representation of the file to write to
+	 * @throws NullPointerException thrown if, and only if, {@code file} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
+	 */
 	public void write(final File file) {
 		final File parentFile = file.getParentFile();
 		
@@ -184,9 +294,37 @@ public final class CompiledScene {
 		}
 	}
 	
+	/**
+	 * Writes this {@code CompiledScene} instance to the file represented by {@code filename}.
+	 * <p>
+	 * If {@code filename} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param filename the filename of the file to write to
+	 * @throws NullPointerException thrown if, and only if, {@code filename} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
+	 */
+	public void write(final String filename) {
+		write(new File(Objects.requireNonNull(filename, "filename")));
+	}
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Reads the data provided by {@code dataInputStream} into a {@code CompiledScene} instance.
+	 * <p>
+	 * Returns a new {@code CompiledScene} instance.
+	 * <p>
+	 * If {@code dataInputStream} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param dataInputStream the {@code DataInputStream} to read from
+	 * @return a new {@code CompiledScene} instance
+	 * @throws NullPointerException thrown if, and only if, {@code dataInputStream} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
+	 */
 	public static CompiledScene read(final DataInputStream dataInputStream) {
 		try {
 			final String name = dataInputStream.readUTF();
@@ -211,12 +349,43 @@ public final class CompiledScene {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Reads the data provided by a file represented by {@code file} into a {@code CompiledScene} instance.
+	 * <p>
+	 * Returns a new {@code CompiledScene} instance.
+	 * <p>
+	 * If {@code file} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param file a {@code File} representation of the file to read from
+	 * @return a new {@code CompiledScene} instance
+	 * @throws NullPointerException thrown if, and only if, {@code file} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
+	 */
 	public static CompiledScene read(final File file) {
 		try(final DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(Objects.requireNonNull(file, "file == null"))))) {
 			return read(dataInputStream);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}
+	}
+	
+	/**
+	 * Reads the data provided by a file represented by {@code filename} into a {@code CompiledScene} instance.
+	 * <p>
+	 * Returns a new {@code CompiledScene} instance.
+	 * <p>
+	 * If {@code filename} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
+	 * 
+	 * @param filename the filename of the file to read from
+	 * @return a new {@code CompiledScene} instance
+	 * @throws NullPointerException thrown if, and only if, {@code filename} is {@code null}
+	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
+	 */
+	public static CompiledScene read(final String filename) {
+		return read(new File(Objects.requireNonNull(filename, "filename == null")));
 	}
 }
