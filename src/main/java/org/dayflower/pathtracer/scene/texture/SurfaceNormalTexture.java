@@ -29,13 +29,19 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class SurfaceNormalTexture implements Texture {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Is Tangent Space parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_IS_TANGENT_SPACE = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code SurfaceNormalTexture} in the {@code float} array. The size is {@code 3}.
+	 */
 	public static final int SIZE = 3;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code SurfaceNormalTexture}. The number is {@code 4}.
+	 */
 	public static final int TYPE = 4;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

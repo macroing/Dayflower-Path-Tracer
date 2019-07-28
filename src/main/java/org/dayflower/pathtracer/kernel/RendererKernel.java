@@ -19,6 +19,7 @@
 package org.dayflower.pathtracer.kernel;
 
 import java.io.File;
+import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -1135,40 +1136,26 @@ public final class RendererKernel extends AbstractKernel {
 		final float eyeX = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_EYE_X];
 		final float eyeY = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_EYE_Y];
 		final float eyeZ = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_EYE_Z];
-//		final float eyeX = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_EYE_X];
-//		final float eyeY = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_EYE_Y];
-//		final float eyeZ = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_EYE_Z];
 		
 //		Retrieve the current U-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
 		final float uX = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_U_X];
 		final float uY = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_U_Y];
 		final float uZ = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_U_Z];
-//		final float uX = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_X];
-//		final float uY = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Y];
-//		final float uZ = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_U_Z];
 		
 //		Retrieve the current V-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
 		final float vX = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_V_X];
 		final float vY = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_V_Y];
 		final float vZ = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_V_Z];
-//		final float vX = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_X];
-//		final float vY = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Y];
-//		final float vZ = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_V_Z];
 		
 //		Retrieve the current W-vector for the orthonormal basis frame of the camera lens (eye) in the scene:
 		final float wX = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_W_X];
 		final float wY = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_W_Y];
 		final float wZ = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_W_Z];
-//		final float wX = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_X];
-//		final float wY = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Y];
-//		final float wZ = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_ORTHONORMAL_BASIS_W_Z];
 		
 //		Calculate the Field of View:
 		final float fieldOfViewX0 = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_FIELD_OF_VIEW_X];
-//		final float fieldOfViewX0 = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_X];
 		final float fieldOfViewX1 = tan(fieldOfViewX0 * PI_DIVIDED_BY_360);
 		final float fieldOfViewY0 = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_FIELD_OF_VIEW_Y];
-//		final float fieldOfViewY0 = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_FIELD_OF_VIEW_Y];
 		final float fieldOfViewY1 = tan(-fieldOfViewY0 * PI_DIVIDED_BY_360);
 		
 //		Calculate the horizontal direction:
@@ -1201,8 +1188,6 @@ public final class RendererKernel extends AbstractKernel {
 //		Calculate the pixel sample point:
 		final float sx = (sampleX + x) / (this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_RESOLUTION_X] - 1.0F);
 		final float sy = (sampleY + y) / (this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_RESOLUTION_Y] - 1.0F);
-//		final float sx = (sampleX + x) / (this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_X] - 1.0F);
-//		final float sy = (sampleY + y) / (this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_RESOLUTION_Y] - 1.0F);
 		final float sx0 = 2.0F * sx - 1.0F;
 		final float sy0 = 2.0F * sy - 1.0F;
 		
@@ -1211,7 +1196,6 @@ public final class RendererKernel extends AbstractKernel {
 		
 //		Retrieve whether or not this camera uses a Fisheye camera lens:
 		final boolean isFisheyeCameraLens = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_CAMERA_LENS] == Camera.CAMERA_LENS_FISHEYE;
-//		final boolean isFisheyeCameraLens = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_CAMERA_LENS] == Camera.CAMERA_LENS_FISHEYE;
 		
 		if(isFisheyeCameraLens) {
 //			Calculate the dot product that will be used in determining if the current pixel is outside the camera lens:
@@ -1237,7 +1221,6 @@ public final class RendererKernel extends AbstractKernel {
 		
 //		Retrieve the focal distance:
 		final float focalDistance = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_FOCAL_DISTANCE];
-//		final float focalDistance = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_FOCAL_DISTANCE];
 		
 //		Calculate the point on the image plane:
 		final float pointOnImagePlaneX = eyeX + (pointOnPlaneOneUnitAwayFromEyeX - eyeX) * focalDistance;
@@ -1246,7 +1229,6 @@ public final class RendererKernel extends AbstractKernel {
 		
 //		Retrieve the aperture radius:
 		final float apertureRadius = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_APERTURE_RADIUS];
-//		final float apertureRadius = this.cameraArray_$constant$[Camera.ABSOLUTE_OFFSET_OF_APERTURE_RADIUS];
 		
 //		Initialize the X-, Y- and Z-coordinates of the aperture point:
 		float aperturePointX = eyeX;
@@ -1991,51 +1973,41 @@ public final class RendererKernel extends AbstractKernel {
 			final float v0Y = w1Z * u2X - w1X * u2Z;
 			final float v0Z = w1X * u2Y - w1Y * u2X;
 			
-//			final int samples = 1;
+			final float xi = nextFloat();
+			final float xj = nextFloat();
+			final float phi = PI_MULTIPLIED_BY_TWO * xi;
+			final float cosPhi = cos(phi);
+			final float sinPhi = sin(phi);
+			final float sinTheta = sqrt(xj);
+			final float cosTheta = sqrt(1.0F - xj);
 			
-//			for(int i = 0; i < samples; i++) {
-				final float xi = nextFloat();
-				final float xj = nextFloat();
-				final float phi = PI_MULTIPLIED_BY_TWO * xi;
-				final float cosPhi = cos(phi);
-				final float sinPhi = sin(phi);
-				final float sinTheta = sqrt(xj);
-				final float cosTheta = sqrt(1.0F - xj);
-				
-				final float direction0X = cosPhi * sinTheta;
-				final float direction0Y = sinPhi * sinTheta;
-				final float direction0Z = cosTheta;
-				final float direction1X = direction0X * u2X + direction0Y * v0X + direction0Z * w1X;
-				final float direction1Y = direction0X * u2Y + direction0Y * v0Y + direction0Z * w1Y;
-				final float direction1Z = direction0X * u2Z + direction0Y * v0Z + direction0Z * w1Z;
-				final float direction1LengthReciprocal = rsqrt(direction1X * direction1X + direction1Y * direction1Y + direction1Z * direction1Z);
-				
-				originX = surfaceIntersectionPointX + w1X * 0.01F;
-				originY = surfaceIntersectionPointY + w1Y * 0.01F;
-				originZ = surfaceIntersectionPointZ + w1Z * 0.01F;
-				
-				directionX = direction1X * direction1LengthReciprocal;
-				directionY = direction1Y * direction1LengthReciprocal;
-				directionZ = direction1Z * direction1LengthReciprocal;
-				
-				final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, false);//doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
-				
-				final boolean isHit = t < this.maximumDistanceAO;
-				
-				final float r = isHit ? brightR : darkR;
-				final float g = isHit ? brightG : darkG;
-				final float b = isHit ? brightB : darkB;
-				
-				pixelColorR += (1.0F - r) * brightR + r * darkR;
-				pixelColorG += (1.0F - g) * brightG + g * darkG;
-				pixelColorB += (1.0F - b) * brightB + b * darkB;
-//			}
+			final float direction0X = cosPhi * sinTheta;
+			final float direction0Y = sinPhi * sinTheta;
+			final float direction0Z = cosTheta;
+			final float direction1X = direction0X * u2X + direction0Y * v0X + direction0Z * w1X;
+			final float direction1Y = direction0X * u2Y + direction0Y * v0Y + direction0Z * w1Y;
+			final float direction1Z = direction0X * u2Z + direction0Y * v0Z + direction0Z * w1Z;
+			final float direction1LengthReciprocal = rsqrt(direction1X * direction1X + direction1Y * direction1Y + direction1Z * direction1Z);
 			
-//			final float samplesReciprocal = 1.0F / samples;
+			originX = surfaceIntersectionPointX + w1X * 0.01F;
+			originY = surfaceIntersectionPointY + w1Y * 0.01F;
+			originZ = surfaceIntersectionPointZ + w1Z * 0.01F;
 			
-//			pixelColorR *= samplesReciprocal;
-//			pixelColorG *= samplesReciprocal;
-//			pixelColorB *= samplesReciprocal;
+			directionX = direction1X * direction1LengthReciprocal;
+			directionY = direction1Y * direction1LengthReciprocal;
+			directionZ = direction1Z * direction1LengthReciprocal;
+			
+			final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, false);//doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
+			
+			final boolean isHit = t < this.maximumDistanceAO;
+			
+			final float r = isHit ? brightR : darkR;
+			final float g = isHit ? brightG : darkG;
+			final float b = isHit ? brightB : darkB;
+			
+			pixelColorR += (1.0F - r) * brightR + r * darkR;
+			pixelColorG += (1.0F - g) * brightG + g * darkG;
+			pixelColorB += (1.0F - b) * brightB + b * darkB;
 		}
 		
 //		Update the current pixel color:
@@ -2804,8 +2776,8 @@ public final class RendererKernel extends AbstractKernel {
 //		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
 		final int offsetAddend = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_ADDEND;
 		final int offsetMultiplier = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_MULTIPLIER;
-		final int offsetFrequency = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_SCALE;
-		final int offsetGain = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_PERSISTENCE;
+		final int offsetFrequency = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_FREQUENCY;
+		final int offsetGain = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_GAIN;
 		final int offsetOctaves = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_OCTAVES;
 		
 		final float x = this.intersections_$local$[offsetSurfaceIntersectionPoint];

@@ -33,7 +33,9 @@ import org.dayflower.pathtracer.scene.Shape;
  * @author J&#246;rgen Lundgren
  */
 public final class Mesh implements Shape {
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code Mesh}. The number is {@code 5}.
+	 */
 	public static final int TYPE = 5;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +44,16 @@ public final class Mesh implements Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Mesh} instance.
+	 * <p>
+	 * If {@code triangles} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * Modifying {@code triangles} after this {@code Mesh} instance has been created, will not affect it. The {@code List} is copied.
+	 * 
+	 * @param triangles the {@link Triangle}s to use
+	 * @throws NullPointerException thrown if, and only if, {@code triangles} is {@code null}
+	 */
 	public Mesh(final List<Triangle> triangles) {
 		this.triangles = new ArrayList<>(triangles);
 	}

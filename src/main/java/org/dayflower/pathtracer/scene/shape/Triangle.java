@@ -35,37 +35,59 @@ import org.dayflower.pathtracer.scene.Surface;
  * @author J&#246;rgen Lundgren
  */
 public final class Triangle implements Shape {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the A Position Offset parameter in the {@code float} array. The value is {@code 0}.
+	 */
 	public static final int RELATIVE_OFFSET_A_POSITION_OFFSET = 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the A Surface Normal Offset parameter in the {@code float} array. The value is {@code 3}.
+	 */
 	public static final int RELATIVE_OFFSET_A_SURFACE_NORMAL_OFFSET = 3;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the A Texture Coordinates Offset parameter in the {@code float} array. The value is {@code 6}.
+	 */
 	public static final int RELATIVE_OFFSET_A_TEXTURE_COORDINATES_OFFSET = 6;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the B Position Offset parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int RELATIVE_OFFSET_B_POSITION_OFFSET = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the B Surface Normal Offset parameter in the {@code float} array. The value is {@code 4}.
+	 */
 	public static final int RELATIVE_OFFSET_B_SURFACE_NORMAL_OFFSET = 4;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the B Texture Coordinates Offset parameter in the {@code float} array. The value is {@code 7}.
+	 */
 	public static final int RELATIVE_OFFSET_B_TEXTURE_COORDINATES_OFFSET = 7;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the C Position Offset parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_C_POSITION_OFFSET = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the C Surface Normal Offset parameter in the {@code float} array. The value is {@code 5}.
+	 */
 	public static final int RELATIVE_OFFSET_C_SURFACE_NORMAL_OFFSET = 5;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the C Texture Coordinates Offset parameter in the {@code float} array. The value is {@code 8}.
+	 */
 	public static final int RELATIVE_OFFSET_C_TEXTURE_COORDINATES_OFFSET = 8;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code Triangle} in the {@code float} array. The size is {@code 9}.
+	 */
 	public static final int SIZE = 9;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code Triangle}. The number is {@code 2}.
+	 */
 	public static final int TYPE = 2;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

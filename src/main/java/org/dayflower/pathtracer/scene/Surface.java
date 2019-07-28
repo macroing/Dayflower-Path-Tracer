@@ -27,25 +27,39 @@ import java.util.Objects;
  * @author J&#246;rgen Lundgren
  */
 public final class Surface {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Material parameter in the {@code float} array. The value is {@code 0}.
+	 */
 	public static final int RELATIVE_OFFSET_MATERIAL = 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Noise Amount parameter in the {@code float} array. The value is {@code 4}.
+	 */
 	public static final int RELATIVE_OFFSET_NOISE_AMOUNT = 4;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Noise Scale parameter in the {@code float} array. The value is {@code 5}.
+	 */
 	public static final int RELATIVE_OFFSET_NOISE_SCALE = 5;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Texture Albedo Offset parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Texture Emission Offset parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_TEXTURE_EMISSION_OFFSET = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Texture Normal Offset parameter in the {@code float} array. The value is {@code 3}.
+	 */
 	public static final int RELATIVE_OFFSET_TEXTURE_NORMAL_OFFSET = 3;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code Surface} in the {@code float} array. The size is {@code 6}.
+	 */
 	public static final int SIZE = 6;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,12 +73,36 @@ public final class Surface {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Surface} instance.
+	 * <p>
+	 * Calling this constructor is equivalent to {@code new Surface(material, textureAlbedo, textureEmission, textureNormal, 0.0F, 0.0F)}.
+	 * <p>
+	 * If either {@code material}, {@code textureAlbedo}, {@code textureEmission} or {@code textureNormal} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param material a {@link Material}
+	 * @param textureAlbedo an Albedo {@link Texture}
+	 * @param textureEmission an Emission {@code Texture}
+	 * @param textureNormal a Normal {@code Texture}
+	 * @throws NullPointerException thrown if, and only if, either {@code material}, {@code textureAlbedo}, {@code textureEmission} or {@code textureNormal} are {@code null}
+	 */
 	public Surface(final Material material, final Texture textureAlbedo, final Texture textureEmission, final Texture textureNormal) {
 		this(material, textureAlbedo, textureEmission, textureNormal, 0.0F, 0.0F);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Surface} instance.
+	 * <p>
+	 * If either {@code material}, {@code textureAlbedo}, {@code textureEmission} or {@code textureNormal} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param material a {@link Material}
+	 * @param textureAlbedo an Albedo {@link Texture}
+	 * @param textureEmission an Emission {@code Texture}
+	 * @param textureNormal a Normal {@code Texture}
+	 * @param noiseAmount the noise amount
+	 * @param noiseScale the noise scale
+	 * @throws NullPointerException thrown if, and only if, either {@code material}, {@code textureAlbedo}, {@code textureEmission} or {@code textureNormal} are {@code null}
+	 */
 	public Surface(final Material material, final Texture textureAlbedo, final Texture textureEmission, final Texture textureNormal, final float noiseAmount, final float noiseScale) {
 		this.material = Objects.requireNonNull(material, "material == null");
 		this.textureAlbedo = Objects.requireNonNull(textureAlbedo, "textureAlbedo == null");

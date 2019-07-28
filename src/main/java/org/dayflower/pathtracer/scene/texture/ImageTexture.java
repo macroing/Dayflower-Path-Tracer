@@ -50,28 +50,44 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class ImageTexture implements Texture {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Data parameter in the {@code float} array. The value is {@code 8}.
+	 */
 	public static final int RELATIVE_OFFSET_DATA = 8;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Height parameter in the {@code float} array. The value is {@code 5}.
+	 */
 	public static final int RELATIVE_OFFSET_HEIGHT = 5;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Radians Cos parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_RADIANS_COS = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Radians Sin parameter in the {@code float} array. The value is {@code 3}.
+	 */
 	public static final int RELATIVE_OFFSET_RADIANS_SIN = 3;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Scale U parameter in the {@code float} array. The value is {@code 6}.
+	 */
 	public static final int RELATIVE_OFFSET_SCALE_U = 6;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Scale V parameter in the {@code float} array. The value is {@code 7}.
+	 */
 	public static final int RELATIVE_OFFSET_SCALE_V = 7;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Width parameter in the {@code float} array. The value is {@code 4}.
+	 */
 	public static final int RELATIVE_OFFSET_WIDTH = 4;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code ImageTexture}. The number is {@code 3}.
+	 */
 	public static final int TYPE = 3;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +112,13 @@ public final class ImageTexture implements Texture {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Performs a Gamma Correction redo operation.
+	 * <p>
+	 * Returns this {@code ImageTexture} instance.
+	 * 
+	 * @return this {@code ImageTexture} instance
+	 */
 	public ImageTexture redoGammaCorrection() {
 		for(int i = 0; i < this.data.length; i++) {
 			this.data[i] = new Color(this.data[i]).redoGammaCorrection(RGBColorSpace.SRGB).multiply(255.0F).toRGB();
@@ -105,7 +127,13 @@ public final class ImageTexture implements Texture {
 		return this;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Performs a Gamma Correction undo operation.
+	 * <p>
+	 * Returns this {@code ImageTexture} instance.
+	 * 
+	 * @return this {@code ImageTexture} instance
+	 */
 	public ImageTexture undoGammaCorrection() {
 		for(int i = 0; i < this.data.length; i++) {
 			this.data[i] = new Color(this.data[i]).undoGammaCorrection(RGBColorSpace.SRGB).multiply(255.0F).toRGB();

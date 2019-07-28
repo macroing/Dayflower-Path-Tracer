@@ -30,54 +30,87 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class FractionalBrownianMotionTexture implements Texture {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Addend parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_ADDEND = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Frequency parameter in the {@code float} array. The value is {@code 4}.
+	 */
+	public static final int RELATIVE_OFFSET_FREQUENCY = 4;
+	
+	/**
+	 * The relative offset of the Gain parameter in the {@code float} array. The value is {@code 5}.
+	 */
+	public static final int RELATIVE_OFFSET_GAIN = 5;
+	
+	/**
+	 * The relative offset of the Multiplier parameter in the {@code float} array. The value is {@code 3}.
+	 */
 	public static final int RELATIVE_OFFSET_MULTIPLIER = 3;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Octaves parameter in the {@code float} array. The value is {@code 6}.
+	 */
 	public static final int RELATIVE_OFFSET_OCTAVES = 6;
 	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_PERSISTENCE = 4;
-	
-//	TODO: Add Javadocs.
-	public static final int RELATIVE_OFFSET_SCALE = 5;
-	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code FractionalBrownianMotionTexture} in the {@code float} array. The size is {@code 7}.
+	 */
 	public static final int SIZE = 7;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code FractionalBrownianMotionTexture}. The number is {@code 5}.
+	 */
 	public static final int TYPE = 5;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private final Color addend;
 	private final Color multiplier;
-	private final float persistence;
-	private final float scale;
+	private final float frequency;
+	private final float gain;
 	private final int octaves;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
-	public FractionalBrownianMotionTexture(final Color addend, final Color multiplier, final float persistence, final float scale, final int octaves) {
+	/**
+	 * Constructs a new {@code FractionalBrownianMotionTexture} instance.
+	 * <p>
+	 * If either {@code addend} or {@code multiplier} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param addend the addend to use
+	 * @param multiplier the multiplier to use
+	 * @param frequency the frequency to use
+	 * @param gain the gain to use
+	 * @param octaves the octaves to use
+	 * @throws NullPointerException thrown if, and only if, either {@code addend} or {@code multiplier} are {@code null}
+	 */
+	public FractionalBrownianMotionTexture(final Color addend, final Color multiplier, final float frequency, final float gain, final int octaves) {
 		this.addend = Objects.requireNonNull(addend, "addend == null");
 		this.multiplier = Objects.requireNonNull(multiplier, "multiplier == null");
-		this.persistence = persistence;
-		this.scale = scale;
+		this.frequency = frequency;
+		this.gain = gain;
 		this.octaves = octaves;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the addend assigned to this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return the addend assigned to this {@code FractionalBrownianMotionTexture} instance
+	 */
 	public Color getAddend() {
 		return this.addend;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the multiplier assigned to this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return the multiplier assigned to this {@code FractionalBrownianMotionTexture} instance
+	 */
 	public Color getMultiplier() {
 		return this.multiplier;
 	}
@@ -89,7 +122,7 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	 */
 	@Override
 	public String toString() {
-		return String.format("new FractionalBrownianMotionTexture(%s, %s, %s, %s, %s)", this.addend, this.multiplier, Float.toString(this.persistence), Float.toString(this.scale), Integer.toString(this.octaves));
+		return String.format("new FractionalBrownianMotionTexture(%s, %s, %s, %s, %s)", this.addend, this.multiplier, Float.toString(this.frequency), Float.toString(this.gain), Integer.toString(this.octaves));
 	}
 	
 	/**
@@ -110,9 +143,9 @@ public final class FractionalBrownianMotionTexture implements Texture {
 			return false;
 		} else if(!Objects.equals(this.multiplier, FractionalBrownianMotionTexture.class.cast(object).multiplier)) {
 			return false;
-		} else if(Float.compare(this.persistence, FractionalBrownianMotionTexture.class.cast(object).persistence) != 0) {
+		} else if(Float.compare(this.frequency, FractionalBrownianMotionTexture.class.cast(object).frequency) != 0) {
 			return false;
-		} else if(Float.compare(this.scale, FractionalBrownianMotionTexture.class.cast(object).scale) != 0) {
+		} else if(Float.compare(this.gain, FractionalBrownianMotionTexture.class.cast(object).gain) != 0) {
 			return false;
 		} else if(this.octaves != FractionalBrownianMotionTexture.class.cast(object).octaves) {
 			return false;
@@ -131,14 +164,22 @@ public final class FractionalBrownianMotionTexture implements Texture {
 		return !this.addend.isBlack() || !this.multiplier.isBlack();
 	}
 	
-//	TODO: Add Javadocs.
-	public float getPersistence() {
-		return this.persistence;
+	/**
+	 * Returns the frequency assigned to this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return the frequency assigned to this {@code FractionalBrownianMotionTexture} instance
+	 */
+	public float getFrequency() {
+		return this.frequency;
 	}
 	
-//	TODO: Add Javadocs.
-	public float getScale() {
-		return this.scale;
+	/**
+	 * Returns the gain assigned to this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return the gain assigned to this {@code FractionalBrownianMotionTexture} instance
+	 */
+	public float getGain() {
+		return this.gain;
 	}
 	
 	/**
@@ -153,13 +194,17 @@ public final class FractionalBrownianMotionTexture implements Texture {
 			getSize(),
 			getAddend().multiply(255.0F).toRGB(),
 			getMultiplier().multiply(255.0F).toRGB(),
-			getPersistence(),
-			getScale(),
+			getFrequency(),
+			getGain(),
 			getOctaves()
 		};
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the octaves assigned to this {@code FractionalBrownianMotionTexture} instance.
+	 * 
+	 * @return the octaves assigned to this {@code FractionalBrownianMotionTexture} instance
+	 */
 	public int getOctaves() {
 		return this.octaves;
 	}
@@ -191,6 +236,6 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.addend, this.multiplier, Float.valueOf(this.persistence), Float.valueOf(this.scale), Integer.valueOf(this.octaves));
+		return Objects.hash(this.addend, this.multiplier, Float.valueOf(this.frequency), Float.valueOf(this.gain), Integer.valueOf(this.octaves));
 	}
 }

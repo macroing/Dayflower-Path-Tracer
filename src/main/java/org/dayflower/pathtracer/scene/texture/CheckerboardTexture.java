@@ -34,28 +34,44 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class CheckerboardTexture implements Texture {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Color 0 parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_COLOR_0 = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Color 1 parameter in the {@code float} array. The value is {@code 3}.
+	 */
 	public static final int RELATIVE_OFFSET_COLOR_1 = 3;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Radians Cos parameter in the {@code float} array. The value is {@code 4}.
+	 */
 	public static final int RELATIVE_OFFSET_RADIANS_COS = 4;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Radians Sin parameter in the {@code float} array. The value is {@code 5}.
+	 */
 	public static final int RELATIVE_OFFSET_RADIANS_SIN = 5;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Scale U parameter in the {@code float} array. The value is {@code 6}.
+	 */
 	public static final int RELATIVE_OFFSET_SCALE_U = 6;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Scale V parameter in the {@code float} array. The value is {@code 7}.
+	 */
 	public static final int RELATIVE_OFFSET_SCALE_V = 7;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code CheckerboardTexture} in the {@code float} array. The size is {@code 8}.
+	 */
 	public static final int SIZE = 8;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code CheckerboardTexture}. The number is {@code 1}.
+	 */
 	public static final int TYPE = 1;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

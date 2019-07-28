@@ -22,27 +22,46 @@ import java.util.Objects;
 
 import org.dayflower.pathtracer.scene.Shape;
 
-//TODO: Add Javadocs.
+/**
+ * A {@link Shape} implementation that implements a noise-based terrain.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Terrain implements Shape {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Frequency parameter in the {@code float} array. The value is {@code 0}.
+	 */
 	public static final int RELATIVE_OFFSET_FREQUENCY = 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Gain parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int RELATIVE_OFFSET_GAIN = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Maximum parameter in the {@code float} array. The value is {@code 3}.
+	 */
 	public static final int RELATIVE_OFFSET_MAXIMUM = 3;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Minimum parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_MINIMUM = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Octaves parameter in the {@code float} array. The value is {@code 4}.
+	 */
 	public static final int RELATIVE_OFFSET_OCTAVES = 4;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code Terrain} in the {@code float} array. The size is {@code 5}.
+	 */
 	public static final int SIZE = 5;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code Terrain}. The number is {@code 4}.
+	 */
 	public static final int TYPE = 4;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,7 +74,15 @@ public final class Terrain implements Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Terrain} instance.
+	 * 
+	 * @param frequency the frequency to use
+	 * @param gain the gain to use
+	 * @param minimum the minimum to use
+	 * @param maximum the maximum to use
+	 * @param octaves the octaves to use
+	 */
 	public Terrain(final float frequency, final float gain, final float minimum, final float maximum, final int octaves) {
 		this.frequency = frequency;
 		this.gain = gain;
@@ -66,7 +93,14 @@ public final class Terrain implements Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Compares {@code object} to this {@code Terrain} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Terrain}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Terrain} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Terrain}, and their respective values are equal, {@code false} otherwise
+	 */
 	@Override
 	public boolean equals(final Object object) {
 		if(object == this) {
@@ -88,27 +122,47 @@ public final class Terrain implements Shape {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the frequency of this {@code Terrain} instance.
+	 * 
+	 * @return the frequency of this {@code Terrain} instance
+	 */
 	public float getFrequency() {
 		return this.frequency;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the gain of this {@code Terrain} instance.
+	 * 
+	 * @return the gain of this {@code Terrain} instance
+	 */
 	public float getGain() {
 		return this.gain;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the maximum of this {@code Terrain} instance.
+	 * 
+	 * @return the maximum of this {@code Terrain} instance
+	 */
 	public float getMaximum() {
 		return this.maximum;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the minimum of this {@code Terrain} instance.
+	 * 
+	 * @return the minimum of this {@code Terrain} instance
+	 */
 	public float getMinimum() {
 		return this.minimum;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the octaves of this {@code Terrain} instance.
+	 * 
+	 * @return the octaves of this {@code Terrain} instance
+	 */
 	public int getOctaves() {
 		return this.octaves;
 	}
@@ -133,7 +187,11 @@ public final class Terrain implements Shape {
 		return TYPE;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a hash code for this {@code Terrain} instance.
+	 * 
+	 * @return a hash code for this {@code Terrain} instance
+	 */
 	@Override
 	public int hashCode() {
 		return Objects.hash(Float.valueOf(this.frequency), Float.valueOf(this.gain), Float.valueOf(this.maximum), Float.valueOf(this.minimum), Integer.valueOf(this.octaves));

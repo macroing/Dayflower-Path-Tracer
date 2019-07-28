@@ -31,22 +31,34 @@ import org.dayflower.pathtracer.scene.Shape;
  * @author J&#246;rgen Lundgren
  */
 public final class Plane implements Shape {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the A Offset parameter in the {@code float} array. The value is {@code 0}.
+	 */
 	public static final int RELATIVE_OFFSET_A_OFFSET = 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the B Offset parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int RELATIVE_OFFSET_B_OFFSET = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the C Offset parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_C_OFFSET = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Surface Normal Offset parameter in the {@code float} array. The value is {@code 3}.
+	 */
 	public static final int RELATIVE_OFFSET_SURFACE_NORMAL_OFFSET = 3;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code Plane} in the {@code float} array. The size is {@code 4}.
+	 */
 	public static final int SIZE = 4;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code Plane}. The number is {@code 3}.
+	 */
 	public static final int TYPE = 3;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

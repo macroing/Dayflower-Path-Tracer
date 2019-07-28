@@ -18,10 +18,12 @@
  */
 package org.dayflower.pathtracer.kernel;
 
+import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import com.amd.aparapi.Kernel;
 
+//TODO: Add Javadocs!
 public final class ConvolutionKernel extends Kernel {
 	private static final int FILTER_BLUR = 1;
 	private static final int FILTER_DETECT_EDGES = 2;
@@ -46,6 +48,7 @@ public final class ConvolutionKernel extends Kernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+//	TODO: Add Javadocs!
 	public ConvolutionKernel(final byte[] pixels, final int width, final int height) {
 		this.pixels = Objects.requireNonNull(pixels, "pixels == null");
 		this.pixelsCopy = pixels.clone();
@@ -55,34 +58,42 @@ public final class ConvolutionKernel extends Kernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+//	TODO: Add Javadocs!
 	public void enableBlur() {
 		this.filter = FILTER_BLUR;
 	}
 	
+//	TODO: Add Javadocs!
 	public void enableDetectEdges() {
 		this.filter = FILTER_DETECT_EDGES;
 	}
 	
+//	TODO: Add Javadocs!
 	public void enableEmboss() {
 		this.filter = FILTER_EMBOSS;
 	}
 	
+//	TODO: Add Javadocs!
 	public void enableGradientHorizontal() {
 		this.filter = FILTER_GRADIENT_HORIZONTAL;
 	}
 	
+//	TODO: Add Javadocs!
 	public void enableGradientVertical() {
 		this.filter = FILTER_GRADIENT_VERTICAL;
 	}
 	
+//	TODO: Add Javadocs!
 	public void enableSharpen() {
 		this.filter = FILTER_SHARPEN;
 	}
 	
+//	TODO: Add Javadocs!
 	public void get() {
 		get(this.pixels);
 	}
 	
+//	TODO: Add Javadocs!
 	@Override
 	public void run() {
 		final int index = getGlobalId();
@@ -104,6 +115,7 @@ public final class ConvolutionKernel extends Kernel {
 		}
 	}
 	
+//	TODO: Add Javadocs!
 	public void update() {
 		setExplicit(true);
 		

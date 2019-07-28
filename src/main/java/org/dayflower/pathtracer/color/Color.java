@@ -187,42 +187,6 @@ public final class Color {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Compares {@code object} to this {@code Color} instance for equality.
-	 * <p>
-	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Color}, and their respective values are equal, {@code false} otherwise.
-	 * 
-	 * @param object the {@code Object} to compare to this {@code Color} instance for equality
-	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Color}, and their respective values are equal, {@code false} otherwise
-	 */
-	@Override
-	public boolean equals(final Object object) {
-		if(object == this) {
-			return true;
-		} else if(!(object instanceof Color)) {
-			return false;
-		} else if(!MathF.equals(this.r, Color.class.cast(object).r)) {
-			return false;
-		} else if(!MathF.equals(this.g, Color.class.cast(object).g)) {
-			return false;
-		} else if(!MathF.equals(this.b, Color.class.cast(object).b)) {
-			return false;
-		} else if(!MathF.equals(this.a, Color.class.cast(object).a)) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, this {@code Color} denotes the color black, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, this {@code Color} denotes the color black, {@code false} otherwise
-	 */
-	public boolean isBlack() {
-		return this.r <= 0.0F && this.g <= 0.0F && this.b <= 0.0F;
-	}
-	
-	/**
 	 * Adds {@code color} to this {@code Color} instance.
 	 * <p>
 	 * Returns a new {@code Color} instance with the result of the addition.
@@ -720,6 +684,52 @@ public final class Color {
 	}
 	
 	/**
+	 * Returns a {@code String} representation of this {@code Color} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code Color} instance
+	 */
+	@Override
+	public String toString() {
+		return String.format("new Color(%s, %s, %s, %s)", Float.toString(this.r), Float.toString(this.g), Float.toString(this.b), Float.toString(this.a));
+	}
+	
+	/**
+	 * Compares {@code object} to this {@code Color} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Color}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Color} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Color}, and their respective values are equal, {@code false} otherwise
+	 */
+	@Override
+	public boolean equals(final Object object) {
+		if(object == this) {
+			return true;
+		} else if(!(object instanceof Color)) {
+			return false;
+		} else if(!MathF.equals(this.r, Color.class.cast(object).r)) {
+			return false;
+		} else if(!MathF.equals(this.g, Color.class.cast(object).g)) {
+			return false;
+		} else if(!MathF.equals(this.b, Color.class.cast(object).b)) {
+			return false;
+		} else if(!MathF.equals(this.a, Color.class.cast(object).a)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, this {@code Color} denotes the color black, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, this {@code Color} denotes the color black, {@code false} otherwise
+	 */
+	public boolean isBlack() {
+		return this.r <= 0.0F && this.g <= 0.0F && this.b <= 0.0F;
+	}
+	
+	/**
 	 * Returns the average value of the RGB-component values of this {@code Color} instance.
 	 * 
 	 * @return the average value of the RGB-component values of this {@code Color} instance
@@ -817,16 +827,6 @@ public final class Color {
 	 */
 	public int toRGB() {
 		return (((int)(this.r + 0.5F) & 0xFF) << 16) | (((int)(this.g + 0.5F) & 0xFF) << 8) | ((int)(this.b + 0.5F) & 0xFF);
-	}
-	
-	/**
-	 * Returns a {@code String} representation of this {@code Color} instance.
-	 * 
-	 * @return a {@code String} representation of this {@code Color} instance
-	 */
-	@Override
-	public String toString() {
-		return String.format("Color: [R=%s], [G=%s], [B=%s], [A=%s]", Float.toString(this.r), Float.toString(this.g), Float.toString(this.b), Float.toString(this.a));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

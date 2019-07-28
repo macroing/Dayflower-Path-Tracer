@@ -152,7 +152,7 @@ final class Scenes {
 		
 //		Light:
 //		final Texture textureLightAlbedo = new FractionalBrownianMotionTexture(new Color(0.25F, 0.125F, 0.0F), Color.WHITE, 0.5F, 0.1F, 16);
-//		final Texture textureLightEmission = new FractionalBrownianMotionTexture(new Color(0.25F, 0.125F, 0.0F), Color.WHITE, 0.5F, 0.1F, 16);
+//		final Texture textureLightEmission = new FractionalBrownianMotionTexture(new Color(0.25F, 0.125F, 0.0F), Color.WHITE, 0.1F, 0.5F, 16);
 //		final Texture textureLightNormal = new ConstantTexture(Color.BLACK);
 		
 //		Material showcase:
@@ -179,7 +179,7 @@ final class Scenes {
 		final Texture textureSphere07Albedo = new ConstantTexture(Color.RED);
 		final Texture textureSphere07Emission = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere07Normal = new ConstantTexture(Color.BLACK);
-		final Texture textureSphere08Albedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.8F, 16);
+		final Texture textureSphere08Albedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.8F, 0.5F, 16);
 		final Texture textureSphere08Emission = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere08Normal = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere09Albedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 1.0F, 1.0F);
@@ -227,7 +227,7 @@ final class Scenes {
 		final Texture textureGroundAlbedo = new ConstantTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));
 		final Texture textureGroundEmission = new ConstantTexture(Color.BLACK);
 		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
-		final Texture textureMonkeyAlbedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.1F, 16);
+		final Texture textureMonkeyAlbedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.1F, 0.5F, 16);
 		final Texture textureMonkeyEmission = new ConstantTexture(Color.BLACK);
 		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
 		

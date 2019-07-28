@@ -20,11 +20,26 @@ package org.dayflower.pathtracer.scene;
 
 import org.dayflower.pathtracer.math.AngleF;
 
-//TODO: Add Javadocs.
+/**
+ * A {@code CameraObserver} can be used to observe changes to a {@link Camera} instance.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public interface CameraObserver {
-//	TODO: Add Javadocs.
+	/**
+	 * Called by a {@link Camera} instance when its pitch has changed.
+	 * 
+	 * @param camera the {@code Camera} that called this method
+	 * @param pitch the new pitch
+	 */
 	void pitchChanged(final Camera camera, final AngleF pitch);
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Called by a {@link Camera} instance when its yaw has changed.
+	 * 
+	 * @param camera the {@code Camera} that called this method
+	 * @param yaw the new yaw
+	 */
 	void yawChanged(final Camera camera, final AngleF yaw);
 }

@@ -20,18 +20,31 @@ package org.dayflower.pathtracer.scene;
 
 import java.util.Objects;
 
-//TODO: Add Javadocs.
+/**
+ * A {@code Primitive} represents a primitive that is associated with a {@link Shape} and a {@link Surface}.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Primitive {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Shape Offset parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int RELATIVE_OFFSET_SHAPE_OFFSET = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Shape Type parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int RELATIVE_OFFSET_SHAPE_TYPE = 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Surface Offset parameter in the {@code float} array. The value is {@code 2}.
+	 */
 	public static final int RELATIVE_OFFSET_SURFACE_OFFSET = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code Primitive} in the {@code float} array. The size is {@code 3}.
+	 */
 	public static final int SIZE = 3;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +54,15 @@ public final class Primitive {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Primitive} instance.
+	 * <p>
+	 * If either {@code shape} or {@code surface} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param shape the {@link Shape} to use
+	 * @param surface the {@link Surface} to use
+	 * @throws NullPointerException thrown if, and only if, either {@code shape} or {@code surface} are {@code null}
+	 */
 	public Primitive(final Shape shape, final Surface surface) {
 		this.shape = Objects.requireNonNull(shape, "shape == null");
 		this.surface = Objects.requireNonNull(surface, "surface == null");
@@ -49,23 +70,42 @@ public final class Primitive {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@link Shape} assigned to this {@code Primitive} instance.
+	 * 
+	 * @return the {@code Shape} assigned to this {@code Primitive} instance
+	 */
 	public Shape getShape() {
 		return this.shape;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@code String} representation of this {@code Primitive} instance.
+	 * 
+	 * @return a {@code String} representation of this {@code Primitive} instance
+	 */
 	@Override
 	public String toString() {
 		return String.format("new Primitive(%s, %s)", this.shape, this.surface);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the {@link Surface} assigned to this {@code Primitive} instance.
+	 * 
+	 * @return the {@code Surface} assigned to this {@code Primitive} instance
+	 */
 	public Surface getSurface() {
 		return this.surface;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Compares {@code object} to this {@code Primitive} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Primitive}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code Primitive} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Primitive}, and their respective values are equal, {@code false} otherwise
+	 */
 	@Override
 	public boolean equals(final Object object) {
 		if(object == this) {
@@ -81,18 +121,36 @@ public final class Primitive {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a hash code for this {@code Primitive} instance.
+	 * 
+	 * @return a hash code for this {@code Primitive} instance
+	 */
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.shape, this.surface);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the {@link Shape} for this {@code Primitive} instance.
+	 * <p>
+	 * If {@code shape} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param shape the new {@code Shape}
+	 * @throws NullPointerException thrown if, and only if, {@code shape} is {@code null}
+	 */
 	public void setShape(final Shape shape) {
 		this.shape = Objects.requireNonNull(shape, "shape == null");
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the {@link Surface} for this {@code Primitive} instance.
+	 * <p>
+	 * If {@code surface} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param surface the new {@code Surface}
+	 * @throws NullPointerException thrown if, and only if, {@code surface} is {@code null}
+	 */
 	public void setSurface(final Surface surface) {
 		this.surface = Objects.requireNonNull(surface, "surface == null");
 	}

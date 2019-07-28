@@ -30,16 +30,24 @@ import org.dayflower.pathtracer.scene.Shape;
  * @author J&#246;rgen Lundgren
  */
 public final class Sphere implements Shape {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Position Offset parameter in the {@code float} array. The value is {@code 0}.
+	 */
 	public static final int RELATIVE_OFFSET_POSITION_OFFSET = 0;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Radius parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	public static final int RELATIVE_OFFSET_RADIUS = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The size of a {@code Sphere} in the {@code float} array. The size is {@code 2}.
+	 */
 	public static final int SIZE = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@code Sphere}. The number is {@code 1}.
+	 */
 	public static final int TYPE = 1;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

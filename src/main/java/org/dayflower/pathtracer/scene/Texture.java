@@ -25,10 +25,14 @@ package org.dayflower.pathtracer.scene;
  * @author J&#246;rgen Lundgren
  */
 public interface Texture {
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Size parameter in the {@code float} array. The value is {@code 1}.
+	 */
 	int RELATIVE_OFFSET_SIZE = 1;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The relative offset of the Type parameter in the {@code float} array. The value is {@code 0}.
+	 */
 	int RELATIVE_OFFSET_TYPE = 0;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

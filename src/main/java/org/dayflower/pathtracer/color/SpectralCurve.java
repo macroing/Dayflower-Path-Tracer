@@ -44,14 +44,6 @@ public abstract class SpectralCurve {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Returns a sample based on the wavelength {@code lambda} in nanometers.
-	 * 
-	 * @param lambda the wavelength in nanometers
-	 * @return a sample based on the wavelength {@code lambda} in nanometers
-	 */
-	public abstract float sample(final float lambda);
-	
-	/**
 	 * Returns a CIE XYZ {@link Color}.
 	 * 
 	 * @return a CIE XYZ {@code Color}
@@ -75,4 +67,12 @@ public abstract class SpectralCurve {
 		
 		return new Color(x, y, z);
 	}
+	
+	/**
+	 * Returns a sample based on the wavelength {@code lambda} in nanometers.
+	 * 
+	 * @param lambda the wavelength in nanometers
+	 * @return a sample based on the wavelength {@code lambda} in nanometers
+	 */
+	public abstract float sample(final float lambda);
 }

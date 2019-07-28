@@ -270,18 +270,22 @@ public final class Sky {
 		this.jacobian = (2.0F * PI * PI) / (w * h);
 	}
 	
+//	TODO: Add Javadocs.
 	public void setTurbidity(final float turbidity) {
 		set(this.sunDirectionWorld, turbidity);
 	}
 	
+//	TODO: Add Javadocs.
 	public void setX(final float x) {
 		set(new Vector3F(x, this.sunDirectionWorld.y, this.sunDirectionWorld.z).normalize(), this.turbidity);
 	}
 	
+//	TODO: Add Javadocs.
 	public void setY(final float y) {
 		set(new Vector3F(this.sunDirectionWorld.x, y, this.sunDirectionWorld.z).normalize(), this.turbidity);
 	}
 	
+//	TODO: Add Javadocs.
 	public void setZ(final float z) {
 		set(new Vector3F(this.sunDirectionWorld.x, this.sunDirectionWorld.y, z).normalize(), this.turbidity);
 	}
