@@ -23,7 +23,6 @@ import static org.dayflower.pathtracer.math.MathF.cos;
 import static org.dayflower.pathtracer.math.MathF.sin;
 import static org.dayflower.pathtracer.math.MathF.tan;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import org.dayflower.pathtracer.util.Strings;
@@ -657,7 +656,27 @@ public final class Matrix44F {
 		return new Matrix44F(1.0F / (focalLength * aspectRatio), 0.0F, 0.0F, 0.0F, 0.0F, 1.0F / focalLength, 0.0F, 0.0F, 0.0F, 0.0F, (-zNear - zFar) / (zNear - zFar), 2.0F * zFar * zNear / (zNear - zFar), 0.0F, 0.0F, 1.0F, 0.0F);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a {@code Matrix44F} for rotating along the X-, Y- and Z-axes.
+	 * <p>
+	 * If either {@code w} or {@code v} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * The layout looks like this:
+	 * <pre>
+	 * {@code
+	 * u.x, u.y, u.z, 0
+	 * v.x, v.y, v.z, 0
+	 * w.x, w.y, w.z, 0
+	 *   0,   0,   0, 1
+	 * }
+	 * </pre>
+	 * Note that the layout above does not use the {@code w} and {@code v} {@link Vector3F}s supplied as arguments to this method directly. They are only used as a starting point for the construction of the OrthoNormal Basis (ONB).
+	 * 
+	 * @param w a {@code Vector3F}
+	 * @param v a {@code Vector3F}
+	 * @return a {@code Matrix44F} for rotating along the X-, Y- and Z-axes
+	 * @throws NullPointerException thrown if, and only if, either {@code w} or {@code v} are {@code null}
+	 */
 	public static Matrix44F rotate(final Vector3F w, final Vector3F v) {
 		final Vector3F w0 = w.normalize();
 		final Vector3F u0 = v.normalize().crossProduct(w0);
