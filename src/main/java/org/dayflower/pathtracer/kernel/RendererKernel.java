@@ -19,7 +19,6 @@
 package org.dayflower.pathtracer.kernel;
 
 import java.io.File;
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -150,7 +149,6 @@ public final class RendererKernel extends AbstractKernel {
 	private final float[] sunAndSkyImageHistogram_$constant$;
 	private float[] intersections_$local$;
 	private float[] rays_$private$6 = new float[SIZE_RAY];
-	private int clouds = BOOLEAN_FALSE;
 	private int depthMaximum = 5;
 	private int depthRussianRoulette = 5;
 	private int effectGrayScale;
@@ -160,12 +158,13 @@ public final class RendererKernel extends AbstractKernel {
 	private int isRenderingWireframes = BOOLEAN_FALSE;
 	private int renderer = RENDERER_PATH_TRACER;
 	private final int scenePrimitivesCount;
-	private final int scenePrimitivesEmittingLightCount;
+//	private final int scenePrimitivesEmittingLightCount;
 	private int selectedPrimitiveOffset = -1;
 	private int shading = SHADING_GOURAUD;
-	private int sunAndSkyActive = BOOLEAN_TRUE;
 	private int sunAndSkyColHistogramLength;
 	private int sunAndSkyImageHistogramHeight;
+	private int sunAndSkyIsActive;
+	private int sunAndSkyIsShowingClouds;
 	private int sunAndSkySamples;
 	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2;
 	private final int width;
@@ -225,7 +224,7 @@ public final class RendererKernel extends AbstractKernel {
 		this.scenePrimitives_$constant$ = compiledScene.getPrimitives();
 		this.scenePrimitivesCount = this.scenePrimitives_$constant$.length / Primitive.SIZE;
 		this.scenePrimitivesEmittingLight_$constant$ = compiledScene.getPrimitivesEmittingLight();
-		this.scenePrimitivesEmittingLightCount = this.scenePrimitivesEmittingLight_$constant$[0];
+//		this.scenePrimitivesEmittingLightCount = this.scenePrimitivesEmittingLight_$constant$[0];
 		this.sceneTriangles_$constant$ = compiledScene.getTriangles();
 		
 //		Initialize the sun and sky variables:
@@ -233,6 +232,8 @@ public final class RendererKernel extends AbstractKernel {
 		this.sunAndSkyColHistogramLength = this.sunAndSkyColHistogram_$constant$.length;
 		this.sunAndSkyImageHistogram_$constant$ = sky.getImageHistogram();
 		this.sunAndSkyImageHistogramHeight = sky.getImageHistogramHeight();
+		this.sunAndSkyIsActive = BOOLEAN_TRUE;
+		this.sunAndSkyIsShowingClouds = BOOLEAN_FALSE;
 		this.sunAndSkyJacobian = sky.getJacobian();
 		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
 		this.sunAndSkyOrthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
@@ -553,12 +554,20 @@ public final class RendererKernel extends AbstractKernel {
 		return this.renderer == RENDERER_RAY_TRACER;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns {@code true} if, and only if, wireframe rendering is enabled, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, wireframe rendering is enabled, {@code false} otherwise
+	 */
 	public boolean isRenderingWireframes() {
 		return this.isRenderingWireframes != 0;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns {@code true} if, and only if, reset is required, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, reset is required, {@code false} otherwise
+	 */
 	public boolean isResetRequired() {
 		return this.isResetRequired;
 	}
@@ -587,7 +596,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @return {@code true} if, and only if, the sky is showing clouds, {@code false} otherwise
 	 */
 	public boolean isShowingClouds() {
-		return this.clouds == BOOLEAN_TRUE;
+		return this.sunAndSkyIsShowingClouds == BOOLEAN_TRUE;
 	}
 	
 	/**
@@ -635,7 +644,11 @@ public final class RendererKernel extends AbstractKernel {
 		return this.height;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the selected primitive offset.
+	 * 
+	 * @return the selected primitive offset
+	 */
 	public int getSelectedPrimitiveOffset() {
 		return this.selectedPrimitiveOffset;
 	}
@@ -649,7 +662,11 @@ public final class RendererKernel extends AbstractKernel {
 		return this.width;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the primitive offsets for all primary rays.
+	 * 
+	 * @return the primitive offsets for all primary rays
+	 */
 	public int[] getPrimitiveOffsetsForPrimaryRay() {
 		get(this.primitiveOffsetsForPrimaryRay);
 		
@@ -802,7 +819,9 @@ public final class RendererKernel extends AbstractKernel {
 		}
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Called when this {@code RendererKernel} is run in JTP mode.
+	 */
 	@NoCL
 	public void noCL() {
 		this.colorTemporarySamples_$private$3 = this.colorTemporarySamplesThreadLocal.get();
@@ -971,13 +990,21 @@ public final class RendererKernel extends AbstractKernel {
 		this.isResetRequired = true;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Sets whether wireframe rendering should be enabled or disabled.
+	 * 
+	 * @param isRenderingWireframes the wireframe rendering state to set
+	 */
 	public void setRenderingWireframes(final boolean isRenderingWireframes) {
 		this.isRenderingWireframes = isRenderingWireframes ? 1 : 0;
 		this.isResetRequired = true;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Sets the selected primitive offset.
+	 * 
+	 * @param selectedPrimitiveOffset the selected primitive offset
+	 */
 	public void setSelectedPrimitiveOffset(final int selectedPrimitiveOffset) {
 		this.selectedPrimitiveOffset = selectedPrimitiveOffset;
 	}
@@ -1004,7 +1031,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @param isShowingClouds {@code true} if, and only if, the sky is showing clouds, {@code false} otherwise
 	 */
 	public void setShowingClouds(final boolean isShowingClouds) {
-		this.clouds = isShowingClouds ? BOOLEAN_TRUE : BOOLEAN_FALSE;
+		this.sunAndSkyIsShowingClouds = isShowingClouds ? BOOLEAN_TRUE : BOOLEAN_FALSE;
 	}
 	
 	/**
@@ -1051,10 +1078,10 @@ public final class RendererKernel extends AbstractKernel {
 	 * Toggles the visibility for the clouds in the sky.
 	 */
 	public void toggleClouds() {
-		if(this.clouds == BOOLEAN_FALSE) {
-			this.clouds = BOOLEAN_TRUE;
+		if(this.sunAndSkyIsShowingClouds == BOOLEAN_FALSE) {
+			this.sunAndSkyIsShowingClouds = BOOLEAN_TRUE;
 		} else {
-			this.clouds = BOOLEAN_FALSE;
+			this.sunAndSkyIsShowingClouds = BOOLEAN_FALSE;
 		}
 	}
 	
@@ -1113,14 +1140,18 @@ public final class RendererKernel extends AbstractKernel {
 	 * Toggles the sun and sky.
 	 */
 	public void toggleSunAndSky() {
-		if(this.sunAndSkyActive == BOOLEAN_FALSE) {
-			this.sunAndSkyActive = BOOLEAN_TRUE;
+		if(this.sunAndSkyIsActive == BOOLEAN_FALSE) {
+			this.sunAndSkyIsActive = BOOLEAN_TRUE;
 		} else {
-			this.sunAndSkyActive = BOOLEAN_FALSE;
+			this.sunAndSkyIsActive = BOOLEAN_FALSE;
 		}
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Updates the reset status.
+	 * <p>
+	 * This essentially means that {@code isResetRequired()} will return {@code false} immediately after this method has been called.
+	 */
 	public void updateResetStatus() {
 		this.isResetRequired = false;
 	}
@@ -1574,6 +1605,8 @@ public final class RendererKernel extends AbstractKernel {
 //				Reset the information in the intersections array:
 				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
 				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET] = -1;
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_TYPE] = -1;
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_OFFSET] = -1;
 			}
 		}
 		
@@ -2158,7 +2191,7 @@ public final class RendererKernel extends AbstractKernel {
 		float direction0Y = directionX * this.sunAndSkyOrthoNormalBasisVX + directionY * this.sunAndSkyOrthoNormalBasisVY + directionZ * this.sunAndSkyOrthoNormalBasisVZ;
 		float direction0Z = directionX * this.sunAndSkyOrthoNormalBasisWX + directionY * this.sunAndSkyOrthoNormalBasisWY + directionZ * this.sunAndSkyOrthoNormalBasisWZ;
 		
-		if(direction0Z < 0.0F || this.sunAndSkyActive == BOOLEAN_FALSE) {
+		if(direction0Z < 0.0F || this.sunAndSkyIsActive == BOOLEAN_FALSE) {
 //			Update the colorTemporarySamples_$local$ array with black:
 			this.colorTemporarySamples_$private$3[0] = 0.01F;
 			this.colorTemporarySamples_$private$3[1] = 0.01F;
@@ -2263,7 +2296,7 @@ public final class RendererKernel extends AbstractKernel {
 		g += w;
 		b += w;
 		
-		if(this.clouds == BOOLEAN_TRUE) {
+		if(this.sunAndSkyIsShowingClouds == BOOLEAN_TRUE) {
 //			final float phi0 = atan2(directionX, directionZ);
 //			final float phi1 = phi0 < 0.0F ? phi0 + PI_MULTIPLIED_BY_TWO : phi0;
 			
@@ -4009,9 +4042,9 @@ public final class RendererKernel extends AbstractKernel {
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 		if(distance != INFINITY && primitivesOffset != -1) {
-//			Retrieve the type of the shape:
+//			Retrieve the type and offset of the shape:
 			final int shapeType = (int)(this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_TYPE]);
-			final int shapeOffset = (int)(this.intersections_$local$[primitivesOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_OFFSET]);
+			final int shapeOffset = (int)(this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_OFFSET]);
 			
 			if(shapeType == Triangle.TYPE) {
 //				Retrieve the offsets of the surface intersection point and the points A, B and C in the intersections array:
@@ -4032,7 +4065,7 @@ public final class RendererKernel extends AbstractKernel {
 				final float cameraOrthoNormalBasisWZ = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_ORTHONORMAL_BASIS_W_Z];
 				
 //				Retrieve the surface intersection point from the intersections array:
-				final float surfaceIntersectionPointX = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint];
+				final float surfaceIntersectionPointX = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 0];
 				final float surfaceIntersectionPointY = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 1];
 				final float surfaceIntersectionPointZ = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 2];
 				final float surfaceIntersectionPointCameraX = surfaceIntersectionPointX * cameraOrthoNormalBasisUX + surfaceIntersectionPointY * cameraOrthoNormalBasisUY + surfaceIntersectionPointZ * cameraOrthoNormalBasisUZ;
@@ -4093,18 +4126,10 @@ public final class RendererKernel extends AbstractKernel {
 				final float dotProductCB = projectionCBX * surfaceIntersectionPointCameraX + projectionCBY * surfaceIntersectionPointCameraY + projectionCBZ * surfaceIntersectionPointCameraZ;
 				
 				if(dotProductAC * projectionACN * surfaceIntersectionPointCameraN >= lineWidthCos || dotProductBA * projectionBAN * surfaceIntersectionPointCameraN >= lineWidthCos || dotProductCB * projectionCBN * surfaceIntersectionPointCameraN >= lineWidthCos) {
-					final float r0 = this.colorCurrentSamples_$local$[pixelIndex + 0];
-					final float g0 = this.colorCurrentSamples_$local$[pixelIndex + 1];
-					final float b0 = this.colorCurrentSamples_$local$[pixelIndex + 2];
-					
-					final float r1 = r0 < 0.5F ? 1.0F : 0.0F;
-					final float g1 = g0 < 0.5F ? 1.0F : 0.0F;
-					final float b1 = b0 < 0.5F ? 1.0F : 0.0F;
-					
 //					Update the current pixel color:
-					this.colorCurrentSamples_$local$[pixelIndex + 0] = r1;
-					this.colorCurrentSamples_$local$[pixelIndex + 1] = g1;
-					this.colorCurrentSamples_$local$[pixelIndex + 2] = b1;
+					this.colorCurrentSamples_$local$[pixelIndex + 0] = 0.0F;
+					this.colorCurrentSamples_$local$[pixelIndex + 1] = 0.0F;
+					this.colorCurrentSamples_$local$[pixelIndex + 2] = 0.0F;
 				}
 			}
 		}

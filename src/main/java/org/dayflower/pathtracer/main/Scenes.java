@@ -32,6 +32,7 @@ import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
+import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
@@ -57,6 +58,9 @@ final class Scenes {
 			case "Monkey_Scene":
 			case "Monkey_Scene.scene":
 				return newMonkeyScene();
+			case "Terrain_Scene":
+			case "Terrain_Scene.scene":
+				return newTerrainScene();
 			default:
 				return newMaterialShowcaseScene();
 		}
@@ -232,6 +236,14 @@ final class Scenes {
 		Scene scene = new Scene("Monkey_Scene");
 		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(Material.MIRROR, textureGroundAlbedo, textureGroundEmission, textureGroundNormal, 1.0F, 4.0F)));
 		scene.addPrimitives(primitives);
+		
+		return scene;
+	}
+	
+	public static Scene newTerrainScene() {
+		final
+		Scene scene = new Scene("Terrain_Scene");
+		scene.addPrimitive(new Primitive(new Terrain(5.0F, 0.5F, 0.0F, 1.0F, 8), new Surface(Material.LAMBERTIAN_DIFFUSE, new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK))));
 		
 		return scene;
 	}
