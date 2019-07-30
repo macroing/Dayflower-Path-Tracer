@@ -18,12 +18,18 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.Objects;
 
 import com.amd.aparapi.Kernel;
 
-//TODO: Add Javadocs!
+/**
+ * A {@code ConvolutionKernel} is a {@code Kernel} that updates an image with convolution-based image effects.
+ * <p>
+ * The effects that are supported are Blur, Detect Edges, Emboss, Gradient (both Horizontal and Vertical) and Sharpen.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class ConvolutionKernel extends Kernel {
 	private static final int FILTER_BLUR = 1;
 	private static final int FILTER_DETECT_EDGES = 2;
@@ -34,66 +40,91 @@ public final class ConvolutionKernel extends Kernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private final byte[] pixels;
-	private final byte[] pixelsCopy;
-	private final float[][] blur = new float[][] {new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F}, new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F}, new float[] {1.0F, 1.0F, 1.0F, 1.0F, 1.0F}, new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F}, new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F}};
-	private final float[][] detectEdges = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 8.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
-	private final float[][] emboss = new float[][] {new float[] {-1.0F, -1.0F, 0.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {0.0F, 1.0F, 1.0F}};
-	private final float[][] gradientHorizontal = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {0.0F, 0.0F, 0.0F}, new float[] {1.0F, 1.0F, 1.0F}};
-	private final float[][] gradientVertical = new float[][] {new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}, new float[] {-1.0F, 0.0F, 1.0F}};
-	private final float[][] sharpen = new float[][] {new float[] {-1.0F, -1.0F, -1.0F}, new float[] {-1.0F, 9.0F, -1.0F}, new float[] {-1.0F, -1.0F, -1.0F}};
+	private final byte[] image;
+	private final byte[] imageCopy;
+	private final float[] blur = new float[] {0.0F, 0.0F, 1.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F};
+	private final float[] detectEdges = new float[] {-1.0F, -1.0F, -1.0F, -1.0F, 8.0F, -1.0F, -1.0F, -1.0F, -1.0F};
+	private final float[] emboss = new float[] {-1.0F, -1.0F, 0.0F, -1.0F, 0.0F, 1.0F, 0.0F, 1.0F, 1.0F};
+	private final float[] gradientHorizontal = new float[] {-1.0F, -1.0F, -1.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F};
+	private final float[] gradientVertical = new float[] {-1.0F, 0.0F, 1.0F, -1.0F, 0.0F, 1.0F, -1.0F, 0.0F, 1.0F};
+	private final float[] sharpen = new float[] {-1.0F, -1.0F, -1.0F, -1.0F, 9.0F, -1.0F, -1.0F, -1.0F, -1.0F};
 	private int filter;
 	private final int height;
 	private final int width;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
-	public ConvolutionKernel(final byte[] pixels, final int width, final int height) {
-		this.pixels = Objects.requireNonNull(pixels, "pixels == null");
-		this.pixelsCopy = pixels.clone();
+	/**
+	 * Constructs a new {@code ConvolutionKernel} instance.
+	 * <p>
+	 * If {@code pixels} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param image the image array
+	 * @param width the width of the image
+	 * @param height the height of the image
+	 * @throws NullPointerException thrown if, and only if, {@code pixels} is {@code null}
+	 */
+	public ConvolutionKernel(final byte[] image, final int width, final int height) {
+		this.image = Objects.requireNonNull(image, "image == null");
+		this.imageCopy = image.clone();
 		this.width = width;
 		this.height = height;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Enables the Blur effect.
+	 */
 	public void enableBlur() {
 		this.filter = FILTER_BLUR;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Enables the Detect Edges effect.
+	 */
 	public void enableDetectEdges() {
 		this.filter = FILTER_DETECT_EDGES;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Enables the Emboss effect.
+	 */
 	public void enableEmboss() {
 		this.filter = FILTER_EMBOSS;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Enables the Horizontal Gradient effect.
+	 */
 	public void enableGradientHorizontal() {
 		this.filter = FILTER_GRADIENT_HORIZONTAL;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Enables the Vertical Gradient effect.
+	 */
 	public void enableGradientVertical() {
 		this.filter = FILTER_GRADIENT_VERTICAL;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Enables the Sharpen effect.
+	 */
 	public void enableSharpen() {
 		this.filter = FILTER_SHARPEN;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns the image array from the GPU.
+	 */
 	public void get() {
-		get(this.pixels);
+		get(this.image);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Runs this {@code ConvolutionKernel} instance.
+	 */
 	@Override
 	public void run() {
 		final int index = getGlobalId();
@@ -115,16 +146,18 @@ public final class ConvolutionKernel extends Kernel {
 		}
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Updates the arrays.
+	 */
 	public void update() {
 		setExplicit(true);
 		
-		for(int i = 0; i < this.pixels.length; i++) {
-			this.pixelsCopy[i] = this.pixels[i];
+		for(int i = 0; i < this.image.length; i++) {
+			this.imageCopy[i] = this.image[i];
 		}
 		
-		put(this.pixels);
-		put(this.pixelsCopy);
+		put(this.image);
+		put(this.imageCopy);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,28 +169,31 @@ public final class ConvolutionKernel extends Kernel {
 		float g0 = 0.0F;
 		float b0 = 0.0F;
 		
-		for(int filterY = 0; filterY < 5; filterY++) {
-			for(int filterX = 0; filterX < 5; filterX++) {
-				final int imageX = (x - 5 / 2 + filterX + this.width) % this.width;
-				final int imageY = (y - 5 / 2 + filterY + this.height) % this.height;
-				
-				final int index = (imageY * this.width + imageX) * 4;
-				
-				r0 += (this.pixelsCopy[index + 0] & 0xFF) * this.blur[filterY][filterX];
-				g0 += (this.pixelsCopy[index + 1] & 0xFF) * this.blur[filterY][filterX];
-				b0 += (this.pixelsCopy[index + 2] & 0xFF) * this.blur[filterY][filterX];
-			}
+		final int imageW = this.width;
+		final int imageH = this.height;
+		
+		for(int filterIndex = 0; filterIndex < 25; filterIndex++) {
+			final int filterX = filterIndex % 5;
+			final int filterY = filterIndex / 5;
+			
+			final int imageX = (x - 5 / 2 + filterX) % imageW;
+			final int imageY = (y - 5 / 2 + filterY) % imageH;
+			final int imageIndex = (imageY * imageW + imageX) * 4;
+			
+			r0 += (this.imageCopy[imageIndex + 0] & 0xFF) * this.blur[filterIndex];
+			g0 += (this.imageCopy[imageIndex + 1] & 0xFF) * this.blur[filterIndex];
+			b0 += (this.imageCopy[imageIndex + 2] & 0xFF) * this.blur[filterIndex];
 		}
 		
-		final int index = (y * this.width + x) * 4;
+		final int imageIndex = (y * imageW + x) * 4;
 		
 		final int r1 = min(max((int)(factor * r0), 0), 255);
 		final int g1 = min(max((int)(factor * g0), 0), 255);
 		final int b1 = min(max((int)(factor * b0), 0), 255);
 		
-		this.pixels[index + 0] = (byte)(r1);
-		this.pixels[index + 1] = (byte)(g1);
-		this.pixels[index + 2] = (byte)(b1);
+		this.image[imageIndex + 0] = (byte)(r1);
+		this.image[imageIndex + 1] = (byte)(g1);
+		this.image[imageIndex + 2] = (byte)(b1);
 	}
 	
 	private void doFilterDetectEdges(final int x, final int y) {
@@ -165,28 +201,31 @@ public final class ConvolutionKernel extends Kernel {
 		float g0 = 0.0F;
 		float b0 = 0.0F;
 		
-		for(int filterY = 0; filterY < 3; filterY++) {
-			for(int filterX = 0; filterX < 3; filterX++) {
-				final int imageX = (x - 3 / 2 + filterX + this.width) % this.width;
-				final int imageY = (y - 3 / 2 + filterY + this.height) % this.height;
-				
-				final int index = (imageY * this.width + imageX) * 4;
-				
-				r0 += (this.pixelsCopy[index + 0] & 0xFF) * this.detectEdges[filterY][filterX];
-				g0 += (this.pixelsCopy[index + 1] & 0xFF) * this.detectEdges[filterY][filterX];
-				b0 += (this.pixelsCopy[index + 2] & 0xFF) * this.detectEdges[filterY][filterX];
-			}
+		final int imageW = this.width;
+		final int imageH = this.height;
+		
+		for(int filterIndex = 0; filterIndex < 9; filterIndex++) {
+			final int filterX = filterIndex % 3;
+			final int filterY = filterIndex / 3;
+			
+			final int imageX = (x - 3 / 2 + filterX) % imageW;
+			final int imageY = (y - 3 / 2 + filterY) % imageH;
+			final int imageIndex = (imageY * imageW + imageX) * 4;
+			
+			r0 += (this.imageCopy[imageIndex + 0] & 0xFF) * this.detectEdges[filterIndex];
+			g0 += (this.imageCopy[imageIndex + 1] & 0xFF) * this.detectEdges[filterIndex];
+			b0 += (this.imageCopy[imageIndex + 2] & 0xFF) * this.detectEdges[filterIndex];
 		}
 		
-		final int index = (y * this.width + x) * 4;
+		final int imageIndex = (y * imageW + x) * 4;
 		
 		final int r1 = min(max((int)(r0), 0), 255);
 		final int g1 = min(max((int)(g0), 0), 255);
 		final int b1 = min(max((int)(b0), 0), 255);
 		
-		this.pixels[index + 0] = (byte)(r1);
-		this.pixels[index + 1] = (byte)(g1);
-		this.pixels[index + 2] = (byte)(b1);
+		this.image[imageIndex + 0] = (byte)(r1);
+		this.image[imageIndex + 1] = (byte)(g1);
+		this.image[imageIndex + 2] = (byte)(b1);
 	}
 	
 	private void doFilterEmboss(final int x, final int y) {
@@ -196,28 +235,31 @@ public final class ConvolutionKernel extends Kernel {
 		float g0 = 0.0F;
 		float b0 = 0.0F;
 		
-		for(int filterY = 0; filterY < 3; filterY++) {
-			for(int filterX = 0; filterX < 3; filterX++) {
-				final int imageX = (x - 3 / 2 + filterX + this.width) % this.width;
-				final int imageY = (y - 3 / 2 + filterY + this.height) % this.height;
-				
-				final int index = (imageY * this.width + imageX) * 4;
-				
-				r0 += (this.pixelsCopy[index + 0] & 0xFF) * this.emboss[filterY][filterX];
-				g0 += (this.pixelsCopy[index + 1] & 0xFF) * this.emboss[filterY][filterX];
-				b0 += (this.pixelsCopy[index + 2] & 0xFF) * this.emboss[filterY][filterX];
-			}
+		final int imageW = this.width;
+		final int imageH = this.height;
+		
+		for(int filterIndex = 0; filterIndex < 9; filterIndex++) {
+			final int filterX = filterIndex % 3;
+			final int filterY = filterIndex / 3;
+			
+			final int imageX = (x - 3 / 2 + filterX) % imageW;
+			final int imageY = (y - 3 / 2 + filterY) % imageH;
+			final int imageIndex = (imageY * imageW + imageX) * 4;
+			
+			r0 += (this.imageCopy[imageIndex + 0] & 0xFF) * this.emboss[filterIndex];
+			g0 += (this.imageCopy[imageIndex + 1] & 0xFF) * this.emboss[filterIndex];
+			b0 += (this.imageCopy[imageIndex + 2] & 0xFF) * this.emboss[filterIndex];
 		}
 		
-		final int index = (y * this.width + x) * 4;
+		final int imageIndex = (y * imageW + x) * 4;
 		
 		final int r1 = min(max((int)(r0 + bias), 0), 255);
 		final int g1 = min(max((int)(g0 + bias), 0), 255);
 		final int b1 = min(max((int)(b0 + bias), 0), 255);
 		
-		this.pixels[index + 0] = (byte)(r1);
-		this.pixels[index + 1] = (byte)(g1);
-		this.pixels[index + 2] = (byte)(b1);
+		this.image[imageIndex + 0] = (byte)(r1);
+		this.image[imageIndex + 1] = (byte)(g1);
+		this.image[imageIndex + 2] = (byte)(b1);
 	}
 	
 	private void doFilterGradientHorizontal(final int x, final int y) {
@@ -225,28 +267,31 @@ public final class ConvolutionKernel extends Kernel {
 		float g0 = 0.0F;
 		float b0 = 0.0F;
 		
-		for(int filterY = 0; filterY < 3; filterY++) {
-			for(int filterX = 0; filterX < 3; filterX++) {
-				final int imageX = (x - 3 / 2 + filterX + this.width) % this.width;
-				final int imageY = (y - 3 / 2 + filterY + this.height) % this.height;
-				
-				final int index = (imageY * this.width + imageX) * 4;
-				
-				r0 += (this.pixelsCopy[index + 0] & 0xFF) * this.gradientHorizontal[filterY][filterX];
-				g0 += (this.pixelsCopy[index + 1] & 0xFF) * this.gradientHorizontal[filterY][filterX];
-				b0 += (this.pixelsCopy[index + 2] & 0xFF) * this.gradientHorizontal[filterY][filterX];
-			}
+		final int imageW = this.width;
+		final int imageH = this.height;
+		
+		for(int filterIndex = 0; filterIndex < 9; filterIndex++) {
+			final int filterX = filterIndex % 3;
+			final int filterY = filterIndex / 3;
+			
+			final int imageX = (x - 3 / 2 + filterX) % imageW;
+			final int imageY = (y - 3 / 2 + filterY) % imageH;
+			final int imageIndex = (imageY * imageW + imageX) * 4;
+			
+			r0 += (this.imageCopy[imageIndex + 0] & 0xFF) * this.gradientHorizontal[filterIndex];
+			g0 += (this.imageCopy[imageIndex + 1] & 0xFF) * this.gradientHorizontal[filterIndex];
+			b0 += (this.imageCopy[imageIndex + 2] & 0xFF) * this.gradientHorizontal[filterIndex];
 		}
 		
-		final int index = (y * this.width + x) * 4;
+		final int imageIndex = (y * imageW + x) * 4;
 		
 		final int r1 = min(max((int)(r0), 0), 255);
 		final int g1 = min(max((int)(g0), 0), 255);
 		final int b1 = min(max((int)(b0), 0), 255);
 		
-		this.pixels[index + 0] = (byte)(r1);
-		this.pixels[index + 1] = (byte)(g1);
-		this.pixels[index + 2] = (byte)(b1);
+		this.image[imageIndex + 0] = (byte)(r1);
+		this.image[imageIndex + 1] = (byte)(g1);
+		this.image[imageIndex + 2] = (byte)(b1);
 	}
 	
 	private void doFilterGradientVertical(final int x, final int y) {
@@ -254,28 +299,31 @@ public final class ConvolutionKernel extends Kernel {
 		float g0 = 0.0F;
 		float b0 = 0.0F;
 		
-		for(int filterY = 0; filterY < 3; filterY++) {
-			for(int filterX = 0; filterX < 3; filterX++) {
-				final int imageX = (x - 3 / 2 + filterX + this.width) % this.width;
-				final int imageY = (y - 3 / 2 + filterY + this.height) % this.height;
-				
-				final int index = (imageY * this.width + imageX) * 4;
-				
-				r0 += (this.pixelsCopy[index + 0] & 0xFF) * this.gradientVertical[filterY][filterX];
-				g0 += (this.pixelsCopy[index + 1] & 0xFF) * this.gradientVertical[filterY][filterX];
-				b0 += (this.pixelsCopy[index + 2] & 0xFF) * this.gradientVertical[filterY][filterX];
-			}
+		final int imageW = this.width;
+		final int imageH = this.height;
+		
+		for(int filterIndex = 0; filterIndex < 9; filterIndex++) {
+			final int filterX = filterIndex % 3;
+			final int filterY = filterIndex / 3;
+			
+			final int imageX = (x - 3 / 2 + filterX) % imageW;
+			final int imageY = (y - 3 / 2 + filterY) % imageH;
+			final int imageIndex = (imageY * imageW + imageX) * 4;
+			
+			r0 += (this.imageCopy[imageIndex + 0] & 0xFF) * this.gradientVertical[filterIndex];
+			g0 += (this.imageCopy[imageIndex + 1] & 0xFF) * this.gradientVertical[filterIndex];
+			b0 += (this.imageCopy[imageIndex + 2] & 0xFF) * this.gradientVertical[filterIndex];
 		}
 		
-		final int index = (y * this.width + x) * 4;
+		final int imageIndex = (y * imageW + x) * 4;
 		
 		final int r1 = min(max((int)(r0), 0), 255);
 		final int g1 = min(max((int)(g0), 0), 255);
 		final int b1 = min(max((int)(b0), 0), 255);
 		
-		this.pixels[index + 0] = (byte)(r1);
-		this.pixels[index + 1] = (byte)(g1);
-		this.pixels[index + 2] = (byte)(b1);
+		this.image[imageIndex + 0] = (byte)(r1);
+		this.image[imageIndex + 1] = (byte)(g1);
+		this.image[imageIndex + 2] = (byte)(b1);
 	}
 	
 	private void doFilterSharpen(final int x, final int y) {
@@ -283,27 +331,30 @@ public final class ConvolutionKernel extends Kernel {
 		float g0 = 0.0F;
 		float b0 = 0.0F;
 		
-		for(int filterY = 0; filterY < 3; filterY++) {
-			for(int filterX = 0; filterX < 3; filterX++) {
-				final int imageX = (x - 3 / 2 + filterX + this.width) % this.width;
-				final int imageY = (y - 3 / 2 + filterY + this.height) % this.height;
-				
-				final int index = (imageY * this.width + imageX) * 4;
-				
-				r0 += (this.pixelsCopy[index + 0] & 0xFF) * this.sharpen[filterY][filterX];
-				g0 += (this.pixelsCopy[index + 1] & 0xFF) * this.sharpen[filterY][filterX];
-				b0 += (this.pixelsCopy[index + 2] & 0xFF) * this.sharpen[filterY][filterX];
-			}
+		final int imageW = this.width;
+		final int imageH = this.height;
+		
+		for(int filterIndex = 0; filterIndex < 9; filterIndex++) {
+			final int filterX = filterIndex % 3;
+			final int filterY = filterIndex / 3;
+			
+			final int imageX = (x - 3 / 2 + filterX) % imageW;
+			final int imageY = (y - 3 / 2 + filterY) % imageH;
+			final int imageIndex = (imageY * imageW + imageX) * 4;
+			
+			r0 += (this.imageCopy[imageIndex + 0] & 0xFF) * this.sharpen[filterIndex];
+			g0 += (this.imageCopy[imageIndex + 1] & 0xFF) * this.sharpen[filterIndex];
+			b0 += (this.imageCopy[imageIndex + 2] & 0xFF) * this.sharpen[filterIndex];
 		}
 		
-		final int index = (y * this.width + x) * 4;
+		final int imageIndex = (y * imageW + x) * 4;
 		
 		final int r1 = min(max((int)(r0), 0), 255);
 		final int g1 = min(max((int)(g0), 0), 255);
 		final int b1 = min(max((int)(b0), 0), 255);
 		
-		this.pixels[index + 0] = (byte)(r1);
-		this.pixels[index + 1] = (byte)(g1);
-		this.pixels[index + 2] = (byte)(b1);
+		this.image[imageIndex + 0] = (byte)(r1);
+		this.image[imageIndex + 1] = (byte)(g1);
+		this.image[imageIndex + 2] = (byte)(b1);
 	}
 }

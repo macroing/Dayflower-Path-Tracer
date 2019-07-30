@@ -46,6 +46,7 @@ Supported Features
 | Rendering Algorithm    | Ray Tracing                                                |
 | Shape                  | Plane                                                      |
 | Shape                  | Sphere                                                     |
+| Shape                  | Terrain                                                    |
 | Shape                  | Triangle                                                   |
 | Shape                  | Triangle Mesh                                              |
 | Texture                | Checkerboard                                               |

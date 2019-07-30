@@ -3081,23 +3081,14 @@ public final class RendererKernel extends AbstractKernel {
 //			Retrieve the offset to the surfaces array for the given shape:
 			final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 			
-//			Update the offset of the shape to skip to the current offset:
-//			shapesOffsetToSkip = shapesOffset;
-			
 //			Retrieve the offsets of the surface intersection point and the surface normal:
 			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-//			final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
 			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 			
 //			Retrieve the surface intersection point:
 			final float surfaceIntersectionPointX = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 0];
 			final float surfaceIntersectionPointY = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 1];
 			final float surfaceIntersectionPointZ = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 2];
-			
-//			Retrieve the surface normal:
-//			final float surfaceNormalX = this.intersections_$local$[offsetIntersectionSurfaceNormal + 0];
-//			final float surfaceNormalY = this.intersections_$local$[offsetIntersectionSurfaceNormal + 1];
-//			final float surfaceNormalZ = this.intersections_$local$[offsetIntersectionSurfaceNormal + 2];
 			
 //			Retrieve the surface normal for shading:
 			final float surfaceNormalShadingX = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0];
