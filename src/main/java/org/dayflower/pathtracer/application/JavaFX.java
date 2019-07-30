@@ -18,8 +18,6 @@
  */
 package org.dayflower.pathtracer.application;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -33,7 +31,12 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.Region;
 
-//TODO: Add Javadocs!
+/**
+ * A class that consists exclusively of static methods that operates on or returns JavaFX components.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class JavaFX {
 	private JavaFX() {
 		
@@ -41,66 +44,129 @@ public final class JavaFX {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code CheckBox} instance.
+	 * <p>
+	 * Calling this method is equivalent to {@code newCheckBox(text, eventHandler, false)}.
+	 * 
+	 * @param text the value of the property {@code text}
+	 * @param eventHandler the value of the property {@code onAction}
+	 * @return a new {@code CheckBox} instance
+	 */
 	public static CheckBox newCheckBox(final String text, final EventHandler<ActionEvent> eventHandler) {
 		return newCheckBox(text, eventHandler, false);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code CheckBox} instance.
+	 * 
+	 * @param text the value of the property {@code text}
+	 * @param eventHandler the value of the property {@code onAction}
+	 * @param isSelected the value of the property {@code selected}
+	 * @return a new {@code CheckBox} instance
+	 */
 	public static CheckBox newCheckBox(final String text, final EventHandler<ActionEvent> eventHandler, final boolean isSelected) {
 		final
-		CheckBox checkBox = new CheckBox(text);
+		CheckBox checkBox = new CheckBox();
 		checkBox.setOnAction(eventHandler);
 		checkBox.setSelected(isSelected);
+		checkBox.setText(text);
 		
 		return checkBox;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code CheckMenuItem} instance.
+	 * <p>
+	 * Calling this method is equivalent to {@code newCheckMenuItem(text, eventHandler, false)}.
+	 * 
+	 * @param text the value of the property {@code text}
+	 * @param eventHandler the value of the property {@code onAction}
+	 * @return a new {@code CheckMenuItem} instance
+	 */
 	public static CheckMenuItem newCheckMenuItem(final String text, final EventHandler<ActionEvent> eventHandler) {
 		return newCheckMenuItem(text, eventHandler, false);
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code CheckMenuItem} instance.
+	 * 
+	 * @param text the value of the property {@code text}
+	 * @param eventHandler the value of the property {@code onAction}
+	 * @param isSelected the value of the property {@code selected}
+	 * @return a new {@code CheckMenuItem} instance
+	 */
 	public static CheckMenuItem newCheckMenuItem(final String text, final EventHandler<ActionEvent> eventHandler, final boolean isSelected) {
 		final
-		CheckMenuItem checkMenuItem = new CheckMenuItem(text);
+		CheckMenuItem checkMenuItem = new CheckMenuItem();
 		checkMenuItem.setOnAction(eventHandler);
 		checkMenuItem.setSelected(isSelected);
+		checkMenuItem.setText(text);
 		
 		return checkMenuItem;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Menu} instance.
+	 * 
+	 * @param text the value of the property {@code text}
+	 * @param menuItems the {@code MenuItem}s to add
+	 * @return a new {@code Menu} instance
+	 */
 	public static Menu newMenu(final String text, final MenuItem... menuItems) {
 		final
-		Menu menu = new Menu(text);
+		Menu menu = new Menu();
 		menu.getItems().addAll(menuItems);
+		menu.setText(text);
 		
 		return menu;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code MenuItem} instance.
+	 * 
+	 * @param text the value of the property {@code text}
+	 * @param eventHandler the value of the property {@code onAction}
+	 * @return a new {@code MenuItem} instance
+	 */
 	public static MenuItem newMenuItem(final String text, final EventHandler<ActionEvent> eventHandler) {
 		final
-		MenuItem menuItem = new MenuItem(text);
+		MenuItem menuItem = new MenuItem();
 		menuItem.setOnAction(eventHandler);
+		menuItem.setText(text);
 		
 		return menuItem;
 	}
 	
-//	TODO: Add Javadocs!
-	public static RadioMenuItem newRadioMenuItem(final String text, final EventHandler<ActionEvent> eventHandler, final boolean isSelected, final ToggleGroup toggleGroup) {
+	/**
+	 * Returns a new {@code RadioMenuItem} instance.
+	 * 
+	 * @param text the value of the property {@code text}
+	 * @param eventHandler the value of the property {@code onAction}
+	 * @param toggleGroup a {@code ToggleGroup}
+	 * @param isSelected {@code true} if, and only if, the {@code RadioMenuItem} {@code Toggle} should be selected, {@code false} otherwise
+	 * @return a new {@code RadioMenuItem} instance
+	 */
+	public static RadioMenuItem newRadioMenuItem(final String text, final EventHandler<ActionEvent> eventHandler, final ToggleGroup toggleGroup, final boolean isSelected) {
 		final
-		RadioMenuItem radioMenuItem = new RadioMenuItem(text);
+		RadioMenuItem radioMenuItem = new RadioMenuItem();
 		radioMenuItem.setOnAction(eventHandler);
+		radioMenuItem.setText(text);
 		radioMenuItem.setToggleGroup(toggleGroup);
 		radioMenuItem.setSelected(isSelected);
 		
 		return radioMenuItem;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Region} instance.
+	 * 
+	 * @param top the top offset
+	 * @param right the right offset
+	 * @param bottom the bottom offset
+	 * @param left the left offset
+	 * @return a new {@code Region} instance
+	 */
 	public static Region newRegion(final double top, final double right, final double bottom, final double left) {
 		final
 		Region region = new Region();
@@ -109,15 +175,31 @@ public final class JavaFX {
 		return region;
 	}
 	
-//	TODO: Add Javadocs!
+	/**
+	 * Returns a new {@code Slider} instance.
+	 * 
+	 * @param min the value of the property {@code min}
+	 * @param max the value of the property {@code max}
+	 * @param value the value of the property {@code value}
+	 * @param blockIncrement the value of the property {@code blockIncrement}
+	 * @param majorTickUnit the value of the property {@code majorTickUnit}
+	 * @param showTickLabels the value of the property {@code showTickLabels}
+	 * @param showTickMarks the value of the property {@code showTickMarks}
+	 * @param snapToTicks the value of the property {@code snapToTicks}
+	 * @param changeListener a {@code ChangeListener}
+	 * @return a new {@code Slider} instance
+	 */
 	public static Slider newSlider(final double min, final double max, final double value, final double blockIncrement, final double majorTickUnit, final boolean showTickLabels, final boolean showTickMarks, final boolean snapToTicks, ChangeListener<? super Number> changeListener) {
 		final
-		Slider slider = new Slider(min, max, value);
+		Slider slider = new Slider();
 		slider.setBlockIncrement(blockIncrement);
 		slider.setMajorTickUnit(majorTickUnit);
+		slider.setMax(max);
+		slider.setMin(min);
 		slider.setShowTickLabels(showTickLabels);
 		slider.setShowTickMarks(showTickMarks);
 		slider.setSnapToTicks(snapToTicks);
+		slider.setValue(value);
 		slider.valueProperty().addListener(changeListener);
 		
 		return slider;

@@ -28,7 +28,6 @@ import static org.dayflower.pathtracer.math.MathF.tan;
 import static org.dayflower.pathtracer.math.MathF.toDegrees;
 import static org.dayflower.pathtracer.math.MathF.toRadians;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -250,11 +249,14 @@ public final class Camera {
 	 * Constructs a new {@code Camera} instance given {@code array} as the {@code float} array to store certain parameters.
 	 * <p>
 	 * This constructor does not clone {@code array}.
+	 * <p>
+	 * If {@code array} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param array the {@code float} array to store certain parameters
+	 * @throws NullPointerException thrown if, and only if, {@code array} is {@code null}
 	 */
 	public Camera(final float[] array) {
-		this.array = array;
+		this.array = Objects.requireNonNull(array, "array == null");
 		this.cameraObservers = new ArrayList<>();
 	}
 	
@@ -510,17 +512,37 @@ public final class Camera {
 		setEye(getEyeX(), getEyeY() + y, getEyeZ());
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Changes the pitch angle of this {@code Camera} instance.
+	 * <p>
+	 * If {@code pitch} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param pitch the pitch angle to add to the current pitch angle
+	 * @throws NullPointerException thrown if, and only if, {@code pitch} is {@code null}
+	 */
 	public void changePitch(final AngleF pitch) {
 		setPitch(AngleF.degrees(max(min(getPitch().degrees + pitch.degrees, 89.99F), -89.99F), -89.99F, 89.99F));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Changes the yaw angle of this {@code Camera} instance.
+	 * <p>
+	 * If {@code yaw} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param yaw the yaw angle to add to the current yaw angle
+	 * @throws NullPointerException thrown if, and only if, {@code yaw} is {@code null}
+	 */
 	public void changeYaw(final AngleF yaw) {
 		setYaw(getYaw().add(yaw));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Moves this {@code Camera} instance forward (or backward) with {@code distance} units.
+	 * <p>
+	 * If {@code isWalkLockEnabled()} returns {@code true}, this method will only affect the X- and Z-axes. Otherwise all axes will be affected.
+	 * 
+	 * @param distance the distance to move
+	 */
 	public void forward(final float distance) {
 		if(isWalkLockEnabled()) {
 			setEye(getEyeX() + getOrthoNormalBasisWX() * distance, getEyeY(), getEyeZ() + getOrthoNormalBasisWZ() * distance);
@@ -541,25 +563,48 @@ public final class Camera {
 		this.cameraObservers.remove(Objects.requireNonNull(cameraObserver, "cameraObserver == null"));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the value of the Aperture Radius parameter.
+	 * 
+	 * @param apertureRadius the new value of the Aperture Radius parameter
+	 */
 	public void setApertureRadius(final float apertureRadius) {
 		this.array[ABSOLUTE_OFFSET_APERTURE_RADIUS] = max(min(apertureRadius, 25.0F), 0.0F);
 		this.hasUpdated = true;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the {@code float} array to store certain parameters.
+	 * <p>
+	 * This method does not clone {@code array}.
+	 * <p>
+	 * If {@code array} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param array the {@code float} array to store certain parameters
+	 * @throws NullPointerException thrown if, and only if, {@code array} is {@code null}
+	 */
 	public void setArray(final float[] array) {
 		this.array = array;
 		this.hasUpdated = true;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the value for the Camera Lens parameter.
+	 * 
+	 * @param cameraLens the new value for the Camera Lens parameter
+	 */
 	public void setCameraLens(final int cameraLens) {
 		this.array[ABSOLUTE_OFFSET_CAMERA_LENS] = cameraLens;
 		this.hasUpdated = true;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the values for the Eye X, Eye Y and Eye Z parameters.
+	 * 
+	 * @param eyeX the new value for the Eye X parameter
+	 * @param eyeY the new value for the Eye Y parameter
+	 * @param eyeZ the new value for the Eye Z parameter
+	 */
 	public void setEye(final float eyeX, final float eyeY, final float eyeZ) {
 		this.array[ABSOLUTE_OFFSET_EYE_X] = eyeX;
 		this.array[ABSOLUTE_OFFSET_EYE_Y] = eyeY;
@@ -567,33 +612,61 @@ public final class Camera {
 		this.hasUpdated = true;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the value for the Field of View X parameter and calculates the value for the Field of View Y parameter.
+	 * 
+	 * @param fieldOfViewX the new value for the Field of View X parameter
+	 */
 	public void setFieldOfViewX(final float fieldOfViewX) {
 		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_X] = fieldOfViewX;
 		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_Y] = toDegrees(atan(tan(toRadians(fieldOfViewX) * 0.5F) * (getResolutionX() / getResolutionY())) * 2.0F);
 		this.hasUpdated = true;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the value for the Camera Lens parameter.
+	 * <p>
+	 * If {@code isFisheyeCameraLens} is {@code true}, the Camera Lens parameter will be set to {@code CAMERA_LENS_FISHEYE}, otherwise it will be set to {@code CAMERA_LENS_THIN}.
+	 * 
+	 * @param isFisheyeCameraLens {@code true} if, and only if, the Camera Lens parameter should be set to {@code CAMERA_LENS_FISHEYE}, {@code false} otherwise
+	 */
 	public void setFisheyeCameraLens(final boolean isFisheyeCameraLens) {
 		this.array[ABSOLUTE_OFFSET_CAMERA_LENS] = isFisheyeCameraLens ? CAMERA_LENS_FISHEYE : CAMERA_LENS_THIN;
 		this.hasUpdated = true;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the value for the Focal Distance parameter.
+	 * 
+	 * @param focalDistance the new value for the Focal Distance parameter
+	 */
 	public void setFocalDistance(final float focalDistance) {
 		this.array[ABSOLUTE_OFFSET_FOCAL_DISTANCE] = max(min(focalDistance, 100.0F), 0.2F);
 		this.hasUpdated = true;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets {@code pitch} as the current pitch angle.
+	 * <p>
+	 * If {@code pitch} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * Calling this method will notify all currently added {@link CameraObserver}s of an updated pitch angle.
+	 * 
+	 * @param pitch an {@link AngleF} with the pitch angle to set
+	 * @throws NullPointerException thrown if, and only if, {@code pitch} is {@code null}
+	 */
 	public void setPitch(final AngleF pitch) {
 		this.pitch = Objects.requireNonNull(pitch, "pitch == null");
 		this.hasUpdated = true;
 		this.cameraObservers.forEach(cameraObserver -> cameraObserver.pitchChanged(this, this.pitch));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the values for the Resolution X and Resolution Y parameters.
+	 * 
+	 * @param resolutionX the new value for the Resolution X parameter
+	 * @param resolutionY the new value for the Resolution Y parameter
+	 */
 	public void setResolution(final float resolutionX, final float resolutionY) {
 		this.array[ABSOLUTE_OFFSET_RESOLUTION_X] = resolutionX;
 		this.array[ABSOLUTE_OFFSET_RESOLUTION_Y] = resolutionY;
@@ -602,25 +675,50 @@ public final class Camera {
 		setFieldOfViewX(getFieldOfViewX());
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the value for the Camera Lens parameter.
+	 * <p>
+	 * If {@code isThinCameraLens} is {@code true}, the Camera Lens parameter will be set to {@code CAMERA_LENS_THIN}, otherwise it will be set to {@code CAMERA_LENS_FISHEYE}.
+	 * 
+	 * @param isThinCameraLens {@code true} if, and only if, the Camera Lens parameter should be set to {@code CAMERA_LENS_THIN}, {@code false} otherwise
+	 */
 	public void setThinCameraLens(final boolean isThinCameraLens) {
 		this.array[ABSOLUTE_OFFSET_CAMERA_LENS] = isThinCameraLens ? CAMERA_LENS_THIN : CAMERA_LENS_FISHEYE;
 		this.hasUpdated = true;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the walk lock state.
+	 * 
+	 * @param isWalkLockEnabled {@code true} if, and only if, walk lock is enabled, {@code false} otherwise
+	 */
 	public void setWalkLockEnabled(final boolean isWalkLockEnabled) {
 		this.isWalkLockEnabled = isWalkLockEnabled;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets {@code yaw} as the current yaw angle.
+	 * <p>
+	 * If {@code yaw} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * Calling this method will notify all currently added {@link CameraObserver}s of an updated yaw angle.
+	 * 
+	 * @param yaw an {@link AngleF} with the yaw angle to set
+	 * @throws NullPointerException thrown if, and only if, {@code yaw} is {@code null}
+	 */
 	public void setYaw(final AngleF yaw) {
 		this.yaw = Objects.requireNonNull(yaw, "yaw == null");
 		this.hasUpdated = true;
 		this.cameraObservers.forEach(cameraObserver -> cameraObserver.yawChanged(this, this.yaw));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Moves this {@code Camera} instance to the left or right with {@code distance} units.
+	 * <p>
+	 * If {@code isWalkLockEnabled()} returns {@code true}, this method will only affect the X- and Z-axes. Otherwise all axes will be affected.
+	 * 
+	 * @param distance the distance to move
+	 */
 	public void strafe(final float distance) {
 		final float uX = getOrthoNormalBasisUX();
 		final float uY = getOrthoNormalBasisUY();

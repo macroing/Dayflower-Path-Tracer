@@ -22,7 +22,6 @@ import static org.dayflower.pathtracer.math.MathF.abs;
 import static org.dayflower.pathtracer.math.MathF.max;
 import static org.dayflower.pathtracer.math.MathF.min;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,12 +32,21 @@ import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.util.Strings;
 
-//TODO: Add Javadocs.
+/**
+ * A {@code BoundingVolumeHierarchy} is an implementation of an acceleration structure called a Bounding Volume Hierarchy (BVH).
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class BoundingVolumeHierarchy {
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@link LeafNode}. The number is {@code 2}.
+	 */
 	public static final int NODE_TYPE_LEAF = 2;
 	
-//	TODO: Add Javadocs.
+	/**
+	 * The type number associated with a {@link TreeNode}. The number is {@code 1}.
+	 */
 	public static final int NODE_TYPE_TREE = 1;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,12 +61,23 @@ public final class BoundingVolumeHierarchy {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the root {@link Node} of this {@code BoundingVolumeHierarchy} instance.
+	 * 
+	 * @return the root {@code Node} of this {@code BoundingVolumeHierarchy} instance
+	 */
 	public Node getRoot() {
 		return this.root;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Compares {@code object} to this {@code BoundingVolumeHierarchy} instance for equality.
+	 * <p>
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code BoundingVolumeHierarchy}, and their respective values are equal, {@code false} otherwise.
+	 * 
+	 * @param object the {@code Object} to compare to this {@code BoundingVolumeHierarchy} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code BoundingVolumeHierarchy}, and their respective values are equal, {@code false} otherwise
+	 */
 	@Override
 	public boolean equals(final Object object) {
 		if(object == this) {
@@ -72,7 +91,11 @@ public final class BoundingVolumeHierarchy {
 		}
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a hash code for this {@code BoundingVolumeHierarchy} instance.
+	 * 
+	 * @return a hash code for this {@code BoundingVolumeHierarchy} instance
+	 */
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.root);
@@ -80,7 +103,17 @@ public final class BoundingVolumeHierarchy {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Creates a {@code BoundingVolumeHierarchy} based on a {@code List} of {@link Triangle}s.
+	 * <p>
+	 * Returns a {@code BoundingVolumeHierarchy} instance.
+	 * <p>
+	 * If either {@code triangles} or at least one {@code Triangle} in {@code triangles} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param triangles the {@code Triangle}s to create the {@code BoundingVolumeHierarchy} from
+	 * @return a {@code BoundingVolumeHierarchy} instance
+	 * @throws NullPointerException thrown if, and only if, either {@code triangles} or at least one {@code Triangle} in {@code triangles} are {@code null}
+	 */
 	public static BoundingVolumeHierarchy createBoundingVolumeHierarchy(final List<Triangle> triangles) {
 		final List<LeafNode> leafNodes = new ArrayList<>(triangles.size());
 		
@@ -122,14 +155,23 @@ public final class BoundingVolumeHierarchy {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * A {@code LeafNode} is a {@link Node} implementation that represents a leaf node in a Bounding Volume Hierarchy (BVH).
+	 * 
+	 * @since 1.0.0
+	 * @author J&#246;rgen Lundgren
+	 */
 	public static final class LeafNode extends Node {
 		private final List<Triangle> triangles = new ArrayList<>(10);
 		private int size;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Constructs a new {@code LeafNode} instance.
+		 * 
+		 * @param depth the depth of this {@code LeafNode}
+		 */
 		public LeafNode(final int depth) {
 			super(depth);
 			
@@ -138,7 +180,15 @@ public final class BoundingVolumeHierarchy {
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code List} with all {@code Node}s added in a depth-first order.
+		 * <p>
+		 * If {@code nodes} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param nodes the {@code List} to add {@code Node}s to and return
+		 * @return a {@code List} with all {@code Node}s added in a depth-first order
+		 * @throws NullPointerException thrown if, and only if, {@code nodes} is {@code null}
+		 */
 		@Override
 		public List<Node> toList(final List<Node> nodes) {
 			nodes.add(this);
@@ -146,24 +196,48 @@ public final class BoundingVolumeHierarchy {
 			return nodes;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code List} with the {@link Triangle}s currently added.
+		 * <p>
+		 * Modifying the returned {@code List} will affect this {@code LeafNode} instance.
+		 * 
+		 * @return a {@code List} with the {@code Triangle}s currently added
+		 */
 		public List<Triangle> getTriangles() {
 			return this.triangles;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code String} representation of this {@code LeafNode} instance.
+		 * <p>
+		 * Calling this method is equivalent to {@code toString(0)}.
+		 * 
+		 * @return a {@code String} representation of this {@code LeafNode} instance
+		 */
 		@Override
 		public String toString() {
 			return toString(0);
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code String} representation of this {@code LeafNode} instance.
+		 * 
+		 * @param indentation the number of indentations to use
+		 * @return a {@code String} representation of this {@code LeafNode} instance
+		 */
 		@Override
 		public String toString(final int indentation) {
 			return String.format("%sLeafNode", Strings.repeat(" ", indentation));
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Compares {@code object} to this {@code LeafNode} instance for equality.
+		 * <p>
+		 * Returns {@code true} if, and only if, {@code object} is an instance of {@code LeafNode}, and their respective values are equal, {@code false} otherwise.
+		 * 
+		 * @param object the {@code Object} to compare to this {@code LeafNode} instance for equality
+		 * @return {@code true} if, and only if, {@code object} is an instance of {@code LeafNode}, and their respective values are equal, {@code false} otherwise
+		 */
 		@Override
 		public boolean equals(final Object object) {
 			if(object == this) {
@@ -189,42 +263,72 @@ public final class BoundingVolumeHierarchy {
 			}
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns {@code true}.
+		 * 
+		 * @return {@code true}
+		 */
 		@Override
 		public boolean isLeaf() {
 			return true;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the size of this {@code LeafNode} instance.
+		 * 
+		 * @return the size of this {@code LeafNode} instance
+		 */
 		@Override
 		public int getSize() {
 			return this.size;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a hash code for this {@code LeafNode} instance.
+		 * 
+		 * @return a hash code for this {@code LeafNode} instance
+		 */
 		@Override
 		public int hashCode() {
 			return Objects.hash(Float.valueOf(getMaximumX()), Float.valueOf(getMaximumY()), Float.valueOf(getMaximumZ()), Float.valueOf(getMinimumX()), Float.valueOf(getMinimumY()), Float.valueOf(getMinimumZ()), this.triangles);
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Adds the maximum and minimum bounds to {@code point3Fs}.
+		 * <p>
+		 * If {@code point3Fs} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param point3Fs a {@code Collection} of {@link Point3F}s
+		 * @throws NullPointerException thrown if, and only if, {@code point3Fs} is {@code null}
+		 */
 		@Override
 		public void addBounds(final Collection<Point3F> point3Fs) {
-			final Point3F maximum = new Point3F(getMaximumX(), getMaximumY(), getMaximumZ());
-			final Point3F minimum = new Point3F(getMinimumX(), getMinimumY(), getMinimumZ());
-			
-			point3Fs.add(maximum);
-			point3Fs.add(minimum);
+			point3Fs.add(getMaximum());
+			point3Fs.add(getMinimum());
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Adds {@code triangle} to this {@code LeafNode} instance.
+		 * <p>
+		 * If {@code triangle} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param triangle the {@link Triangle} to add
+		 * @throws NullPointerException thrown if, and only if, {@code triangle} is {@code null}
+		 */
 		public void addTriangle(final Triangle triangle) {
 			if(this.triangles.add(Objects.requireNonNull(triangle, "triangle == null"))) {
 				this.size += 1;
 			}
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Removes {@code triangle} from this {@code LeafNode} instance.
+		 * <p>
+		 * If {@code triangle} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param triangle the {@link Triangle} to remove
+		 * @throws NullPointerException thrown if, and only if, {@code triangle} is {@code null}
+		 */
 		public void removeTriangle(final Triangle triangle) {
 			if(this.triangles.remove(Objects.requireNonNull(triangle, "triangle == null"))) {
 				this.size -= 1;
@@ -234,7 +338,12 @@ public final class BoundingVolumeHierarchy {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * A {@code Node} is an abstract base type used to represent a node in a Bounding Volume Hierarchy (BVH).
+	 * 
+	 * @since 1.0.0
+	 * @author J&#246;rgen Lundgren
+	 */
 	public static abstract class Node {
 		private float maximumX = Float.MAX_VALUE;
 		private float maximumY = Float.MAX_VALUE;
@@ -246,106 +355,208 @@ public final class BoundingVolumeHierarchy {
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Constructs a new {@code Node} instance.
+		 * 
+		 * @param depth the depth of this {@code Node}
+		 */
 		protected Node(final int depth) {
 			this.depth = depth;
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code List} with all {@code Node}s added in a depth-first order.
+		 * <p>
+		 * Calling this method is equivalent to {@code toList(new ArrayList<>())}.
+		 * 
+		 * @return a {@code List} with all {@code Node}s added in a depth-first order
+		 */
 		public final List<Node> toList() {
 			return toList(new ArrayList<>());
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code List} with all {@code Node}s added in a depth-first order.
+		 * <p>
+		 * If {@code nodes} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param nodes the {@code List} to add {@code Node}s to and return
+		 * @return a {@code List} with all {@code Node}s added in a depth-first order
+		 * @throws NullPointerException thrown if, and only if, {@code nodes} is {@code null}
+		 */
 		public abstract List<Node> toList(final List<Node> nodes);
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@link Point3F} with the center of the bounds of this {@code Node} instance.
+		 * 
+		 * @return a {@code Point3F} with the center of the bounds of this {@code Node} instance
+		 */
 		public final Point3F getCenter() {
 			return new Point3F(getCenterX(), getCenterY(), getCenterZ());
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@link Point3F} with the maximum bound of this {@code Node} instance.
+		 * 
+		 * @return a {@code Point3F} with the maximum bound of this {@code Node} instance
+		 */
 		public final Point3F getMaximum() {
 			return new Point3F(getMaximumX(), getMaximumY(), getMaximumZ());
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@link Point3F} with the minimum bound of this {@code Node} instance.
+		 * 
+		 * @return a {@code Point3F} with the minimum bound of this {@code Node} instance
+		 */
 		public final Point3F getMinimum() {
 			return new Point3F(getMinimumX(), getMinimumY(), getMinimumZ());
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code String} representation of this {@code Node} instance.
+		 * 
+		 * @param indentation the number of indentations to use
+		 * @return a {@code String} representation of this {@code Node} instance
+		 */
 		public abstract String toString(final int indentation);
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns {@code true} if, and only if, this {@code Node} is a leaf node, {@code false} otherwise.
+		 * 
+		 * @return {@code true} if, and only if, this {@code Node} is a leaf node, {@code false} otherwise
+		 */
 		public abstract boolean isLeaf();
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the X-coordinate of the center of the bounds of this {@code Node} instance.
+		 * 
+		 * @return the X-coordinate of the center of the bounds of this {@code Node} instance
+		 */
 		public final float getCenterX() {
 			return (this.maximumX + this.minimumX) * 0.5F;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the Y-coordinate of the center of the bounds of this {@code Node} instance.
+		 * 
+		 * @return the Y-coordinate of the center of the bounds of this {@code Node} instance
+		 */
 		public final float getCenterY() {
 			return (this.maximumY + this.minimumY) * 0.5F;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the Z-coordinate of the center of the bounds of this {@code Node} instance.
+		 * 
+		 * @return the Z-coordinate of the center of the bounds of this {@code Node} instance
+		 */
 		public final float getCenterZ() {
 			return (this.maximumZ + this.minimumZ) * 0.5F;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the X-coordinate of the maximum bound of this {@code Node} instance.
+		 * 
+		 * @return the X-coordinate of the maximum bound of this {@code Node} instance
+		 */
 		public final float getMaximumX() {
 			return this.maximumX;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the Y-coordinate of the maximum bound of this {@code Node} instance.
+		 * 
+		 * @return the Y-coordinate of the maximum bound of this {@code Node} instance
+		 */
 		public final float getMaximumY() {
 			return this.maximumY;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the Z-coordinate of the maximum bound of this {@code Node} instance.
+		 * 
+		 * @return the Z-coordinate of the maximum bound of this {@code Node} instance
+		 */
 		public final float getMaximumZ() {
 			return this.maximumZ;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the X-coordinate of the minimum bound of this {@code Node} instance.
+		 * 
+		 * @return the X-coordinate of the minimum bound of this {@code Node} instance
+		 */
 		public final float getMinimumX() {
 			return this.minimumX;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the Y-coordinate of the minimum bound of this {@code Node} instance.
+		 * 
+		 * @return the Y-coordinate of the minimum bound of this {@code Node} instance
+		 */
 		public final float getMinimumY() {
 			return this.minimumY;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the Z-coordinate of the minimum bound of this {@code Node} instance.
+		 * 
+		 * @return the Z-coordinate of the minimum bound of this {@code Node} instance
+		 */
 		public final float getMinimumZ() {
 			return this.minimumZ;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the depth of this {@code Node} instance.
+		 * 
+		 * @return the depth of this {@code Node} instance
+		 */
 		public final int getDepth() {
 			return this.depth;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the size of this {@code Node} instance.
+		 * 
+		 * @return the size of this {@code Node} instance
+		 */
 		public abstract int getSize();
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Adds the maximum and minimum bounds to {@code point3Fs}.
+		 * <p>
+		 * If {@code point3Fs} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param point3Fs a {@code Collection} of {@link Point3F}s
+		 * @throws NullPointerException thrown if, and only if, {@code point3Fs} is {@code null}
+		 */
 		public abstract void addBounds(final Collection<Point3F> point3Fs);
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Sets the maximum bound for this {@code Node} instance.
+		 * 
+		 * @param maximumX the X-coordinate of the maximum bound
+		 * @param maximumY the Y-coordinate of the maximum bound
+		 * @param maximumZ the Z-coordinate of the maximum bound
+		 */
 		public final void setMaximum(final float maximumX, final float maximumY, final float maximumZ) {
 			this.maximumX = maximumX;
 			this.maximumY = maximumY;
 			this.maximumZ = maximumZ;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Sets the minimum bound for this {@code Node} instance.
+		 * 
+		 * @param minimumX the X-coordinate of the minimum bound
+		 * @param minimumY the Y-coordinate of the minimum bound
+		 * @param minimumZ the Z-coordinate of the minimum bound
+		 */
 		public final void setMinimum(final float minimumX, final float minimumY, final float minimumZ) {
 			this.minimumX = minimumX;
 			this.minimumY = minimumY;
@@ -355,7 +566,12 @@ public final class BoundingVolumeHierarchy {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * A {@code TreeNode} is a {@link Node} implementation that represents a tree node in a Bounding Volume Hierarchy (BVH).
+	 * 
+	 * @since 1.0.0
+	 * @author J&#246;rgen Lundgren
+	 */
 	public static final class TreeNode extends Node {
 		private Node left;
 		private Node right;
@@ -363,7 +579,11 @@ public final class BoundingVolumeHierarchy {
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Constructs a new {@code TreeNode} instance.
+		 * 
+		 * @param depth the depth of this {@code TreeNode}
+		 */
 		public TreeNode(final int depth) {
 			super(depth);
 			
@@ -372,7 +592,15 @@ public final class BoundingVolumeHierarchy {
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code List} with all {@code Node}s added in a depth-first order.
+		 * <p>
+		 * If {@code nodes} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param nodes the {@code List} to add {@code Node}s to and return
+		 * @return a {@code List} with all {@code Node}s added in a depth-first order
+		 * @throws NullPointerException thrown if, and only if, {@code nodes} is {@code null}
+		 */
 		@Override
 		public List<Node> toList(final List<Node> nodes) {
 			nodes.add(this);
@@ -391,23 +619,42 @@ public final class BoundingVolumeHierarchy {
 			return nodes;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns an {@code Optional} with the optional left {@link Node}.
+		 * 
+		 * @return an {@code Optional} with the optional left {@code Node}
+		 */
 		public Optional<Node> getLeft() {
 			return Optional.ofNullable(this.left);
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns an {@code Optional} with the optional right {@link Node}.
+		 * 
+		 * @return an {@code Optional} with the optional right {@code Node}
+		 */
 		public Optional<Node> getRight() {
 			return Optional.ofNullable(this.right);
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code String} representation of this {@code TreeNode} instance.
+		 * <p>
+		 * Calling this method is equivalent to {@code toString(0)}.
+		 * 
+		 * @return a {@code String} representation of this {@code TreeNode} instance
+		 */
 		@Override
 		public String toString() {
 			return toString(0);
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a {@code String} representation of this {@code TreeNode} instance.
+		 * 
+		 * @param indentation the number of indentations to use
+		 * @return a {@code String} representation of this {@code TreeNode} instance
+		 */
 		@Override
 		public String toString(final int indentation) {
 			final Node left = this.left;
@@ -423,7 +670,14 @@ public final class BoundingVolumeHierarchy {
 			return stringBuilder.toString();
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Compares {@code object} to this {@code TreeNode} instance for equality.
+		 * <p>
+		 * Returns {@code true} if, and only if, {@code object} is an instance of {@code TreeNode}, and their respective values are equal, {@code false} otherwise.
+		 * 
+		 * @param object the {@code Object} to compare to this {@code TreeNode} instance for equality
+		 * @return {@code true} if, and only if, {@code object} is an instance of {@code TreeNode}, and their respective values are equal, {@code false} otherwise
+		 */
 		@Override
 		public boolean equals(final Object object) {
 			if(object == this) {
@@ -451,32 +705,48 @@ public final class BoundingVolumeHierarchy {
 			}
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns {@code false}.
+		 * 
+		 * @return {@code false}
+		 */
 		@Override
 		public boolean isLeaf() {
 			return false;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns the size of this {@code TreeNode} instance.
+		 * 
+		 * @return the size of this {@code TreeNode} instance
+		 */
 		@Override
 		public int getSize() {
 			return this.size;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Returns a hash code for this {@code TreeNode} instance.
+		 * 
+		 * @return a hash code for this {@code TreeNode} instance
+		 */
 		@Override
 		public int hashCode() {
 			return Objects.hash(Float.valueOf(getMaximumX()), Float.valueOf(getMaximumY()), Float.valueOf(getMaximumZ()), Float.valueOf(getMinimumX()), Float.valueOf(getMinimumY()), Float.valueOf(getMinimumZ()), this.left, this.right);
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Adds the maximum and minimum bounds to {@code point3Fs}.
+		 * <p>
+		 * If {@code point3Fs} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param point3Fs a {@code Collection} of {@link Point3F}s
+		 * @throws NullPointerException thrown if, and only if, {@code point3Fs} is {@code null}
+		 */
 		@Override
 		public void addBounds(final Collection<Point3F> point3Fs) {
-			final Point3F maximum = new Point3F(getMaximumX(), getMaximumY(), getMaximumZ());
-			final Point3F minimum = new Point3F(getMinimumX(), getMinimumY(), getMinimumZ());
-			
-			point3Fs.add(maximum);
-			point3Fs.add(minimum);
+			point3Fs.add(getMaximum());
+			point3Fs.add(getMinimum());
 			
 			final Node left = this.left;
 			final Node right = this.right;
@@ -490,17 +760,25 @@ public final class BoundingVolumeHierarchy {
 			}
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Sets the left {@link Node}.
+		 * 
+		 * @param left the left {@code Node}, which may be {@code null}
+		 */
 		public void setLeft(final Node left) {
 			this.size -= this.left != null ? this.left.getSize() : 0;
-			this.left = Objects.requireNonNull(left, "left == null");
+			this.left = left;
 			this.size += this.left != null ? this.left.getSize() : 0;
 		}
 		
-//		TODO: Add Javadocs.
+		/**
+		 * Sets the right {@link Node}.
+		 * 
+		 * @param right the right {@code Node}, which may be {@code null}
+		 */
 		public void setRight(final Node right) {
 			this.size -= this.right != null ? this.right.getSize() : 0;
-			this.right = Objects.requireNonNull(right, "right == null");
+			this.right = right;
 			this.size += this.right != null ? this.right.getSize() : 0;
 		}
 	}

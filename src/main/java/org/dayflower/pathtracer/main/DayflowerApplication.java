@@ -248,8 +248,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		final CheckMenuItem checkMenuItemWalkLock = JavaFX.newCheckMenuItem("Walk Lock", e -> camera.setWalkLockEnabled(!camera.isWalkLockEnabled()), camera.isWalkLockEnabled());
 		
-		final RadioMenuItem radioMenuItemFisheye = JavaFX.newRadioMenuItem("Fisheye Camera Lens", e -> camera.setFisheyeCameraLens(true), camera.isFisheyeCameraLens(), toggleGroupCameraLens);
-		final RadioMenuItem radioMenuItemThin = JavaFX.newRadioMenuItem("Thin Camera Lens", e -> camera.setThinCameraLens(true), camera.isThinCameraLens(), toggleGroupCameraLens);
+		final RadioMenuItem radioMenuItemFisheye = JavaFX.newRadioMenuItem("Fisheye Camera Lens", e -> camera.setFisheyeCameraLens(true), toggleGroupCameraLens, camera.isFisheyeCameraLens());
+		final RadioMenuItem radioMenuItemThin = JavaFX.newRadioMenuItem("Thin Camera Lens", e -> camera.setThinCameraLens(true), toggleGroupCameraLens, camera.isThinCameraLens());
 		
 		final Menu menuCamera = JavaFX.newMenu("Camera", checkMenuItemWalkLock, radioMenuItemFisheye, radioMenuItemThin);
 		
@@ -272,11 +272,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Renderer" Menu:
 		final ToggleGroup toggleGroupRenderer = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> rendererKernel.setAmbientOcclusion(true), rendererKernel.isAmbientOcclusion(), toggleGroupRenderer);
-		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> rendererKernel.setPathTracing(true), rendererKernel.isPathTracing(), toggleGroupRenderer);
-		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> rendererKernel.setRayCasting(true), rendererKernel.isRayCasting(), toggleGroupRenderer);
-		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> rendererKernel.setRayMarching(true), rendererKernel.isRayMarching(), toggleGroupRenderer);
-		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> rendererKernel.setRayTracing(true), rendererKernel.isRayTracing(), toggleGroupRenderer);
+		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> rendererKernel.setAmbientOcclusion(true), toggleGroupRenderer, rendererKernel.isAmbientOcclusion());
+		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> rendererKernel.setPathTracing(true), toggleGroupRenderer, rendererKernel.isPathTracing());
+		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> rendererKernel.setRayCasting(true), toggleGroupRenderer, rendererKernel.isRayCasting());
+		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> rendererKernel.setRayMarching(true), toggleGroupRenderer, rendererKernel.isRayMarching());
+		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> rendererKernel.setRayTracing(true), toggleGroupRenderer, rendererKernel.isRayTracing());
 		
 		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemAmbientOcclusion, radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer);
 		
@@ -290,8 +290,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		final MenuItem menuItemEnterScene = JavaFX.newMenuItem("Enter Scene", e -> enter());
 		
-		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> rendererKernel.setShadingFlat(), rendererKernel.isShadingFlat(), toggleGroupShading);
-		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> rendererKernel.setShadingGouraud(), rendererKernel.isShadingGouraud(), toggleGroupShading);
+		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> rendererKernel.setShadingFlat(), toggleGroupShading, rendererKernel.isShadingFlat());
+		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> rendererKernel.setShadingGouraud(), toggleGroupShading, rendererKernel.isShadingGouraud());
 		
 		final Menu menuScene = JavaFX.newMenu("Scene", checkMenuItemNormalMapping, checkMenuItemWireframes, menuItemEnterScene, radioMenuItemFlatShading, radioMenuItemGouraudShading);
 		
@@ -300,11 +300,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Tone Mapper" Menu:
 		final ToggleGroup toggleGroupToneMapper = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemToneMapperFilmicCurve1 = JavaFX.newRadioMenuItem("Filmic Curve v.1", e -> rendererKernel.setToneMappingAndGammaCorrectionFilmicCurve1(), false, toggleGroupToneMapper);
-		final RadioMenuItem radioMenuItemToneMapperFilmicCurve2 = JavaFX.newRadioMenuItem("Filmic Curve v.2", e -> rendererKernel.setToneMappingAndGammaCorrectionFilmicCurve2(), true, toggleGroupToneMapper);
-		final RadioMenuItem radioMenuItemToneMapperLinear = JavaFX.newRadioMenuItem("Linear", e -> rendererKernel.setToneMappingAndGammaCorrectionLinear(), false, toggleGroupToneMapper);
-		final RadioMenuItem radioMenuItemToneMapperReinhard1 = JavaFX.newRadioMenuItem("Reinhard v.1", e -> rendererKernel.setToneMappingAndGammaCorrectionReinhard1(), false, toggleGroupToneMapper);
-		final RadioMenuItem radioMenuItemToneMapperReinhard2 = JavaFX.newRadioMenuItem("Reinhard v.2", e -> rendererKernel.setToneMappingAndGammaCorrectionReinhard2(), false, toggleGroupToneMapper);
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurve1 = JavaFX.newRadioMenuItem("Filmic Curve v.1", e -> rendererKernel.setToneMappingAndGammaCorrectionFilmicCurve1(), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurve2 = JavaFX.newRadioMenuItem("Filmic Curve v.2", e -> rendererKernel.setToneMappingAndGammaCorrectionFilmicCurve2(), toggleGroupToneMapper, true);
+		final RadioMenuItem radioMenuItemToneMapperLinear = JavaFX.newRadioMenuItem("Linear", e -> rendererKernel.setToneMappingAndGammaCorrectionLinear(), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperReinhard1 = JavaFX.newRadioMenuItem("Reinhard v.1", e -> rendererKernel.setToneMappingAndGammaCorrectionReinhard1(), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperReinhard2 = JavaFX.newRadioMenuItem("Reinhard v.2", e -> rendererKernel.setToneMappingAndGammaCorrectionReinhard2(), toggleGroupToneMapper, false);
 		
 		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurve1, radioMenuItemToneMapperFilmicCurve2, radioMenuItemToneMapperLinear, radioMenuItemToneMapperReinhard1, radioMenuItemToneMapperReinhard2);
 		
@@ -756,21 +756,21 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldX(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.scene.getSky().setX(newValue.floatValue());
+		this.scene.getSky().setSunDirectionWorldX(newValue.floatValue());
 		
 		this.rendererKernel.updateSky();
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldY(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.scene.getSky().setY(newValue.floatValue());
+		this.scene.getSky().setSunDirectionWorldY(newValue.floatValue());
 		
 		this.rendererKernel.updateSky();
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldZ(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.scene.getSky().setZ(newValue.floatValue());
+		this.scene.getSky().setSunDirectionWorldZ(newValue.floatValue());
 		
 		this.rendererKernel.updateSky();
 	}

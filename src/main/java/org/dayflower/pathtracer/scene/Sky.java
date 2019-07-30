@@ -24,8 +24,6 @@ import static org.dayflower.pathtracer.math.MathF.max;
 import static org.dayflower.pathtracer.math.MathF.saturate;
 import static org.dayflower.pathtracer.math.MathF.sin;
 
-import java.lang.reflect.Field;//TODO: Add Javadocs.
-
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.color.SpectralCurve;
 import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
@@ -37,7 +35,12 @@ import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.math.Vector3F;
 
-//TODO: Add Javadocs!
+/**
+ * This {@code Sky} class implements the Perez Sun and Sky Model.
+ * 
+ * @since 1.0.0
+ * @author J&#246;rgen Lundgren
+ */
 public final class Sky {
 	private static final float[] K_G_AMPLITUDES = {0.0F, 3.0F, 0.210F, 0.0F};
 	private static final float[] K_G_WAVELENGTHS = {759.0F, 760.0F, 770.0F, 771.0F};
@@ -76,119 +79,218 @@ public final class Sky {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Constructs a new {@code Sky} instance.
+	 */
 	public Sky() {
 		set();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@link Color} with the color of the sun.
+	 * 
+	 * @return a {@code Color} with the color of the sun
+	 */
 	public Color getSunColor() {
 		return this.sunColor;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the current {@link OrthoNormalBasis33F}.
+	 * 
+	 * @return the current {@code OrthoNormalBasis33F}
+	 */
 	public OrthoNormalBasis33F getOrthoNormalBasis() {
 		return this.orthoNormalBasis;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@link Point3F} with the sun origin.
+	 * 
+	 * @return a {@code Point3F} with the sun origin
+	 */
 	public Point3F getSunOrigin() {
 		return this.sunOrigin;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@link Vector3F} with the sun direction in local-space.
+	 * 
+	 * @return a {@code Vector3F} with the sun direction in local-space
+	 */
 	public Vector3F getSunDirection() {
 		return this.sunDirection;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns a {@link Vector3F} with the sun direction in world-space.
+	 * 
+	 * @return a {@code Vector3F} with the sun direction in world-space
+	 */
 	public Vector3F getSunDirectionWorld() {
 		return this.sunDirectionWorld;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Zenith relative luminance.
+	 * 
+	 * @return the Zenith relative luminance
+	 */
 	public double getZenithRelativeLuminance() {
 		return this.zenithRelativeLuminance;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Zenith X.
+	 * 
+	 * @return the Zenith X
+	 */
 	public double getZenithX() {
 		return this.zenithX;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Zenith Y.
+	 * 
+	 * @return the Zenith Y
+	 */
 	public double getZenithY() {
 		return this.zenithY;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Perez relative luminance.
+	 * 
+	 * @return the Perez relative luminance
+	 */
 	public double[] getPerezRelativeLuminance() {
 		return this.perezRelativeLuminance.clone();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Perez X.
+	 * 
+	 * @return the Perez X
+	 */
 	public double[] getPerezX() {
 		return this.perezX.clone();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Perez Y.
+	 * 
+	 * @return the Perez Y
+	 */
 	public double[] getPerezY() {
 		return this.perezY.clone();
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Jacobian.
+	 * 
+	 * @return the Jacobian
+	 */
 	public float getJacobian() {
 		return this.jacobian;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the Theta angle.
+	 * 
+	 * @return the Theta angle
+	 */
 	public float getTheta() {
 		return this.theta;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the turbidity.
+	 * 
+	 * @return the turbidity
+	 */
 	public float getTurbidity() {
 		return this.turbidity;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the column histogram.
+	 * 
+	 * @return the column histogram
+	 */
 	public float[] getColHistogram() {
 		return this.colHistogram;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the image histogram.
+	 * 
+	 * @return the image histogram
+	 */
 	public float[] getImageHistogram() {
 		return this.imageHistogram;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the image histogram height.
+	 * 
+	 * @return the image histogram height
+	 */
 	public int getImageHistogramHeight() {
 		return this.imageHistogramHeight;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the image histogram width.
+	 * 
+	 * @return the image histogram width
+	 */
 	public int getImageHistogramWidth() {
 		return this.imageHistogramWidth;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Returns the sample count.
+	 * 
+	 * @return the sample count
+	 */
 	public int getSamples() {
 		return this.samples;
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the sun and sky parameters.
+	 * <p>
+	 * Calling this method is equivalent to {@code set(new Vector3F(1.0F, 1.0F, 1.0F))}.
+	 */
 	public void set() {
 		set(new Vector3F(1.0F, 1.0F, 1.0F));
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the sun and sky parameters.
+	 * <p>
+	 * Calling this method is equivalent to {@code set(sunDirectionWorld, 2.0F)}.
+	 * <p>
+	 * If {@code sunDirectionWorld} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param sunDirectionWorld the sun direction in world-space
+	 * @throws NullPointerException thrown if, and only if, {@code sunDirectionWorld} is {@code null}
+	 */
 	public void set(final Vector3F sunDirectionWorld) {
 		set(sunDirectionWorld, 2.0F);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the sun and sky parameters.
+	 * <p>
+	 * If {@code sunDirectionWorld} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param sunDirectionWorld the sun direction in world-space
+	 * @param turbidity the turbidity
+	 * @throws NullPointerException thrown if, and only if, {@code sunDirectionWorld} is {@code null}
+	 */
 	public void set(final Vector3F sunDirectionWorld, final float turbidity) {
 		this.sunDirectionWorld = sunDirectionWorld.normalize();
 		this.turbidity = turbidity;
@@ -270,24 +372,40 @@ public final class Sky {
 		this.jacobian = (2.0F * PI * PI) / (w * h);
 	}
 	
-//	TODO: Add Javadocs.
+	/**
+	 * Sets the X-coordinate of the sun direction in world-space and updates the parameters.
+	 * 
+	 * @param x the new X-coordinate
+	 */
+	public void setSunDirectionWorldX(final float x) {
+		set(new Vector3F(x, this.sunDirectionWorld.y, this.sunDirectionWorld.z), this.turbidity);
+	}
+	
+	/**
+	 * Sets the Y-coordinate of the sun direction in world-space and updates the parameters.
+	 * 
+	 * @param y the new Y-coordinate
+	 */
+	public void setSunDirectionWorldY(final float y) {
+		set(new Vector3F(this.sunDirectionWorld.x, y, this.sunDirectionWorld.z), this.turbidity);
+	}
+	
+	/**
+	 * Sets the Z-coordinate of the sun direction in world-space and updates the parameters.
+	 * 
+	 * @param z the new Z-coordinate
+	 */
+	public void setSunDirectionWorldZ(final float z) {
+		set(new Vector3F(this.sunDirectionWorld.x, this.sunDirectionWorld.y, z), this.turbidity);
+	}
+	
+	/**
+	 * Sets the turbidity and updates the parameters.
+	 * 
+	 * @param turbidity the new turbidity
+	 */
 	public void setTurbidity(final float turbidity) {
 		set(this.sunDirectionWorld, turbidity);
-	}
-	
-//	TODO: Add Javadocs.
-	public void setX(final float x) {
-		set(new Vector3F(x, this.sunDirectionWorld.y, this.sunDirectionWorld.z).normalize(), this.turbidity);
-	}
-	
-//	TODO: Add Javadocs.
-	public void setY(final float y) {
-		set(new Vector3F(this.sunDirectionWorld.x, y, this.sunDirectionWorld.z).normalize(), this.turbidity);
-	}
-	
-//	TODO: Add Javadocs.
-	public void setZ(final float z) {
-		set(new Vector3F(this.sunDirectionWorld.x, this.sunDirectionWorld.y, z).normalize(), this.turbidity);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
