@@ -2428,7 +2428,7 @@ public final class RendererKernel extends AbstractKernel {
 			g = (gMaximum * (6.2F * gMaximum + 0.5F)) / (gMaximum * (6.2F * gMaximum + 1.7F) + 0.06F);
 			b = (bMaximum * (6.2F * bMaximum + 0.5F)) / (bMaximum * (6.2F * bMaximum + 1.7F) + 0.06F);
 		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2) {
-			final float exposure = 1.0F;
+			final float exposure = 0.5F;
 			
 			r *= exposure;
 			g *= exposure;

@@ -67,16 +67,14 @@ final class Scenes {
 	public static Scene getSceneByName(final File directory, final String name) {
 		switch(name) {
 			case "House_Scene":
-			case "House_Scene.scene":
 				return newHouseScene(directory);
+			case "Image_Scene":
+				return newImageScene(directory);
 			case "Material_Showcase_Scene":
-			case "Material_Showcase_Scene.scene":
 				return newMaterialShowcaseScene(directory);
 			case "Monkey_Scene":
-			case "Monkey_Scene.scene":
 				return newMonkeyScene(directory);
 			case "Terrain_Scene":
-			case "Terrain_Scene.scene":
 				return newTerrainScene();
 			default:
 				return newMaterialShowcaseScene(directory);
@@ -154,6 +152,31 @@ final class Scenes {
 		Scene scene = new Scene("House_Scene");
 		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(new LambertianMaterial(), textureAlbedoPlane, textureEmissionPlane, textureNormalPlane, 0.0F, 0.0F)));
 		scene.addPrimitives(primitives);
+		
+		return scene;
+	}
+	
+	public static Scene newImageScene(@SuppressWarnings("unused") final File directory) {
+		final Texture textureGroundAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture textureGroundEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
+//		final Texture textureMonkeyAlbedo = new ConstantTexture(Color.GRAY);
+//		final Texture textureMonkeyEmission = new ConstantTexture(Color.BLACK);
+//		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphereAlbedo = new BlendTexture(new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.5F, 16), new CheckerboardTexture(Color.GRAY, Color.RED), 0.5F);
+		final Texture textureSphereEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphereNormal = new ConstantTexture(Color.BLACK);
+		
+//		final Surface surface = new Surface(new LambertianMaterial(), textureMonkeyAlbedo, textureMonkeyEmission, textureMonkeyNormal, 0.0F, 0.0F);
+		
+//		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "smoothMonkey2.obj"), 100.0F, (groupName, materialName) -> surface, 0.0F, 100.0F, 0.0F);
+		
+		final
+		Scene scene = new Scene("Image_Scene");
+		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(new LambertianMaterial(), textureGroundAlbedo, textureGroundEmission, textureGroundNormal, 0.0F, 0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(-8.0F, 32.0F, 250.0F), 32.0F), new Surface(new ClearCoatMaterial(), textureSphereAlbedo, textureSphereEmission, textureSphereNormal, 0.0F, 0.0F)));
+//		scene.addPrimitives(primitives);
+		scene.getCamera().setEye(-8.75F, 42.0F, 332.6F);
 		
 		return scene;
 	}
@@ -660,36 +683,6 @@ final class Scenes {
 		scene.addShape(triangleFloor[1]);
 		scene.addShape(triangleRoof[0]);
 		scene.addShape(triangleRoof[1]);
-		
-		return scene;
-	}
-	*/
-	
-	/*
-	public static Scene newImageScene() {
-		final Texture textureGroundAlbedo = new ConstantTexture(Color.WHITE);
-		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
-		final Texture textureMonkeyAlbedo = new ConstantTexture(Color.GRAY);
-		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
-//		final Texture textureSphereAlbedo = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2.jpg")), 0.0F, 4.0F, 4.0F);
-//		final Texture textureSphereNormal = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
-		
-		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, textureMonkeyAlbedo, textureMonkeyNormal);
-		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surface, Dayflower.getModelFilename("smoothMonkey2.obj"), 100.0F);
-		
-		final List<Triangle> triangles = mesh.getTriangles();
-		
-		final
-		Scene scene = new Scene("Image_Scene");
-//		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureSphereAlbedo, textureSphereNormal), 32.0F, new Point3F(-8.0F, 32.0F, 250.0F)));
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, textureGroundAlbedo, textureGroundNormal), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
-		
-		for(final Triangle triangle : triangles) {
-			scene.addShape(triangle.translateY(100.0F));
-		}
-		
-		scene.getCamera().setEye(-8.75F, 42.0F, 332.6F);
 		
 		return scene;
 	}
