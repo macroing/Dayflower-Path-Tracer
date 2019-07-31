@@ -188,18 +188,6 @@ public abstract class AbstractApplication extends Application {
 		borderPane.setBottom(hBox);
 		borderPane.setLeft(tabPane);
 		
-		configureMenuBar(menuBar);
-		configureTabPane(tabPane);
-		configureStatusBar(hBox);
-		configureStage(stage);
-		
-		final Scene scene = new Scene(borderPane);
-		
-		stage.setResizable(false);
-		stage.setScene(scene);
-		stage.sizeToScene();
-		stage.show();
-		
 		final PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraPreInstance();
 		
 		final AtomicBoolean hasRequestedToExit = this.hasRequestedToExit;
@@ -217,6 +205,17 @@ public abstract class AbstractApplication extends Application {
 		imageView.setViewport(new Rectangle2D(0.0D, 0.0D, getKernelWidth(), getKernelHeight()));
 		
 		configurePixels(pixels);
+		configureMenuBar(menuBar);
+		configureTabPane(tabPane);
+		configureStatusBar(hBox);
+		configureStage(stage);
+		
+		final Scene scene = new Scene(borderPane);
+		
+		stage.setResizable(false);
+		stage.setScene(scene);
+		stage.sizeToScene();
+		stage.show();
 		
 		new AnimationTimer() {
 			@Override

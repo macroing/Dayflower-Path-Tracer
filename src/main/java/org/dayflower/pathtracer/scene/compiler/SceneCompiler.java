@@ -41,6 +41,7 @@ import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.TriangleMesh;
+import org.dayflower.pathtracer.scene.texture.BlendTexture;
 import org.dayflower.pathtracer.util.Arrays2;
 
 /**
@@ -169,7 +170,7 @@ public final class SceneCompiler {
 		final float[] spheres = doCompileSpheres(uniqueSpheres, point3FMappings);
 		final float[] surfaces = doCompileSurfaces(uniqueSurfaces, textureMappings);
 		final float[] terrains = doCompileTerrains(uniqueTerrains);
-		final float[] textures = doCompileTextures(uniqueTextures);
+		final float[] textures = doCompileTextures(uniqueTextures, textureMappings);
 		final float[] vector3Fs = doCompileVector3Fs(uniqueVector3Fs);
 		
 		final int[] boundingVolumeHierarchies = doCompileBoundingVolumeHierarchies(uniqueBoundingVolumeHierarchyRootNodes, point3FMappings, triangleMappings);
@@ -390,6 +391,36 @@ public final class SceneCompiler {
 			allTextures.add(textureAlbedo);
 			allTextures.add(textureEmission);
 			allTextures.add(textureNormal);
+			
+			if(textureAlbedo instanceof BlendTexture) {
+				final BlendTexture blendTexture = BlendTexture.class.cast(textureAlbedo);
+				
+				final Texture textureA = blendTexture.getTextureA();
+				final Texture textureB = blendTexture.getTextureB();
+				
+				allTextures.add(textureA);
+				allTextures.add(textureB);
+			}
+			
+			if(textureEmission instanceof BlendTexture) {
+				final BlendTexture blendTexture = BlendTexture.class.cast(textureEmission);
+				
+				final Texture textureA = blendTexture.getTextureA();
+				final Texture textureB = blendTexture.getTextureB();
+				
+				allTextures.add(textureA);
+				allTextures.add(textureB);
+			}
+			
+			if(textureNormal instanceof BlendTexture) {
+				final BlendTexture blendTexture = BlendTexture.class.cast(textureNormal);
+				
+				final Texture textureA = blendTexture.getTextureA();
+				final Texture textureB = blendTexture.getTextureB();
+				
+				allTextures.add(textureA);
+				allTextures.add(textureB);
+			}
 		}
 		
 		return allTextures;
@@ -682,8 +713,21 @@ public final class SceneCompiler {
 		return Arrays2.toFloatArray(terrains, terrain -> doCompileTerrain(terrain), 1);
 	}
 	
-	private static float[] doCompileTextures(final List<Texture> textures) {
-		return Arrays2.toFloatArray(textures, texture -> texture.toArray(), 1);
+	private static float[] doCompileTexture(final Texture texture, final Map<Texture, Integer> textureMappings) {
+		final float[] compiledTexture = texture.toArray();
+		
+		if(texture instanceof BlendTexture) {
+			final BlendTexture blendTexture = BlendTexture.class.cast(texture);
+			
+			compiledTexture[BlendTexture.RELATIVE_OFFSET_TEXTURE_A_OFFSET] = textureMappings.get(blendTexture.getTextureA()).intValue();
+			compiledTexture[BlendTexture.RELATIVE_OFFSET_TEXTURE_B_OFFSET] = textureMappings.get(blendTexture.getTextureB()).intValue();
+		}
+		
+		return compiledTexture;
+	}
+	
+	private static float[] doCompileTextures(final List<Texture> textures, final Map<Texture, Integer> textureMappings) {
+		return Arrays2.toFloatArray(textures, texture -> doCompileTexture(texture, textureMappings), 1);
 	}
 	
 	private static float[] doCompileVector3Fs(final List<Vector3F> vector3Fs) {

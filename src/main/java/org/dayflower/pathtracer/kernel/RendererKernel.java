@@ -18,7 +18,6 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -30,9 +29,10 @@ import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.Surface;
+import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
 import org.dayflower.pathtracer.scene.compiler.CompiledScene;
-import org.dayflower.pathtracer.scene.compiler.SceneCompiler;
+import org.dayflower.pathtracer.scene.loader.SceneLoader;
 import org.dayflower.pathtracer.scene.material.ClearCoatMaterial;
 import org.dayflower.pathtracer.scene.material.GlassMaterial;
 import org.dayflower.pathtracer.scene.material.LambertianMaterial;
@@ -43,6 +43,7 @@ import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.TriangleMesh;
+import org.dayflower.pathtracer.scene.texture.BlendTexture;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
@@ -57,6 +58,7 @@ import org.dayflower.pathtracer.util.FloatArrayThreadLocal;
  * @author J&#246;rgen Lundgren
  */
 public final class RendererKernel extends AbstractKernel {
+	private static final float COLOR_RECIPROCAL = 1.0F / 255.0F;
 	private static final float REFRACTIVE_INDEX_AIR = 1.0F;
 	private static final float REFRACTIVE_INDEX_GLASS = 1.5F;
 	private static final int BOOLEAN_FALSE = 0;
@@ -93,6 +95,7 @@ public final class RendererKernel extends AbstractKernel {
 	
 	private final Camera camera;
 	private final CompiledScene compiledScene;
+	private final Scene scene;
 	private final Sky sky;
 	private final ThreadLocal<float[]> colorTemporarySamplesThreadLocal;
 	private final ThreadLocal<float[]> raysThreadLocal;
@@ -181,22 +184,25 @@ public final class RendererKernel extends AbstractKernel {
 	/**
 	 * Constructs a new {@code RendererKernel} instance.
 	 * <p>
-	 * If either {@code camera}, {@code sky} or {@code compiledScene} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If {@code sceneLoader} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param width the width to use
 	 * @param height the height to use
-	 * @param camera the {@link Camera} to use
-	 * @param sky the {@link Sky} to use
-	 * @param compiledScene the {@link CompiledScene} to use
-	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code compiledScene} are {@code null}
+	 * @param sceneLoader the {@link SceneLoader} to use
+	 * @throws NullPointerException thrown if, and only if, {@code sceneLoader} is {@code null}
 	 */
-	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final CompiledScene compiledScene) {
+	public RendererKernel(final int width, final int height, final SceneLoader sceneLoader) {
 		final RGBColorSpace rGBColorSpace = RGBColorSpace.SRGB;
 		
-		this.camera = Objects.requireNonNull(camera, "camera == null");
+		final Scene scene = sceneLoader.loadScene();
+		
+		final CompiledScene compiledScene = sceneLoader.loadCompiledScene();
+		
+		this.camera = scene.getCamera();
 		this.camera.setArray(compiledScene.getCamera());
-		this.sky = Objects.requireNonNull(sky, "sky == null");
-		this.compiledScene = Objects.requireNonNull(compiledScene, "compiledScene == null");
+		this.compiledScene = compiledScene;
+		this.scene = scene;
+		this.sky = scene.getSky();
 		this.colorTemporarySamplesThreadLocal = new FloatArrayThreadLocal(SIZE_COLOR_RGB);
 		this.raysThreadLocal = new FloatArrayThreadLocal(SIZE_RAY);
 		
@@ -235,80 +241,48 @@ public final class RendererKernel extends AbstractKernel {
 		this.rendererPTRayDepthRussianRoulette = 5;
 		
 //		Initialize the sun and sky variables:
-		this.sunAndSkyColHistogram_$constant$ = sky.getColHistogram();
+		this.sunAndSkyColHistogram_$constant$ = this.sky.getColHistogram();
 		this.sunAndSkyColHistogramLength = this.sunAndSkyColHistogram_$constant$.length;
-		this.sunAndSkyImageHistogram_$constant$ = sky.getImageHistogram();
-		this.sunAndSkyImageHistogramHeight = sky.getImageHistogramHeight();
+		this.sunAndSkyImageHistogram_$constant$ = this.sky.getImageHistogram();
+		this.sunAndSkyImageHistogramHeight = this.sky.getImageHistogramHeight();
 		this.sunAndSkyIsActive = BOOLEAN_TRUE;
 		this.sunAndSkyIsShowingClouds = BOOLEAN_FALSE;
-		this.sunAndSkyJacobian = sky.getJacobian();
-		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
-		this.sunAndSkyOrthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
-		this.sunAndSkyOrthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
-		this.sunAndSkyOrthoNormalBasisVX = sky.getOrthoNormalBasis().v.x;
-		this.sunAndSkyOrthoNormalBasisVY = sky.getOrthoNormalBasis().v.y;
-		this.sunAndSkyOrthoNormalBasisVZ = sky.getOrthoNormalBasis().v.z;
-		this.sunAndSkyOrthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
-		this.sunAndSkyOrthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
-		this.sunAndSkyOrthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
-		this.sunAndSkyPerezRelativeLuminance_$constant$ = sky.getPerezRelativeLuminance();
-		this.sunAndSkyPerezX_$constant$ = sky.getPerezX();
-		this.sunAndSkyPerezY_$constant$ = sky.getPerezY();
-		this.sunAndSkySamples = sky.getSamples();
-		this.sunAndSkySunColorR = sky.getSunColor().r;
-		this.sunAndSkySunColorG = sky.getSunColor().g;
-		this.sunAndSkySunColorB = sky.getSunColor().b;
-		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
-		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
-		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
-		this.sunAndSkySunDirectionX = sky.getSunDirection().x;
-		this.sunAndSkySunDirectionY = sky.getSunDirection().y;
-		this.sunAndSkySunDirectionZ = sky.getSunDirection().z;
-		this.sunAndSkySunOriginX = sky.getSunOrigin().x;
-		this.sunAndSkySunOriginY = sky.getSunOrigin().y;
-		this.sunAndSkySunOriginZ = sky.getSunOrigin().z;
-		this.sunAndSkyTheta = sky.getTheta();
-		this.sunAndSkyTurbidity = sky.getTurbidity();
-		this.sunAndSkyZenithRelativeLuminance = sky.getZenithRelativeLuminance();
-		this.sunAndSkyZenithX = sky.getZenithX();
-		this.sunAndSkyZenithY = sky.getZenithY();
+		this.sunAndSkyJacobian = this.sky.getJacobian();
+		this.sunAndSkyOrthoNormalBasisUX = this.sky.getOrthoNormalBasis().u.x;
+		this.sunAndSkyOrthoNormalBasisUY = this.sky.getOrthoNormalBasis().u.y;
+		this.sunAndSkyOrthoNormalBasisUZ = this.sky.getOrthoNormalBasis().u.z;
+		this.sunAndSkyOrthoNormalBasisVX = this.sky.getOrthoNormalBasis().v.x;
+		this.sunAndSkyOrthoNormalBasisVY = this.sky.getOrthoNormalBasis().v.y;
+		this.sunAndSkyOrthoNormalBasisVZ = this.sky.getOrthoNormalBasis().v.z;
+		this.sunAndSkyOrthoNormalBasisWX = this.sky.getOrthoNormalBasis().w.x;
+		this.sunAndSkyOrthoNormalBasisWY = this.sky.getOrthoNormalBasis().w.y;
+		this.sunAndSkyOrthoNormalBasisWZ = this.sky.getOrthoNormalBasis().w.z;
+		this.sunAndSkyPerezRelativeLuminance_$constant$ = this.sky.getPerezRelativeLuminance();
+		this.sunAndSkyPerezX_$constant$ = this.sky.getPerezX();
+		this.sunAndSkyPerezY_$constant$ = this.sky.getPerezY();
+		this.sunAndSkySamples = this.sky.getSamples();
+		this.sunAndSkySunColorR = this.sky.getSunColor().r;
+		this.sunAndSkySunColorG = this.sky.getSunColor().g;
+		this.sunAndSkySunColorB = this.sky.getSunColor().b;
+		this.sunAndSkySunDirectionWorldX = this.sky.getSunDirectionWorld().x;
+		this.sunAndSkySunDirectionWorldY = this.sky.getSunDirectionWorld().y;
+		this.sunAndSkySunDirectionWorldZ = this.sky.getSunDirectionWorld().z;
+		this.sunAndSkySunDirectionX = this.sky.getSunDirection().x;
+		this.sunAndSkySunDirectionY = this.sky.getSunDirection().y;
+		this.sunAndSkySunDirectionZ = this.sky.getSunDirection().z;
+		this.sunAndSkySunOriginX = this.sky.getSunOrigin().x;
+		this.sunAndSkySunOriginY = this.sky.getSunOrigin().y;
+		this.sunAndSkySunOriginZ = this.sky.getSunOrigin().z;
+		this.sunAndSkyTheta = this.sky.getTheta();
+		this.sunAndSkyTurbidity = this.sky.getTurbidity();
+		this.sunAndSkyZenithRelativeLuminance = this.sky.getZenithRelativeLuminance();
+		this.sunAndSkyZenithX = this.sky.getZenithX();
+		this.sunAndSkyZenithY = this.sky.getZenithY();
 		
 		this.rays_$private$6 = new float[SIZE_RAY];
 		this.width = width;
 		this.height = height;
 		this.subSamples = new long[width * height];
-	}
-	
-	/**
-	 * Constructs a new {@code RendererKernel} instance.
-	 * <p>
-	 * If either {@code camera}, {@code sky} or {@code scene} are {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param width the width to use
-	 * @param height the height to use
-	 * @param camera the {@link Camera} to use
-	 * @param sky the {@link Sky} to use
-	 * @param scene the {@link Scene} to use
-	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code scene} are {@code null}
-	 */
-	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final Scene scene) {
-		this(width, height, camera, sky, new SceneCompiler().compile(scene));
-	}
-	
-	/**
-	 * Constructs a new {@code RendererKernel} instance.
-	 * <p>
-	 * If either {@code camera}, {@code sky} or {@code filename} are {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param width the width to use
-	 * @param height the height to use
-	 * @param camera the {@link Camera} to use
-	 * @param sky the {@link Sky} to use
-	 * @param filename the filename of the file to read from
-	 * @throws NullPointerException thrown if, and only if, either {@code camera}, {@code sky} or {@code filename} are {@code null}
-	 */
-	public RendererKernel(final int width, final int height, final Camera camera, final Sky sky, final String filename) {
-		this(width, height, camera, sky, CompiledScene.read(new File(Objects.requireNonNull(filename, "filename == null"))));
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -487,6 +461,15 @@ public final class RendererKernel extends AbstractKernel {
 		this.isResetRequired = true;
 		
 		return this;
+	}
+	
+	/**
+	 * Returns the {@link Scene} instance assigned to this {@code RendererKernel} instance.
+	 * 
+	 * @return the {@code Scene} instance assigned to this {@code RendererKernel} instance
+	 */
+	public Scene getScene() {
+		return this.scene;
 	}
 	
 	/**
@@ -1772,6 +1755,327 @@ public final class RendererKernel extends AbstractKernel {
 		return t;
 	}
 	
+	private int doGetTextureColor(final int texturesOffset) {
+		final int textureType = (int)(this.sceneTextures_$constant$[texturesOffset + Texture.RELATIVE_OFFSET_TYPE]);
+		
+		if(textureType == BlendTexture.TYPE) {
+			return doGetTextureColorFromBlendTexture(texturesOffset);
+		} else if(textureType == CheckerboardTexture.TYPE) {
+			return doGetTextureColorFromCheckerboardTexture(texturesOffset);
+		} else if(textureType == ConstantTexture.TYPE) {
+			return doGetTextureColorFromConstantTexture(texturesOffset);
+		} else if(textureType == FractionalBrownianMotionTexture.TYPE) {
+			return doGetTextureColorFromFractionalBrownianMotionTexture(texturesOffset);
+		} else if(textureType == ImageTexture.TYPE) {
+//			return doGetTextureColorFromImageTexture(texturesOffset);
+			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
+		} else if(textureType == SurfaceNormalTexture.TYPE) {
+			return doGetTextureColorFromSurfaceNormalTexture();
+		} else {
+			return 0;
+		}
+	}
+	
+	private int doGetTextureColor2(final int texturesOffset) {
+		final int textureType = (int)(this.sceneTextures_$constant$[texturesOffset + Texture.RELATIVE_OFFSET_TYPE]);
+		
+		if(textureType == CheckerboardTexture.TYPE) {
+			return doGetTextureColorFromCheckerboardTexture(texturesOffset);
+		} else if(textureType == ConstantTexture.TYPE) {
+			return doGetTextureColorFromConstantTexture(texturesOffset);
+		} else if(textureType == FractionalBrownianMotionTexture.TYPE) {
+			return doGetTextureColorFromFractionalBrownianMotionTexture(texturesOffset);
+		} else if(textureType == ImageTexture.TYPE) {
+//			return doGetTextureColorFromImageTexture(texturesOffset);
+			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
+		} else if(textureType == SurfaceNormalTexture.TYPE) {
+			return doGetTextureColorFromSurfaceNormalTexture();
+		} else {
+			return 0;
+		}
+	}
+	
+	private int doGetTextureColorFromBlendTexture(final int texturesOffset) {
+		final int textureAOffset = (int)(this.sceneTextures_$constant$[texturesOffset + BlendTexture.RELATIVE_OFFSET_TEXTURE_A_OFFSET]);
+		final int textureBOffset = (int)(this.sceneTextures_$constant$[texturesOffset + BlendTexture.RELATIVE_OFFSET_TEXTURE_B_OFFSET]);
+		
+		final float factor = this.sceneTextures_$constant$[texturesOffset + BlendTexture.RELATIVE_OFFSET_FACTOR];
+		
+		final int textureAColorRGB = doGetTextureColor2(textureAOffset);
+		final int textureBColorRGB = doGetTextureColor2(textureBOffset);
+		
+		final float textureAColorR = ((textureAColorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float textureAColorG = ((textureAColorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float textureAColorB = ((textureAColorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float textureBColorR = ((textureBColorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float textureBColorG = ((textureBColorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float textureBColorB = ((textureBColorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final int colorR = (int)(saturate((1.0F - factor) * textureAColorR + factor * textureBColorR, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int colorG = (int)(saturate((1.0F - factor) * textureAColorG + factor * textureBColorG, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int colorB = (int)(saturate((1.0F - factor) * textureAColorB + factor * textureBColorB, 0.0F, 1.0F) * 255.0F + 0.5F);
+		
+		final int colorRGB = ((colorR & 0xFF) << 16) | ((colorG & 0xFF) << 8) | (colorB & 0xFF);
+		
+		return colorRGB;
+	}
+	
+	private int doGetTextureColorFromCheckerboardTexture(final int texturesOffset) {
+//		Get the intersections offset:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+//		TODO: Write explanation!
+		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
+		final int offsetColor0 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_0;
+		final int offsetColor1 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_1;
+		
+//		TODO: Write explanation!
+		final float u = this.intersections_$local$[offsetUVCoordinates];
+		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
+		
+//		TODO: Write explanation!
+		final int color0RGB = (int)(this.sceneTextures_$constant$[offsetColor0]);
+		final int color1RGB = (int)(this.sceneTextures_$constant$[offsetColor1]);
+		
+		final float color0R = ((color0RGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float color0G = ((color0RGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float color0B = ((color0RGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float color1R = ((color1RGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float color1G = ((color1RGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float color1B = ((color1RGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+//		TODO: Write explanation!
+		final float sU = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_SCALE_U];
+		final float sV = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_SCALE_V];
+		
+//		TODO: Write explanation!
+		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_RADIANS_COS];
+		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_RADIANS_SIN];
+		
+//		TODO: Write explanation!
+		final float textureU = modulo((u * cosAngle - v * sinAngle) * sU);
+		final float textureV = modulo((v * cosAngle + u * sinAngle) * sV);
+		
+//		TODO: Write explanation!
+		final boolean isDarkU = textureU > 0.5F;
+		final boolean isDarkV = textureV > 0.5F;
+		final boolean isDark = isDarkU ^ isDarkV;
+		
+//		TODO: Write explanation!
+//		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
+		
+		if(color0R == color1R && color0G == color1G && color0B == color1B) {
+//			TODO: Write explanation!
+			final float textureMultiplier = isDark ? 0.8F : 1.2F;
+			
+//			TODO: Write explanation!
+			final int r = (int)(saturate(color0R * textureMultiplier, 0.0F, 1.0F) * 255.0F + 0.5F);
+			final int g = (int)(saturate(color0G * textureMultiplier, 0.0F, 1.0F) * 255.0F + 0.5F);
+			final int b = (int)(saturate(color0B * textureMultiplier, 0.0F, 1.0F) * 255.0F + 0.5F);
+			
+			final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+			
+			return rGB;
+		}
+		
+//		TODO: Write explanation!
+		final int r = (int)(saturate(isDark ? color0R : color1R, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int g = (int)(saturate(isDark ? color0G : color1G, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int b = (int)(saturate(isDark ? color0B : color1B, 0.0F, 1.0F) * 255.0F + 0.5F);
+		
+		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+		
+		return rGB;
+	}
+	
+	private int doGetTextureColorFromConstantTexture(final int texturesOffset) {
+//		Retrieve the R-, G- and B-component values of the texture:
+		final int colorRGB = (int)(this.sceneTextures_$constant$[texturesOffset + ConstantTexture.RELATIVE_OFFSET_COLOR]);
+		
+		return colorRGB;
+	}
+	
+	private int doGetTextureColorFromFractionalBrownianMotionTexture(final int texturesOffset) {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+		final int offsetSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+//		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
+		final int offsetAddend = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_ADDEND;
+		final int offsetMultiplier = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_MULTIPLIER;
+		final int offsetFrequency = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_FREQUENCY;
+		final int offsetGain = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_GAIN;
+		final int offsetOctaves = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_OCTAVES;
+		
+		final float x = this.intersections_$local$[offsetSurfaceIntersectionPoint];
+		final float y = this.intersections_$local$[offsetSurfaceIntersectionPoint + 1];
+		final float z = this.intersections_$local$[offsetSurfaceIntersectionPoint + 2];
+//		final float u = this.intersections_$local$[offsetUVCoordinates];
+//		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
+		
+		final int addendRGB = (int)(this.sceneTextures_$constant$[offsetAddend]);
+		final int multiplierRGB = (int)(this.sceneTextures_$constant$[offsetMultiplier]);
+		
+		final float addendR = ((addendRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float addendG = ((addendRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float addendB = ((addendRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float multiplierR = ((multiplierRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float multiplierG = ((multiplierRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float multiplierB = ((multiplierRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float frequency = this.sceneTextures_$constant$[offsetFrequency];
+		final float gain = this.sceneTextures_$constant$[offsetGain];
+		
+		final int octaves = (int)(this.sceneTextures_$constant$[offsetOctaves]);
+		
+		final float noise = simplexFractionalBrownianMotionXYZ(frequency, gain, 0.0F, 1.0F, octaves, x, y, z);
+//		final float noise = simplexFractionalBrownianMotionXY(frequency, gain, 0.0F, 1.0F, octaves, u, v);
+		
+		final int r = (int)(saturate(noise * multiplierR + addendR, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int g = (int)(saturate(noise * multiplierG + addendG, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int b = (int)(saturate(noise * multiplierB + addendB, 0.0F, 1.0F) * 255.0F + 0.5F);
+		
+		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+		
+		return rGB;
+	}
+	
+	private int doGetTextureColorFromImageTexture(final int texturesOffset) {
+//		Get the intersections offset:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+//		TODO: Write explanation!
+		final int offsetTextureCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
+		
+//		TODO: Write explanation!
+		final float u = this.intersections_$local$[offsetTextureCoordinates + 0];
+		final float v = this.intersections_$local$[offsetTextureCoordinates + 1];
+		
+//		TODO: Write explanation!
+		final float width = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
+		final float height = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
+		
+//		TODO: Write explanation!
+		final float scaleU = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
+		final float scaleV = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
+		
+//		TODO: Write explanation!
+		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
+		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
+		
+//		TODO: Write explanation!
+		final float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
+		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
+		
+//		TODO: Write explanation!
+		final int index = (int)((y * width + x));
+		
+		final int rGB = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index]);
+		
+		return rGB;
+	}
+	
+	private int doGetTextureColorFromImageTextureBilinearInterpolation(final int texturesOffset) {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
+		
+		final float u = this.intersections_$local$[offsetUVCoordinates];
+		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
+		final float width = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
+		final float height = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
+		final float scaleU = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
+		final float scaleV = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
+//		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
+//		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
+		
+//		float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
+//		float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
+		float x = u * scaleU;
+		float y = v * scaleV;
+		
+		x = x - (int)(x);
+		y = y - (int)(y);
+		
+		if(x < 0.0F) {
+			x++;
+		}
+		
+		if(y < 0.0F) {
+			y++;
+		}
+		
+		final float dx = x * (width - 1.0F);
+		final float dy = y * (height - 1.0F);
+		
+		final int ix0 = (int)(dx);
+		final int iy0 = (int)(dy);
+		final int ix1 = (int)(remainder(ix0 + 1, width));
+		final int iy1 = (int)(remainder(iy0 + 1, height));
+		
+		float u0 = dx - ix0;
+		float v0 = dy - iy0;
+		
+		u0 = u0 * u0 * (3.0F - (2.0F * u0));
+		v0 = v0 * v0 * (3.0F - (2.0F * v0));
+		
+		final float k00 = (1.0F - u0) * (1.0F - v0);
+		final float k01 = (1.0F - u0) * v0;
+		final float k10 = u0 * (1.0F - v0);
+		final float k11 = u0 * v0;
+		
+		final int index00 = iy0 * (int)(width) + ix0;
+		final int index01 = iy1 * (int)(width) + ix0;
+		final int index10 = iy0 * (int)(width) + ix1;
+		final int index11 = iy1 * (int)(width) + ix1;
+		
+		final int rGB00 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index00]);
+		final int rGB01 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index01]);
+		final int rGB10 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index10]);
+		final int rGB11 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index11]);
+		
+		final float r00 = ((rGB00 >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float g00 = ((rGB00 >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float b00 = ((rGB00 >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float r01 = ((rGB01 >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float g01 = ((rGB01 >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float b01 = ((rGB01 >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float r10 = ((rGB10 >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float g10 = ((rGB10 >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float b10 = ((rGB10 >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float r11 = ((rGB11 >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float g11 = ((rGB11 >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float b11 = ((rGB11 >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final int r = (int)(saturate(r00 * k00 + r01 * k01 + r10 * k10 + r11 * k11, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int g = (int)(saturate(g00 * k00 + g01 * k01 + g10 * k10 + g11 * k11, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int b = (int)(saturate(b00 * k00 + b01 * k01 + b10 * k10 + b11 * k11, 0.0F, 1.0F) * 255.0F + 0.5F);
+		
+		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+		
+		return rGB;
+	}
+	
+	private int doGetTextureColorFromSurfaceNormalTexture() {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+		final float surfaceNormalShadingX = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING];
+		final float surfaceNormalShadingY = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 1];
+		final float surfaceNormalShadingZ = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 2];
+		
+		final int r = (int)(saturate((surfaceNormalShadingX + 1.0F) * 0.5F, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int g = (int)(saturate((surfaceNormalShadingY + 1.0F) * 0.5F, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int b = (int)(saturate((surfaceNormalShadingZ + 1.0F) * 0.5F, 0.0F, 1.0F) * 255.0F + 0.5F);
+		
+		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+		
+		return rGB;
+	}
+	
 	private int doShaderPhongReflectionModel0(final boolean isCheckingForIntersections, final float pX, final float pY, final float pZ, final float nX, final float nY, final float nZ, final float vX, final float vY, final float vZ, final float albedoR, final float albedoG, final float albedoB, final float kaR, final float kaG, final float kaB, final float kdR, final float kdG, final float kdB, final float ksR, final float ksG, final float ksB, final float ns) {
 //		Initialize the color:
 		float r = 0.0F;
@@ -2713,301 +3017,6 @@ public final class RendererKernel extends AbstractKernel {
 		}
 	}
 	
-	private void doCalculateTextureColor(final int relativeOffsetTextures, final int primitivesOffset) {
-		final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
-		final int texturesOffset = (int)(this.sceneSurfaces_$constant$[surfacesOffset + relativeOffsetTextures]);
-		final int textureType = (int)(this.sceneTextures_$constant$[texturesOffset]);
-		
-		if(textureType == CheckerboardTexture.TYPE) {
-			doCalculateTextureColorForCheckerboardTexture(texturesOffset);
-		} else if(textureType == ConstantTexture.TYPE) {
-			doCalculateTextureColorForConstantTexture(texturesOffset);
-		} else if(textureType == FractionalBrownianMotionTexture.TYPE) {
-			doCalculateTextureColorForFractionalBrownianMotionTexture(texturesOffset);
-		} else if(textureType == ImageTexture.TYPE) {
-//			doCalculateTextureColorForImageTexture(texturesOffset);
-			doCalculateTextureColorForImageTextureBilinearInterpolation(texturesOffset);
-		} else if(textureType == SurfaceNormalTexture.TYPE) {
-			doCalculateTextureColorForSurfaceNormalTexture(texturesOffset);
-		}
-	}
-	
-	private void doCalculateTextureColorForCheckerboardTexture(final int texturesOffset) {
-//		Get the intersections offset:
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		
-//		TODO: Write explanation!
-		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
-		final int offsetColor0 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_0;
-		final int offsetColor1 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_1;
-		
-//		TODO: Write explanation!
-		final float u = this.intersections_$local$[offsetUVCoordinates];
-		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
-		
-//		TODO: Write explanation!
-		final int color0RGB = (int)(this.sceneTextures_$constant$[offsetColor0]);
-		final int color1RGB = (int)(this.sceneTextures_$constant$[offsetColor1]);
-		
-		final float color0R = ((color0RGB >> 16) & 0xFF) / 255.0F;
-		final float color0G = ((color0RGB >>  8) & 0xFF) / 255.0F;
-		final float color0B = ((color0RGB >>  0) & 0xFF) / 255.0F;
-		
-		final float color1R = ((color1RGB >> 16) & 0xFF) / 255.0F;
-		final float color1G = ((color1RGB >>  8) & 0xFF) / 255.0F;
-		final float color1B = ((color1RGB >>  0) & 0xFF) / 255.0F;
-		
-//		TODO: Write explanation!
-		final float sU = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_SCALE_U];
-		final float sV = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_SCALE_V];
-		
-//		TODO: Write explanation!
-		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_RADIANS_COS];
-		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_RADIANS_SIN];
-		
-//		TODO: Write explanation!
-		final float textureU = modulo((u * cosAngle - v * sinAngle) * sU);
-		final float textureV = modulo((v * cosAngle + u * sinAngle) * sV);
-		
-//		TODO: Write explanation!
-		final boolean isDarkU = textureU > 0.5F;
-		final boolean isDarkV = textureV > 0.5F;
-		final boolean isDark = isDarkU ^ isDarkV;
-		
-//		TODO: Write explanation!
-//		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
-		
-		if(color0R == color1R && color0G == color1G && color0B == color1B) {
-//			TODO: Write explanation!
-			final float textureMultiplier = isDark ? 0.8F : 1.2F;
-			
-//			TODO: Write explanation!
-			final float r = color0R * textureMultiplier;
-			final float g = color0G * textureMultiplier;
-			final float b = color0B * textureMultiplier;
-			
-//			TODO: Write explanation!
-			this.colorTemporarySamples_$private$3[0] = r;
-			this.colorTemporarySamples_$private$3[1] = g;
-			this.colorTemporarySamples_$private$3[2] = b;
-		} else {
-//			TODO: Write explanation!
-			final float r = isDark ? color0R : color1R;
-			final float g = isDark ? color0G : color1G;
-			final float b = isDark ? color0B : color1B;
-			
-//			TODO: Write explanation!
-			this.colorTemporarySamples_$private$3[0] = r;
-			this.colorTemporarySamples_$private$3[1] = g;
-			this.colorTemporarySamples_$private$3[2] = b;
-		}
-	}
-	
-	private void doCalculateTextureColorForConstantTexture(final int texturesOffset) {
-//		Retrieve the R-, G- and B-component values of the texture:
-		final int colorRGB = (int)(this.sceneTextures_$constant$[texturesOffset + ConstantTexture.RELATIVE_OFFSET_COLOR]);
-		
-		final float colorR = ((colorRGB >> 16) & 0xFF) / 255.0F;
-		final float colorG = ((colorRGB >>  8) & 0xFF) / 255.0F;
-		final float colorB = ((colorRGB >>  0) & 0xFF) / 255.0F;
-		
-//		Update the colorTemporarySamples_$private$3 array with the color of the texture:
-		this.colorTemporarySamples_$private$3[0] = colorR;
-		this.colorTemporarySamples_$private$3[1] = colorG;
-		this.colorTemporarySamples_$private$3[2] = colorB;
-	}
-	
-	private void doCalculateTextureColorForFractionalBrownianMotionTexture(final int texturesOffset) {
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		
-		final int offsetSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-//		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
-		final int offsetAddend = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_ADDEND;
-		final int offsetMultiplier = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_MULTIPLIER;
-		final int offsetFrequency = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_FREQUENCY;
-		final int offsetGain = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_GAIN;
-		final int offsetOctaves = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_OCTAVES;
-		
-		final float x = this.intersections_$local$[offsetSurfaceIntersectionPoint];
-		final float y = this.intersections_$local$[offsetSurfaceIntersectionPoint + 1];
-		final float z = this.intersections_$local$[offsetSurfaceIntersectionPoint + 2];
-//		final float u = this.intersections_$local$[offsetUVCoordinates];
-//		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
-		
-		final int addendRGB = (int)(this.sceneTextures_$constant$[offsetAddend]);
-		final int multiplierRGB = (int)(this.sceneTextures_$constant$[offsetMultiplier]);
-		
-		final float addendR = ((addendRGB >> 16) & 0xFF) / 255.0F;
-		final float addendG = ((addendRGB >> 8) & 0xFF) / 255.0F;
-		final float addendB = (addendRGB & 0xFF) / 255.0F;
-		
-		final float multiplierR = ((multiplierRGB >> 16) & 0xFF) / 255.0F;
-		final float multiplierG = ((multiplierRGB >> 8) & 0xFF) / 255.0F;
-		final float multiplierB = (multiplierRGB & 0xFF) / 255.0F;
-		
-		final float frequency = this.sceneTextures_$constant$[offsetFrequency];
-		final float gain = this.sceneTextures_$constant$[offsetGain];
-		
-		final int octaves = (int)(this.sceneTextures_$constant$[offsetOctaves]);
-		
-		final float noise = simplexFractionalBrownianMotionXYZ(frequency, gain, 0.0F, 1.0F, octaves, x, y, z);
-//		final float noise = simplexFractionalBrownianMotionXY(frequency, gain, 0.0F, 1.0F, octaves, u, v);
-		
-		final float r = saturate(noise * multiplierR + addendR, 0.0F, 1.0F);
-		final float g = saturate(noise * multiplierG + addendG, 0.0F, 1.0F);
-		final float b = saturate(noise * multiplierB + addendB, 0.0F, 1.0F);
-		
-		this.colorTemporarySamples_$private$3[0] = r;
-		this.colorTemporarySamples_$private$3[1] = g;
-		this.colorTemporarySamples_$private$3[2] = b;
-	}
-	
-	private void doCalculateTextureColorForImageTexture(final int texturesOffset) {
-//		Get the intersections offset:
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		
-//		TODO: Write explanation!
-		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
-		
-//		TODO: Write explanation!
-		final float u = this.intersections_$local$[offsetUVCoordinates];
-		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
-		
-//		TODO: Write explanation!
-		final float width = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
-		final float height = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
-		
-//		TODO: Write explanation!
-		final float scaleU = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
-		final float scaleV = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
-		
-//		TODO: Write explanation!
-		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
-		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
-		
-//		TODO: Write explanation!
-		final float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
-		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
-		
-//		TODO: Write explanation!
-		final int index = (int)((y * width + x));
-		
-		final float color = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index];
-		
-		final int rGB = (int)(color);
-		
-		final float r = ((rGB >> 16) & 0xFF) / 255.0F;
-		final float g = ((rGB >> 8) & 0xFF) / 255.0F;
-		final float b = (rGB & 0xFF) / 255.0F;
-		
-//		TODO: Write explanation!
-		this.colorTemporarySamples_$private$3[0] = r;
-		this.colorTemporarySamples_$private$3[1] = g;
-		this.colorTemporarySamples_$private$3[2] = b;
-	}
-	
-	private void doCalculateTextureColorForImageTextureBilinearInterpolation(final int texturesOffset) {
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
-		
-		final float u = this.intersections_$local$[offsetUVCoordinates];
-		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
-		final float width = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
-		final float height = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
-		final float scaleU = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
-		final float scaleV = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
-//		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
-//		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
-		
-//		float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
-//		float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
-		float x = u * scaleU;
-		float y = v * scaleV;
-		
-		x = x - (int)(x);
-		y = y - (int)(y);
-		
-		if(x < 0.0F) {
-			x++;
-		}
-		
-		if(y < 0.0F) {
-			y++;
-		}
-		
-		final float dx = x * (width - 1.0F);
-		final float dy = y * (height - 1.0F);
-		
-		final int ix0 = (int)(dx);
-		final int iy0 = (int)(dy);
-		final int ix1 = (int)(remainder(ix0 + 1, width));
-		final int iy1 = (int)(remainder(iy0 + 1, height));
-		
-		float u0 = dx - ix0;
-		float v0 = dy - iy0;
-		
-		u0 = u0 * u0 * (3.0F - (2.0F * u0));
-		v0 = v0 * v0 * (3.0F - (2.0F * v0));
-		
-		final float k00 = (1.0F - u0) * (1.0F - v0);
-		final float k01 = (1.0F - u0) * v0;
-		final float k10 = u0 * (1.0F - v0);
-		final float k11 = u0 * v0;
-		
-		final int index00 = iy0 * (int)(width) + ix0;
-		final int index01 = iy1 * (int)(width) + ix0;
-		final int index10 = iy0 * (int)(width) + ix1;
-		final int index11 = iy1 * (int)(width) + ix1;
-		
-		final int rGB00 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index00]);
-		final int rGB01 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index01]);
-		final int rGB10 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index10]);
-		final int rGB11 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index11]);
-		
-		final float r00 = ((rGB00 >> 16) & 0xFF) / 255.0F;
-		final float g00 = ((rGB00 >> 8) & 0xFF) / 255.0F;
-		final float b00 = (rGB00 & 0xFF) / 255.0F;
-		
-		final float r01 = ((rGB01 >> 16) & 0xFF) / 255.0F;
-		final float g01 = ((rGB01 >> 8) & 0xFF) / 255.0F;
-		final float b01 = (rGB01 & 0xFF) / 255.0F;
-		
-		final float r10 = ((rGB10 >> 16) & 0xFF) / 255.0F;
-		final float g10 = ((rGB10 >> 8) & 0xFF) / 255.0F;
-		final float b10 = (rGB10 & 0xFF) / 255.0F;
-		
-		final float r11 = ((rGB11 >> 16) & 0xFF) / 255.0F;
-		final float g11 = ((rGB11 >> 8) & 0xFF) / 255.0F;
-		final float b11 = (rGB11 & 0xFF) / 255.0F;
-		
-		final float r = r00 * k00 + r01 * k01 + r10 * k10 + r11 * k11;
-		final float g = g00 * k00 + g01 * k01 + g10 * k10 + g11 * k11;
-		final float b = b00 * k00 + b01 * k01 + b10 * k10 + b11 * k11;
-		
-		this.colorTemporarySamples_$private$3[0] = r;
-		this.colorTemporarySamples_$private$3[1] = g;
-		this.colorTemporarySamples_$private$3[2] = b;
-	}
-	
-	private void doCalculateTextureColorForSurfaceNormalTexture(@SuppressWarnings("unused") final int texturesOffset) {
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		
-//		TODO: Add support for tangent space. This requires the Ortho Normal Basis (Tangent vectors). The Ortho Normal Basis probably requires object-spaces (at least for simplicity).
-//		final float isTangentSpace = this.textures[texturesOffset + CompiledScene.SURFACE_NORMAL_TEXTURE_RELATIVE_OFFSET_IS_TANGENT_SPACE];
-		
-		final float surfaceNormalShadingX = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING];
-		final float surfaceNormalShadingY = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 1];
-		final float surfaceNormalShadingZ = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 2];
-		
-		final float r = (surfaceNormalShadingX + 1.0F) * 0.5F;
-		final float g = (surfaceNormalShadingY + 1.0F) * 0.5F;
-		final float b = (surfaceNormalShadingZ + 1.0F) * 0.5F;
-		
-		this.colorTemporarySamples_$private$3[0] = r;
-		this.colorTemporarySamples_$private$3[1] = g;
-		this.colorTemporarySamples_$private$3[2] = b;
-	}
-	
 	private void doFill(final int x, final int y, final Color color) {
 //		Calculate the pixel index:
 		final int index = (y * this.width + x) * SIZE_PIXEL;
@@ -3110,21 +3119,24 @@ public final class RendererKernel extends AbstractKernel {
 			final float surfaceNormalShadingY = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
 			final float surfaceNormalShadingZ = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
 			
+			final int textureOffsetAlbedo = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET]);
+			final int textureOffsetEmission = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_TEXTURE_EMISSION_OFFSET]);
+			
 //			Calculate the albedo texture color for the intersected primitive:
-			doCalculateTextureColor(Surface.RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET, primitivesOffset);
+			final int albedoColorRGB = doGetTextureColor(textureOffsetAlbedo);
 			
 //			Get the color of the primitive from the albedo texture color that was looked up:
-			float albedoColorR = this.colorTemporarySamples_$private$3[0];
-			float albedoColorG = this.colorTemporarySamples_$private$3[1];
-			float albedoColorB = this.colorTemporarySamples_$private$3[2];
+			float albedoColorR = ((albedoColorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+			float albedoColorG = ((albedoColorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+			float albedoColorB = ((albedoColorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
 			
 //			Calculate the emission texture color for the intersected primitive:
-			doCalculateTextureColor(Surface.RELATIVE_OFFSET_TEXTURE_EMISSION_OFFSET, primitivesOffset);
+			final int emissionColorRGB = doGetTextureColor(textureOffsetEmission);
 			
 //			Get the color of the primitive from the emission texture color that was looked up:
-			float emissionColorR = this.colorTemporarySamples_$private$3[0];
-			float emissionColorG = this.colorTemporarySamples_$private$3[1];
-			float emissionColorB = this.colorTemporarySamples_$private$3[2];
+			float emissionColorR = ((emissionColorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+			float emissionColorG = ((emissionColorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+			float emissionColorB = ((emissionColorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
 			
 //			Add the current radiance multiplied by the emission of the intersected primitive to the current pixel color:
 			pixelColorR += radianceMultiplierR * emissionColorR;
@@ -3609,9 +3621,9 @@ public final class RendererKernel extends AbstractKernel {
 			final float z1 = z0 * scaleReciprocal;
 			
 //			Compute the noise given the X-, Y- and Z-component values:
-			final float noiseX = simplexFractionalBrownianMotionXYZ(scale, 0.5F, -0.26F, 0.26F, 16, x1, y1, z1);//perlinNoiseXYZ(x1, y1, z1);
-			final float noiseY = simplexFractionalBrownianMotionXYZ(scale, 0.5F, -0.26F, 0.26F, 16, y1, z1, x1);//perlinNoiseXYZ(y1, z1, x1);
-			final float noiseZ = simplexFractionalBrownianMotionXYZ(scale, 0.5F, -0.26F, 0.26F, 16, z1, x1, y1);//perlinNoiseXYZ(z1, x1, y1);
+			final float noiseX = simplexFractionalBrownianMotionXYZ(scale, 0.5F, -0.26F, 0.26F, 16, x1, y1, z1);
+			final float noiseY = simplexFractionalBrownianMotionXYZ(scale, 0.5F, -0.26F, 0.26F, 16, y1, z1, x1);
+			final float noiseZ = simplexFractionalBrownianMotionXYZ(scale, 0.5F, -0.26F, 0.26F, 16, z1, x1, y1);
 			
 //			Calculate the surface normal:
 			final float surfaceNormal0X = this.intersections_$local$[offsetIntersectionSurfaceNormalShading];
@@ -3643,12 +3655,12 @@ public final class RendererKernel extends AbstractKernel {
 		
 		if(this.isNormalMapping == 1 && textureType == ImageTexture.TYPE) {
 //			Calculate the texture color:
-			doCalculateTextureColorForImageTexture(texturesOffset);
+			final int rGB = doGetTextureColorFromImageTexture(texturesOffset);
 			
 //			Retrieve the R-, G- and B-component values:
-			final float r = 2.0F * this.colorTemporarySamples_$private$3[0] - 1.0F;
-			final float g = 2.0F * this.colorTemporarySamples_$private$3[1] - 1.0F;
-			final float b = 2.0F * this.colorTemporarySamples_$private$3[2] - 1.0F;
+			final float r = 2.0F * (((rGB >> 16) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
+			final float g = 2.0F * (((rGB >>  8) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
+			final float b = 2.0F * (((rGB >>  0) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
 			
 //			Retrieve the offset of the surface normal in the intersections array:
 			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
@@ -3768,6 +3780,9 @@ public final class RendererKernel extends AbstractKernel {
 //		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
 		final int primitivesOffset = (int)(this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET]);
 		
+//		Retrieve the offset to the surfaces array for the given shape:
+		final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
+		
 		this.primitiveOffsetsForPrimaryRay[getGlobalId()] = primitivesOffset;
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
@@ -3788,13 +3803,15 @@ public final class RendererKernel extends AbstractKernel {
 			return;
 		}
 		
+		final int textureOffsetAlbedo = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET]);
+		
 //		Calculate the albedo texture color for the intersected shape:
-		doCalculateTextureColor(Surface.RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET, primitivesOffset);
+		final int albedoColorRGB = doGetTextureColor(textureOffsetAlbedo);
 		
 //		Get the color of the shape from the albedo texture color that was looked up:
-		float albedoColorR = this.colorTemporarySamples_$private$3[0];
-		float albedoColorG = this.colorTemporarySamples_$private$3[1];
-		float albedoColorB = this.colorTemporarySamples_$private$3[2];
+		float albedoColorR = ((albedoColorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		float albedoColorG = ((albedoColorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		float albedoColorB = ((albedoColorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
 		
 //		Retrieve the offsets of the surface intersection point and the surface normal in the intersections array:
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
@@ -3813,9 +3830,9 @@ public final class RendererKernel extends AbstractKernel {
 		final int colorRGB = doShaderPhongReflectionModel0(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
 //		final int colorRGB = doShaderPhongReflectionModel1(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
 		
-		pixelColorR = ((colorRGB >> 16) & 0xFF) / 255.0F;
-		pixelColorG = ((colorRGB >>  8) & 0xFF) / 255.0F;
-		pixelColorB = ((colorRGB >>  0) & 0xFF) / 255.0F;
+		pixelColorR = ((colorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		pixelColorG = ((colorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		pixelColorB = ((colorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
 		
 //		Update the current pixel color:
 		this.colorCurrentSamples_$local$[pixelIndex + 0] = pixelColorR;
@@ -3876,9 +3893,9 @@ public final class RendererKernel extends AbstractKernel {
 				final int colorRGB = doShaderPhongReflectionModel0(false, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalNormalizedX, surfaceNormalNormalizedY, surfaceNormalNormalizedZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
 //				final int colorRGB = doShaderPhongReflectionModel1(false, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalNormalizedX, surfaceNormalNormalizedY, surfaceNormalNormalizedZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
 				
-				pixelColorR = ((colorRGB >> 16) & 0xFF) / 255.0F;
-				pixelColorG = ((colorRGB >> 8) & 0xFF) / 255.0F;
-				pixelColorB = (colorRGB & 0xFF) / 255.0F;
+				pixelColorR = ((colorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+				pixelColorG = ((colorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+				pixelColorB = ((colorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
 				
 				t = maxT;
 			}
@@ -3963,13 +3980,15 @@ public final class RendererKernel extends AbstractKernel {
 //			Retrieve the material type of the intersected primitive:
 			final int material = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
+			final int textureOffsetAlbedo = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET]);
+			
 //			Calculate the albedo texture color for the intersected primitive:
-			doCalculateTextureColor(Surface.RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET, primitivesOffset);
+			final int albedoColorRGB = doGetTextureColor(textureOffsetAlbedo);
 			
 //			Get the color of the shape from the albedo texture color that was looked up:
-			float albedoColorR = this.colorTemporarySamples_$private$3[0];
-			float albedoColorG = this.colorTemporarySamples_$private$3[1];
-			float albedoColorB = this.colorTemporarySamples_$private$3[2];
+			float albedoColorR = ((albedoColorRGB >> 16) & 0xFF) / 255.0F;
+			float albedoColorG = ((albedoColorRGB >>  8) & 0xFF) / 255.0F;
+			float albedoColorB = ((albedoColorRGB >>  0) & 0xFF) / 255.0F;
 			
 //			Retrieve the offsets of the surface intersection point and the surface normal in the intersections array:
 			final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;

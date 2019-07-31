@@ -1,6 +1,7 @@
 2019-07-31  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* ADD:		All public API:s have been fully documented with Javadocs. Improvements may of course still be done over time.
+	* ADD:		A new BlendTexture class has been added. Its constructors take two Textures as parameter arguments. When rendering, they are blended together. These two Textures cannot themselves be BlendTextures, however. This restriction might be fixed in a future version.
 	* CHANGE:	The Material API has been changed. Previously the Material type was an enum. Now it is an interface and we have five implementations of it so far.
 
 2019-07-26  Jörgen Lundgren  <joergen.lundgren@macroing.org>

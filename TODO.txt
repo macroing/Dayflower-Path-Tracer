@@ -1,0 +1,18 @@
+Renderer:
+
+	* ADD:		Add a new version of the renderer that uses the API:s of Dayflower and runs on the CPU. This would make it easier to test things out, before adding them to the GPU-renderer.
+
+Scene:
+
+	* ADD:		Add a text format to define scenes, so scenes do not have to be hard-coded and compiled.
+	* CHANGE:	Make it possible to load a scene while the program is running. Then it would be possible to add a scene switch to the GUI.
+
+Shape:
+
+	* ADD:		Add a Cube class and implement it.
+	* ADD:		Add a Disk class and implement it.
+	* ADD:		Add a Torus class and implement it.
+
+Texture:
+
+	* CHANGE:	Make it possible to blend more than two Textures together. Maybe multiple layers. A BlendTexture with a BlendTexture as parameter argument might not be possible, because of recursion. But a BlendTexture that has a list of Textures and factors could work.

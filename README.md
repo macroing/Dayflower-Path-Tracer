@@ -49,6 +49,7 @@ Supported Features
 | Shape                  | Terrain                                                    |
 | Shape                  | Triangle                                                   |
 | Shape                  | Triangle Mesh                                              |
+| Texture                | Blend                                                      |
 | Texture                | Checkerboard                                               |
 | Texture                | Constant                                                   |
 | Texture                | Fractional Brownian Motion                                 |

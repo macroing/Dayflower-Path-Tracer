@@ -41,9 +41,9 @@ public final class ConstantTexture implements Texture {
 	public static final int SIZE = 3;
 	
 	/**
-	 * The type number associated with a {@code ConstantTexture}. The number is {@code 2}.
+	 * The type number associated with a {@code ConstantTexture}. The number is {@code 3}.
 	 */
-	public static final int TYPE = 2;
+	public static final int TYPE = 3;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

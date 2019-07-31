@@ -40,9 +40,9 @@ public final class SurfaceNormalTexture implements Texture {
 	public static final int SIZE = 3;
 	
 	/**
-	 * The type number associated with a {@code SurfaceNormalTexture}. The number is {@code 4}.
+	 * The type number associated with a {@code SurfaceNormalTexture}. The number is {@code 6}.
 	 */
-	public static final int TYPE = 4;
+	public static final int TYPE = 6;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

@@ -70,9 +70,9 @@ public final class CheckerboardTexture implements Texture {
 	public static final int SIZE = 8;
 	
 	/**
-	 * The type number associated with a {@code CheckerboardTexture}. The number is {@code 1}.
+	 * The type number associated with a {@code CheckerboardTexture}. The number is {@code 2}.
 	 */
-	public static final int TYPE = 1;
+	public static final int TYPE = 2;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

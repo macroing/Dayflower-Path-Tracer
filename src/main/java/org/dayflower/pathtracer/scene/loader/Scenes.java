@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.main;
+package org.dayflower.pathtracer.scene.loader;
 
 import java.io.File;
 import java.util.HashMap;
@@ -37,6 +37,7 @@ import org.dayflower.pathtracer.scene.material.ReflectionMaterial;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
+import org.dayflower.pathtracer.scene.texture.BlendTexture;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
@@ -51,28 +52,40 @@ final class Scenes {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public static Scene getSceneByName(final String name) {
+	public static File getModelFile(final File directory, final String name) {
+		return new File(getModelFilename(directory, name));
+	}
+	
+	public static File getSceneFile(final File directory, final Scene scene) {
+		return new File(getSceneFilename(directory, scene));
+	}
+	
+	public static File getTextureFile(final File directory, final String name) {
+		return new File(getTextureFilename(directory, name));
+	}
+	
+	public static Scene getSceneByName(final File directory, final String name) {
 		switch(name) {
 			case "House_Scene":
 			case "House_Scene.scene":
-				return newHouseScene();
+				return newHouseScene(directory);
 			case "Material_Showcase_Scene":
 			case "Material_Showcase_Scene.scene":
-				return newMaterialShowcaseScene();
+				return newMaterialShowcaseScene(directory);
 			case "Monkey_Scene":
 			case "Monkey_Scene.scene":
-				return newMonkeyScene();
+				return newMonkeyScene(directory);
 			case "Terrain_Scene":
 			case "Terrain_Scene.scene":
 				return newTerrainScene();
 			default:
-				return newMaterialShowcaseScene();
+				return newMaterialShowcaseScene(directory);
 		}
 	}
 	
-	public static Scene newHouseScene() {
+	public static Scene newHouseScene(final File directory) {
 //		Ground:
-		final Texture textureAlbedoPlane = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture textureAlbedoPlane = ImageTexture.load(new File(getTextureFilename(directory, "Texture_2.png")), 0.0F, 0.008F, 0.008F);
 		final Texture textureEmissionPlane = new ConstantTexture(Color.BLACK);
 		final Texture textureNormalPlane = new ConstantTexture(Color.BLACK);
 		
@@ -135,7 +148,7 @@ final class Scenes {
 		surfaces.put("20___Default", surface_20___Default);
 		surfaces.put("double_sopha_wood_right_texture", surface_double_sopha_wood_right_texture);
 		
-		final List<Primitive> primitives = ObjectLoader.load(Dayflower.getModelFilename("house interior.obj"), 1.0F, (groupName, materialName) -> surfaces.getOrDefault(materialName, surface), 0.0F, 10.0F, 0.0F);
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "house interior.obj"), 1.0F, (groupName, materialName) -> surfaces.getOrDefault(materialName, surface), 0.0F, 10.0F, 0.0F);
 		
 		final
 		Scene scene = new Scene("House_Scene");
@@ -145,7 +158,7 @@ final class Scenes {
 		return scene;
 	}
 	
-	public static Scene newMaterialShowcaseScene() {
+	public static Scene newMaterialShowcaseScene(final File directory) {
 //		Ground:
 		final Texture texturePlaneAlbedo = new ConstantTexture(Color.GRAY);
 		final Texture texturePlaneEmission = new ConstantTexture(Color.BLACK);
@@ -183,20 +196,23 @@ final class Scenes {
 		final Texture textureSphere08Albedo = new FractionalBrownianMotionTexture(new Color(0.5F, 0.05F, 0.05F), Color.WHITE, 0.8F, 0.5F, 16);
 		final Texture textureSphere08Emission = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere08Normal = new ConstantTexture(Color.BLACK);
-		final Texture textureSphere09Albedo = ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 1.0F, 1.0F);
+		final Texture textureSphere09Albedo = ImageTexture.load(new File(getTextureFilename(directory, "Texture_2.png")), 0.0F, 1.0F, 1.0F);
 		final Texture textureSphere09Emission = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere09Normal = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere10Albedo = new SurfaceNormalTexture();
 		final Texture textureSphere10Emission = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere10Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere11Albedo = new BlendTexture(new CheckerboardTexture(Color.GRAY, Color.WHITE), new SurfaceNormalTexture(), 0.5F);
+		final Texture textureSphere11Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere11Normal = new ConstantTexture(Color.BLACK);
 		
 //		Normal Mapping showcase:
-		final Texture textureSphere11Albedo = new ConstantTexture(Color.GRAY);
-		final Texture textureSphere11Emission = new ConstantTexture(Color.BLACK);
-		final Texture textureSphere11Normal = ImageTexture.load(new File(Dayflower.getTextureFilename("bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
-		final Texture textureSphere12Albedo = new ConstantTexture(Color.WHITE);
+		final Texture textureSphere12Albedo = new ConstantTexture(Color.GRAY);
 		final Texture textureSphere12Emission = new ConstantTexture(Color.BLACK);
-		final Texture textureSphere12Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere12Normal = ImageTexture.load(new File(getTextureFilename(directory, "bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
+		final Texture textureSphere13Albedo = new ConstantTexture(Color.WHITE);
+		final Texture textureSphere13Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere13Normal = new ConstantTexture(Color.BLACK);
 		
 		final
 		Scene scene = new Scene("Material_Showcase_Scene");
@@ -215,16 +231,17 @@ final class Scenes {
 		scene.addPrimitive(new Primitive(new Sphere(new Point3F(360.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere08Albedo, textureSphere08Emission, textureSphere08Normal, 0.0F,  0.0F)));
 		scene.addPrimitive(new Primitive(new Sphere(new Point3F(400.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere09Albedo, textureSphere09Emission, textureSphere09Normal, 0.0F,  0.0F)));
 		scene.addPrimitive(new Primitive(new Sphere(new Point3F(440.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere10Albedo, textureSphere10Emission, textureSphere10Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(480.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere11Albedo, textureSphere11Emission, textureSphere11Normal, 0.0F,  0.0F)));
 		
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(520.0F,  16.5F, 20.0F),  16.5F), new Surface(new ReflectionMaterial(), textureSphere11Albedo, textureSphere11Emission, textureSphere11Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(560.0F,  16.5F, 20.0F),  16.5F), new Surface(new GlassMaterial(),      textureSphere12Albedo, textureSphere12Emission, textureSphere12Normal, 1.0F, 16.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(560.0F,  16.5F, 20.0F),  16.5F), new Surface(new ReflectionMaterial(), textureSphere12Albedo, textureSphere12Emission, textureSphere12Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(600.0F,  16.5F, 20.0F),  16.5F), new Surface(new GlassMaterial(),      textureSphere13Albedo, textureSphere13Emission, textureSphere13Normal, 1.0F, 16.0F)));
 		
 		scene.getCamera().setEye(295.0F, 42.0F, 332.6F);
 		
 		return scene;
 	}
 	
-	public static Scene newMonkeyScene() {
+	public static Scene newMonkeyScene(final File directory) {
 		final Texture textureGroundAlbedo = new ConstantTexture(new Color(135.0F / 255.0F, 206.0F / 255.0F, 235.0F / 255.0F));
 		final Texture textureGroundEmission = new ConstantTexture(Color.BLACK);
 		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
@@ -234,7 +251,7 @@ final class Scenes {
 		
 		final Surface surface = new Surface(new PhongMaterial(), textureMonkeyAlbedo, textureMonkeyEmission, textureMonkeyNormal, 0.0F, 0.0F);
 		
-		final List<Primitive> primitives = ObjectLoader.load(Dayflower.getModelFilename("smoothMonkey2.obj"), 100.0F, (groupName, materialName) -> surface, 0.0F, 100.0F, 0.0F);
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "smoothMonkey2.obj"), 100.0F, (groupName, materialName) -> surface, 0.0F, 100.0F, 0.0F);
 		
 		final
 		Scene scene = new Scene("Monkey_Scene");
@@ -251,6 +268,20 @@ final class Scenes {
 		
 		return scene;
 	}
+	
+	public static String getModelFilename(final File directory, final String name) {
+		return String.format("%s/model/%s", directory.getAbsolutePath(), name);
+	}
+	
+	public static String getSceneFilename(final File directory, final Scene scene) {
+		return String.format("%s/scene/%s.scene", directory.getAbsolutePath(), scene.getName());
+	}
+	
+	public static String getTextureFilename(final File directory, final String name) {
+		return String.format("%s/texture/%s", directory.getAbsolutePath(), name);
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/*
 	public static Scene getSceneByName(final String name) {

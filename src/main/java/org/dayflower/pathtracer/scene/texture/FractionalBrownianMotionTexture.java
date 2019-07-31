@@ -61,9 +61,9 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	public static final int SIZE = 7;
 	
 	/**
-	 * The type number associated with a {@code FractionalBrownianMotionTexture}. The number is {@code 5}.
+	 * The type number associated with a {@code FractionalBrownianMotionTexture}. The number is {@code 4}.
 	 */
-	public static final int TYPE = 5;
+	public static final int TYPE = 4;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

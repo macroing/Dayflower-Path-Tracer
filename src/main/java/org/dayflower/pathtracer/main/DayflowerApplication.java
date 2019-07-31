@@ -62,9 +62,7 @@ import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
-import org.dayflower.pathtracer.scene.compiler.CompiledScene;
-import org.dayflower.pathtracer.scene.compiler.PrintingSceneCompilerObserver;
-import org.dayflower.pathtracer.scene.compiler.SceneCompiler;
+import org.dayflower.pathtracer.scene.loader.SceneLoader;
 import org.dayflower.pathtracer.util.Timer;
 import org.dayflower.pathtracer.util.Files;
 
@@ -80,6 +78,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private final AtomicInteger renderPass;
+	private final Configuration configuration;
 	private ConvolutionKernel convolutionKernel;
 	private final Label labelFPS;
 	private final Label labelKernelTime;
@@ -97,6 +96,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	private final Setting settingFilterGradientVertical;
 	private final Setting settingFilterSharpen;
 	private Scene scene;
+	private SceneLoader sceneLoader;
 	private Slider sliderPitch;
 	private Slider sliderYaw;
 	private final Timer timer;
@@ -110,6 +110,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	public DayflowerApplication() {
 		this.renderPass = new AtomicInteger();
+		this.configuration = new Configuration();
 		this.labelFPS = new Label("FPS: 0");
 		this.labelKernelTime = new Label("Kernel Time: 0 ms");
 		this.labelPosition = new Label("Position: [0.0, 0.0, 0.0]");
@@ -122,6 +123,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		this.settingFilterGradientHorizontal = new Setting("Filter.Gradient.Horizontal");
 		this.settingFilterGradientVertical = new Setting("Filter.Gradient.Vertical");
 		this.settingFilterSharpen = new Setting("Filter.Sharpen");
+		this.sceneLoader = new SceneLoader(new File(this.configuration.getRootDirectory()), this.configuration.getSceneCompile(), this.configuration.getSceneName());
 		this.timer = new Timer();
 	}
 	
@@ -132,40 +134,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	public void init() {
-		this.scene = Scenes.getSceneByName(Dayflower.getSceneName());
-		
-		final String sceneFilename = Dayflower.getSceneFilename(String.format("%s.scene", this.scene.getName()));
-		
-		final File sceneFile = new File(sceneFilename);
-		
-		if(!sceneFile.isFile() || Dayflower.getSceneCompile()) {
-			final
-			SceneCompiler sceneCompiler = new SceneCompiler();
-			sceneCompiler.addSceneCompilerObserver(new PrintingSceneCompilerObserver());
-			
-			final
-			CompiledScene compiledScene = sceneCompiler.compile(this.scene);
-			compiledScene.write(sceneFile);
-			
-			try {
-				Thread.sleep(100L);
-			} catch(final InterruptedException e) {
-//				Do nothing.
-			}
-		}
-		
-		setCanvasWidth(Dayflower.getCanvasWidth());
-		setCanvasHeight(Dayflower.getCanvasHeight());
-		setKernelWidth(Dayflower.getKernelWidth());
-		setKernelHeight(Dayflower.getKernelHeight());
-		
-		this.rendererKernel = new RendererKernel(getKernelWidth(), getKernelHeight(), this.scene.getCamera(), this.scene.getSky(), sceneFilename);
-		
-		final
-		Camera camera = this.scene.getCamera();
-		camera.setResolution(getKernelWidth(), getKernelHeight());
-		camera.update();
-		camera.addCameraObserver(this);
+		setCanvasWidth(this.configuration.getCanvasWidth());
+		setCanvasHeight(this.configuration.getCanvasHeight());
+		setKernelWidth(this.configuration.getKernelWidth());
+		setKernelHeight(this.configuration.getKernelHeight());
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(this::onExit));
 	}
@@ -228,12 +200,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	protected void configureMenuBar(final MenuBar menuBar) {
-		final RendererKernel rendererKernel = this.rendererKernel;
-		
-		final Scene scene = this.scene;
-		
-		final Camera camera = scene.getCamera();
-		
 //		Create the "File" Menu:
 		final MenuItem menuItemSave = JavaFX.newMenuItem("Save", this::doOnMenuItemSave);
 		final MenuItem menuItemExit = JavaFX.newMenuItem("Exit", e -> exit());
@@ -245,10 +211,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Camera" Menu:
 		final ToggleGroup toggleGroupCameraLens = new ToggleGroup();
 		
-		final CheckMenuItem checkMenuItemWalkLock = JavaFX.newCheckMenuItem("Walk Lock", e -> camera.setWalkLockEnabled(!camera.isWalkLockEnabled()), camera.isWalkLockEnabled());
+		final CheckMenuItem checkMenuItemWalkLock = JavaFX.newCheckMenuItem("Walk Lock", e -> doGetCamera().setWalkLockEnabled(!doGetCamera().isWalkLockEnabled()), doGetCamera().isWalkLockEnabled());
 		
-		final RadioMenuItem radioMenuItemFisheye = JavaFX.newRadioMenuItem("Fisheye Camera Lens", e -> camera.setFisheyeCameraLens(true), toggleGroupCameraLens, camera.isFisheyeCameraLens());
-		final RadioMenuItem radioMenuItemThin = JavaFX.newRadioMenuItem("Thin Camera Lens", e -> camera.setThinCameraLens(true), toggleGroupCameraLens, camera.isThinCameraLens());
+		final RadioMenuItem radioMenuItemFisheye = JavaFX.newRadioMenuItem("Fisheye Camera Lens", e -> doGetCamera().setFisheyeCameraLens(true), toggleGroupCameraLens, doGetCamera().isFisheyeCameraLens());
+		final RadioMenuItem radioMenuItemThin = JavaFX.newRadioMenuItem("Thin Camera Lens", e -> doGetCamera().setThinCameraLens(true), toggleGroupCameraLens, doGetCamera().isThinCameraLens());
 		
 		final Menu menuCamera = JavaFX.newMenu("Camera", checkMenuItemWalkLock, radioMenuItemFisheye, radioMenuItemThin);
 		
@@ -261,8 +227,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final CheckMenuItem checkMenuItemGradientHorizontal = JavaFX.newCheckMenuItem("Gradient (Horizontal)", e -> this.settingFilterGradientHorizontal.toggle());
 		final CheckMenuItem checkMenuItemGradientVertical = JavaFX.newCheckMenuItem("Gradient (Vertical)", e -> this.settingFilterGradientVertical.toggle());
 		final CheckMenuItem checkMenuItemSharpen = JavaFX.newCheckMenuItem("Sharpen", e -> this.settingFilterSharpen.toggle());
-		final CheckMenuItem checkMenuItemGrayscale = JavaFX.newCheckMenuItem("Grayscale", e -> rendererKernel.setEffectGrayScale(!rendererKernel.isEffectGrayScale()));
-		final CheckMenuItem checkMenuItemSepiaTone = JavaFX.newCheckMenuItem("Sepia Tone", e -> rendererKernel.setEffectSepiaTone(!rendererKernel.isEffectSepiaTone()));
+		final CheckMenuItem checkMenuItemGrayscale = JavaFX.newCheckMenuItem("Grayscale", e -> doGetRendererKernel().setEffectGrayScale(!doGetRendererKernel().isEffectGrayScale()));
+		final CheckMenuItem checkMenuItemSepiaTone = JavaFX.newCheckMenuItem("Sepia Tone", e -> doGetRendererKernel().setEffectSepiaTone(!doGetRendererKernel().isEffectSepiaTone()));
 		
 		final Menu menuEffect = JavaFX.newMenu("Effect", checkMenuItemBlur, checkMenuItemDetectEdges, checkMenuItemEmboss, checkMenuItemGradientHorizontal, checkMenuItemGradientVertical, checkMenuItemSharpen, checkMenuItemGrayscale, checkMenuItemSepiaTone);
 		
@@ -271,11 +237,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Renderer" Menu:
 		final ToggleGroup toggleGroupRenderer = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> rendererKernel.setAmbientOcclusion(true), toggleGroupRenderer, rendererKernel.isAmbientOcclusion());
-		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> rendererKernel.setPathTracing(true), toggleGroupRenderer, rendererKernel.isPathTracing());
-		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> rendererKernel.setRayCasting(true), toggleGroupRenderer, rendererKernel.isRayCasting());
-		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> rendererKernel.setRayMarching(true), toggleGroupRenderer, rendererKernel.isRayMarching());
-		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> rendererKernel.setRayTracing(true), toggleGroupRenderer, rendererKernel.isRayTracing());
+		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> doGetRendererKernel().setAmbientOcclusion(true), toggleGroupRenderer, doGetRendererKernel().isAmbientOcclusion());
+		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> doGetRendererKernel().setPathTracing(true), toggleGroupRenderer, doGetRendererKernel().isPathTracing());
+		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> doGetRendererKernel().setRayCasting(true), toggleGroupRenderer, doGetRendererKernel().isRayCasting());
+		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> doGetRendererKernel().setRayMarching(true), toggleGroupRenderer, doGetRendererKernel().isRayMarching());
+		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> doGetRendererKernel().setRayTracing(true), toggleGroupRenderer, doGetRendererKernel().isRayTracing());
 		
 		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemAmbientOcclusion, radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer);
 		
@@ -284,13 +250,13 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Scene" Menu:
 		final ToggleGroup toggleGroupShading = new ToggleGroup();
 		
-		final CheckMenuItem checkMenuItemNormalMapping = JavaFX.newCheckMenuItem("Normal Mapping", e -> rendererKernel.setNormalMapping(!rendererKernel.isNormalMapping()), rendererKernel.isNormalMapping());
-		final CheckMenuItem checkMenuItemWireframes = JavaFX.newCheckMenuItem("Wireframes", e -> rendererKernel.setRenderingWireframes(!rendererKernel.isRenderingWireframes()), rendererKernel.isRenderingWireframes());
+		final CheckMenuItem checkMenuItemNormalMapping = JavaFX.newCheckMenuItem("Normal Mapping", e -> doGetRendererKernel().setNormalMapping(!doGetRendererKernel().isNormalMapping()), doGetRendererKernel().isNormalMapping());
+		final CheckMenuItem checkMenuItemWireframes = JavaFX.newCheckMenuItem("Wireframes", e -> doGetRendererKernel().setRenderingWireframes(!doGetRendererKernel().isRenderingWireframes()), doGetRendererKernel().isRenderingWireframes());
 		
 		final MenuItem menuItemEnterScene = JavaFX.newMenuItem("Enter Scene", e -> enter());
 		
-		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> rendererKernel.setShadingFlat(), toggleGroupShading, rendererKernel.isShadingFlat());
-		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> rendererKernel.setShadingGouraud(), toggleGroupShading, rendererKernel.isShadingGouraud());
+		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> doGetRendererKernel().setShadingFlat(), toggleGroupShading, doGetRendererKernel().isShadingFlat());
+		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> doGetRendererKernel().setShadingGouraud(), toggleGroupShading, doGetRendererKernel().isShadingGouraud());
 		
 		final Menu menuScene = JavaFX.newMenu("Scene", checkMenuItemNormalMapping, checkMenuItemWireframes, menuItemEnterScene, radioMenuItemFlatShading, radioMenuItemGouraudShading);
 		
@@ -299,11 +265,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Tone Mapper" Menu:
 		final ToggleGroup toggleGroupToneMapper = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemToneMapperFilmicCurve1 = JavaFX.newRadioMenuItem("Filmic Curve v.1", e -> rendererKernel.setToneMappingAndGammaCorrectionFilmicCurve1(), toggleGroupToneMapper, false);
-		final RadioMenuItem radioMenuItemToneMapperFilmicCurve2 = JavaFX.newRadioMenuItem("Filmic Curve v.2", e -> rendererKernel.setToneMappingAndGammaCorrectionFilmicCurve2(), toggleGroupToneMapper, true);
-		final RadioMenuItem radioMenuItemToneMapperLinear = JavaFX.newRadioMenuItem("Linear", e -> rendererKernel.setToneMappingAndGammaCorrectionLinear(), toggleGroupToneMapper, false);
-		final RadioMenuItem radioMenuItemToneMapperReinhard1 = JavaFX.newRadioMenuItem("Reinhard v.1", e -> rendererKernel.setToneMappingAndGammaCorrectionReinhard1(), toggleGroupToneMapper, false);
-		final RadioMenuItem radioMenuItemToneMapperReinhard2 = JavaFX.newRadioMenuItem("Reinhard v.2", e -> rendererKernel.setToneMappingAndGammaCorrectionReinhard2(), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurve1 = JavaFX.newRadioMenuItem("Filmic Curve v.1", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionFilmicCurve1(), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurve2 = JavaFX.newRadioMenuItem("Filmic Curve v.2", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionFilmicCurve2(), toggleGroupToneMapper, true);
+		final RadioMenuItem radioMenuItemToneMapperLinear = JavaFX.newRadioMenuItem("Linear", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionLinear(), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperReinhard1 = JavaFX.newRadioMenuItem("Reinhard v.1", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionReinhard1(), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperReinhard2 = JavaFX.newRadioMenuItem("Reinhard v.2", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionReinhard2(), toggleGroupToneMapper, false);
 		
 		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurve1, radioMenuItemToneMapperFilmicCurve2, radioMenuItemToneMapperLinear, radioMenuItemToneMapperReinhard1, radioMenuItemToneMapperReinhard2);
 		
@@ -319,10 +285,23 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	protected void configurePixels(final byte[] pixels) {
 		this.pixels0 = pixels;
 		this.pixels1 = pixels.clone();
+		
 		this.convolutionKernel = new ConvolutionKernel(this.pixels1, getKernelWidth(), getKernelHeight());
+		
 		this.range = Range.create(getKernelWidth() * getKernelHeight());
+		
+		this.rendererKernel = new RendererKernel(getKernelWidth(), getKernelHeight(), this.sceneLoader);
 		this.rendererKernel.updateLocalVariables(this.range.getLocalSize(0));
 		this.rendererKernel.compile(this.pixels1, getKernelWidth(), getKernelHeight());
+		
+		this.scene = this.rendererKernel.getScene();
+		
+		final
+		Camera camera = this.scene.getCamera();
+		camera.setResolution(getKernelWidth(), getKernelHeight());
+		camera.update();
+		camera.addCameraObserver(this);
+		
 		this.rendererRunnable = new RendererRunnable(this.renderPass, this.convolutionKernel, this.range, this.rendererKernel, this.settingFilterBlur, this.settingFilterDetectEdges, this.settingFilterEmboss, this.settingFilterGradientHorizontal, this.settingFilterGradientVertical, this.settingFilterSharpen, this.pixels0, this.pixels1);
 		
 		final
@@ -337,7 +316,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	protected void configureStage(final Stage stage) {
-		stage.setTitle(String.format("%s %s", ENGINE_NAME, Dayflower.getVersion()));
+		stage.setTitle(String.format("%s %s", ENGINE_NAME, this.configuration.getVersion()));
 	}
 	
 	/**
@@ -357,14 +336,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	protected void configureTabPane(final TabPane tabPane) {
-		final RendererKernel rendererKernel = this.rendererKernel;
-		
-		final Scene scene = this.scene;
-		
-		final Camera camera = scene.getCamera();
-		
-		final Sky sky = scene.getSky();
-		
 //		Create the Tab with the Camera settings:
 		final Label labelFieldOfView = new Label("Field of View:");
 		final Label labelApertureRadius = new Label("Aperture Radius:");
@@ -372,11 +343,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final Label labelPitch = new Label("Pitch:");
 		final Label labelYaw = new Label("Yaw:");
 		
-		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, camera.getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
-		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, camera.getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
-		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, camera.getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
-		final Slider sliderPitch = JavaFX.newSlider(-90.0F, 90.0F, camera.getPitch().degrees, 10.0D, 20.0D, true, true, false, this::doOnSliderPitch);
-		final Slider sliderYaw = JavaFX.newSlider(0.0D, 360.0F, camera.getYaw().degrees, 20.0D, 40.0D, true, true, false, this::doOnSliderYaw);
+		final Slider sliderFieldOfView = JavaFX.newSlider(40.0D, 100.0D, doGetCamera().getFieldOfViewX(), 10.0D, 10.0D, true, true, false, this::doOnSliderFieldOfView);
+		final Slider sliderApertureRadius = JavaFX.newSlider(0.0D, 25.0D, doGetCamera().getApertureRadius(), 1.0D, 5.0D, true, true, false, this::doOnSliderApertureRadius);
+		final Slider sliderFocalDistance = JavaFX.newSlider(0.0D, 100.0D, doGetCamera().getFocalDistance(), 1.0D, 20.0D, true, true, false, this::doOnSliderFocalDistance);
+		final Slider sliderPitch = JavaFX.newSlider(-90.0F, 90.0F, doGetCamera().getPitch().degrees, 10.0D, 20.0D, true, true, false, this::doOnSliderPitch);
+		final Slider sliderYaw = JavaFX.newSlider(0.0D, 360.0F, doGetCamera().getYaw().degrees, 20.0D, 40.0D, true, true, false, this::doOnSliderYaw);
 		
 		this.sliderPitch = sliderPitch;
 		this.sliderYaw = sliderYaw;
@@ -400,10 +371,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final Label labelSunDirectionWorldZ = new Label("Sun Direction Z:");
 		final Label labelTurbidity = new Label("Turbidity:");
 		
-		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, sky.getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
-		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 1.0D, sky.getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
-		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, sky.getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
-		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, sky.getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
+		final Slider sliderSunDirectionWorldX = JavaFX.newSlider(-1.0D, 1.0D, doGetSky().getSunDirectionWorld().x, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldX);
+		final Slider sliderSunDirectionWorldY = JavaFX.newSlider(0.0D, 1.0D, doGetSky().getSunDirectionWorld().y, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldY);
+		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, doGetSky().getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
+		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, doGetSky().getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
 		final CheckBox checkBoxToggleSunAndSky = JavaFX.newCheckBox("Toggle Sun & Sky", this::doOnCheckBoxToggleSunAndSky, true);
 		final CheckBox checkBoxToggleClouds = JavaFX.newCheckBox("Toggle Clouds", this::doOnCheckBoxToggleClouds, false);
@@ -439,12 +410,12 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		labelRayMarcher.setFont(Font.font(16.0D));
 		labelRayMarcher.setPadding(new Insets(10.0D, 0.0D, 10.0D, 0.0D));
 		
-		final Slider sliderMaximumDistance = JavaFX.newSlider(0.0D, 1000.0D, rendererKernel.getRendererAOMaximumDistance(), 50.0D, 200.0D, true, true, true, this::doOnSliderMaximumDistance);
-		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, rendererKernel.getRendererPTRayDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
-		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, rendererKernel.getAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
-		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, rendererKernel.getFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
-		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, rendererKernel.getGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
-		final Slider sliderLacunarity = JavaFX.newSlider(0.0D, 10.0D, rendererKernel.getLacunarity(), 1.0D, 5.0D, true, true, false, this::doOnSliderLacunarity);
+		final Slider sliderMaximumDistance = JavaFX.newSlider(0.0D, 1000.0D, doGetRendererKernel().getRendererAOMaximumDistance(), 50.0D, 200.0D, true, true, true, this::doOnSliderMaximumDistance);
+		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, doGetRendererKernel().getRendererPTRayDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
+		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
+		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
+		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
+		final Slider sliderLacunarity = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getLacunarity(), 1.0D, 5.0D, true, true, false, this::doOnSliderLacunarity);
 		
 		final
 		VBox vBoxRenderer = new VBox();
@@ -657,6 +628,18 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		return bufferedImage;
 	}
 	
+	private Camera doGetCamera() {
+		return this.scene.getCamera();
+	}
+	
+	private RendererKernel doGetRendererKernel() {
+		return this.rendererKernel;
+	}
+	
+	private Sky doGetSky() {
+		return this.scene.getSky();
+	}
+	
 	@SuppressWarnings("unused")
 	private void doOnCheckBoxToggleClouds(final ActionEvent e) {
 		synchronized(this.pixels1) {
@@ -681,7 +664,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnMenuItemSave(final ActionEvent e) {
-		final File directory = new File(Dayflower.getImageDirectory());
+		final File directory = new File(this.configuration.getImageDirectory());
 		final File file = Files.findNextFile(directory, "Dayflower-Image-%s.png");
 		
 		if(!file.getParentFile().exists()) {
