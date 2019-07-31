@@ -401,4 +401,94 @@ public final class Point3F {
 		
 		return new Point3F(minimumX, minimumY, minimumZ);
 	}
+	
+	/**
+	 * Returns the maximum X-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}.
+	 * <p>
+	 * If either {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param a one of the {@code Point3F}s defining the bounds
+	 * @param b one of the {@code Point3F}s defining the bounds
+	 * @param c one of the {@code Point3F}s defining the bounds
+	 * @return the maximum X-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}
+	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
+	 */
+	public static float maximumX(final Point3F a, final Point3F b, final Point3F c) {
+		return a.x > b.x && a.x > c.x ? a.x : b.x > c.x ? b.x : c.x;
+	}
+	
+	/**
+	 * Returns the maximum Y-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}.
+	 * <p>
+	 * If either {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param a one of the {@code Point3F}s defining the bounds
+	 * @param b one of the {@code Point3F}s defining the bounds
+	 * @param c one of the {@code Point3F}s defining the bounds
+	 * @return the maximum Y-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}
+	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
+	 */
+	public static float maximumY(final Point3F a, final Point3F b, final Point3F c) {
+		return a.y > b.y && a.y > c.y ? a.y : b.y > c.y ? b.y : c.y;
+	}
+	
+	/**
+	 * Returns the maximum Z-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}.
+	 * <p>
+	 * If either {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param a one of the {@code Point3F}s defining the bounds
+	 * @param b one of the {@code Point3F}s defining the bounds
+	 * @param c one of the {@code Point3F}s defining the bounds
+	 * @return the maximum Z-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}
+	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
+	 */
+	public static float maximumZ(final Point3F a, final Point3F b, final Point3F c) {
+		return a.z > b.z && a.z > c.z ? a.z : b.z > c.z ? b.z : c.z;
+	}
+	
+	/**
+	 * Returns the minimum X-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}.
+	 * <p>
+	 * If either {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param a one of the {@code Point3F}s defining the bounds
+	 * @param b one of the {@code Point3F}s defining the bounds
+	 * @param c one of the {@code Point3F}s defining the bounds
+	 * @return the minimum X-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}
+	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
+	 */
+	public static float minimumX(final Point3F a, final Point3F b, final Point3F c) {
+		return a.x < b.x && a.x < c.x ? a.x : b.x < c.x ? b.x : c.x;
+	}
+	
+	/**
+	 * Returns the minimum Y-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}.
+	 * <p>
+	 * If either {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param a one of the {@code Point3F}s defining the bounds
+	 * @param b one of the {@code Point3F}s defining the bounds
+	 * @param c one of the {@code Point3F}s defining the bounds
+	 * @return the minimum Y-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}
+	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
+	 */
+	public static float minimumY(final Point3F a, final Point3F b, final Point3F c) {
+		return a.y < b.y && a.y < c.y ? a.y : b.y < c.y ? b.y : c.y;
+	}
+	
+	/**
+	 * Returns the minimum Z-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}.
+	 * <p>
+	 * If either {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param a one of the {@code Point3F}s defining the bounds
+	 * @param b one of the {@code Point3F}s defining the bounds
+	 * @param c one of the {@code Point3F}s defining the bounds
+	 * @return the minimum Z-coordinate given the bounds represented by {@code a}, {@code b} and {@code c}
+	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
+	 */
+	public static float minimumZ(final Point3F a, final Point3F b, final Point3F c) {
+		return a.z < b.z && a.z < c.z ? a.z : b.z < c.z ? b.z : c.z;
+	}
 }

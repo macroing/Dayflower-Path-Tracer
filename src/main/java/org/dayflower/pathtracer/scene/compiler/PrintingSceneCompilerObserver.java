@@ -27,11 +27,11 @@ import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;
-import org.dayflower.pathtracer.scene.shape.Mesh;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
+import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 
 /**
  * A {@code PrintingSceneCompilerObserver} is an implementation of {@link SceneCompilerObserver} that prints the progress to {@code System.out}.
@@ -60,19 +60,6 @@ public final class PrintingSceneCompilerObserver implements SceneCompilerObserve
 	@Override
 	public void onComparisonBoundingVolumeHierarchyRootNode(final Scene scene, final long milliseconds, final int boundingVolumeHierarchyRootNodeCountAll, final int boundingVolumeHierarchyRootNodeCountUnique) {
 		System.out.printf("%s SceneCompiler: BoundingVolumeHierarchy.Node: %s/%s%n", Long.toString(milliseconds), Integer.toString(boundingVolumeHierarchyRootNodeCountUnique), Integer.toString(boundingVolumeHierarchyRootNodeCountAll));
-	}
-	
-	/**
-	 * Called by a {@link SceneCompiler} to report statistics about the {@link Mesh}es.
-	 * 
-	 * @param scene the {@link Scene} being compiled
-	 * @param milliseconds the time the compilation process has taken this far, in milliseconds
-	 * @param meshCountAll the {@code Mesh} count
-	 * @param meshCountUnique the unique {@code Mesh} count
-	 */
-	@Override
-	public void onComparisonMesh(final Scene scene, final long milliseconds, final int meshCountAll, final int meshCountUnique) {
-		System.out.printf("%s SceneCompiler: Mesh: %s/%s%n", Long.toString(milliseconds), Integer.toString(meshCountUnique), Integer.toString(meshCountAll));
 	}
 	
 	/**
@@ -190,6 +177,19 @@ public final class PrintingSceneCompilerObserver implements SceneCompilerObserve
 	@Override
 	public void onComparisonTriangle(final Scene scene, final long milliseconds, final int triangleCountAll, final int triangleCountUnique) {
 		System.out.printf("%s SceneCompiler: Triangle: %s/%s%n", Long.toString(milliseconds), Integer.toString(triangleCountUnique), Integer.toString(triangleCountAll));
+	}
+	
+	/**
+	 * Called by a {@link SceneCompiler} to report statistics about the {@link TriangleMesh}es.
+	 * 
+	 * @param scene the {@link Scene} being compiled
+	 * @param milliseconds the time the compilation process has taken this far, in milliseconds
+	 * @param triangleMeshCountAll the {@code TriangleMesh} count
+	 * @param triangleMeshCountUnique the unique {@code TriangleMesh} count
+	 */
+	@Override
+	public void onComparisonTriangleMesh(final Scene scene, final long milliseconds, final int triangleMeshCountAll, final int triangleMeshCountUnique) {
+		System.out.printf("%s SceneCompiler: TriangleMesh: %s/%s%n", Long.toString(milliseconds), Integer.toString(triangleMeshCountUnique), Integer.toString(triangleMeshCountAll));
 	}
 	
 	/**

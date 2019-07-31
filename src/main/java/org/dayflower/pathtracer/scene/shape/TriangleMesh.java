@@ -25,16 +25,16 @@ import java.util.Objects;
 import org.dayflower.pathtracer.scene.Shape;
 
 /**
- * A {@code Mesh} represents a triangle mesh.
+ * A {@code TriangleMesh} represents a triangle mesh.
  * <p>
  * This class is immutable and therefore suitable for concurrent use without external synchronization.
  * 
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Mesh implements Shape {
+public final class TriangleMesh implements Shape {
 	/**
-	 * The type number associated with a {@code Mesh}. The number is {@code 5}.
+	 * The type number associated with a {@code TriangleMesh}. The number is {@code 5}.
 	 */
 	public static final int TYPE = 5;
 	
@@ -45,34 +45,34 @@ public final class Mesh implements Shape {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Constructs a new {@code Mesh} instance.
+	 * Constructs a new {@code TriangleMesh} instance.
 	 * <p>
 	 * If {@code triangles} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
-	 * Modifying {@code triangles} after this {@code Mesh} instance has been created, will not affect it. The {@code List} is copied.
+	 * Modifying {@code triangles} after this {@code TriangleMesh} instance has been created, will not affect it. The {@code List} is copied.
 	 * 
 	 * @param triangles the {@link Triangle}s to use
 	 * @throws NullPointerException thrown if, and only if, {@code triangles} is {@code null}
 	 */
-	public Mesh(final List<Triangle> triangles) {
+	public TriangleMesh(final List<Triangle> triangles) {
 		this.triangles = new ArrayList<>(triangles);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Returns a {@code List} with all {@link Triangle}s added to this {@code Mesh} instance.
+	 * Returns a {@code List} with all {@link Triangle}s added to this {@code TriangleMesh} instance.
 	 * 
-	 * @return a {@code List} with all {@code Triangle}s added to this {@code Mesh} instance
+	 * @return a {@code List} with all {@code Triangle}s added to this {@code TriangleMesh} instance
 	 */
 	public List<Triangle> getTriangles() {
 		return new ArrayList<>(this.triangles);
 	}
 	
 	/**
-	 * Returns a {@code String} representation of this {@code Mesh} instance.
+	 * Returns a {@code String} representation of this {@code TriangleMesh} instance.
 	 * 
-	 * @return a {@code String} representation of this {@code Mesh} instance
+	 * @return a {@code String} representation of this {@code TriangleMesh} instance
 	 */
 	@Override
 	public String toString() {
@@ -80,20 +80,20 @@ public final class Mesh implements Shape {
 	}
 	
 	/**
-	 * Compares {@code object} to this {@code Mesh} instance for equality.
+	 * Compares {@code object} to this {@code TriangleMesh} instance for equality.
 	 * <p>
-	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code Mesh}, and their respective values are equal, {@code false} otherwise.
+	 * Returns {@code true} if, and only if, {@code object} is an instance of {@code TriangleMesh}, and their respective values are equal, {@code false} otherwise.
 	 * 
-	 * @param object the {@code Object} to compare to this {@code Mesh} instance for equality
-	 * @return {@code true} if, and only if, {@code object} is an instance of {@code Mesh}, and their respective values are equal, {@code false} otherwise
+	 * @param object the {@code Object} to compare to this {@code TriangleMesh} instance for equality
+	 * @return {@code true} if, and only if, {@code object} is an instance of {@code TriangleMesh}, and their respective values are equal, {@code false} otherwise
 	 */
 	@Override
 	public boolean equals(final Object object) {
 		if(object == this) {
 			return true;
-		} else if(!(object instanceof Mesh)) {
+		} else if(!(object instanceof TriangleMesh)) {
 			return false;
-		} else if(!Objects.equals(this.triangles, Mesh.class.cast(object).triangles)) {
+		} else if(!Objects.equals(this.triangles, TriangleMesh.class.cast(object).triangles)) {
 			return false;
 		} else {
 			return true;
@@ -101,9 +101,9 @@ public final class Mesh implements Shape {
 	}
 	
 	/**
-	 * Returns the size of this {@code Mesh} instance.
+	 * Returns the size of this {@code TriangleMesh} instance.
 	 * 
-	 * @return the size of this {@code Mesh} instance
+	 * @return the size of this {@code TriangleMesh} instance
 	 */
 	@Override
 	public int getSize() {
@@ -111,9 +111,9 @@ public final class Mesh implements Shape {
 	}
 	
 	/**
-	 * Returns the type of this {@code Mesh} instance.
+	 * Returns the type of this {@code TriangleMesh} instance.
 	 * 
-	 * @return the type of this {@code Mesh} instance
+	 * @return the type of this {@code TriangleMesh} instance
 	 */
 	@Override
 	public int getType() {
@@ -121,9 +121,9 @@ public final class Mesh implements Shape {
 	}
 	
 	/**
-	 * Returns a hash code for this {@code Mesh} instance.
+	 * Returns a hash code for this {@code TriangleMesh} instance.
 	 * 
-	 * @return a hash code for this {@code Mesh} instance
+	 * @return a hash code for this {@code TriangleMesh} instance
 	 */
 	@Override
 	public int hashCode() {

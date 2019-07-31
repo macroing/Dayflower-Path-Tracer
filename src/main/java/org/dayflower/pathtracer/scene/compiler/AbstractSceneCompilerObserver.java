@@ -27,11 +27,11 @@ import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy.Node;
-import org.dayflower.pathtracer.scene.shape.Mesh;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
+import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 
 /**
  * An {@code AbstractSceneCompilerObserver} is an abstract implementation of {@link SceneCompilerObserver} that does nothing by default.
@@ -61,19 +61,6 @@ public abstract class AbstractSceneCompilerObserver implements SceneCompilerObse
 	 */
 	@Override
 	public void onComparisonBoundingVolumeHierarchyRootNode(final Scene scene, final long milliseconds, final int boundingVolumeHierarchyRootNodeCountAll, final int boundingVolumeHierarchyRootNodeCountUnique) {
-//		Do nothing.
-	}
-	
-	/**
-	 * Called by a {@link SceneCompiler} to report statistics about the {@link Mesh}es.
-	 * 
-	 * @param scene the {@link Scene} being compiled
-	 * @param milliseconds the time the compilation process has taken this far, in milliseconds
-	 * @param meshCountAll the {@code Mesh} count
-	 * @param meshCountUnique the unique {@code Mesh} count
-	 */
-	@Override
-	public void onComparisonMesh(final Scene scene, final long milliseconds, final int meshCountAll, final int meshCountUnique) {
 //		Do nothing.
 	}
 	
@@ -191,6 +178,19 @@ public abstract class AbstractSceneCompilerObserver implements SceneCompilerObse
 	 */
 	@Override
 	public void onComparisonTriangle(final Scene scene, final long milliseconds, final int triangleCountAll, final int triangleCountUnique) {
+//		Do nothing.
+	}
+	
+	/**
+	 * Called by a {@link SceneCompiler} to report statistics about the {@link TriangleMesh}es.
+	 * 
+	 * @param scene the {@link Scene} being compiled
+	 * @param milliseconds the time the compilation process has taken this far, in milliseconds
+	 * @param triangleMeshCountAll the {@code TriangleMesh} count
+	 * @param triangleMeshCountUnique the unique {@code TriangleMesh} count
+	 */
+	@Override
+	public void onComparisonTriangleMesh(final Scene scene, final long milliseconds, final int triangleMeshCountAll, final int triangleMeshCountUnique) {
 //		Do nothing.
 	}
 	

@@ -132,8 +132,8 @@ public final class BoundingVolumeHierarchy {
 			final
 			LeafNode leafNode = new LeafNode(0);
 			leafNode.addTriangle(triangle);
-			leafNode.setMaximum(doGetMaximumX(p0, p1, p2), doGetMaximumY(p0, p1, p2), doGetMaximumZ(p0, p1, p2));
-			leafNode.setMinimum(doGetMinimumX(p0, p1, p2), doGetMinimumY(p0, p1, p2), doGetMinimumZ(p0, p1, p2));
+			leafNode.setMaximum(Point3F.maximumX(p0, p1, p2), Point3F.maximumY(p0, p1, p2), Point3F.maximumZ(p0, p1, p2));
+			leafNode.setMinimum(Point3F.minimumX(p0, p1, p2), Point3F.minimumY(p0, p1, p2), Point3F.minimumZ(p0, p1, p2));
 			
 			leafNodes.add(leafNode);
 			
@@ -784,30 +784,6 @@ public final class BoundingVolumeHierarchy {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private static float doGetMaximumX(final Point3F p0, final Point3F p1, final Point3F p2) {
-		return p0.x > p1.x && p0.x > p2.x ? p0.x : p1.x > p2.x ? p1.x : p2.x;
-	}
-	
-	private static float doGetMaximumY(final Point3F p0, final Point3F p1, final Point3F p2) {
-		return p0.y > p1.y && p0.y > p2.y ? p0.y : p1.y > p2.y ? p1.y : p2.y;
-	}
-	
-	private static float doGetMaximumZ(final Point3F p0, final Point3F p1, final Point3F p2) {
-		return p0.z > p1.z && p0.z > p2.z ? p0.z : p1.z > p2.z ? p1.z : p2.z;
-	}
-	
-	private static float doGetMinimumX(final Point3F p0, final Point3F p1, final Point3F p2) {
-		return p0.x < p1.x && p0.x < p2.x ? p0.x : p1.x < p2.x ? p1.x : p2.x;
-	}
-	
-	private static float doGetMinimumY(final Point3F p0, final Point3F p1, final Point3F p2) {
-		return p0.y < p1.y && p0.y < p2.y ? p0.y : p1.y < p2.y ? p1.y : p2.y;
-	}
-	
-	private static float doGetMinimumZ(final Point3F p0, final Point3F p1, final Point3F p2) {
-		return p0.z < p1.z && p0.z < p2.z ? p0.z : p1.z < p2.z ? p1.z : p2.z;
-	}
 	
 	private static Node doCreateBoundingVolumeHierarchy(final List<LeafNode> leafNodes, final int depth, final float maximumX, final float maximumY, final float maximumZ, final float minimumX, final float minimumY, final float minimumZ) {
 		final int size0 = leafNodes.size();

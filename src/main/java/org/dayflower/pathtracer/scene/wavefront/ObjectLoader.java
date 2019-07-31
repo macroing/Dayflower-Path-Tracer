@@ -35,12 +35,12 @@ import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.math.Vector3F;
-import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Surface;
-import org.dayflower.pathtracer.scene.shape.Mesh;
+import org.dayflower.pathtracer.scene.material.LambertianMaterial;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
+import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 
 /**
@@ -81,7 +81,7 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * Calling this method is equivalent to {@code load(file, scale, (groupName, materialName) -> new Surface(Material.LAMBERTIAN_DIFFUSE, new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)))}.
+	 * Calling this method is equivalent to {@code load(file, scale, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)))}.
 	 * <p>
 	 * If {@code file} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
@@ -94,7 +94,7 @@ public final class ObjectLoader {
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
 	public static List<Primitive> load(final File file, final float scale) {
-		return load(file, scale, (groupName, materialName) -> new Surface(Material.LAMBERTIAN_DIFFUSE, new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)));
+		return load(file, scale, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)));
 	}
 	
 	/**
@@ -167,7 +167,7 @@ public final class ObjectLoader {
 				
 				if(!previousGroup.equals(currentGroup)) {
 					if(triangles.size() > 0) {
-						primitives.add(new Primitive(new Mesh(triangles), surfaceMapper.apply(previousGroup, previousMaterial)));
+						primitives.add(new Primitive(new TriangleMesh(triangles), surfaceMapper.apply(previousGroup, previousMaterial)));
 						
 						triangles.clear();
 					}
@@ -200,7 +200,7 @@ public final class ObjectLoader {
 				triangles.add(triangle);
 			}
 			
-			primitives.add(new Primitive(new Mesh(triangles), surfaceMapper.apply(previousGroup, previousMaterial)));
+			primitives.add(new Primitive(new TriangleMesh(triangles), surfaceMapper.apply(previousGroup, previousMaterial)));
 			
 			return primitives;
 		} catch(final IOException e) {
@@ -257,7 +257,7 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * Calling this method is equivalent to {@code load(filename, scale, (groupName, materialName) -> new Surface(Material.LAMBERTIAN_DIFFUSE, new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)))}.
+	 * Calling this method is equivalent to {@code load(filename, scale, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)))}.
 	 * <p>
 	 * If {@code filename} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
@@ -270,7 +270,7 @@ public final class ObjectLoader {
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
 	public static List<Primitive> load(final String filename, final float scale) {
-		return load(filename, scale, (groupName, materialName) -> new Surface(Material.LAMBERTIAN_DIFFUSE, new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)));
+		return load(filename, scale, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)));
 	}
 	
 	/**

@@ -66,7 +66,6 @@ import org.dayflower.pathtracer.scene.compiler.CompiledScene;
 import org.dayflower.pathtracer.scene.compiler.PrintingSceneCompilerObserver;
 import org.dayflower.pathtracer.scene.compiler.SceneCompiler;
 import org.dayflower.pathtracer.util.Timer;
-import org.dayflower.pathtracer.util.FPSCounter;
 import org.dayflower.pathtracer.util.Files;
 
 /**
@@ -440,8 +439,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		labelRayMarcher.setFont(Font.font(16.0D));
 		labelRayMarcher.setPadding(new Insets(10.0D, 0.0D, 10.0D, 0.0D));
 		
-		final Slider sliderMaximumDistance = JavaFX.newSlider(0.0D, 1000.0D, rendererKernel.getMaximumDistanceAO(), 50.0D, 200.0D, true, true, true, this::doOnSliderMaximumDistance);
-		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, rendererKernel.getDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
+		final Slider sliderMaximumDistance = JavaFX.newSlider(0.0D, 1000.0D, rendererKernel.getRendererAOMaximumDistance(), 50.0D, 200.0D, true, true, true, this::doOnSliderMaximumDistance);
+		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, rendererKernel.getRendererPTRayDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
 		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, rendererKernel.getAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
 		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, rendererKernel.getFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
 		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, rendererKernel.getGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
@@ -523,15 +522,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	protected void render() {
-		final
-		FPSCounter fPSCounter = getFPSCounter();
-		fPSCounter.update();
-		
 		final int renderPass = this.renderPass.get();
 		
 		final long renderTimeMillis = this.rendererRunnable.getRenderTimeMillis();
-		final long fPS = fPSCounter.getFPS();
-		final long sPS = fPS * getKernelWidth() * getKernelHeight();
+		final long fPS = renderTimeMillis > 0L ? 1000L / renderTimeMillis : 0L;
+		final long sPS = renderTimeMillis > 0L ? 1000L / renderTimeMillis * getKernelWidth() * getKernelHeight() : 0L;
 		
 		final Camera camera = this.scene.getCamera();
 		
@@ -562,8 +557,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		final byte[] pixels1 = this.pixels1;
 		
-		final float velocity = rendererKernel.isRayMarching() ? 1.0F : 250.0F;
-		final float movement = getFPSCounter().getFrameTimeMillis() / 1000.0F * velocity;
+		final float velocity = rendererKernel.isRayMarching() ? 1.0F : 5.0F;
+		final float movement = velocity;
 		
 		if(isKeyPressed(KeyCode.A)) {
 			camera.strafe(-movement);
@@ -741,12 +736,12 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderMaximumDistance(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setMaximumDistanceAO(newValue.floatValue());
+		this.rendererKernel.setRendererAOMaximumDistance(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderMaximumRayDepth(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setDepthMaximum(newValue.intValue());
+		this.rendererKernel.setRendererPTRayDepthMaximum(newValue.intValue());
 	}
 	
 	@SuppressWarnings("unused")

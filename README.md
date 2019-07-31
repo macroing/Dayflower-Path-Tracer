@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.1.0
+Dayflower - Path Tracer v.0.1.1
 ===============================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
@@ -32,11 +32,11 @@ Supported Features
 | Effect                 | Sharpen                                                    |
 | Light                  | Perez Sun and Sky Model                                    |
 | Light                  | Primitive-based Area Light via an Emission Texture         |
-| Material               | Diffuse using Lambertian reflectance                       |
-| Material               | Clear Coat with Fresnel                                    |
-| Material               | Glass with Fresnel                                         |
-| Material               | Metal using Phong                                          |
-| Material               | Specular (Mirror)                                          |
+| Material               | Clear Coat                                                 |
+| Material               | Glass                                                      |
+| Material               | Lambertian                                                 |
+| Material               | Phong                                                      |
+| Material               | Reflection                                                 |
 | Normal Mapping         | Image Texture                                              |
 | Normal Mapping         | Noise                                                      |
 | Rendering Algorithm    | Ambient Occlusion                                          |

@@ -1,3 +1,8 @@
+2019-07-31  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		All public API:s have been fully documented with Javadocs. Improvements may of course still be done over time.
+	* CHANGE:	The Material API has been changed. Previously the Material type was an enum. Now it is an interface and we have five implementations of it so far.
+
 2019-07-26  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* CHANGE:	The scene model and the renderer have been rewritten almost entirely, in order to optimize the memory requirement.

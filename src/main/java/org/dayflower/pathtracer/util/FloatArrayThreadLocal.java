@@ -16,19 +16,37 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.scene;
+package org.dayflower.pathtracer.util;
 
 /**
- * A {@code Material} represents a material of a surface.
+ * A {@code FloatArrayThreadLocal} is a {@code ThreadLocal} that provides thread-local {@code float} arrays.
  * 
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public interface Material {
+public class FloatArrayThreadLocal extends ThreadLocal<float[]> {
+	private final int length;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	/**
-	 * Returns the type of this {@code Material} instance.
+	 * Constructs a new {@code FloatArrayThreadLocal} instance.
 	 * 
-	 * @return the type of this {@code Material} instance
+	 * @param length the length of the {@code float} array to create
 	 */
-	int getType();
+	public FloatArrayThreadLocal(final int length) {
+		this.length = length;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns a new {@code float} array.
+	 * 
+	 * @return a new {@code float} array
+	 */
+	@Override
+	protected float[] initialValue() {
+		return new float[this.length];
+	}
 }

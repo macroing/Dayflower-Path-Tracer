@@ -26,7 +26,6 @@ import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
 import org.dayflower.pathtracer.math.MathF;
 import org.dayflower.pathtracer.scene.Camera;
-import org.dayflower.pathtracer.scene.Material;
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
@@ -34,16 +33,22 @@ import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.bvh.BoundingVolumeHierarchy;
 import org.dayflower.pathtracer.scene.compiler.CompiledScene;
 import org.dayflower.pathtracer.scene.compiler.SceneCompiler;
-import org.dayflower.pathtracer.scene.shape.Mesh;
+import org.dayflower.pathtracer.scene.material.ClearCoatMaterial;
+import org.dayflower.pathtracer.scene.material.GlassMaterial;
+import org.dayflower.pathtracer.scene.material.LambertianMaterial;
+import org.dayflower.pathtracer.scene.material.PhongMaterial;
+import org.dayflower.pathtracer.scene.material.ReflectionMaterial;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
+import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
+import org.dayflower.pathtracer.util.FloatArrayThreadLocal;
 
 /**
  * An extension of the {@code AbstractKernel} class that performs Path Tracing, Ray Casting and Ray Marching.
@@ -56,11 +61,6 @@ public final class RendererKernel extends AbstractKernel {
 	private static final float REFRACTIVE_INDEX_GLASS = 1.5F;
 	private static final int BOOLEAN_FALSE = 0;
 	private static final int BOOLEAN_TRUE = 1;
-	private static final int MATERIAL_CLEAR_COAT = 0;
-	private static final int MATERIAL_GLASS = 1;
-	private static final int MATERIAL_LAMBERTIAN_DIFFUSE = 2;
-	private static final int MATERIAL_MIRROR = 3;
-	private static final int MATERIAL_PHONG_METAL = 4;
 	private static final int RELATIVE_OFFSET_INTERSECTION_DISTANCE = 0;
 	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_U = 10;
 	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_V = 13;
@@ -109,7 +109,7 @@ public final class RendererKernel extends AbstractKernel {
 	private final float colorSpaceSegmentOffset;
 	private final float colorSpaceSlope;
 	private final float colorSpaceSlopeMatch;
-	private float maximumDistanceAO;
+	private float rendererAOMaximumDistance;
 	private float sunAndSkyJacobian;
 	private float sunAndSkyOrthoNormalBasisUX;
 	private float sunAndSkyOrthoNormalBasisUY;
@@ -136,7 +136,7 @@ public final class RendererKernel extends AbstractKernel {
 	private float sunAndSkyTurbidity;
 	private final float[] colorAverageSamples;
 	private float[] colorCurrentSamples_$local$;
-	private float[] colorTemporarySamples_$private$3 = new float[SIZE_COLOR_RGB];
+	private float[] colorTemporarySamples_$private$3;
 	private final float[] sceneCamera_$constant$;
 	private final float[] scenePoint2Fs_$constant$;
 	private final float[] scenePoint3Fs_$constant$;
@@ -148,15 +148,15 @@ public final class RendererKernel extends AbstractKernel {
 	private final float[] sunAndSkyColHistogram_$constant$;
 	private final float[] sunAndSkyImageHistogram_$constant$;
 	private float[] intersections_$local$;
-	private float[] rays_$private$6 = new float[SIZE_RAY];
-	private int depthMaximum = 5;
-	private int depthRussianRoulette = 5;
+	private float[] rays_$private$6;
 	private int effectGrayScale;
 	private int effectSepiaTone;
 	private final int height;
 	private int isNormalMapping = BOOLEAN_TRUE;
 	private int isRenderingWireframes = BOOLEAN_FALSE;
-	private int renderer = RENDERER_PATH_TRACER;
+	private int renderer;
+	private int rendererPTRayDepthMaximum;
+	private int rendererPTRayDepthRussianRoulette;
 	private final int scenePrimitivesCount;
 //	private final int scenePrimitivesEmittingLightCount;
 	private int selectedPrimitiveOffset = -1;
@@ -202,6 +202,7 @@ public final class RendererKernel extends AbstractKernel {
 		
 //		Initialize the color variables:
 		this.colorAverageSamples = new float[width * height * SIZE_COLOR_RGB];
+		this.colorTemporarySamples_$private$3 = new float[SIZE_COLOR_RGB];
 		
 //		Initialize the color space variables:
 		this.colorSpaceBreakPoint = rGBColorSpace.getBreakPoint();
@@ -226,6 +227,12 @@ public final class RendererKernel extends AbstractKernel {
 		this.scenePrimitivesEmittingLight_$constant$ = compiledScene.getPrimitivesEmittingLight();
 //		this.scenePrimitivesEmittingLightCount = this.scenePrimitivesEmittingLight_$constant$[0];
 		this.sceneTriangles_$constant$ = compiledScene.getTriangles();
+		
+//		Initialize the renderer parameters:
+		this.renderer = RENDERER_PATH_TRACER;
+		this.rendererAOMaximumDistance = 200.0F;
+		this.rendererPTRayDepthMaximum = 5;
+		this.rendererPTRayDepthRussianRoulette = 5;
 		
 //		Initialize the sun and sky variables:
 		this.sunAndSkyColHistogram_$constant$ = sky.getColHistogram();
@@ -266,7 +273,7 @@ public final class RendererKernel extends AbstractKernel {
 		this.sunAndSkyZenithX = sky.getZenithX();
 		this.sunAndSkyZenithY = sky.getZenithY();
 		
-		this.maximumDistanceAO = 200.0F;
+		this.rays_$private$6 = new float[SIZE_RAY];
 		this.width = width;
 		this.height = height;
 		this.subSamples = new long[width * height];
@@ -497,7 +504,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @return {@code true} if, and only if, the Grayscale effect is enabled, {@code false} otherwise
 	 */
 	public boolean isEffectGrayScale() {
-		return this.effectGrayScale == 1;
+		return this.effectGrayScale == BOOLEAN_TRUE;
 	}
 	
 	/**
@@ -506,7 +513,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @return {@code true} if, and only if, the Sepia Tone effect is enabled, {@code false} otherwise
 	 */
 	public boolean isEffectSepiaTone() {
-		return this.effectSepiaTone == 1;
+		return this.effectSepiaTone == BOOLEAN_TRUE;
 	}
 	
 	/**
@@ -515,7 +522,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @return {@code true} if, and only if, Normal Mapping is activaded, {@code false} otherwise
 	 */
 	public boolean isNormalMapping() {
-		return this.isNormalMapping == 1;
+		return this.isNormalMapping == BOOLEAN_TRUE;
 	}
 	
 	/**
@@ -560,7 +567,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @return {@code true} if, and only if, wireframe rendering is enabled, {@code false} otherwise
 	 */
 	public boolean isRenderingWireframes() {
-		return this.isRenderingWireframes != 0;
+		return this.isRenderingWireframes != BOOLEAN_FALSE;
 	}
 	
 	/**
@@ -613,26 +620,8 @@ public final class RendererKernel extends AbstractKernel {
 	 * 
 	 * @return the maximum distance for Ambient Occlusion
 	 */
-	public float getMaximumDistanceAO() {
-		return this.maximumDistanceAO;
-	}
-	
-	/**
-	 * Returns the maximum depth for path termination.
-	 * 
-	 * @return the maximum depth for path termination
-	 */
-	public int getDepthMaximum() {
-		return this.depthMaximum;
-	}
-	
-	/**
-	 * Returns the depth used for Russian Roulette path termination.
-	 * 
-	 * @return the depth used for Russian Roulette path termination
-	 */
-	public int getDepthRussianRoulette() {
-		return this.depthRussianRoulette;
+	public float getRendererAOMaximumDistance() {
+		return this.rendererAOMaximumDistance;
 	}
 	
 	/**
@@ -642,6 +631,24 @@ public final class RendererKernel extends AbstractKernel {
 	 */
 	public int getHeight() {
 		return this.height;
+	}
+	
+	/**
+	 * Returns the maximum ray depth for Path Tracing.
+	 * 
+	 * @return the maximum ray depth for Path Tracing
+	 */
+	public int getRendererPTRayDepthMaximum() {
+		return this.rendererPTRayDepthMaximum;
+	}
+	
+	/**
+	 * Returns the ray depth to begin Russian Roulette path termination for Path Tracing.
+	 * 
+	 * @return the ray depth to begin Russian Roulette path termination for Path Tracing
+	 */
+	public int getRendererPTRayDepthRussianRoulette() {
+		return this.rendererPTRayDepthRussianRoulette;
 	}
 	
 	/**
@@ -886,25 +893,6 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Sets the maximum depth to be used for path termination.
-	 * 
-	 * @param depthMaximum the maximum depth
-	 */
-	public void setDepthMaximum(final int depthMaximum) {
-		this.depthMaximum = depthMaximum;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets the depth to be used for Russian Roulette path termination.
-	 * 
-	 * @param depthRussianRoulette the depth to use
-	 */
-	public void setDepthRussianRoulette(final int depthRussianRoulette) {
-		this.depthRussianRoulette = depthRussianRoulette;
-	}
-	
-	/**
 	 * Enables or disables the Grayscale effect.
 	 * 
 	 * @param isEffectGrayScale {@code true} if the Grayscale effect is enabled, {@code false} otherwise
@@ -920,16 +908,6 @@ public final class RendererKernel extends AbstractKernel {
 	 */
 	public void setEffectSepiaTone(final boolean isEffectSepiaTone) {
 		this.effectSepiaTone = isEffectSepiaTone ? 1 : 0;
-	}
-	
-	/**
-	 * Sets the maximum distance for Ambient Occlusion.
-	 * 
-	 * @param maximumDistanceAO the new maximum distance for Ambient Occlusion
-	 */
-	public void setMaximumDistanceAO(final float maximumDistanceAO) {
-		this.maximumDistanceAO = maximumDistanceAO;
-		this.isResetRequired = true;
 	}
 	
 	/**
@@ -988,6 +966,35 @@ public final class RendererKernel extends AbstractKernel {
 	public void setRayTracing(final boolean isRayTracing) {
 		this.renderer = isRayTracing ? RENDERER_RAY_TRACER : RENDERER_AMBIENT_OCCLUSION;
 		this.isResetRequired = true;
+	}
+	
+	/**
+	 * Sets the maximum distance for Ambient Occlusion.
+	 * 
+	 * @param rendererAOMaximumDistance the maximum distance for Ambient Occlusion
+	 */
+	public void setRendererAOMaximumDistance(final float rendererAOMaximumDistance) {
+		this.rendererAOMaximumDistance = rendererAOMaximumDistance;
+		this.isResetRequired = true;
+	}
+	
+	/**
+	 * Sets the maximum ray depth for Path Tracing.
+	 * 
+	 * @param rendererPTRayDepthMaximum the maximum ray depth for Path Tracing
+	 */
+	public void setRendererPTRayDepthMaximum(final int rendererPTRayDepthMaximum) {
+		this.rendererPTRayDepthMaximum = rendererPTRayDepthMaximum;
+		this.isResetRequired = true;
+	}
+	
+	/**
+	 * Sets the ray depth to begin Russian Roulette path termination for Path Tracing.
+	 * 
+	 * @param rendererPTRayDepthRussianRoulette the ray depth to begin Russian Roulette path termination for Path Tracing
+	 */
+	public void setRendererPTRayDepthRussianRoulette(final int rendererPTRayDepthRussianRoulette) {
+		this.rendererPTRayDepthRussianRoulette = rendererPTRayDepthRussianRoulette;
 	}
 	
 	/**
@@ -1094,14 +1101,22 @@ public final class RendererKernel extends AbstractKernel {
 		if(selectedPrimitiveOffset != -1) {
 			final int surfacesOffset = this.scenePrimitives_$constant$[selectedPrimitiveOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 			
-			final int oldMaterialOrdinal = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
+			final int oldMaterialType = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
+			final int oldMaterialOrdinal = oldMaterialType - 1;
 			
-			final Material[] materials = Material.values();
+			final int[] materials = new int[] {
+				ClearCoatMaterial.TYPE,
+				GlassMaterial.TYPE,
+				LambertianMaterial.TYPE,
+				PhongMaterial.TYPE,
+				ReflectionMaterial.TYPE
+			};
 			
 			if(oldMaterialOrdinal >= 0 && oldMaterialOrdinal < materials.length) {
 				final int newMaterialOrdinal = (oldMaterialOrdinal + 1) % materials.length;
+				final int newMaterialType = materials[newMaterialOrdinal];
 				
-				this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL] = newMaterialOrdinal;
+				this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL] = newMaterialType;
 				
 				put(this.sceneSurfaces_$constant$);
 			}
@@ -1337,7 +1352,7 @@ public final class RendererKernel extends AbstractKernel {
 			int currentShapeType = this.scenePrimitives_$constant$[currentPrimitiveOffset + Primitive.RELATIVE_OFFSET_SHAPE_TYPE];
 			int currentShapeOffset = this.scenePrimitives_$constant$[currentPrimitiveOffset + Primitive.RELATIVE_OFFSET_SHAPE_OFFSET];
 			
-			if(currentShapeType == Mesh.TYPE) {
+			if(currentShapeType == TriangleMesh.TYPE) {
 //				Initialize the offset to the root of the BVH structure:
 				int boundingVolumeHierarchyAbsoluteOffset = currentShapeOffset;
 				int boundingVolumeHierarchyRelativeOffset = 0;
@@ -2030,9 +2045,9 @@ public final class RendererKernel extends AbstractKernel {
 			directionY = direction1Y * direction1LengthReciprocal;
 			directionZ = direction1Z * direction1LengthReciprocal;
 			
-			final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, false);//doPerformIntersectionTest(-1, originX, originY, originZ, directionX, directionY, directionZ);
+			final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, false);
 			
-			final boolean isHit = t < this.maximumDistanceAO;
+			final boolean isHit = t < this.rendererAOMaximumDistance;
 			
 			final float r = isHit ? brightR : darkR;
 			final float g = isHit ? brightG : darkG;
@@ -3013,8 +3028,8 @@ public final class RendererKernel extends AbstractKernel {
 	
 	private void doPathTracing() {
 //		Retrieve the maximum depth allowed and the depth at which to use Russian Roulette to test for path termination:
-		final int depthMaximum = this.depthMaximum;
-		final int depthRussianRoulette = this.depthRussianRoulette;
+		final int depthMaximum = this.rendererPTRayDepthMaximum;
+		final int depthRussianRoulette = this.rendererPTRayDepthRussianRoulette;
 		
 //		Calculate the current offset to the intersections array:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
@@ -3175,7 +3190,7 @@ public final class RendererKernel extends AbstractKernel {
 			final float surfaceNormalWNormalizedY = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
 			final float surfaceNormalWNormalizedZ = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
 			
-			if(material == MATERIAL_CLEAR_COAT) {
+			if(material == ClearCoatMaterial.TYPE) {
 				final float a = REFRACTIVE_INDEX_GLASS - REFRACTIVE_INDEX_AIR;
 				final float b = REFRACTIVE_INDEX_GLASS + REFRACTIVE_INDEX_AIR;
 				final float c = REFRACTIVE_INDEX_AIR / REFRACTIVE_INDEX_GLASS;
@@ -3317,7 +3332,7 @@ public final class RendererKernel extends AbstractKernel {
 				
 //				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
 				depthCurrent = depthCurrent + 0;
-			} else if(material == MATERIAL_LAMBERTIAN_DIFFUSE) {
+			} else if(material == LambertianMaterial.TYPE) {
 //				Compute cosine weighted hemisphere sample:
 				final float u = nextFloat();
 				final float v = nextFloat();
@@ -3368,7 +3383,7 @@ public final class RendererKernel extends AbstractKernel {
 				radianceMultiplierR *= albedoColorR;
 				radianceMultiplierG *= albedoColorG;
 				radianceMultiplierB *= albedoColorB;
-			} else if(material == MATERIAL_PHONG_METAL) {
+			} else if(material == PhongMaterial.TYPE) {
 //				Compute power cosine weighted hemisphere sample:
 				final float exponent = 20.0F;
 				final float u = nextFloat();
@@ -3429,7 +3444,7 @@ public final class RendererKernel extends AbstractKernel {
 				radianceMultiplierR *= albedoColorR;
 				radianceMultiplierG *= albedoColorG;
 				radianceMultiplierB *= albedoColorB;
-			} else if(material == MATERIAL_GLASS) {
+			} else if(material == GlassMaterial.TYPE) {
 				final float a = REFRACTIVE_INDEX_GLASS - REFRACTIVE_INDEX_AIR;
 				final float b = REFRACTIVE_INDEX_GLASS + REFRACTIVE_INDEX_AIR;
 				final float c = REFRACTIVE_INDEX_AIR / REFRACTIVE_INDEX_GLASS;
@@ -3523,7 +3538,7 @@ public final class RendererKernel extends AbstractKernel {
 				
 //				FIXME: Find out why the "child list broken" Exception occurs if the following line is not present!
 				depthCurrent = depthCurrent + 0;
-			} else if(material == MATERIAL_MIRROR) {
+			} else if(material == ReflectionMaterial.TYPE) {
 //				Update the ray origin for the next iteration:
 				originX = surfaceIntersectionPointX + surfaceNormalShadingX * 0.000001F;
 				originY = surfaceIntersectionPointY + surfaceNormalShadingY * 0.000001F;
@@ -3977,7 +3992,7 @@ public final class RendererKernel extends AbstractKernel {
 			pixelColorG += ((colorRGB >> 8) & 0xFF) / 255.0F;
 			pixelColorB += (colorRGB & 0xFF) / 255.0F;
 			
-			if(material == MATERIAL_MIRROR) {
+			if(material == ReflectionMaterial.TYPE) {
 //				Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
 				final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
 				final float dotProductMultipliedByTwo = dotProduct * 2.0F;
@@ -4123,25 +4138,6 @@ public final class RendererKernel extends AbstractKernel {
 					this.colorCurrentSamples_$local$[pixelIndex + 2] = 0.0F;
 				}
 			}
-		}
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private static final class FloatArrayThreadLocal extends ThreadLocal<float[]> {
-		private final int length;
-		
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		
-		public FloatArrayThreadLocal(final int length) {
-			this.length = length;
-		}
-		
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		
-		@Override
-		protected float[] initialValue() {
-			return new float[this.length];
 		}
 	}
 }
