@@ -225,7 +225,7 @@ final class Scenes {
 		final Texture textureSphere10Albedo = new SurfaceNormalTexture();
 		final Texture textureSphere10Emission = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere10Normal = new ConstantTexture(Color.BLACK);
-		final Texture textureSphere11Albedo = new BlendTexture(new CheckerboardTexture(Color.GRAY, Color.WHITE), new SurfaceNormalTexture(), 0.5F);
+		final Texture textureSphere11Albedo = new BlendTexture(new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.5F, 16), new CheckerboardTexture(Color.GRAY, Color.RED), 0.5F);
 		final Texture textureSphere11Emission = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere11Normal = new ConstantTexture(Color.BLACK);
 		

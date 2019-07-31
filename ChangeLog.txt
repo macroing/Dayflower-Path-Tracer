@@ -1,3 +1,7 @@
+2019-08-01  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		It's now possible to change the exposure for all Tone Mappers in the GUI.
+
 2019-07-31  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* ADD:		All public API:s have been fully documented with Javadocs. Improvements may of course still be done over time.

@@ -430,6 +430,24 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		tabPane.getTabs().add(tabRenderer);
 		
+//		Create the Tab with the settings for the tone mappers:
+		final Label labelExposure = new Label("Exposure");
+		
+		final Slider sliderExposure = JavaFX.newSlider(0.0D, 2.0D, doGetRendererKernel().getToneMapperExposure(), 0.2D, 0.4D, true, true, false, this::doOnSliderExposure);
+		
+		final
+		VBox vBoxToneMapper = new VBox();
+		vBoxToneMapper.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
+		vBoxToneMapper.getChildren().addAll(labelExposure, sliderExposure);
+		
+		final
+		Tab tabToneMapper = new Tab();
+		tabToneMapper.setClosable(false);
+		tabToneMapper.setContent(vBoxToneMapper);
+		tabToneMapper.setText("Tone Mapper");
+		
+		tabPane.getTabs().add(tabToneMapper);
+		
 //		Select the default Tab:
 		tabPane.getSelectionModel().select(tabCamera);
 	}
@@ -690,6 +708,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	@SuppressWarnings("unused")
 	private void doOnSliderApertureRadius(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.scene.getCamera().setApertureRadius(newValue.floatValue());
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnSliderExposure(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
+		this.rendererKernel.setToneMapperExposure(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")

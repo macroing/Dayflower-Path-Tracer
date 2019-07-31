@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.1.1
+Dayflower - Path Tracer v.0.1.2
 ===============================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
@@ -145,6 +145,7 @@ Supported Tab Controls
 | Renderer > Frequency            | Change the Frequency of the terrain generation    |
 | Renderer > Gain                 | Change the Gain of the terrain generation         |
 | Renderer > Lacunarity           | Change the Lacunarity of the terrain generation   |
+| Tone Mapper > Exposure          | Change the exposure for all Tone Mappers          |
 
 ______________________________________________________________________________________
 

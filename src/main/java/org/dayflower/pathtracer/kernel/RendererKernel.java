@@ -137,6 +137,7 @@ public final class RendererKernel extends AbstractKernel {
 	private float sunAndSkySunOriginZ;
 	private float sunAndSkyTheta;
 	private float sunAndSkyTurbidity;
+	private float toneMapperExposure;
 	private final float[] colorAverageSamples;
 	private float[] colorCurrentSamples_$local$;
 	private float[] colorTemporarySamples_$private$3;
@@ -278,6 +279,9 @@ public final class RendererKernel extends AbstractKernel {
 		this.sunAndSkyZenithRelativeLuminance = this.sky.getZenithRelativeLuminance();
 		this.sunAndSkyZenithX = this.sky.getZenithX();
 		this.sunAndSkyZenithY = this.sky.getZenithY();
+		
+//		Initialize the tone mapper variables:
+		this.toneMapperExposure = 1.0F;
 		
 		this.rays_$private$6 = new float[SIZE_RAY];
 		this.width = width;
@@ -605,6 +609,15 @@ public final class RendererKernel extends AbstractKernel {
 	 */
 	public float getRendererAOMaximumDistance() {
 		return this.rendererAOMaximumDistance;
+	}
+	
+	/**
+	 * Returns the exposure for the Tone Mappers.
+	 * 
+	 * @return the exposure for the Tone Mappers
+	 */
+	public float getToneMapperExposure() {
+		return this.toneMapperExposure;
 	}
 	
 	/**
@@ -1022,6 +1035,15 @@ public final class RendererKernel extends AbstractKernel {
 	 */
 	public void setShowingClouds(final boolean isShowingClouds) {
 		this.sunAndSkyIsShowingClouds = isShowingClouds ? BOOLEAN_TRUE : BOOLEAN_FALSE;
+	}
+	
+	/**
+	 * Sets the exposure for the Tone Mappers.
+	 * 
+	 * @param toneMapperExposure the new exposure
+	 */
+	public void setToneMapperExposure(final float toneMapperExposure) {
+		this.toneMapperExposure = toneMapperExposure;
 	}
 	
 	/**
@@ -2405,19 +2427,31 @@ public final class RendererKernel extends AbstractKernel {
 		float b = this.colorAverageSamples[pixelIndex0 + 2];
 		
 		if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_1) {
+			final float exposure = this.toneMapperExposure;
+			
+			r *= exposure;
+			g *= exposure;
+			b *= exposure;
+			
 //			Perform Tone Mapping on the 'normalized' accumulated pixel color components:
 			r = r / (r + 1.0F);
 			g = g / (g + 1.0F);
 			b = b / (b + 1.0F);
 		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_2) {
 //			Set the exposure:
-			final float exposure = 1.0F;
+			final float exposure = this.toneMapperExposure;
 			
 //			Perform Tone Mapping on the 'normalized' accumulated pixel color components:
 			r = 1.0F - exp(-r * exposure);
 			g = 1.0F - exp(-g * exposure);
 			b = 1.0F - exp(-b * exposure);
 		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1) {
+			final float exposure = this.toneMapperExposure;
+			
+			r *= exposure;
+			g *= exposure;
+			b *= exposure;
+			
 //			Calculate the maximum pixel color component values:
 			final float rMaximum = max(r - 0.004F, 0.0F);
 			final float gMaximum = max(g - 0.004F, 0.0F);
@@ -2428,7 +2462,7 @@ public final class RendererKernel extends AbstractKernel {
 			g = (gMaximum * (6.2F * gMaximum + 0.5F)) / (gMaximum * (6.2F * gMaximum + 1.7F) + 0.06F);
 			b = (bMaximum * (6.2F * bMaximum + 0.5F)) / (bMaximum * (6.2F * bMaximum + 1.7F) + 0.06F);
 		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2) {
-			final float exposure = 0.5F;
+			final float exposure = this.toneMapperExposure;
 			
 			r *= exposure;
 			g *= exposure;
@@ -2439,6 +2473,12 @@ public final class RendererKernel extends AbstractKernel {
 			g = saturate((g * (2.51F * g + 0.03F)) / (g * (2.43F * g + 0.59F) + 0.14F), 0.0F, 1.0F);
 			b = saturate((b * (2.51F * b + 0.03F)) / (b * (2.43F * b + 0.59F) + 0.14F), 0.0F, 1.0F);
 		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR) {
+			final float exposure = this.toneMapperExposure;
+			
+			r *= exposure;
+			g *= exposure;
+			b *= exposure;
+			
 //			Calculate the maximum component value of the 'normalized' accumulated pixel color component values:
 			final float maximumComponentValue = max(r, max(g, b));
 			
