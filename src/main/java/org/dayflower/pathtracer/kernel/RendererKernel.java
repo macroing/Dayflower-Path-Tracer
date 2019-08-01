@@ -1691,21 +1691,82 @@ public final class RendererKernel extends AbstractKernel {
 		return INFINITY;
 	}
 	
+	/*
+	 *	bool castRay( const vec3 & ro, const vec3 & rd, float & resT ) {
+			float dt = 0.01f;
+			const float mint = 0.001f;
+			const float maxt = 10.0f;
+			float lh = 0.0f;
+			float ly = 0.0f;
+			for( float t = mint; t < maxt; t += dt ) {
+				const vec3  p = ro + rd*t;
+				const float h = f( p.xz );
+				if( p.y < h ) {
+					resT = t - dt + dt*(lh-ly)/(p.y-ly-h+lh);
+					return true;
+				}
+				dt = 0.01f*t;
+				lh = h;
+				ly = p.y;
+			}
+			return false;
+		}
+	 */
+	@SuppressWarnings("unused")
 	private float doIntersectTerrain(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float frequency, final float gain, final float minimum, final float maximum, final int octaves) {
+		final float scale = 10.0F;
+		final float scaleReciprocal = 1.0F / scale;
+		
 		float t = 0.0F;
 		
 		final float tMinimum = 0.001F;
-		final float tMaximum = 2000.0F;
+		final float tMaximum = 10.0F;
+		
+		float tDelta = 0.01F;
+		
+		float lH = 0.0F;
+		float lY = 0.0F;
+		
+		for(float tCurrent = tMinimum; tCurrent < tMaximum; tCurrent += tDelta) {
+			final float surfaceIntersectionPointX = originX * scaleReciprocal + directionX * tCurrent;
+			final float surfaceIntersectionPointY = originY * scaleReciprocal + directionY * tCurrent;
+			final float surfaceIntersectionPointZ = originZ * scaleReciprocal + directionZ * tCurrent;
+			
+			final float h = (sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ));
+			
+			if(surfaceIntersectionPointY < h) {
+				t = tCurrent - tDelta + tDelta * (lH - lY) / (surfaceIntersectionPointY - lY - h + lH);
+				
+				tCurrent = tMaximum;
+			}
+			
+			tDelta = 0.01F * tCurrent;
+			
+			lH = h;
+			lY = surfaceIntersectionPointY;
+		}
+		
+		t = t > EPSILON ? t : INFINITY;
+		
+		return t;
+		
+		/*
+		float t = 0.0F;
+		
+		final float tMinimum = 0.001F;
+		final float tMaximum = 40.0F;
 		final float tMultiplier = 0.1F;
 		
 		float tDelta = tMultiplier;
 		
 		for(float tCurrent = tMinimum; tCurrent < tMaximum; tCurrent += tDelta) {
-			final float surfaceIntersectionPointX = originX + directionX * tCurrent;
-			final float surfaceIntersectionPointY = originY + directionY * tCurrent;
-			final float surfaceIntersectionPointZ = originZ + directionZ * tCurrent;
+			final float surfaceIntersectionPointX = originX / 40.0F + directionX * tCurrent;
+			final float surfaceIntersectionPointY = originY / 40.0F + directionY * tCurrent;
+			final float surfaceIntersectionPointZ = originZ / 40.0F + directionZ * tCurrent;
 			
-			final float y = simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ);
+//			final float y = simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ);
+//			final float y = (simplexFractalXY(getAmplitude(), getFrequency(), getGain(), getLacunarity(), getOctaves(), surfaceIntersectionPointX, surfaceIntersectionPointZ) + 1.0F) / 2.0F;
+			final float y = (sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ));
 			
 			if(surfaceIntersectionPointY < y) {
 				t = tCurrent;
@@ -1719,6 +1780,7 @@ public final class RendererKernel extends AbstractKernel {
 		t = t > EPSILON ? t : INFINITY;
 		
 		return t;
+		*/
 	}
 	
 	@SuppressWarnings("static-method")
@@ -2926,16 +2988,26 @@ public final class RendererKernel extends AbstractKernel {
 		this.intersections_$local$[offsetIntersectionUVCoordinates + 1] = v;
 	}
 	
+	@SuppressWarnings("unused")
 	private void doCalculateSurfacePropertiesForTerrain(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float distance, final float frequency, final float gain, final float minimum, final float maximum, final int octaves) {
-		final float surfaceIntersectionPointX = originX + directionX * distance;
-		final float surfaceIntersectionPointY = originY + directionY * distance;
-		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
+		final float scale = 10.0F;
+		final float scaleReciprocal = 1.0F / scale;
+		
+		final float surfaceIntersectionPointX = originX * scaleReciprocal + directionX * distance;
+		final float surfaceIntersectionPointY = originY * scaleReciprocal + directionY * distance;
+		final float surfaceIntersectionPointZ = originZ * scaleReciprocal + directionZ * distance;
 		
 		final float epsilon = 0.02F;
 		
-		final float surfaceNormalX = simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX - epsilon, surfaceIntersectionPointZ) - simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX + epsilon, surfaceIntersectionPointZ);
-		final float surfaceNormalY = -2.0F * epsilon;
-		final float surfaceNormalZ = simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ - epsilon) - simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ + epsilon);
+//		final float surfaceNormalX = simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX - epsilon, surfaceIntersectionPointZ) - simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX + epsilon, surfaceIntersectionPointZ);
+//		final float surfaceNormalY = 2.0F * epsilon;
+//		final float surfaceNormalZ = simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ - epsilon) - simplexFractionalBrownianMotionXY(frequency, gain, minimum, maximum, octaves, surfaceIntersectionPointX, surfaceIntersectionPointZ + epsilon);
+//		final float surfaceNormalX = (simplexFractalXY(getAmplitude(), getFrequency(), getGain(), getLacunarity(), getOctaves(), surfaceIntersectionPointX - epsilon, surfaceIntersectionPointZ) + 1.0F) / 2.0F - (simplexFractalXY(getAmplitude(), getFrequency(), getGain(), getLacunarity(), getOctaves(), surfaceIntersectionPointX + epsilon, surfaceIntersectionPointZ) + 1.0F) / 2.0F;
+//		final float surfaceNormalY = 2.0F * epsilon;
+//		final float surfaceNormalZ = (simplexFractalXY(getAmplitude(), getFrequency(), getGain(), getLacunarity(), getOctaves(), surfaceIntersectionPointX, surfaceIntersectionPointZ - epsilon) + 1.0F) / 2.0F - (simplexFractalXY(getAmplitude(), getFrequency(), getGain(), getLacunarity(), getOctaves(), surfaceIntersectionPointX, surfaceIntersectionPointZ + epsilon) + 1.0F) / 2.0F;
+		final float surfaceNormalX = (sin(surfaceIntersectionPointX - epsilon) * sin(surfaceIntersectionPointZ)) - (sin(surfaceIntersectionPointX + epsilon) * sin(surfaceIntersectionPointZ));
+		final float surfaceNormalY = 2.0F * epsilon;
+		final float surfaceNormalZ = (sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ - epsilon)) - (sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ + epsilon));
 		final float surfaceNormalLengthReciprocal = rsqrt(surfaceNormalX * surfaceNormalX + surfaceNormalY * surfaceNormalY + surfaceNormalZ * surfaceNormalZ);
 		final float surfaceNormalNormalizedX = surfaceNormalX * surfaceNormalLengthReciprocal;
 		final float surfaceNormalNormalizedY = surfaceNormalY * surfaceNormalLengthReciprocal;

@@ -12,6 +12,7 @@ Shape:
 	* ADD:		Add a Cube class and implement it.
 	* ADD:		Add a Disk class and implement it.
 	* ADD:		Add a Torus class and implement it.
+	* CHANGE:	Fix the rendering of the noise-based Terrain Shape.
 
 Texture:
 

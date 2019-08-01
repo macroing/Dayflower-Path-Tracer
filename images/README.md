@@ -20,6 +20,10 @@ Path Tracer
 #### Phong:
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/path-tracer/Dayflower-Path-Tracer-Material-Phong.png "Path Tracer - Material - Phong")
 
+### Shape
+#### Terrain
+![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/path-tracer/Dayflower-Path-Tracer-Shape-Terrain.png "Path Tracer - Shape - Terrain")
+
 ### Texture
 #### Blend:
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/path-tracer/Dayflower-Path-Tracer-Texture-Blend.png "Path Tracer - Texture - Blend")

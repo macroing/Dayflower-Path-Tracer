@@ -75,7 +75,7 @@ final class Scenes {
 			case "Monkey_Scene":
 				return newMonkeyScene(directory);
 			case "Terrain_Scene":
-				return newTerrainScene();
+				return newTerrainScene(directory);
 			default:
 				return newMaterialShowcaseScene(directory);
 		}
@@ -284,10 +284,10 @@ final class Scenes {
 		return scene;
 	}
 	
-	public static Scene newTerrainScene() {
+	public static Scene newTerrainScene(final File directory) {
 		final
 		Scene scene = new Scene("Terrain_Scene");
-		scene.addPrimitive(new Primitive(new Terrain(5.0F, 0.5F, 0.0F, 1.0F, 8), new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK))));
+		scene.addPrimitive(new Primitive(new Terrain(8.0F, 0.5F, 0.0F, 1.0F, 8), new Surface(new LambertianMaterial(), ImageTexture.load(new File(getTextureFilename(directory, "Texture_2.png")), 0.0F, 2.5F, 2.5F), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK))));
 		
 		return scene;
 	}
