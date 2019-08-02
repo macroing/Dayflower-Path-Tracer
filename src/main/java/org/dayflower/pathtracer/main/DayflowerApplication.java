@@ -18,16 +18,11 @@
  */
 package org.dayflower.pathtracer.main;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.imageio.ImageIO;
 
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -54,7 +49,6 @@ import com.amd.aparapi.Range;
 
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.application.JavaFX;
-import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.kernel.ConvolutionKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
 import org.dayflower.pathtracer.math.AngleF;
@@ -65,6 +59,7 @@ import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.loader.SceneLoader;
 import org.dayflower.pathtracer.util.Timer;
 import org.dayflower.pathtracer.util.Files;
+import org.dayflower.pathtracer.util.Image;
 
 /**
  * An implementation of {@link AbstractApplication} that performs Ambient Occlusion, Path Tracing, Ray Casting, Ray Marching or Ray Tracing.
@@ -623,31 +618,14 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private BufferedImage doCreateBufferedImage() {
-		final int width = getCanvasWidth();
-		final int height = getCanvasHeight();
-		
-		final BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		
-		final int[] data = DataBufferInt.class.cast(bufferedImage.getRaster().getDataBuffer()).getData();
-		
-		synchronized(this.pixels1) {
-			for(int i = 0, j = 0; i < data.length; i++, j += 4) {
-				final int r = this.pixels1[j + 2];
-				final int g = this.pixels1[j + 1];
-				final int b = this.pixels1[j + 0];
-				
-				final int rGB = Color.toRGB(r, g, b);
-				
-				data[i] = rGB;
-			}
-		}
-		
-		return bufferedImage;
-	}
-	
 	private Camera doGetCamera() {
 		return this.scene.getCamera();
+	}
+	
+	private Image doCreateImage() {
+		synchronized(this.pixels1) {
+			return new Image(getCanvasWidth(), getCanvasHeight(), this.pixels1);
+		}
 	}
 	
 	private RendererKernel doGetRendererKernel() {
@@ -691,13 +669,9 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		System.out.println("Saving image to \"" + file.getAbsolutePath() + "\".");
 		
-		final BufferedImage bufferedImage = doCreateBufferedImage();
-		
-		try {
-			ImageIO.write(bufferedImage, "png", file);
-		} catch(final IOException e1) {
-//			Do nothing for now.
-		}
+		final
+		Image image = doCreateImage();
+		image.save(file);
 	}
 	
 	@SuppressWarnings("unused")

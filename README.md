@@ -177,6 +177,7 @@ The following is a list of scene names that can be used.
 * ``House_Scene``
 * ``Material_Showcase_Scene`` (Default)
 * ``Monkey_Scene``
+* ``Terrain_Scene``
 
 ______________________________________________________________________________________
 

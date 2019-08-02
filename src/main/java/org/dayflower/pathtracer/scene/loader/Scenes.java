@@ -285,9 +285,13 @@ final class Scenes {
 	}
 	
 	public static Scene newTerrainScene(final File directory) {
+		final Texture textureTerrainAlbedo = ImageTexture.load(new File(getTextureFilename(directory, "Texture_2.png")), 0.0F, 2.5F, 2.5F);
+		final Texture textureTerrainEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureTerrainNormal = new ConstantTexture(Color.BLACK);
+		
 		final
 		Scene scene = new Scene("Terrain_Scene");
-		scene.addPrimitive(new Primitive(new Terrain(8.0F, 0.5F, 0.0F, 1.0F, 8), new Surface(new LambertianMaterial(), ImageTexture.load(new File(getTextureFilename(directory, "Texture_2.png")), 0.0F, 2.5F, 2.5F), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK))));
+		scene.addPrimitive(new Primitive(new Terrain(8.0F, 0.5F, 0.0F, 1.0F, 8), new Surface(new LambertianMaterial(), textureTerrainAlbedo, textureTerrainEmission, textureTerrainNormal)));
 		
 		return scene;
 	}

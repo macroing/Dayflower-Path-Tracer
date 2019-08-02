@@ -21,9 +21,7 @@ package org.dayflower.pathtracer.kernel;
 import java.util.Arrays;
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
-import org.dayflower.pathtracer.math.MathF;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
@@ -674,152 +672,6 @@ public final class RendererKernel extends AbstractKernel {
 		get(this.primitiveOffsetsForPrimaryRay);
 		
 		return this.primitiveOffsetsForPrimaryRay;
-	}
-	
-	/**
-	 * Draws a line from {@code x0} and {@code y0} to {@code x1} and {@code y1} with a color of {@code color}.
-	 * <p>
-	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param x0 the X-coordinate of the first end of the line
-	 * @param y0 the Y-coordinate of the first end of the line
-	 * @param x1 the X-coordinate of the second end of the line
-	 * @param y1 the Y-coordinate of the second end of the line
-	 * @param color the {@link Color} to use
-	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
-	 */
-	public void drawLine(final int x0, final int y0, final int x1, final int y1, final Color color) {
-		final int width = x1 - x0;
-		final int height = y1 - y0;
-		
-		int delta0X = width < 0 ? -1 : width > 0 ? 1 : 0;
-		int delta0Y = height < 0 ? -1 : height > 0 ? 1 : 0;
-		int delta1X = width < 0 ? -1 : width > 0 ? 1 : 0;
-		int delta1Y = 0;
-		
-		int longest = MathF.abs(width);
-		int shortest = MathF.abs(height);
-		
-		if(longest <= shortest) {
-			longest = MathF.abs(height);
-			shortest = MathF.abs(width);
-			
-			delta1X = 0;
-			delta1Y = height < 0 ? -1 : height > 0 ? 1 : 0;
-		}
-		
-		int numerator = longest >> 1;
-		
-		int x = x0;
-		int y = y0;
-		
-		for(int i = 0; i <= longest; i++) {
-			doFill(x, y, color);
-			
-			numerator += shortest;
-			
-			if(numerator >= longest) {
-				numerator -= longest;
-				
-				x += delta0X;
-				y += delta0Y;
-			} else {
-				x += delta1X;
-				y += delta1Y;
-			}
-		}
-	}
-	
-	/**
-	 * Draws a rectangle from {@code x} and {@code y} to {@code x + width} and {@code y + height} with a color of {@code color}.
-	 * <p>
-	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param x the X-coordinate to start from
-	 * @param y the Y-coordinate to start from
-	 * @param width the width of the rectangle
-	 * @param height the height of the rectangle
-	 * @param color the {@link Color} to use
-	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
-	 */
-	public void drawRectangle(final int x, final int y, final int width, final int height, final Color color) {
-		for(int i = y; i < y + height; i++) {
-			for(int j = x; j < x + width; j++) {
-				if(i == y || i + 1 == y + height || j == x || j + 1 == x + width) {
-					doFill(j, i, color);
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Draws a triangle with a color of {@code color}.
-	 * <p>
-	 * Calling this method is equivalent to the following:
-	 * <pre>
-	 * {@code
-	 * drawLine(x0, y0, x1, y1, color);
-	 * drawLine(x1, y1, x2, y2, color);
-	 * drawLine(x2, y2, x0, y0, color);
-	 * }
-	 * </pre>
-	 * <p>
-	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param x0 the X-coordinate of the first point
-	 * @param y0 the Y-coordinate of the first point
-	 * @param x1 the X-coordinate of the second point
-	 * @param y1 the Y-coordinate of the second point
-	 * @param x2 the X-coordinate of the third point
-	 * @param y2 the Y-coordinate of the third point
-	 * @param color the {@link Color} to use
-	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
-	 */
-	public void drawTriangle(final int x0, final int y0, final int x1, final int y1, final int x2, final int y2, final Color color) {
-		drawLine(x0, y0, x1, y1, color);
-		drawLine(x1, y1, x2, y2, color);
-		drawLine(x2, y2, x0, y0, color);
-	}
-	
-	/**
-	 * Fills a circle with a center of {@code x} and {@code y}, a radius of {@code radius} and a color of {@code color}.
-	 * <p>
-	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param x the X-coordinate of the center
-	 * @param y the Y-coordinate of the center
-	 * @param radius the radius
-	 * @param color the {@link Color} to use
-	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
-	 */
-	public void fillCircle(final int x, final int y, final int radius, final Color color) {
-		for(int i = -radius; i <= radius; i++) {
-			for(int j = -radius; j <= radius; j++) {
-				if(j * j + i * i <= radius * radius) {
-					doFill(x + j, y + i, color);
-				}
-			}
-		}
-	}
-	
-	/**
-	 * Fills a rectangle from {@code x} and {@code y} to {@code x + width} and {@code y + height} with a color of {@code color}.
-	 * <p>
-	 * If {@code color} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * 
-	 * @param x the X-coordinate to start from
-	 * @param y the Y-coordinate to start from
-	 * @param width the width of the rectangle
-	 * @param height the height of the rectangle
-	 * @param color the {@link Color} to use
-	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
-	 */
-	public void fillRectangle(final int x, final int y, final int width, final int height, final Color color) {
-		for(int i = y; i < y + height; i++) {
-			for(int j = x; j < x + width; j++) {
-				doFill(j, i, color);
-			}
-		}
 	}
 	
 	/**
@@ -1691,27 +1543,6 @@ public final class RendererKernel extends AbstractKernel {
 		return INFINITY;
 	}
 	
-	/*
-	 *	bool castRay( const vec3 & ro, const vec3 & rd, float & resT ) {
-			float dt = 0.01f;
-			const float mint = 0.001f;
-			const float maxt = 10.0f;
-			float lh = 0.0f;
-			float ly = 0.0f;
-			for( float t = mint; t < maxt; t += dt ) {
-				const vec3  p = ro + rd*t;
-				const float h = f( p.xz );
-				if( p.y < h ) {
-					resT = t - dt + dt*(lh-ly)/(p.y-ly-h+lh);
-					return true;
-				}
-				dt = 0.01f*t;
-				lh = h;
-				ly = p.y;
-			}
-			return false;
-		}
-	 */
 	@SuppressWarnings("unused")
 	private float doIntersectTerrain(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float frequency, final float gain, final float minimum, final float maximum, final int octaves) {
 		final float scale = 10.0F;
@@ -3126,24 +2957,6 @@ public final class RendererKernel extends AbstractKernel {
 			this.intersections_$local$[offsetIntersectionSurfaceNormalShading] = surfaceNormal5X;
 			this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal5Y;
 			this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal5Z;
-		}
-	}
-	
-	private void doFill(final int x, final int y, final Color color) {
-//		Calculate the pixel index:
-		final int index = (y * this.width + x) * SIZE_PIXEL;
-		
-//		Retrieve the RGB-component values:
-		final int r = (int)(color.getR() * 255.0F);
-		final int g = (int)(color.getG() * 255.0F);
-		final int b = (int)(color.getB() * 255.0F);
-		
-		if(index >= 0 && index + SIZE_PIXEL - 1 < this.pixels.length) {
-//			Update the pixel:
-			this.pixels[index + 0] = (byte)(b);
-			this.pixels[index + 1] = (byte)(g);
-			this.pixels[index + 2] = (byte)(r);
-			this.pixels[index + 3] = (byte)(255);
 		}
 	}
 	
