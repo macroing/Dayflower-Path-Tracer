@@ -1,10 +1,17 @@
+This TODO-list does not show the priority of the different tasks. It does not either order the tasks in any specific way.
+Some tasks may require some other tasks to be completed, before they can be started on. This order is not necessarily shown in the list.
+
 Renderer:
 
-	* ADD:		Add a new version of the renderer that uses the API:s of Dayflower and runs on the CPU. This would make it easier to test things out, before adding them to the GPU-renderer.
+	* ADD:		Add a new version of the renderer that uses the API:s of Dayflower and runs on the CPU (a CPU-renderer). This would make it easier to test things out, before adding them to the GPU-renderer.
 
 Scene:
 
 	* ADD:		Add a text format to define scenes, so scenes do not have to be hard-coded and compiled.
+	* ADD:		Add a DynamicCompiledScene, that can be created from a CompiledScene, and allows you to add and remove various structures as the program runs. All structures not currently referenced should be removed, by default. Except for top-level structures, or structures that are added in order to be switched between, such as some textures or materials. These textures and materials should be added with a flag (maybe a boolean set to true), that indicates that this is the expected behavior.
+	* ADD:		When the DynamicCompiledScene exists and is used by default, it would be possible to add GUI-controls that allows you to add new primitives, change existing ones, or remove them completely.
+	* ADD:		Add a progress bar, or something similar, that shows when the scene is loading. Preferably in the same window as the scene is rendered.
+	* CHANGE:	Implement some deferred scene loading, after the program has started.
 	* CHANGE:	Make it possible to load a scene while the program is running. Then it would be possible to add a scene switch to the GUI.
 
 Shape:
@@ -12,8 +19,8 @@ Shape:
 	* ADD:		Add a Cube class and implement it.
 	* ADD:		Add a Disk class and implement it.
 	* ADD:		Add a Torus class and implement it.
-	* CHANGE:	Fix the rendering of the noise-based Terrain Shape.
+	* CHANGE:	Fix the rendering of the noise-based Terrain Shape. It currently works to some degree, but its parameters are currently not used.
 
 Texture:
 
-	* CHANGE:	Make it possible to blend more than two Textures together. Maybe multiple layers. A BlendTexture with a BlendTexture as parameter argument might not be possible, because of recursion. But a BlendTexture that has a list of Textures and factors could work.
+	* CHANGE:	Make it possible to blend more than two Textures together. Maybe multiple layers. A BlendTexture with a BlendTexture as parameter argument might not be possible, because of recursion. But a BlendTexture that has a list of Textures and a list of factors could work.

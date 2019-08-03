@@ -188,7 +188,7 @@ final class Scenes {
 		final Texture texturePlaneNormal = new ConstantTexture(Color.BLACK);
 		
 //		Light:
-//		final Texture textureLightAlbedo = new FractionalBrownianMotionTexture(new Color(0.25F, 0.125F, 0.0F), Color.WHITE, 0.5F, 0.1F, 16);
+//		final Texture textureLightAlbedo = new FractionalBrownianMotionTexture(new Color(0.25F, 0.125F, 0.0F), Color.WHITE, 0.1F, 0.5F, 16);
 //		final Texture textureLightEmission = new FractionalBrownianMotionTexture(new Color(0.25F, 0.125F, 0.0F), Color.WHITE, 0.1F, 0.5F, 16);
 //		final Texture textureLightNormal = new ConstantTexture(Color.BLACK);
 		

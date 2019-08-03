@@ -825,7 +825,7 @@ public final class Image {
 	}
 	
 	/**
-	 * Fills a triangle from three points, denoted {@code A}, {@code B} and {@code C}, with a color of {@code r}, {@code g} and {@code b}.
+	 * Fills a triangle from three points, denoted {@code A}, {@code B} and {@code C}, with a color of {@code r}, {@code g}, {@code b} and {@code a}.
 	 * <p>
 	 * Only the parts of the triangle that are inside the image will be filled.
 	 * 

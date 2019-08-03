@@ -2,7 +2,7 @@ Dayflower - Path Tracer v.0.1.2
 ===============================
 Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
 
-The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ambient Occlusion, Ray Casting, Ray Marching and Ray Tracing may be used.
+The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ambient Occlusion, Ray Casting, Ray Marching, Ray Tracing and Wireframe rendering may be used.
 
 This early test implementation of Dayflower uses a library called Aparapi. Aparapi is responsible for decompiling the Java bytecode into OpenCL C99 on the fly. The OpenCL C99 is then compiled into binary code and an attempt to execute it by the current GPU is made. If the GPU fails to execute the binary code, it should still run, but in a Java Thread pool on the CPU.
 
@@ -20,8 +20,8 @@ Supported Features
 | Camera                 | Depth of Field                                             |
 | Camera                 | Field of View                                              |
 | Camera                 | Free Movement                                              |
-| Camera                 | Fisheye camera lens                                        |
-| Camera                 | Thin camera lens                                           |
+| Camera                 | Fisheye Camera Lens                                        |
+| Camera                 | Thin Camera Lens                                           |
 | Effect                 | Blur                                                       |
 | Effect                 | Detect Edges                                               |
 | Effect                 | Emboss                                                     |
@@ -44,6 +44,7 @@ Supported Features
 | Rendering Algorithm    | Ray Casting                                                |
 | Rendering Algorithm    | Ray Marching                                               |
 | Rendering Algorithm    | Ray Tracing                                                |
+| Rendering Algorithm    | Wireframe                                                  |
 | Shape                  | Plane                                                      |
 | Shape                  | Sphere                                                     |
 | Shape                  | Terrain                                                    |
