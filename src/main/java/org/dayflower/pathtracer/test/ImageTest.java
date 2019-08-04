@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Dayflower. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.dayflower.pathtracer.main;
+package org.dayflower.pathtracer.test;
 
 import org.dayflower.pathtracer.util.Image;
 
-public final class Test {
-	private Test() {
+public final class ImageTest {
+	private ImageTest() {
 		
 	}
 	
