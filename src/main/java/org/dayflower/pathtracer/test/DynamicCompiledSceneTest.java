@@ -18,8 +18,11 @@
  */
 package org.dayflower.pathtracer.test;
 
+import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.scene.compiler.DynamicCompiledScene;
+import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
+import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 
 public final class DynamicCompiledSceneTest {
 	private DynamicCompiledSceneTest() {
@@ -31,15 +34,15 @@ public final class DynamicCompiledSceneTest {
 	public static void main(final String[] args) {
 		final DynamicCompiledScene dynamicCompiledScene = new DynamicCompiledScene();
 		
-		System.out.println("* IndexOf: " + dynamicCompiledScene.indexOf(new Point2F(0.0F, 1.0F)));
-		System.out.println("* Add: " + dynamicCompiledScene.add(new Point2F(0.0F, 1.0F)));
-		System.out.println("* IndexOf: " + dynamicCompiledScene.indexOf(new Point2F(0.0F, 1.0F)));
-		System.out.println("* Add: " + dynamicCompiledScene.add(new Point2F(0.0F, 1.0F)));
-		System.out.println("* Add: " + dynamicCompiledScene.add(new Point2F(1.0F, 2.0F)));
-		System.out.println("* Remove: " + dynamicCompiledScene.remove(new Point2F(0.0F, 1.0F)));
-		System.out.println("* Remove: " + dynamicCompiledScene.remove(new Point2F(1.0F, 2.0F)));
-		System.out.println("* Remove: " + dynamicCompiledScene.remove(new Point2F(0.0F, 1.0F)));
-		System.out.println("* Remove: " + dynamicCompiledScene.remove(new Point2F(0.0F, 1.0F)));
-		System.out.println("* Remove: " + dynamicCompiledScene.remove(new Point2F(1.0F, 2.0F)));
+		System.out.println("* IndexOf: " + dynamicCompiledScene.indexOf(new ConstantTexture(Color.BLACK)));
+		System.out.println("* Add: " + dynamicCompiledScene.add(new ConstantTexture(Color.BLACK)));
+		System.out.println("* IndexOf: " + dynamicCompiledScene.indexOf(new ConstantTexture(Color.BLACK)));
+		System.out.println("* Add: " + dynamicCompiledScene.add(new ConstantTexture(Color.BLACK)));
+		System.out.println("* Add: " + dynamicCompiledScene.add(new CheckerboardTexture(Color.RED, Color.BLACK)));
+		System.out.println("* Remove: " + dynamicCompiledScene.remove(new CheckerboardTexture(Color.RED, Color.BLACK)));
+		System.out.println("* Remove: " + dynamicCompiledScene.remove(new ConstantTexture(Color.BLACK)));
+		System.out.println("* Remove: " + dynamicCompiledScene.remove(new CheckerboardTexture(Color.RED, Color.BLACK)));
+		System.out.println("* Remove: " + dynamicCompiledScene.remove(new ConstantTexture(Color.BLACK)));
+		System.out.println("* Remove: " + dynamicCompiledScene.remove(new ConstantTexture(Color.BLACK)));
 	}
 }

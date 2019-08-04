@@ -18,10 +18,13 @@
  */
 package org.dayflower.pathtracer.scene.compiler;
 
+import java.util.function.Consumer;
+
 import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Scene;
+import org.dayflower.pathtracer.scene.Texture;
 
 /**
  * A {@code DynamicCompiledScene} represents a dynamic and compiled version of a {@link Scene} instance.
@@ -35,14 +38,9 @@ import org.dayflower.pathtracer.scene.Scene;
  * @author J&#246;rgen Lundgren
  */
 public final class DynamicCompiledScene {
-	private static final int POINT2F_LENGTH = 2;
-	private static final int POINT3F_LENGTH = 3;
-	private static final int VECTOR3F_LENGTH = 3;
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
 	private float[] point2Fs;
 	private float[] point3Fs;
+	private float[] textures;
 	private float[] vector3Fs;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -53,6 +51,7 @@ public final class DynamicCompiledScene {
 	public DynamicCompiledScene() {
 		this.point2Fs = new float[1];
 		this.point3Fs = new float[1];
+		this.textures = new float[1];
 		this.vector3Fs = new float[1];
 	}
 	
@@ -70,32 +69,7 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code point2F} is {@code null}
 	 */
 	public synchronized int add(final Point2F point2F) {
-//		Retrieve the index for point2F, if it exists:
-		final int index = indexOf(point2F);
-		
-		if(index != -1) {
-//			An index for point2F exists, so return it:
-			return index;
-		}
-		
-//		Retrieve the old array and create a new array:
-		final float[] oldPoint2Fs = this.point2Fs;
-		final float[] newPoint2Fs = oldPoint2Fs == null || oldPoint2Fs.length < POINT2F_LENGTH ? new float[POINT2F_LENGTH] : new float[oldPoint2Fs.length + POINT2F_LENGTH];
-		
-//		Copy the contents in the old array to the new array:
-		if(oldPoint2Fs != null && oldPoint2Fs.length >= POINT2F_LENGTH) {
-			System.arraycopy(oldPoint2Fs, 0, newPoint2Fs, 0, oldPoint2Fs.length);
-		}
-		
-//		Add point2F to the end of the new array:
-		newPoint2Fs[newPoint2Fs.length - POINT2F_LENGTH + 0] = point2F.x;
-		newPoint2Fs[newPoint2Fs.length - POINT2F_LENGTH + 1] = point2F.y;
-		
-//		Update the old array with the new array:
-		this.point2Fs = newPoint2Fs;
-		
-//		Return the index for point2F:
-		return newPoint2Fs.length - POINT2F_LENGTH;
+		return doAdd(new float[] {point2F.x, point2F.y}, this.point2Fs, point2Fs -> this.point2Fs = point2Fs);
 	}
 	
 	/**
@@ -110,33 +84,22 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code point3F} is {@code null}
 	 */
 	public synchronized int add(final Point3F point3F) {
-//		Retrieve the index for point3F, if it exists:
-		final int index = indexOf(point3F);
-		
-		if(index != -1) {
-//			An index for point3F exists, so return it:
-			return index;
-		}
-		
-//		Retrieve the old array and create a new array:
-		final float[] oldPoint3Fs = this.point3Fs;
-		final float[] newPoint3Fs = oldPoint3Fs == null || oldPoint3Fs.length < POINT3F_LENGTH ? new float[POINT3F_LENGTH] : new float[oldPoint3Fs.length + POINT3F_LENGTH];
-		
-//		Copy the contents in the old array to the new array:
-		if(oldPoint3Fs != null && oldPoint3Fs.length >= POINT3F_LENGTH) {
-			System.arraycopy(oldPoint3Fs, 0, newPoint3Fs, 0, oldPoint3Fs.length);
-		}
-		
-//		Add point3F to the end of the new array:
-		newPoint3Fs[newPoint3Fs.length - POINT3F_LENGTH + 0] = point3F.x;
-		newPoint3Fs[newPoint3Fs.length - POINT3F_LENGTH + 1] = point3F.y;
-		newPoint3Fs[newPoint3Fs.length - POINT3F_LENGTH + 2] = point3F.z;
-		
-//		Update the old array with the new array:
-		this.point3Fs = newPoint3Fs;
-		
-//		Return the index for point3F:
-		return newPoint3Fs.length - POINT3F_LENGTH;
+		return doAdd(new float[] {point3F.x, point3F.y, point3F.z}, this.point3Fs, point3Fs -> this.point3Fs = point3Fs);
+	}
+	
+	/**
+	 * Adds {@code texture} to this {@code DynamicCompiledScene} instance.
+	 * <p>
+	 * Returns the index of {@code texture}.
+	 * <p>
+	 * If {@code texture} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param texture the {@link Texture} to add
+	 * @return the index of {@code texture}
+	 * @throws NullPointerException thrown if, and only if, {@code texture} is {@code null}
+	 */
+	public synchronized int add(final Texture texture) {
+		return doAdd(texture.toArray(), this.textures, textures -> this.textures = textures, Texture.RELATIVE_OFFSET_SIZE);
 	}
 	
 	/**
@@ -151,33 +114,7 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code vector3F} is {@code null}
 	 */
 	public synchronized int add(final Vector3F vector3F) {
-//		Retrieve the index for vector3F, if it exists:
-		final int index = indexOf(vector3F);
-		
-		if(index != -1) {
-//			An index for vector3F exists, so return it:
-			return index;
-		}
-		
-//		Retrieve the old array and create a new array:
-		final float[] oldVector3Fs = this.vector3Fs;
-		final float[] newVector3Fs = oldVector3Fs == null || oldVector3Fs.length < VECTOR3F_LENGTH ? new float[VECTOR3F_LENGTH] : new float[oldVector3Fs.length + VECTOR3F_LENGTH];
-		
-//		Copy the contents in the old array to the new array:
-		if(oldVector3Fs != null && oldVector3Fs.length >= VECTOR3F_LENGTH) {
-			System.arraycopy(oldVector3Fs, 0, newVector3Fs, 0, oldVector3Fs.length);
-		}
-		
-//		Add vector3F to the end of the new array:
-		newVector3Fs[newVector3Fs.length - VECTOR3F_LENGTH + 0] = vector3F.x;
-		newVector3Fs[newVector3Fs.length - VECTOR3F_LENGTH + 1] = vector3F.y;
-		newVector3Fs[newVector3Fs.length - VECTOR3F_LENGTH + 2] = vector3F.z;
-		
-//		Update the old array with the new array:
-		this.vector3Fs = newVector3Fs;
-		
-//		Return the index for vector3F:
-		return newVector3Fs.length - VECTOR3F_LENGTH;
+		return doAdd(new float[] {vector3F.x, vector3F.y, vector3F.z}, this.vector3Fs, vector3Fs -> this.vector3Fs = vector3Fs);
 	}
 	
 	/**
@@ -190,32 +127,7 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code point2F} is {@code null}
 	 */
 	public synchronized int indexOf(final Point2F point2F) {
-//		Retrieve the array:
-		final float[] point2Fs = this.point2Fs;
-		
-		if(point2Fs == null) {
-//			The array is null, so return -1:
-			return -1;
-		}
-		
-		if(point2Fs.length < POINT2F_LENGTH) {
-//			The array has no entries, so return -1:
-			return -1;
-		}
-		
-		for(int i = 0; i < point2Fs.length; i += POINT2F_LENGTH) {
-//			Retrieve the X- and Y-coordinates of the current entry:
-			final float x = point2Fs[i + 0];
-			final float y = point2Fs[i + 1];
-			
-			if(Float.compare(point2F.x, x) == 0 && Float.compare(point2F.y, y) == 0) {
-//				The X- and Y-coordinates of the current entry matches point2F, so return its index:
-				return i;
-			}
-		}
-		
-//		No entry in the array matched point2F, so return -1:
-		return -1;
+		return doIndexOf(new float[] {point2F.x, point2F.y}, this.point2Fs);
 	}
 	
 	/**
@@ -228,33 +140,20 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code point3F} is {@code null}
 	 */
 	public synchronized int indexOf(final Point3F point3F) {
-//		Retrieve the array:
-		final float[] point3Fs = this.point3Fs;
-		
-		if(point3Fs == null) {
-//			The array is null, so return -1:
-			return -1;
-		}
-		
-		if(point3Fs.length < POINT3F_LENGTH) {
-//			The array has no entries, so return -1:
-			return -1;
-		}
-		
-		for(int i = 0; i < point3Fs.length; i += POINT3F_LENGTH) {
-//			Retrieve the X-, Y- and Z-coordinates of the current entry:
-			final float x = point3Fs[i + 0];
-			final float y = point3Fs[i + 1];
-			final float z = point3Fs[i + 2];
-			
-			if(Float.compare(point3F.x, x) == 0 && Float.compare(point3F.y, y) == 0 && Float.compare(point3F.z, z) == 0) {
-//				The X-, Y- and Z-coordinates of the current entry matches point3F, so return its index:
-				return i;
-			}
-		}
-		
-//		No entry in the array matched point3F, so return -1:
-		return -1;
+		return doIndexOf(new float[] {point3F.x, point3F.y, point3F.z}, this.point3Fs);
+	}
+	
+	/**
+	 * Returns the index of {@code texture}, or {@code -1} if it does not exist.
+	 * <p>
+	 * If {@code texture} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param texture the {@link Texture} to check
+	 * @return the index of {@code texture}, or {@code -1} if it does not exist
+	 * @throws NullPointerException thrown if, and only if, {@code texture} is {@code null}
+	 */
+	public synchronized int indexOf(final Texture texture) {
+		return doIndexOf(texture.toArray(), this.textures, Texture.RELATIVE_OFFSET_SIZE);
 	}
 	
 	/**
@@ -267,33 +166,7 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code vector3F} is {@code null}
 	 */
 	public synchronized int indexOf(final Vector3F vector3F) {
-//		Retrieve the array:
-		final float[] vector3Fs = this.vector3Fs;
-		
-		if(vector3Fs == null) {
-//			The array is null, so return -1:
-			return -1;
-		}
-		
-		if(vector3Fs.length < VECTOR3F_LENGTH) {
-//			The array has no entries, so return -1:
-			return -1;
-		}
-		
-		for(int i = 0; i < vector3Fs.length; i += VECTOR3F_LENGTH) {
-//			Retrieve the X-, Y- and Z-coordinates of the current entry:
-			final float x = vector3Fs[i + 0];
-			final float y = vector3Fs[i + 1];
-			final float z = vector3Fs[i + 2];
-			
-			if(Float.compare(vector3F.x, x) == 0 && Float.compare(vector3F.y, y) == 0 && Float.compare(vector3F.z, z) == 0) {
-//				The X-, Y- and Z-coordinates of the current entry matches vector3F, so return its index:
-				return i;
-			}
-		}
-		
-//		No entry in the array matched vector3F, so return -1:
-		return -1;
+		return doIndexOf(new float[] {vector3F.x, vector3F.y, vector3F.z}, this.vector3Fs);
 	}
 	
 	/**
@@ -350,46 +223,7 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code point2F} is {@code null}
 	 */
 	public synchronized int remove(final Point2F point2F) {
-//		Retrieve the index for point2F, if it exists:
-		int index = indexOf(point2F);
-		
-		if(index == -1) {
-//			No entry for point2F exists, so return -1:
-			return -1;
-		}
-		
-//		Retrieve the old array and create a new array:
-		final float[] oldPoint2Fs = this.point2Fs;
-		final float[] newPoint2Fs = oldPoint2Fs == null || oldPoint2Fs.length - POINT2F_LENGTH < POINT2F_LENGTH ? new float[1] : new float[oldPoint2Fs.length - POINT2F_LENGTH];
-		
-//		Initialize the index to -1:
-		index = -1;
-		
-		if(oldPoint2Fs != null && oldPoint2Fs.length >= POINT2F_LENGTH) {
-			for(int i = 0, j = 0; i < oldPoint2Fs.length; i += POINT2F_LENGTH, j += POINT2F_LENGTH) {
-//				Retrieve the X- and Y-coordinates of the current entry:
-				final float x = oldPoint2Fs[i + 0];
-				final float y = oldPoint2Fs[i + 1];
-				
-				if(Float.compare(point2F.x, x) == 0 && Float.compare(point2F.y, y) == 0) {
-//					Update the index to return to the index of the entry to remove:
-					index = j;
-					
-//					Because the current entry was removed, we need to decrement the index for the new array, in order to continue:
-					j -= POINT2F_LENGTH;
-				} else {
-//					Add the current entry from the old array to the new array:
-					newPoint2Fs[j + 0] = x;
-					newPoint2Fs[j + 1] = y;
-				}
-			}
-		}
-		
-//		Update the old array with the new array:
-		this.point2Fs = newPoint2Fs;
-		
-//		Return the index of the entry that was removed:
-		return index;
+		return doRemove(new float[] {point2F.x, point2F.y}, this.point2Fs, point2Fs -> this.point2Fs = point2Fs);
 	}
 	
 	/**
@@ -404,48 +238,22 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code point3F} is {@code null}
 	 */
 	public synchronized int remove(final Point3F point3F) {
-//		Retrieve the index for point3F, if it exists:
-		int index = indexOf(point3F);
-		
-		if(index == -1) {
-//			No entry for point3F exists, so return -1:
-			return -1;
-		}
-		
-//		Retrieve the old array and create a new array:
-		final float[] oldPoint3Fs = this.point3Fs;
-		final float[] newPoint3Fs = oldPoint3Fs == null || oldPoint3Fs.length - POINT3F_LENGTH < POINT3F_LENGTH ? new float[1] : new float[oldPoint3Fs.length - POINT3F_LENGTH];
-		
-//		Initialize the index to -1:
-		index = -1;
-		
-		if(oldPoint3Fs != null && oldPoint3Fs.length >= POINT3F_LENGTH) {
-			for(int i = 0, j = 0; i < oldPoint3Fs.length; i += POINT3F_LENGTH, j += POINT3F_LENGTH) {
-//				Retrieve the X-, Y- and Z-coordinates of the current entry:
-				final float x = oldPoint3Fs[i + 0];
-				final float y = oldPoint3Fs[i + 1];
-				final float z = oldPoint3Fs[i + 2];
-				
-				if(Float.compare(point3F.x, x) == 0 && Float.compare(point3F.y, y) == 0 && Float.compare(point3F.z, z) == 0) {
-//					Update the index to return to the index of the entry to remove:
-					index = j;
-					
-//					Because the current entry was removed, we need to decrement the index for the new array, in order to continue:
-					j -= POINT3F_LENGTH;
-				} else {
-//					Add the current entry from the old array to the new array:
-					newPoint3Fs[j + 0] = x;
-					newPoint3Fs[j + 1] = y;
-					newPoint3Fs[j + 2] = z;
-				}
-			}
-		}
-		
-//		Update the old array with the new array:
-		this.point3Fs = newPoint3Fs;
-		
-//		Return the index of the entry that was removed:
-		return index;
+		return doRemove(new float[] {point3F.x, point3F.y, point3F.z}, this.point3Fs, point3Fs -> this.point3Fs = point3Fs);
+	}
+	
+	/**
+	 * Removes {@code texture} from this {@code DynamicCompiledScene} instance, if it exists.
+	 * <p>
+	 * Returns the index of {@code texture}, or {@code -1} if it does not exist.
+	 * <p>
+	 * If {@code texture} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param texture the {@link Texture} to remove
+	 * @return the index of {@code texture}, or {@code -1} if it does not exist
+	 * @throws NullPointerException thrown if, and only if, {@code texture} is {@code null}
+	 */
+	public synchronized int remove(final Texture texture) {
+		return doRemove(texture.toArray(), this.textures, textures -> this.textures = textures, Texture.RELATIVE_OFFSET_SIZE);
 	}
 	
 	/**
@@ -460,48 +268,7 @@ public final class DynamicCompiledScene {
 	 * @throws NullPointerException thrown if, and only if, {@code vector3F} is {@code null}
 	 */
 	public synchronized int remove(final Vector3F vector3F) {
-//		Retrieve the index for vector3F, if it exists:
-		int index = indexOf(vector3F);
-		
-		if(index == -1) {
-//			No entry for vector3F exists, so return -1:
-			return -1;
-		}
-		
-//		Retrieve the old array and create a new array:
-		final float[] oldVector3Fs = this.vector3Fs;
-		final float[] newVector3Fs = oldVector3Fs == null || oldVector3Fs.length - VECTOR3F_LENGTH < VECTOR3F_LENGTH ? new float[1] : new float[oldVector3Fs.length - VECTOR3F_LENGTH];
-		
-//		Initialize the index to -1:
-		index = -1;
-		
-		if(oldVector3Fs != null && oldVector3Fs.length >= VECTOR3F_LENGTH) {
-			for(int i = 0, j = 0; i < oldVector3Fs.length; i += VECTOR3F_LENGTH, j += VECTOR3F_LENGTH) {
-//				Retrieve the X-, Y- and Z-coordinates of the current entry:
-				final float x = oldVector3Fs[i + 0];
-				final float y = oldVector3Fs[i + 1];
-				final float z = oldVector3Fs[i + 2];
-				
-				if(Float.compare(vector3F.x, x) == 0 && Float.compare(vector3F.y, y) == 0 && Float.compare(vector3F.z, z) == 0) {
-//					Update the index to return to the index of the entry to remove:
-					index = j;
-					
-//					Because the current entry was removed, we need to decrement the index for the new array, in order to continue:
-					j -= VECTOR3F_LENGTH;
-				} else {
-//					Add the current entry from the old array to the new array:
-					newVector3Fs[j + 0] = x;
-					newVector3Fs[j + 1] = y;
-					newVector3Fs[j + 2] = z;
-				}
-			}
-		}
-		
-//		Update the old array with the new array:
-		this.vector3Fs = newVector3Fs;
-		
-//		Return the index of the entry that was removed:
-		return index;
+		return doRemove(new float[] {vector3F.x, vector3F.y, vector3F.z}, this.vector3Fs, vector3Fs -> this.vector3Fs = vector3Fs);
 	}
 	
 	/**
@@ -519,5 +286,200 @@ public final class DynamicCompiledScene {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private static synchronized int doAdd(final float[] structure, final float[] structures, final Consumer<float[]> consumer) {
+		return doAdd(structure, structures, consumer, -1);
+	}
 	
+	private static synchronized int doAdd(final float[] structure, final float[] structures, final Consumer<float[]> consumer, final int relativeOffsetSize) {
+		/*
+		 * structure:			The structure to find in the array 'structures'.
+		 * structures:			The set of structures in which a search for 'structure' is performed.
+		 * consumer:			A 'Consumer' that accepts the new array of structures.
+		 * relativeOffsetSize:	A negative value (-1 or less) is used for static structures. They all have the same size. It can be determined from 'structure.length'.
+		 * 						A positive value (0 or more) is used for dynamic structures. They all have varying sizes. In this case 'relativeOffsetSize' is used as a relative offset in each structure of the 'structures' array.
+		 */
+		
+		if(structure == null) {
+//			The supplied 'structure' array is 'null', so return '-1':
+			return -1;
+		}
+		
+		if(structure.length == 0) {
+//			The length of the supplied 'structure' array is '0', so return '-1':
+			return -1;
+		}
+		
+//		Retrieve the index for 'structure', if it exists:
+		final int index = doIndexOf(structure, structures, relativeOffsetSize);
+		
+		if(index != -1) {
+//			A match for 'structure' was found, so return its index:
+			return index;
+		}
+		
+		if(structures == null || structures.length <= 1) {
+//			Let 'consumer' accept a clone of 'structure' as the new array of structures:
+			consumer.accept(structure.clone());
+			
+			return 0;
+		}
+		
+		if(relativeOffsetSize < 0 && structures.length % structure.length != 0) {
+			throw new IllegalArgumentException(String.format("structures.length %% structure.length != 0: structure.length=%s, structures.length=%s", Integer.toString(structure.length), Integer.toString(structures.length)));
+		}
+		
+//		Retrieve the size of 'structure':
+		final int size = relativeOffsetSize < 0 ? structure.length : (int)(structure[relativeOffsetSize]);
+		
+//		Create 'structuresUpdated' to hold all existing structures and 'structure':
+		final float[] structuresUpdated = new float[structures.length + size];
+		
+//		Copy all existing structures from 'structures' to 'structuresUpdated':
+		System.arraycopy(structures, 0, structuresUpdated, 0, structures.length);
+		
+		for(int i = 0; i < size; i++) {
+//			Add the data in 'structure' to 'structuresUpdated':
+			structuresUpdated[structures.length + i] = structure[i];
+		}
+		
+//		Let 'consumer' accept 'structuresUpdated' as the new array of structures:
+		consumer.accept(structuresUpdated);
+		
+//		Return the index of 'structure' in 'structuresUpdated':
+		return structures.length;
+	}
+	
+	private static synchronized int doIndexOf(final float[] structure, final float[] structures) {
+		return doIndexOf(structure, structures, -1);
+	}
+	
+	private static synchronized int doIndexOf(final float[] structure, final float[] structures, final int relativeOffsetSize) {
+		/*
+		 * structure:			The structure to find in the array 'structures'.
+		 * structures:			The set of structures in which a search for 'structure' is performed.
+		 * relativeOffsetSize:	A negative value (-1 or less) is used for static structures. They all have the same size. It can be determined from 'structure.length'.
+		 * 						A positive value (0 or more) is used for dynamic structures. They all have varying sizes. In this case 'relativeOffsetSize' is used as a relative offset in each structure of the 'structures' array.
+		 */
+		
+		if(structure == null) {
+//			The supplied 'structure' array is 'null', so return '-1':
+			return -1;
+		}
+		
+		if(structure.length == 0) {
+//			The length of the supplied 'structure' array is '0', so return '-1':
+			return -1;
+		}
+		
+		if(structures == null) {
+//			The supplied 'structures' array is 'null', so return '-1':
+			return -1;
+		}
+		
+		if(structures.length <= 1) {
+//			The length of the supplied 'structures' array is less than or equal to '1', which means it is empty, so return '-1':
+			return -1;
+		}
+		
+		if(relativeOffsetSize < 0 && structures.length % structure.length != 0) {
+			throw new IllegalArgumentException(String.format("structures.length %% structure.length != 0: structure.length=%s, structures.length=%s", Integer.toString(structure.length), Integer.toString(structures.length)));
+		}
+		
+		for(int i = 0; i < structures.length;) {
+//			Initialize 'hasFoundMatch' to 'true':
+			boolean hasFoundMatch = true;
+			
+			for(int j = 0; j < structure.length; j++) {
+				if(Float.compare(structure[j], structures[i + j]) != 0) {
+//					A difference between the 'structure' array and the current structure in the 'structures' array has been found, so update 'hasFoundMatch' to 'false':
+					hasFoundMatch = false;
+					
+					break;
+				}
+			}
+			
+			if(hasFoundMatch) {
+//				The 'structure' array supplied and the current structure in the 'structures' array match, so return its index:
+				return i;
+			}
+			
+//			Update the index to the next structure in the 'structures' array:
+			i += relativeOffsetSize < 0 ? structure.length : structures[i + relativeOffsetSize];
+		}
+		
+//		No match has been found in the 'structures' array, so return '-1':
+		return -1;
+	}
+	
+	private static synchronized int doRemove(final float[] structure, final float[] structures, final Consumer<float[]> consumer) {
+		return doRemove(structure, structures, consumer, -1);
+	}
+	
+	private static synchronized int doRemove(final float[] structure, final float[] structures, final Consumer<float[]> consumer, final int relativeOffsetSize) {
+		/*
+		 * structure:			The structure to find in the array 'structures'.
+		 * structures:			The set of structures in which a search for 'structure' is performed.
+		 * consumer:			A 'Consumer' that accepts the new array of structures.
+		 * relativeOffsetSize:	A negative value (-1 or less) is used for static structures. They all have the same size. It can be determined from 'structure.length'.
+		 * 						A positive value (0 or more) is used for dynamic structures. They all have varying sizes. In this case 'relativeOffsetSize' is used as a relative offset in each structure of the 'structures' array.
+		 */
+		
+		if(structure == null) {
+//			The supplied 'structure' array is 'null', so return '-1':
+			return -1;
+		}
+		
+		if(structure.length == 0) {
+//			The length of the supplied 'structure' array is '0', so return '-1':
+			return -1;
+		}
+		
+		if(structures == null) {
+//			The supplied 'structures' array is 'null', so return '-1':
+			return -1;
+		}
+		
+		if(structures.length <= 1) {
+//			The length of the supplied 'structures' array is less than or equal to '1', which means it is empty, so return '-1':
+			return -1;
+		}
+		
+		if(relativeOffsetSize < 0 && structures.length % structure.length != 0) {
+			throw new IllegalArgumentException(String.format("structures.length %% structure.length != 0: structure.length=%s, structures.length=%s", Integer.toString(structure.length), Integer.toString(structures.length)));
+		}
+		
+//		Retrieve the index for 'structure', if it exists:
+		final int index = doIndexOf(structure, structures, relativeOffsetSize);
+		
+		if(index == -1) {
+//			No match for 'structure' was found, so return '-1':
+			return -1;
+		}
+		
+//		Retrieve the size of 'structure':
+		final int size = relativeOffsetSize < 0 ? structure.length : (int)(structure[relativeOffsetSize]);
+		
+		if(structures.length == size) {
+//			Let 'consumer' accept an "empty" array (an array with a length of '1') as the new array of structures:
+			consumer.accept(new float[1]);
+			
+//			Return the index of 'structure' that was removed (which should be '0' in this case):
+			return index;
+		}
+		
+//		Create 'structuresUpdated' to hold all existing structures except for 'structure':
+		final float[] structuresUpdated = new float[structures.length - size];
+		
+		for(int i = 0, j = 0; i < structures.length; i++) {
+			if(i < index || i >= index + size) {
+				structuresUpdated[j++] = structures[i];
+			}
+		}
+		
+//		Let 'consumer' accept 'structuresUpdated' as the new array of structures:
+		consumer.accept(structuresUpdated);
+		
+//		Return the index of 'structure' that was removed:
+		return index;
+	}
 }
