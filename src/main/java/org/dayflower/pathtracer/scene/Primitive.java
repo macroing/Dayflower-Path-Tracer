@@ -20,6 +20,8 @@ package org.dayflower.pathtracer.scene;
 
 import java.util.Objects;
 
+import org.dayflower.pathtracer.math.Matrix44F;
+
 /**
  * A {@code Primitive} represents a primitive that is associated with a {@link Shape} and a {@link Surface}.
  * 
@@ -49,6 +51,8 @@ public final class Primitive {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private Matrix44F objectToWorld;
+	private Matrix44F worldToObject;
 	private Shape shape;
 	private Surface surface;
 	
@@ -64,11 +68,48 @@ public final class Primitive {
 	 * @throws NullPointerException thrown if, and only if, either {@code shape} or {@code surface} are {@code null}
 	 */
 	public Primitive(final Shape shape, final Surface surface) {
+		this(shape, surface, new Matrix44F());
+	}
+	
+	/**
+	 * Constructs a new {@code Primitive} instance.
+	 * <p>
+	 * If either {@code shape}, {@code surface} or {@code objectToWorld} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If {@code objectToWorld} cannot be inversed, an {@code IllegalStateException} will be thrown.
+	 * 
+	 * @param shape the {@link Shape} to use
+	 * @param surface the {@link Surface} to use
+	 * @param objectToWorld the {@link Matrix44F} to transform from object-space to world-space
+	 * @throws IllegalStateException thrown if, and only if, {@code objectToWorld} cannot be inversed
+	 * @throws NullPointerException thrown if, and only if, either {@code shape}, {@code surface} or {@code objectToWorld} are {@code null}
+	 */
+	public Primitive(final Shape shape, final Surface surface, final Matrix44F objectToWorld) {
 		this.shape = Objects.requireNonNull(shape, "shape == null");
 		this.surface = Objects.requireNonNull(surface, "surface == null");
+		this.objectToWorld = Objects.requireNonNull(objectToWorld, "objectToWorld == null");
+		this.worldToObject = this.objectToWorld.inverse();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns the {@link Matrix44F} to transform from object-space to world-space.
+	 * 
+	 * @return the {@code Matrix44F} to transform from object-space to world-space
+	 */
+	public Matrix44F getObjectToWorld() {
+		return this.objectToWorld;
+	}
+	
+	/**
+	 * Returns the {@link Matrix44F} to transform from world-space to object-space.
+	 * 
+	 * @return the {@code Matrix44F} to transform from world-space to object-space
+	 */
+	public Matrix44F getWorldToObject() {
+		return this.worldToObject;
+	}
 	
 	/**
 	 * Returns the {@link Shape} assigned to this {@code Primitive} instance.
@@ -86,7 +127,7 @@ public final class Primitive {
 	 */
 	@Override
 	public String toString() {
-		return String.format("new Primitive(%s, %s)", this.shape, this.surface);
+		return String.format("new Primitive(%s, %s, %s)", this.shape, this.surface, this.objectToWorld);
 	}
 	
 	/**
@@ -112,6 +153,10 @@ public final class Primitive {
 			return true;
 		} else if(!(object instanceof Primitive)) {
 			return false;
+		} else if(!Objects.equals(this.objectToWorld, Primitive.class.cast(object).objectToWorld)) {
+			return false;
+		} else if(!Objects.equals(this.worldToObject, Primitive.class.cast(object).worldToObject)) {
+			return false;
 		} else if(!Objects.equals(this.shape, Primitive.class.cast(object).shape)) {
 			return false;
 		} else if(!Objects.equals(this.surface, Primitive.class.cast(object).surface)) {
@@ -128,7 +173,23 @@ public final class Primitive {
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.shape, this.surface);
+		return Objects.hash(this.objectToWorld, this.worldToObject, this.shape, this.surface);
+	}
+	
+	/**
+	 * Sets the {@link Matrix44F} to transform from object-space to world-space and updates the {@code Matrix44F} to transform from world-space to object-space.
+	 * <p>
+	 * If {@code objectToWorld} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If {@code objectToWorld} cannot be inversed, an {@code IllegalStateException} will be thrown.
+	 * 
+	 * @param objectToWorld the new {@code Matrix44F} to transform from object-space to world-space
+	 * @throws IllegalStateException thrown if, and only if, {@code objectToWorld} cannot be inversed
+	 * @throws NullPointerException thrown if, and only if, {@code objectToWorld} is {@code null}
+	 */
+	public void setObjectToWorld(final Matrix44F objectToWorld) {
+		this.objectToWorld = Objects.requireNonNull(objectToWorld, "objectToWorld == null");
+		this.worldToObject = this.objectToWorld.inverse();
 	}
 	
 	/**
@@ -153,5 +214,21 @@ public final class Primitive {
 	 */
 	public void setSurface(final Surface surface) {
 		this.surface = Objects.requireNonNull(surface, "surface == null");
+	}
+	
+	/**
+	 * Sets the {@link Matrix44F} to transform from world-space to object-space and updates the {@code Matrix44F} to transform from object-space to world-space.
+	 * <p>
+	 * If {@code worldToObject} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * <p>
+	 * If {@code worldToObject} cannot be inversed, an {@code IllegalStateException} will be thrown.
+	 * 
+	 * @param worldToObject the new {@code Matrix44F} to transform from world-space to object-space
+	 * @throws IllegalStateException thrown if, and only if, {@code worldToObject} cannot be inversed
+	 * @throws NullPointerException thrown if, and only if, {@code worldToObject} is {@code null}
+	 */
+	public void setWorldToObject(final Matrix44F worldToObject) {
+		this.worldToObject = Objects.requireNonNull(worldToObject, "worldToObject == null");
+		this.objectToWorld = this.worldToObject.inverse();
 	}
 }

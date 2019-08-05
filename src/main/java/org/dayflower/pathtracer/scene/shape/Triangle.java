@@ -26,7 +26,6 @@ import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
-import org.dayflower.pathtracer.scene.Surface;
 
 /**
  * A {@link Shape} implementation that implements a triangle.
@@ -112,13 +111,12 @@ public final class Triangle implements Shape {
 	/**
 	 * Constructs a new {@code Triangle} instance.
 	 * <p>
-	 * If either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If either {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param surface a {@link Surface} denoting the surface of this {@code Triangle}
 	 * @param a a {@link Vertex} denoted by A
 	 * @param b a {@code Vertex} denoted by B
 	 * @param c a {@code Vertex} denoted by C
-	 * @throws NullPointerException thrown if, and only if, either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
 	 */
 	public Triangle(final Vertex a, final Vertex b, final Vertex c) {
 		this.a = Objects.requireNonNull(a, "a == null");

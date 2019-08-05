@@ -77,6 +77,7 @@ public final class Arrays2 {
 	 * If {@code array.length} is less than the length read from {@code dataInputStream}, an {@code ArrayIndexOutOfBoundsException} will be thrown.
 	 * 
 	 * @param dataInputStream the {@code DataInputStream} to read from
+	 * @param array the {@code float} array to write to and return
 	 * @return {@code array}
 	 * @throws ArrayIndexOutOfBoundsException thrown if, and only if, {@code array.length} is less than the length read from {@code dataInputStream}
 	 * @throws IOException thrown if, and only if, an I/O error occurs
@@ -101,6 +102,7 @@ public final class Arrays2 {
 	 * <p>
 	 * If an element in {@code list} is {@code null}, a {@code NullPointerException} might be thrown. But no guarantees can be made. This is up to {@code function}.
 	 * 
+	 * @param <T> the generic type to use
 	 * @param list a {@code List}
 	 * @param function a {@code Function} mapping {@code List}s elements to {@code float[]}
 	 * @return a larger {@code float[]} by merging smaller {@code float[]} together
@@ -119,6 +121,7 @@ public final class Arrays2 {
 	 * <p>
 	 * If the length of the larger {@code float[]} is less than {@code minimumLength}, a new empty {@code float[]} with {@code minimumLength} as length will be returned.
 	 * 
+	 * @param <T> the generic type to use
 	 * @param list a {@code List}
 	 * @param function a {@code Function} mapping {@code List}s elements to {@code float[]}
 	 * @param minimumLength the minimum length of the {@code float[]} to return
@@ -183,6 +186,7 @@ public final class Arrays2 {
 	 * <p>
 	 * If an element in {@code list} is {@code null}, a {@code NullPointerException} might be thrown. But no guarantees can be made. This is up to {@code function}.
 	 * 
+	 * @param <T> the generic type to use
 	 * @param list a {@code List}
 	 * @param function a {@code Function} mapping {@code List}s elements to {@code int[]}
 	 * @return a larger {@code int[]} by merging smaller {@code int[]} together
@@ -201,6 +205,7 @@ public final class Arrays2 {
 	 * <p>
 	 * If the length of the larger {@code int[]} is less than {@code minimumLength}, a new empty {@code int[]} with {@code minimumLength} as length will be returned.
 	 * 
+	 * @param <T> the generic type to use
 	 * @param list a {@code List}
 	 * @param function a {@code Function} mapping {@code List}s elements to {@code int[]}
 	 * @param minimumLength the minimum length of the {@code int[]} to return

@@ -88,13 +88,12 @@ public final class Plane implements Shape {
 	/**
 	 * Constructs a new {@code Plane} instance.
 	 * <p>
-	 * If either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If either {@code a}, {@code b} or {@code c} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param surface a {@link Surface} denoting the surface of this {@code Plane}
 	 * @param a a {@link Point3F} denoting the point A
 	 * @param b a {@code Point3} denoting the point A
 	 * @param c a {@code Point3} denoting the point A
-	 * @throws NullPointerException thrown if, and only if, either {@code surface}, {@code a}, {@code b} or {@code c} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
 	 */
 	public Plane(final Point3F a, final Point3F b, final Point3F c) {
 		this.a = Objects.requireNonNull(a, "a == null");

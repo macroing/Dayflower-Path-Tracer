@@ -24,6 +24,7 @@ import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Scene;
+import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
 
 /**
@@ -40,6 +41,7 @@ import org.dayflower.pathtracer.scene.Texture;
 public final class DynamicCompiledScene {
 	private float[] point2Fs;
 	private float[] point3Fs;
+	private float[] surfaces;
 	private float[] textures;
 	private float[] vector3Fs;
 	
@@ -51,6 +53,7 @@ public final class DynamicCompiledScene {
 	public DynamicCompiledScene() {
 		this.point2Fs = new float[1];
 		this.point3Fs = new float[1];
+		this.surfaces = new float[1];
 		this.textures = new float[1];
 		this.vector3Fs = new float[1];
 	}
@@ -85,6 +88,25 @@ public final class DynamicCompiledScene {
 	 */
 	public synchronized int add(final Point3F point3F) {
 		return doAdd(new float[] {point3F.x, point3F.y, point3F.z}, this.point3Fs, point3Fs -> this.point3Fs = point3Fs);
+	}
+	
+	/**
+	 * Adds {@code surface} to this {@code DynamicCompiledScene} instance.
+	 * <p>
+	 * Returns the index of {@code surface}.
+	 * <p>
+	 * If {@code surface} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param surface the {@link Surface} to add
+	 * @return the index of {@code surface}
+	 * @throws NullPointerException thrown if, and only if, {@code surface} is {@code null}
+	 */
+	public synchronized int add(final Surface surface) {
+		add(surface.getTextureAlbedo());
+		add(surface.getTextureEmission());
+		add(surface.getTextureNormal());
+		
+		return doAdd(doToArray(surface), this.surfaces, surfaces -> this.surfaces = surfaces);
 	}
 	
 	/**
@@ -144,6 +166,19 @@ public final class DynamicCompiledScene {
 	}
 	
 	/**
+	 * Returns the index of {@code surface}, or {@code -1} if it does not exist.
+	 * <p>
+	 * If {@code surface} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param surface the {@link Surface} to check
+	 * @return the index of {@code surface}, or {@code -1} if it does not exist
+	 * @throws NullPointerException thrown if, and only if, {@code surface} is {@code null}
+	 */
+	public synchronized int indexOf(final Surface surface) {
+		return doIndexOf(doToArray(surface), this.surfaces);
+	}
+	
+	/**
 	 * Returns the index of {@code texture}, or {@code -1} if it does not exist.
 	 * <p>
 	 * If {@code texture} is {@code null}, a {@code NullPointerException} will be thrown.
@@ -198,6 +233,34 @@ public final class DynamicCompiledScene {
 	}
 	
 	/**
+	 * Returns the number of references to {@code surface}.
+	 * <p>
+	 * If {@code surface} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param surface a {@link Surface}
+	 * @return the number of references to {@code surface}
+	 * @throws NullPointerException thrown if, and only if, {@code surface} is {@code null}
+	 */
+	@SuppressWarnings("static-method")
+	public synchronized int referencesTo(final Surface surface) {
+		return 0;//TODO: Implement!
+	}
+	
+	/**
+	 * Returns the number of references to {@code texture}.
+	 * <p>
+	 * If {@code texture} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param texture a {@link Texture}
+	 * @return the number of references to {@code texture}
+	 * @throws NullPointerException thrown if, and only if, {@code texture} is {@code null}
+	 */
+	@SuppressWarnings("static-method")
+	public synchronized int referencesTo(final Texture texture) {
+		return 0;//TODO: Implement!
+	}
+	
+	/**
 	 * Returns the number of references to {@code vector3F}.
 	 * <p>
 	 * If {@code vector3F} is {@code null}, a {@code NullPointerException} will be thrown.
@@ -239,6 +302,21 @@ public final class DynamicCompiledScene {
 	 */
 	public synchronized int remove(final Point3F point3F) {
 		return doRemove(new float[] {point3F.x, point3F.y, point3F.z}, this.point3Fs, point3Fs -> this.point3Fs = point3Fs);
+	}
+	
+	/**
+	 * Removes {@code surface} from this {@code DynamicCompiledScene} instance, if it exists.
+	 * <p>
+	 * Returns the index of {@code surface}, or {@code -1} if it does not exist.
+	 * <p>
+	 * If {@code surface} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param surface the {@link Surface} to remove
+	 * @return the index of {@code surface}, or {@code -1} if it does not exist
+	 * @throws NullPointerException thrown if, and only if, {@code surface} is {@code null}
+	 */
+	public synchronized int remove(final Surface surface) {
+		return doRemove(doToArray(surface), this.surfaces, surfaces -> this.surfaces = surfaces);
 	}
 	
 	/**
@@ -286,13 +364,26 @@ public final class DynamicCompiledScene {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private synchronized float[] doToArray(final Surface surface) {
+		return new float[] {
+			surface.getMaterial().getType(),
+			indexOf(surface.getTextureAlbedo()),
+			indexOf(surface.getTextureEmission()),
+			indexOf(surface.getTextureNormal()),
+			surface.getNoiseAmount(),
+			surface.getNoiseScale()
+		};
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private static synchronized int doAdd(final float[] structure, final float[] structures, final Consumer<float[]> consumer) {
 		return doAdd(structure, structures, consumer, -1);
 	}
 	
 	private static synchronized int doAdd(final float[] structure, final float[] structures, final Consumer<float[]> consumer, final int relativeOffsetSize) {
 		/*
-		 * structure:			The structure to find in the array 'structures'.
+		 * structure:			The structure to find in or add to 'structures'.
 		 * structures:			The set of structures in which a search for 'structure' is performed.
 		 * consumer:			A 'Consumer' that accepts the new array of structures.
 		 * relativeOffsetSize:	A negative value (-1 or less) is used for static structures. They all have the same size. It can be determined from 'structure.length'.
@@ -417,7 +508,7 @@ public final class DynamicCompiledScene {
 	
 	private static synchronized int doRemove(final float[] structure, final float[] structures, final Consumer<float[]> consumer, final int relativeOffsetSize) {
 		/*
-		 * structure:			The structure to find in the array 'structures'.
+		 * structure:			The structure to find in and remove from the array 'structures'.
 		 * structures:			The set of structures in which a search for 'structure' is performed.
 		 * consumer:			A 'Consumer' that accepts the new array of structures.
 		 * relativeOffsetSize:	A negative value (-1 or less) is used for static structures. They all have the same size. It can be determined from 'structure.length'.

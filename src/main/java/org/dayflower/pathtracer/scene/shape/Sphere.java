@@ -60,11 +60,10 @@ public final class Sphere implements Shape {
 	/**
 	 * Constructs a new {@code Sphere} instance.
 	 * <p>
-	 * If either {@code surface} or {@code position} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If {@code position} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param surface a {@link Surface} denoting the surface of this {@code Sphere}
 	 * @param position the position of this {@code Sphere}
-	 * @throws NullPointerException thrown if, and only if, either {@code surface} or {@code position} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, {@code position} is {@code null}
 	 */
 	public Sphere(final Point3F position) {
 		this(position, 1.0F);
@@ -73,12 +72,11 @@ public final class Sphere implements Shape {
 	/**
 	 * Constructs a new {@code Sphere} instance.
 	 * <p>
-	 * If either {@code surface} or {@code position} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If {@code position} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param surface a {@link Surface} denoting the surface of this {@code Sphere}
 	 * @param position the position of this {@code Sphere}
 	 * @param radius the radius of this {@code Sphere}
-	 * @throws NullPointerException thrown if, and only if, either {@code surface} or {@code position} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, {@code position} is {@code null}
 	 */
 	public Sphere(final Point3F position, final float radius) {
 		this.position = Objects.requireNonNull(position, "position == null");

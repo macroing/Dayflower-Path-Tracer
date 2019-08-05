@@ -1,6 +1,6 @@
 Dayflower - Path Tracer v.0.1.2
 ===============================
-Dayflower - Path Tracer is a photo-realistic realtime renderer written in Java.
+Dayflower - Path Tracer is a photorealistic realtime renderer written in Java.
 
 The engine primarily uses a rendering technique called Path Tracing, which is in the family of Ray Tracing algorithms. As secondary rendering techniques, Ambient Occlusion, Ray Casting, Ray Marching, Ray Tracing and Wireframe rendering may be used.
 
