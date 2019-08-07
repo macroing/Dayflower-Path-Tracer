@@ -193,7 +193,7 @@ public final class Vector3F {
 	 * <p>
 	 * If {@code v} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param v the {@code Vector3} to subtract
+	 * @param v the {@code Vector3F} to subtract
 	 * @return a new {@code Vector3F} instance with the result of the subtraction
 	 * @throws NullPointerException thrown if, and only if, {@code v} is {@code null}
 	 */

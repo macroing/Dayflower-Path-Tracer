@@ -112,12 +112,12 @@ public final class OrthoNormalBasis33F {
 	}
 	
 	/**
-	 * Constructs a new {@code OrthoNormalBasis} instance given {@code w} and {@code v}.
+	 * Constructs a new {@code OrthoNormalBasis33F} instance given {@code w} and {@code v}.
 	 * <p>
 	 * If either {@code w} or {@code v} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param w a {@link Vector3F} pointing in the W-direction
-	 * @param v a {@code Vector3} pointing in the V-direction
+	 * @param v a {@code Vector3F} pointing in the V-direction
 	 * @throws NullPointerException thrown if, and only if, either {@code w} or {@code v} are {@code null}
 	 */
 	public OrthoNormalBasis33F(final Vector3F w, final Vector3F v) {

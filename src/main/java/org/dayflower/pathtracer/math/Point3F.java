@@ -28,7 +28,7 @@ import java.util.Objects;
 import org.dayflower.pathtracer.util.Strings;
 
 /**
- * A {@code Point3} denotes a point in 3D-space.
+ * A {@code Point3F} denotes a point in 3D-space.
  * <p>
  * This class is immutable and therefore thread-safe.
  * 
@@ -273,7 +273,7 @@ public final class Point3F {
 	 * If {@code p} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param p a {@code Point3F} instance
-	 * @return the distance from this {@code Point3} to {@code p} in squared form
+	 * @return the distance from this {@code Point3F} to {@code p} in squared form
 	 * @throws NullPointerException thrown if, and only if, {@code p} is {@code null}
 	 */
 	public float distanceToSquared(final Point3F p) {
