@@ -39,6 +39,8 @@ import org.dayflower.pathtracer.scene.Texture;
  * @author J&#246;rgen Lundgren
  */
 public final class DynamicCompiledScene {
+	private static final int ARRAY_EMPTY_LENGTH = 1;
+	
 	private float[] point2Fs;
 	private float[] point3Fs;
 	private float[] surfaces;
@@ -51,11 +53,12 @@ public final class DynamicCompiledScene {
 	 * Constructs a new {@code DynamicCompiledScene} instance.
 	 */
 	public DynamicCompiledScene() {
-		this.point2Fs = new float[1];
-		this.point3Fs = new float[1];
-		this.surfaces = new float[1];
-		this.textures = new float[1];
-		this.vector3Fs = new float[1];
+//		The length of "empty" arrays has to be 1. An array with a length of 0 does not seem to work in Aparapi.
+		this.point2Fs = new float[ARRAY_EMPTY_LENGTH];
+		this.point3Fs = new float[ARRAY_EMPTY_LENGTH];
+		this.surfaces = new float[ARRAY_EMPTY_LENGTH];
+		this.textures = new float[ARRAY_EMPTY_LENGTH];
+		this.vector3Fs = new float[ARRAY_EMPTY_LENGTH];
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -408,7 +411,7 @@ public final class DynamicCompiledScene {
 			return index;
 		}
 		
-		if(structures == null || structures.length <= 1) {
+		if(structures == null || structures.length <= ARRAY_EMPTY_LENGTH) {
 //			Let 'consumer' accept a clone of 'structure' as the new array of structures:
 			consumer.accept(structure.clone());
 			
@@ -467,7 +470,7 @@ public final class DynamicCompiledScene {
 			return -1;
 		}
 		
-		if(structures.length <= 1) {
+		if(structures.length <= ARRAY_EMPTY_LENGTH) {
 //			The length of the supplied 'structures' array is less than or equal to '1', which means it is empty, so return '-1':
 			return -1;
 		}
@@ -530,7 +533,7 @@ public final class DynamicCompiledScene {
 			return -1;
 		}
 		
-		if(structures.length <= 1) {
+		if(structures.length <= ARRAY_EMPTY_LENGTH) {
 //			The length of the supplied 'structures' array is less than or equal to '1', which means it is empty, so return '-1':
 			return -1;
 		}
@@ -551,8 +554,8 @@ public final class DynamicCompiledScene {
 		final int size = relativeOffsetSize < 0 ? structure.length : (int)(structure[relativeOffsetSize]);
 		
 		if(structures.length == size) {
-//			Let 'consumer' accept an "empty" array (an array with a length of '1') as the new array of structures:
-			consumer.accept(new float[1]);
+//			Let 'consumer' accept an "empty" array (an array with a length of 'ARRAY_EMPTY_LENGTH', or '1') as the new array of structures:
+			consumer.accept(new float[ARRAY_EMPTY_LENGTH]);
 			
 //			Return the index of 'structure' that was removed (which should be '0' in this case):
 			return index;
