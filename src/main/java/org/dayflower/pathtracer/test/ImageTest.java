@@ -18,6 +18,8 @@
  */
 package org.dayflower.pathtracer.test;
 
+import java.io.File;
+
 import org.dayflower.pathtracer.util.Image;
 
 public final class ImageTest {
@@ -29,10 +31,17 @@ public final class ImageTest {
 	
 	public static void main(final String[] args) {
 		final
-		Image image = new Image();
-		image.clear(0.1F, 0.2F, 0.3F);
-		image.drawLine(0, 0, image.getResolutionX(), image.getResolutionY(), 0.0F, 1.0F, 0.0F);
-		image.drawTriangle(10, 10, 110, 10, 10, 110, 1.0F, 0.0F, 0.0F);
-		image.save("Test-Image.png");
+		Image image = new Image(new File("../07.jpg"));
+//		image.clear(0.1F, 0.2F, 0.3F);
+		image.gammaCorrectionUndo();
+//		image.drawLine(0, 0, image.getResolutionX(), image.getResolutionY(), 0.0F, 1.0F, 0.0F);
+//		image.drawTriangle(10, 10, 110, 10, 10, 110, 1.0F, 0.0F, 0.0F);
+//		image.convolutionFilter33Random();
+//		image.toneMappingFilmicCurveACES(1.0F);
+//		image.effectSepia();
+//		image.toneMappingUnreal3(1.0F);
+		image.toneMappingFilmicCurveACES2(1.0F);
+		image.gammaCorrectionRedo();
+		image.save("../Test-Image.png");
 	}
 }

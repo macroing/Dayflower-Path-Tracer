@@ -55,12 +55,10 @@ import org.dayflower.pathtracer.util.FloatArrayThreadLocal;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class RendererKernel extends AbstractKernel {
+public final class RendererKernel extends AbstractRendererKernel {
 	private static final float COLOR_RECIPROCAL = 1.0F / 255.0F;
 	private static final float REFRACTIVE_INDEX_AIR = 1.0F;
 	private static final float REFRACTIVE_INDEX_GLASS = 1.5F;
-	private static final int BOOLEAN_FALSE = 0;
-	private static final int BOOLEAN_TRUE = 1;
 	private static final int RELATIVE_OFFSET_INTERSECTION_DISTANCE = 0;
 	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_U = 10;
 	private static final int RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_V = 13;
@@ -72,29 +70,15 @@ public final class RendererKernel extends AbstractKernel {
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL = 5;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING = 19;
 	private static final int RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES = 8;
-	private static final int RENDERER_AMBIENT_OCCLUSION = 0;
-	private static final int RENDERER_PATH_TRACER = 1;
-	private static final int RENDERER_RAY_CASTER = 2;
-	private static final int RENDERER_RAY_MARCHER = 3;
-	private static final int RENDERER_RAY_TRACER = 4;
 	private static final int SHADING_FLAT = 1;
 	private static final int SHADING_GOURAUD = 2;
 	private static final int SIZE_COLOR_RGB = 3;
 	private static final int SIZE_INTERSECTION = 24;
 	private static final int SIZE_PIXEL = 4;
 	private static final int SIZE_RAY = 6;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1 = 1;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2 = 2;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR = 3;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_1 = 4;
-	private static final int TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_2 = 5;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private final Camera camera;
-	private final CompiledScene compiledScene;
-	private final Scene scene;
-	private final Sky sky;
 	private final ThreadLocal<float[]> colorTemporarySamplesThreadLocal;
 	private final ThreadLocal<float[]> raysThreadLocal;
 	private boolean isResetRequired;
@@ -110,7 +94,6 @@ public final class RendererKernel extends AbstractKernel {
 	private final float colorSpaceSegmentOffset;
 	private final float colorSpaceSlope;
 	private final float colorSpaceSlopeMatch;
-	private float rendererAOMaximumDistance;
 	private float sunAndSkyJacobian;
 	private float sunAndSkyOrthoNormalBasisUX;
 	private float sunAndSkyOrthoNormalBasisUY;
@@ -151,14 +134,8 @@ public final class RendererKernel extends AbstractKernel {
 	private final float[] sunAndSkyImageHistogram_$constant$;
 	private float[] intersections_$local$;
 	private float[] rays_$private$6;
-	private int effectGrayScale;
-	private int effectSepiaTone;
-	private final int height;
 	private int isNormalMapping = BOOLEAN_TRUE;
 	private int isRenderingWireframes = BOOLEAN_FALSE;
-	private int renderer;
-	private int rendererPTRayDepthMaximum;
-	private int rendererPTRayDepthRussianRoulette;
 	private final int scenePrimitivesCount;
 //	private final int scenePrimitivesEmittingLightCount;
 	private int selectedPrimitiveOffset = -1;
@@ -168,8 +145,6 @@ public final class RendererKernel extends AbstractKernel {
 	private int sunAndSkyIsActive;
 	private int sunAndSkyIsShowingClouds;
 	private int sunAndSkySamples;
-	private int toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2;
-	private final int width;
 	private int[] primitiveOffsetsForPrimaryRay;
 	private final int[] sceneBoundingVolumeHierarchies_$constant$;
 	private final int[] scenePlanes_$constant$;
@@ -191,17 +166,20 @@ public final class RendererKernel extends AbstractKernel {
 	 * @throws NullPointerException thrown if, and only if, {@code sceneLoader} is {@code null}
 	 */
 	public RendererKernel(final int width, final int height, final SceneLoader sceneLoader) {
+		super(width, height, sceneLoader);
+		
 		final RGBColorSpace rGBColorSpace = RGBColorSpace.SRGB;
 		
 		final Scene scene = sceneLoader.loadScene();
 		
 		final CompiledScene compiledScene = sceneLoader.loadCompiledScene();
 		
-		this.camera = scene.getCamera();
-		this.camera.setArray(compiledScene.getCamera());
-		this.compiledScene = compiledScene;
-		this.scene = scene;
-		this.sky = scene.getSky();
+		final
+		Camera camera = scene.getCamera();
+		camera.setArray(compiledScene.getCamera());
+		
+		final Sky sky = scene.getSky();
+		
 		this.colorTemporarySamplesThreadLocal = new FloatArrayThreadLocal(SIZE_COLOR_RGB);
 		this.raysThreadLocal = new FloatArrayThreadLocal(SIZE_RAY);
 		
@@ -233,79 +211,50 @@ public final class RendererKernel extends AbstractKernel {
 //		this.scenePrimitivesEmittingLightCount = this.scenePrimitivesEmittingLight_$constant$[0];
 		this.sceneTriangles_$constant$ = compiledScene.getTriangles();
 		
-//		Initialize the renderer parameters:
-		this.renderer = RENDERER_PATH_TRACER;
-		this.rendererAOMaximumDistance = 200.0F;
-		this.rendererPTRayDepthMaximum = 5;
-		this.rendererPTRayDepthRussianRoulette = 5;
-		
 //		Initialize the sun and sky variables:
-		this.sunAndSkyColHistogram_$constant$ = this.sky.getColHistogram();
+		this.sunAndSkyColHistogram_$constant$ = sky.getColHistogram();
 		this.sunAndSkyColHistogramLength = this.sunAndSkyColHistogram_$constant$.length;
-		this.sunAndSkyImageHistogram_$constant$ = this.sky.getImageHistogram();
-		this.sunAndSkyImageHistogramHeight = this.sky.getImageHistogramHeight();
+		this.sunAndSkyImageHistogram_$constant$ = sky.getImageHistogram();
+		this.sunAndSkyImageHistogramHeight = sky.getImageHistogramHeight();
 		this.sunAndSkyIsActive = BOOLEAN_TRUE;
 		this.sunAndSkyIsShowingClouds = BOOLEAN_FALSE;
-		this.sunAndSkyJacobian = this.sky.getJacobian();
-		this.sunAndSkyOrthoNormalBasisUX = this.sky.getOrthoNormalBasis().u.x;
-		this.sunAndSkyOrthoNormalBasisUY = this.sky.getOrthoNormalBasis().u.y;
-		this.sunAndSkyOrthoNormalBasisUZ = this.sky.getOrthoNormalBasis().u.z;
-		this.sunAndSkyOrthoNormalBasisVX = this.sky.getOrthoNormalBasis().v.x;
-		this.sunAndSkyOrthoNormalBasisVY = this.sky.getOrthoNormalBasis().v.y;
-		this.sunAndSkyOrthoNormalBasisVZ = this.sky.getOrthoNormalBasis().v.z;
-		this.sunAndSkyOrthoNormalBasisWX = this.sky.getOrthoNormalBasis().w.x;
-		this.sunAndSkyOrthoNormalBasisWY = this.sky.getOrthoNormalBasis().w.y;
-		this.sunAndSkyOrthoNormalBasisWZ = this.sky.getOrthoNormalBasis().w.z;
-		this.sunAndSkyPerezRelativeLuminance_$constant$ = this.sky.getPerezRelativeLuminance();
-		this.sunAndSkyPerezX_$constant$ = this.sky.getPerezX();
-		this.sunAndSkyPerezY_$constant$ = this.sky.getPerezY();
-		this.sunAndSkySamples = this.sky.getSamples();
-		this.sunAndSkySunColorR = this.sky.getSunColor().r;
-		this.sunAndSkySunColorG = this.sky.getSunColor().g;
-		this.sunAndSkySunColorB = this.sky.getSunColor().b;
-		this.sunAndSkySunDirectionWorldX = this.sky.getSunDirectionWorld().x;
-		this.sunAndSkySunDirectionWorldY = this.sky.getSunDirectionWorld().y;
-		this.sunAndSkySunDirectionWorldZ = this.sky.getSunDirectionWorld().z;
-		this.sunAndSkySunDirectionX = this.sky.getSunDirection().x;
-		this.sunAndSkySunDirectionY = this.sky.getSunDirection().y;
-		this.sunAndSkySunDirectionZ = this.sky.getSunDirection().z;
-		this.sunAndSkySunOriginX = this.sky.getSunOrigin().x;
-		this.sunAndSkySunOriginY = this.sky.getSunOrigin().y;
-		this.sunAndSkySunOriginZ = this.sky.getSunOrigin().z;
-		this.sunAndSkyTheta = this.sky.getTheta();
-		this.sunAndSkyTurbidity = this.sky.getTurbidity();
-		this.sunAndSkyZenithRelativeLuminance = this.sky.getZenithRelativeLuminance();
-		this.sunAndSkyZenithX = this.sky.getZenithX();
-		this.sunAndSkyZenithY = this.sky.getZenithY();
-		
-//		Initialize the tone mapper variables:
-		this.toneMapperExposure = 1.0F;
+		this.sunAndSkyJacobian = sky.getJacobian();
+		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
+		this.sunAndSkyOrthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
+		this.sunAndSkyOrthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
+		this.sunAndSkyOrthoNormalBasisVX = sky.getOrthoNormalBasis().v.x;
+		this.sunAndSkyOrthoNormalBasisVY = sky.getOrthoNormalBasis().v.y;
+		this.sunAndSkyOrthoNormalBasisVZ = sky.getOrthoNormalBasis().v.z;
+		this.sunAndSkyOrthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
+		this.sunAndSkyOrthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
+		this.sunAndSkyOrthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
+		this.sunAndSkyPerezRelativeLuminance_$constant$ = sky.getPerezRelativeLuminance();
+		this.sunAndSkyPerezX_$constant$ = sky.getPerezX();
+		this.sunAndSkyPerezY_$constant$ = sky.getPerezY();
+		this.sunAndSkySamples = sky.getSamples();
+		this.sunAndSkySunColorR = sky.getSunColor().r;
+		this.sunAndSkySunColorG = sky.getSunColor().g;
+		this.sunAndSkySunColorB = sky.getSunColor().b;
+		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
+		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
+		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
+		this.sunAndSkySunDirectionX = sky.getSunDirection().x;
+		this.sunAndSkySunDirectionY = sky.getSunDirection().y;
+		this.sunAndSkySunDirectionZ = sky.getSunDirection().z;
+		this.sunAndSkySunOriginX = sky.getSunOrigin().x;
+		this.sunAndSkySunOriginY = sky.getSunOrigin().y;
+		this.sunAndSkySunOriginZ = sky.getSunOrigin().z;
+		this.sunAndSkyTheta = sky.getTheta();
+		this.sunAndSkyTurbidity = sky.getTurbidity();
+		this.sunAndSkyZenithRelativeLuminance = sky.getZenithRelativeLuminance();
+		this.sunAndSkyZenithX = sky.getZenithX();
+		this.sunAndSkyZenithY = sky.getZenithY();
 		
 		this.rays_$private$6 = new float[SIZE_RAY];
-		this.width = width;
-		this.height = height;
 		this.subSamples = new long[width * height];
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Returns the {@link Camera} instance assigned to this {@code RendererKernel} instance.
-	 * 
-	 * @return the {@code Camera} instance assigned to this {@code RendererKernel} instance
-	 */
-	public Camera getCamera() {
-		return this.camera;
-	}
-	
-	/**
-	 * Returns the {@link CompiledScene}.
-	 * 
-	 * @return the {@code CompiledScene}
-	 */
-	public CompiledScene getCompiledScene() {
-		return this.compiledScene;
-	}
 	
 	/**
 	 * Compiles this {@code RendererKernel} instance.
@@ -366,7 +315,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @return itself for method chaining
 	 */
 	public RendererKernel reset() {
-		final boolean isResettingFully = this.renderer != RENDERER_AMBIENT_OCCLUSION && this.renderer != RENDERER_PATH_TRACER;
+		final boolean isResettingFully = !isRendererTypeAmbientOcclusion() && !isRendererTypePathTracer();
 		
 		for(int i = 0; i < this.subSamples.length; i++) {
 			if(isResettingFully) {
@@ -419,40 +368,42 @@ public final class RendererKernel extends AbstractKernel {
 	 * @return itself for method chaining
 	 */
 	public RendererKernel updateSky() {
-		this.sunAndSkyJacobian = this.sky.getJacobian();
-		this.sunAndSkyOrthoNormalBasisUX = this.sky.getOrthoNormalBasis().u.x;
-		this.sunAndSkyOrthoNormalBasisUY = this.sky.getOrthoNormalBasis().u.y;
-		this.sunAndSkyOrthoNormalBasisUZ = this.sky.getOrthoNormalBasis().u.z;
-		this.sunAndSkyOrthoNormalBasisVX = this.sky.getOrthoNormalBasis().v.x;
-		this.sunAndSkyOrthoNormalBasisVY = this.sky.getOrthoNormalBasis().v.y;
-		this.sunAndSkyOrthoNormalBasisVZ = this.sky.getOrthoNormalBasis().v.z;
-		this.sunAndSkyOrthoNormalBasisWX = this.sky.getOrthoNormalBasis().w.x;
-		this.sunAndSkyOrthoNormalBasisWY = this.sky.getOrthoNormalBasis().w.y;
-		this.sunAndSkyOrthoNormalBasisWZ = this.sky.getOrthoNormalBasis().w.z;
-		this.sunAndSkySamples = this.sky.getSamples();
-		this.sunAndSkySunColorB = this.sky.getSunColor().b;
-		this.sunAndSkySunColorG = this.sky.getSunColor().g;
-		this.sunAndSkySunColorR = this.sky.getSunColor().r;
-		this.sunAndSkySunDirectionWorldX = this.sky.getSunDirectionWorld().x;
-		this.sunAndSkySunDirectionWorldY = this.sky.getSunDirectionWorld().y;
-		this.sunAndSkySunDirectionWorldZ = this.sky.getSunDirectionWorld().z;
-		this.sunAndSkySunDirectionX = this.sky.getSunDirection().x;
-		this.sunAndSkySunDirectionY = this.sky.getSunDirection().y;
-		this.sunAndSkySunDirectionZ = this.sky.getSunDirection().z;
-		this.sunAndSkySunOriginX = this.sky.getSunOrigin().x;
-		this.sunAndSkySunOriginY = this.sky.getSunOrigin().y;
-		this.sunAndSkySunOriginZ = this.sky.getSunOrigin().z;
-		this.sunAndSkyTheta = this.sky.getTheta();
-		this.sunAndSkyTurbidity = this.sky.getTurbidity();
-		this.sunAndSkyZenithRelativeLuminance = this.sky.getZenithRelativeLuminance();
-		this.sunAndSkyZenithX = this.sky.getZenithX();
-		this.sunAndSkyZenithY = this.sky.getZenithY();
+		final Sky sky = getSky();
 		
-		System.arraycopy(this.sky.getColHistogram(), 0, this.sunAndSkyColHistogram_$constant$, 0, this.sunAndSkyColHistogram_$constant$.length);
-		System.arraycopy(this.sky.getImageHistogram(), 0, this.sunAndSkyImageHistogram_$constant$, 0, this.sunAndSkyImageHistogram_$constant$.length);
-		System.arraycopy(this.sky.getPerezRelativeLuminance(), 0, this.sunAndSkyPerezRelativeLuminance_$constant$, 0, this.sunAndSkyPerezRelativeLuminance_$constant$.length);
-		System.arraycopy(this.sky.getPerezX(), 0, this.sunAndSkyPerezX_$constant$, 0, this.sunAndSkyPerezX_$constant$.length);
-		System.arraycopy(this.sky.getPerezY(), 0, this.sunAndSkyPerezY_$constant$, 0, this.sunAndSkyPerezY_$constant$.length);
+		this.sunAndSkyJacobian = sky.getJacobian();
+		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
+		this.sunAndSkyOrthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
+		this.sunAndSkyOrthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
+		this.sunAndSkyOrthoNormalBasisVX = sky.getOrthoNormalBasis().v.x;
+		this.sunAndSkyOrthoNormalBasisVY = sky.getOrthoNormalBasis().v.y;
+		this.sunAndSkyOrthoNormalBasisVZ = sky.getOrthoNormalBasis().v.z;
+		this.sunAndSkyOrthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
+		this.sunAndSkyOrthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
+		this.sunAndSkyOrthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
+		this.sunAndSkySamples = sky.getSamples();
+		this.sunAndSkySunColorB = sky.getSunColor().b;
+		this.sunAndSkySunColorG = sky.getSunColor().g;
+		this.sunAndSkySunColorR = sky.getSunColor().r;
+		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
+		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
+		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
+		this.sunAndSkySunDirectionX = sky.getSunDirection().x;
+		this.sunAndSkySunDirectionY = sky.getSunDirection().y;
+		this.sunAndSkySunDirectionZ = sky.getSunDirection().z;
+		this.sunAndSkySunOriginX = sky.getSunOrigin().x;
+		this.sunAndSkySunOriginY = sky.getSunOrigin().y;
+		this.sunAndSkySunOriginZ = sky.getSunOrigin().z;
+		this.sunAndSkyTheta = sky.getTheta();
+		this.sunAndSkyTurbidity = sky.getTurbidity();
+		this.sunAndSkyZenithRelativeLuminance = sky.getZenithRelativeLuminance();
+		this.sunAndSkyZenithX = sky.getZenithX();
+		this.sunAndSkyZenithY = sky.getZenithY();
+		
+		System.arraycopy(sky.getColHistogram(), 0, this.sunAndSkyColHistogram_$constant$, 0, this.sunAndSkyColHistogram_$constant$.length);
+		System.arraycopy(sky.getImageHistogram(), 0, this.sunAndSkyImageHistogram_$constant$, 0, this.sunAndSkyImageHistogram_$constant$.length);
+		System.arraycopy(sky.getPerezRelativeLuminance(), 0, this.sunAndSkyPerezRelativeLuminance_$constant$, 0, this.sunAndSkyPerezRelativeLuminance_$constant$.length);
+		System.arraycopy(sky.getPerezX(), 0, this.sunAndSkyPerezX_$constant$, 0, this.sunAndSkyPerezX_$constant$.length);
+		System.arraycopy(sky.getPerezY(), 0, this.sunAndSkyPerezY_$constant$, 0, this.sunAndSkyPerezY_$constant$.length);
 		
 		put(this.sunAndSkyColHistogram_$constant$);
 		put(this.sunAndSkyImageHistogram_$constant$);
@@ -466,84 +417,12 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Returns the {@link Scene} instance assigned to this {@code RendererKernel} instance.
-	 * 
-	 * @return the {@code Scene} instance assigned to this {@code RendererKernel} instance
-	 */
-	public Scene getScene() {
-		return this.scene;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, Ambient Occlusion is enabled, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, Ambient Occlusion is enabled, {@code false} otherwise
-	 */
-	public boolean isAmbientOcclusion() {
-		return this.renderer == RENDERER_AMBIENT_OCCLUSION;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, the Grayscale effect is enabled, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, the Grayscale effect is enabled, {@code false} otherwise
-	 */
-	public boolean isEffectGrayScale() {
-		return this.effectGrayScale == BOOLEAN_TRUE;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, the Sepia Tone effect is enabled, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, the Sepia Tone effect is enabled, {@code false} otherwise
-	 */
-	public boolean isEffectSepiaTone() {
-		return this.effectSepiaTone == BOOLEAN_TRUE;
-	}
-	
-	/**
 	 * Returns {@code true} if, and only if, Normal Mapping is activaded, {@code false} otherwise.
 	 * 
 	 * @return {@code true} if, and only if, Normal Mapping is activaded, {@code false} otherwise
 	 */
 	public boolean isNormalMapping() {
 		return this.isNormalMapping == BOOLEAN_TRUE;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, Path Tracing is enabled, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, Path Tracing is enabled, {@code false} otherwise
-	 */
-	public boolean isPathTracing() {
-		return this.renderer == RENDERER_PATH_TRACER;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, Ray Casting is enabled, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, Ray Casting is enabled, {@code false} otherwise
-	 */
-	public boolean isRayCasting() {
-		return this.renderer == RENDERER_RAY_CASTER;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, Ray Marching is enabled, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, Ray Marching is enabled, {@code false} otherwise
-	 */
-	public boolean isRayMarching() {
-		return this.renderer == RENDERER_RAY_MARCHER;
-	}
-	
-	/**
-	 * Returns {@code true} if, and only if, Ray Tracing is enabled, {@code false} otherwise.
-	 * 
-	 * @return {@code true} if, and only if, Ray Tracing is enabled, {@code false} otherwise
-	 */
-	public boolean isRayTracing() {
-		return this.renderer == RENDERER_RAY_TRACER;
 	}
 	
 	/**
@@ -561,7 +440,7 @@ public final class RendererKernel extends AbstractKernel {
 	 * @return {@code true} if, and only if, reset is required, {@code false} otherwise
 	 */
 	public boolean isResetRequired() {
-		return this.isResetRequired;
+		return this.isResetRequired || hasChanged();
 	}
 	
 	/**
@@ -601,66 +480,12 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Returns the maximum distance for Ambient Occlusion.
-	 * 
-	 * @return the maximum distance for Ambient Occlusion
-	 */
-	public float getRendererAOMaximumDistance() {
-		return this.rendererAOMaximumDistance;
-	}
-	
-	/**
-	 * Returns the exposure for the Tone Mappers.
-	 * 
-	 * @return the exposure for the Tone Mappers
-	 */
-	public float getToneMapperExposure() {
-		return this.toneMapperExposure;
-	}
-	
-	/**
-	 * Returns the height.
-	 * 
-	 * @return the height
-	 */
-	public int getHeight() {
-		return this.height;
-	}
-	
-	/**
-	 * Returns the maximum ray depth for Path Tracing.
-	 * 
-	 * @return the maximum ray depth for Path Tracing
-	 */
-	public int getRendererPTRayDepthMaximum() {
-		return this.rendererPTRayDepthMaximum;
-	}
-	
-	/**
-	 * Returns the ray depth to begin Russian Roulette path termination for Path Tracing.
-	 * 
-	 * @return the ray depth to begin Russian Roulette path termination for Path Tracing
-	 */
-	public int getRendererPTRayDepthRussianRoulette() {
-		return this.rendererPTRayDepthRussianRoulette;
-	}
-	
-	/**
 	 * Returns the selected primitive offset.
 	 * 
 	 * @return the selected primitive offset
 	 */
 	public int getSelectedPrimitiveOffset() {
 		return this.selectedPrimitiveOffset;
-	}
-	
-	/**
-	 * Returns the width.
-	 * 
-	 * @return the width
-	 */
-	public int getWidth() {
-		return this.width;
 	}
 	
 	/**
@@ -693,15 +518,15 @@ public final class RendererKernel extends AbstractKernel {
 		final int pixelIndex = getGlobalId();
 		
 		if(doCreatePrimaryRay(pixelIndex)) {
-			if(this.renderer == RENDERER_AMBIENT_OCCLUSION) {
+			if(super.rendererType == RENDERER_TYPE_AMBIENT_OCCLUSION) {
 				doAmbientOcclusion(1.0F, 1.0F, 1.0F, 0.0F, 0.0F, 0.0F);
-			} else if(this.renderer == RENDERER_PATH_TRACER) {
+			} else if(super.rendererType == RENDERER_TYPE_PATH_TRACER) {
 				doPathTracing();
-			} else if(this.renderer == RENDERER_RAY_CASTER) {
+			} else if(super.rendererType == RENDERER_TYPE_RAY_CASTER) {
 				doRayCasting();
-			} else if(this.renderer == RENDERER_RAY_MARCHER) {
+			} else if(super.rendererType == RENDERER_TYPE_RAY_MARCHER) {
 				doRayMarching();
-			} else if(this.renderer == RENDERER_RAY_TRACER) {
+			} else if(super.rendererType == RENDERER_TYPE_RAY_TRACER) {
 				doRayTracing();
 			} else {
 				doPathTracing();
@@ -729,36 +554,6 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Sets whether Ambient Occlusion should be enabled or disabled.
-	 * <p>
-	 * If {@code isAmbientOcclusion} is {@code false}, the renderer will be a Path Tracer.
-	 * 
-	 * @param isAmbientOcclusion the Ambient Occlusion state to set
-	 */
-	public void setAmbientOcclusion(final boolean isAmbientOcclusion) {
-		this.renderer = isAmbientOcclusion ? RENDERER_AMBIENT_OCCLUSION : RENDERER_PATH_TRACER;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Enables or disables the Grayscale effect.
-	 * 
-	 * @param isEffectGrayScale {@code true} if the Grayscale effect is enabled, {@code false} otherwise
-	 */
-	public void setEffectGrayScale(final boolean isEffectGrayScale) {
-		this.effectGrayScale = isEffectGrayScale ? 1 : 0;
-	}
-	
-	/**
-	 * Enables or disables the Sepia Tone effect.
-	 * 
-	 * @param isEffectSepiaTone {@code true} if the Sepia Tone effect is enabled, {@code false} otherwise
-	 */
-	public void setEffectSepiaTone(final boolean isEffectSepiaTone) {
-		this.effectSepiaTone = isEffectSepiaTone ? 1 : 0;
-	}
-	
-	/**
 	 * Sets the Normal Mapping state.
 	 * 
 	 * @param isNormalMapping {@code true} if, and only if, Normal Mapping is activated, {@code false} otherwise
@@ -766,83 +561,6 @@ public final class RendererKernel extends AbstractKernel {
 	public void setNormalMapping(final boolean isNormalMapping) {
 		this.isNormalMapping = isNormalMapping ? 1 : 0;
 		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets whether Path Tracing should be enabled or disabled.
-	 * <p>
-	 * If {@code isPathTracing} is {@code false}, the renderer will be a Ray Caster.
-	 * 
-	 * @param isPathTracing the Path Tracing state to set
-	 */
-	public void setPathTracing(final boolean isPathTracing) {
-		this.renderer = isPathTracing ? RENDERER_PATH_TRACER : RENDERER_RAY_CASTER;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets whether Ray Casting should be enabled or disabled.
-	 * <p>
-	 * If {@code isRayCasting} is {@code false}, the renderer will be a Ray Marcher.
-	 * 
-	 * @param isRayCasting the Ray Casting state to set
-	 */
-	public void setRayCasting(final boolean isRayCasting) {
-		this.renderer = isRayCasting ? RENDERER_RAY_CASTER : RENDERER_RAY_MARCHER;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets whether Ray Marching should be enabled or disabled.
-	 * <p>
-	 * If {@code isRayMarching} is {@code false}, the renderer will be a Ray Tracer.
-	 * 
-	 * @param isRayMarching the Ray Marching state to set
-	 */
-	public void setRayMarching(final boolean isRayMarching) {
-		this.renderer = isRayMarching ? RENDERER_RAY_MARCHER : RENDERER_RAY_TRACER;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets whether Ray Tracing should be enabled or disabled.
-	 * <p>
-	 * If {@code isRayTracing} is {@code false}, the renderer will be Ambient Occlusion.
-	 * 
-	 * @param isRayTracing the Ray Tracing state to set
-	 */
-	public void setRayTracing(final boolean isRayTracing) {
-		this.renderer = isRayTracing ? RENDERER_RAY_TRACER : RENDERER_AMBIENT_OCCLUSION;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets the maximum distance for Ambient Occlusion.
-	 * 
-	 * @param rendererAOMaximumDistance the maximum distance for Ambient Occlusion
-	 */
-	public void setRendererAOMaximumDistance(final float rendererAOMaximumDistance) {
-		this.rendererAOMaximumDistance = rendererAOMaximumDistance;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets the maximum ray depth for Path Tracing.
-	 * 
-	 * @param rendererPTRayDepthMaximum the maximum ray depth for Path Tracing
-	 */
-	public void setRendererPTRayDepthMaximum(final int rendererPTRayDepthMaximum) {
-		this.rendererPTRayDepthMaximum = rendererPTRayDepthMaximum;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets the ray depth to begin Russian Roulette path termination for Path Tracing.
-	 * 
-	 * @param rendererPTRayDepthRussianRoulette the ray depth to begin Russian Roulette path termination for Path Tracing
-	 */
-	public void setRendererPTRayDepthRussianRoulette(final int rendererPTRayDepthRussianRoulette) {
-		this.rendererPTRayDepthRussianRoulette = rendererPTRayDepthRussianRoulette;
 	}
 	
 	/**
@@ -890,55 +608,6 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Sets the exposure for the Tone Mappers.
-	 * 
-	 * @param toneMapperExposure the new exposure
-	 */
-	public void setToneMapperExposure(final float toneMapperExposure) {
-		this.toneMapperExposure = toneMapperExposure;
-	}
-	
-	/**
-	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve version 1.
-	 */
-	public void setToneMappingAndGammaCorrectionFilmicCurve1() {
-		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets the Tone Mapping and Gamma Correction to Filmic Curve version 2.
-	 */
-	public void setToneMappingAndGammaCorrectionFilmicCurve2() {
-		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets the Tone Mapping and Gamma Correction to Linear.
-	 */
-	public void setToneMappingAndGammaCorrectionLinear() {
-		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets the Tone Mapping and Gamma Correction to Reinhard version 1.
-	 */
-	public void setToneMappingAndGammaCorrectionReinhard1() {
-		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_1;
-		this.isResetRequired = true;
-	}
-	
-	/**
-	 * Sets the Tone Mapping and Gamma Correction to Reinhard version 2.
-	 */
-	public void setToneMappingAndGammaCorrectionReinhard2() {
-		this.toneMappingAndGammaCorrection = TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_2;
-		this.isResetRequired = true;
-	}
-	
-	/**
 	 * Toggles the visibility for the clouds in the sky.
 	 */
 	public void toggleClouds() {
@@ -981,23 +650,6 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Toggles to the next renderer.
-	 */
-	public void toggleRenderer() {
-		if(isAmbientOcclusion()) {
-			setPathTracing(true);
-		} else if(isPathTracing()) {
-			setRayCasting(true);
-		} else if(isRayCasting()) {
-			setRayMarching(true);
-		} else if(isRayMarching()) {
-			setRayTracing(true);
-		} else if(isRayTracing()) {
-			setAmbientOcclusion(true);
-		}
-	}
-	
-	/**
 	 * Toggles to the next shading.
 	 */
 	public void toggleShading() {
@@ -1026,14 +678,16 @@ public final class RendererKernel extends AbstractKernel {
 	 */
 	public void updateResetStatus() {
 		this.isResetRequired = false;
+		
+		resetChanged();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private boolean doCreatePrimaryRay(final int pixelIndex) {
 //		Calculate the X- and Y-coordinates on the screen:
-		final int y = pixelIndex / this.width;
-		final int x = pixelIndex - y * this.width;
+		final int y = pixelIndex / super.resolutionX;
+		final int x = pixelIndex - y * super.resolutionX;
 		
 //		Retrieve the current X-, Y- and Z-coordinates of the camera lens (eye) in the scene:
 		final float eyeX = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_EYE_X];
@@ -1075,7 +729,7 @@ public final class RendererKernel extends AbstractKernel {
 		float sampleX = 0.5F;
 		float sampleY = 0.5F;
 		
-		if(this.renderer == RENDERER_PATH_TRACER) {
+		if(super.rendererType == RENDERER_TYPE_PATH_TRACER) {
 			sampleX = nextFloat();
 			sampleY = nextFloat();
 			
@@ -1563,7 +1217,7 @@ public final class RendererKernel extends AbstractKernel {
 			final float surfaceIntersectionPointY = originY * scaleReciprocal + directionY * tCurrent;
 			final float surfaceIntersectionPointZ = originZ * scaleReciprocal + directionZ * tCurrent;
 			
-			final float h = (sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ));
+			final float h = sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ);
 			
 			if(surfaceIntersectionPointY < h) {
 				t = tCurrent - tDelta + tDelta * (lH - lY) / (surfaceIntersectionPointY - lY - h + lH);
@@ -1637,7 +1291,7 @@ public final class RendererKernel extends AbstractKernel {
 //		Initialize the distance to a value denoting no hit:
 		float t = INFINITY;
 		
-//		Check that the determinant is anything other than in the range of negative epsilon and positive epsilon:
+//		Check that the determinant is anything other than in the range of negative epsilon to positive epsilon:
 		if(determinant < -EPSILON || determinant > EPSILON) {
 //			Calculate the reciprocal of the determinant:
 			final float determinantReciprocal = 1.0F / determinant;
@@ -1737,19 +1391,15 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private int doGetTextureColorFromCheckerboardTexture(final int texturesOffset) {
-//		Get the intersections offset:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
-//		TODO: Write explanation!
 		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
 		final int offsetColor0 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_0;
 		final int offsetColor1 = texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_COLOR_1;
 		
-//		TODO: Write explanation!
-		final float u = this.intersections_$local$[offsetUVCoordinates];
+		final float u = this.intersections_$local$[offsetUVCoordinates + 0];
 		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
 		
-//		TODO: Write explanation!
 		final int color0RGB = (int)(this.sceneTextures_$constant$[offsetColor0]);
 		final int color1RGB = (int)(this.sceneTextures_$constant$[offsetColor1]);
 		
@@ -1761,44 +1411,34 @@ public final class RendererKernel extends AbstractKernel {
 		final float color1G = ((color1RGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
 		final float color1B = ((color1RGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
 		
-//		TODO: Write explanation!
 		final float sU = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_SCALE_U];
 		final float sV = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_SCALE_V];
 		
-//		TODO: Write explanation!
 		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_RADIANS_COS];
 		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + CheckerboardTexture.RELATIVE_OFFSET_RADIANS_SIN];
 		
-//		TODO: Write explanation!
 		final float textureU = modulo((u * cosAngle - v * sinAngle) * sU);
 		final float textureV = modulo((v * cosAngle + u * sinAngle) * sV);
 		
-//		TODO: Write explanation!
 		final boolean isDarkU = textureU > 0.5F;
 		final boolean isDarkV = textureV > 0.5F;
 		final boolean isDark = isDarkU ^ isDarkV;
 		
-//		TODO: Write explanation!
-//		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
+		final float textureMultiplier = isDark ? 0.8F : 1.2F;
+		
+		float colorR = isDark ? color0R : color1R;
+		float colorG = isDark ? color0G : color1G;
+		float colorB = isDark ? color0B : color1B;
 		
 		if(color0R == color1R && color0G == color1G && color0B == color1B) {
-//			TODO: Write explanation!
-			final float textureMultiplier = isDark ? 0.8F : 1.2F;
-			
-//			TODO: Write explanation!
-			final int r = (int)(saturate(color0R * textureMultiplier, 0.0F, 1.0F) * 255.0F + 0.5F);
-			final int g = (int)(saturate(color0G * textureMultiplier, 0.0F, 1.0F) * 255.0F + 0.5F);
-			final int b = (int)(saturate(color0B * textureMultiplier, 0.0F, 1.0F) * 255.0F + 0.5F);
-			
-			final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
-			
-			return rGB;
+			colorR *= textureMultiplier;
+			colorG *= textureMultiplier;
+			colorB *= textureMultiplier;
 		}
 		
-//		TODO: Write explanation!
-		final int r = (int)(saturate(isDark ? color0R : color1R, 0.0F, 1.0F) * 255.0F + 0.5F);
-		final int g = (int)(saturate(isDark ? color0G : color1G, 0.0F, 1.0F) * 255.0F + 0.5F);
-		final int b = (int)(saturate(isDark ? color0B : color1B, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int r = (int)(saturate(colorR, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int g = (int)(saturate(colorG, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int b = (int)(saturate(colorB, 0.0F, 1.0F) * 255.0F + 0.5F);
 		
 		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
 		
@@ -1816,7 +1456,6 @@ public final class RendererKernel extends AbstractKernel {
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
 		final int offsetSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
-//		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_UV_COORDINATES;
 		final int offsetAddend = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_ADDEND;
 		final int offsetMultiplier = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_MULTIPLIER;
 		final int offsetFrequency = texturesOffset + FractionalBrownianMotionTexture.RELATIVE_OFFSET_FREQUENCY;
@@ -1826,8 +1465,6 @@ public final class RendererKernel extends AbstractKernel {
 		final float x = this.intersections_$local$[offsetSurfaceIntersectionPoint];
 		final float y = this.intersections_$local$[offsetSurfaceIntersectionPoint + 1];
 		final float z = this.intersections_$local$[offsetSurfaceIntersectionPoint + 2];
-//		final float u = this.intersections_$local$[offsetUVCoordinates];
-//		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
 		
 		final int addendRGB = (int)(this.sceneTextures_$constant$[offsetAddend]);
 		final int multiplierRGB = (int)(this.sceneTextures_$constant$[offsetMultiplier]);
@@ -1846,7 +1483,6 @@ public final class RendererKernel extends AbstractKernel {
 		final int octaves = (int)(this.sceneTextures_$constant$[offsetOctaves]);
 		
 		final float noise = simplexFractionalBrownianMotionXYZ(frequency, gain, 0.0F, 1.0F, octaves, x, y, z);
-//		final float noise = simplexFractionalBrownianMotionXY(frequency, gain, 0.0F, 1.0F, octaves, u, v);
 		
 		final int r = (int)(saturate(noise * multiplierR + addendR, 0.0F, 1.0F) * 255.0F + 0.5F);
 		final int g = (int)(saturate(noise * multiplierG + addendG, 0.0F, 1.0F) * 255.0F + 0.5F);
@@ -1858,33 +1494,25 @@ public final class RendererKernel extends AbstractKernel {
 	}
 	
 	private int doGetTextureColorFromImageTexture(final int texturesOffset) {
-//		Get the intersections offset:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
-//		TODO: Write explanation!
 		final int offsetTextureCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
 		
-//		TODO: Write explanation!
 		final float u = this.intersections_$local$[offsetTextureCoordinates + 0];
 		final float v = this.intersections_$local$[offsetTextureCoordinates + 1];
 		
-//		TODO: Write explanation!
 		final float width = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
 		final float height = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
 		
-//		TODO: Write explanation!
 		final float scaleU = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
 		final float scaleV = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
 		
-//		TODO: Write explanation!
 		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
 		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
 		
-//		TODO: Write explanation!
 		final float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
 		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
 		
-//		TODO: Write explanation!
 		final int index = (int)((y * width + x));
 		
 		final int rGB = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index]);
@@ -2319,7 +1947,7 @@ public final class RendererKernel extends AbstractKernel {
 		float g = this.colorAverageSamples[pixelIndex0 + 1];
 		float b = this.colorAverageSamples[pixelIndex0 + 2];
 		
-		if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_1) {
+		if(this.toneMapperType == TONE_MAPPER_TYPE_REINHARD) {
 			final float exposure = this.toneMapperExposure;
 			
 			r *= exposure;
@@ -2330,7 +1958,10 @@ public final class RendererKernel extends AbstractKernel {
 			r = r / (r + 1.0F);
 			g = g / (g + 1.0F);
 			b = b / (b + 1.0F);
-		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_REINHARD_2) {
+			
+//			Source: https://www.shadertoy.com/view/WdjSW3
+//			Note:   Not the original source used, but a source nonetheless.
+		} else if(this.toneMapperType == TONE_MAPPER_TYPE_REINHARD_MODIFIED_1) {
 //			Set the exposure:
 			final float exposure = this.toneMapperExposure;
 			
@@ -2338,23 +1969,23 @@ public final class RendererKernel extends AbstractKernel {
 			r = 1.0F - exp(-r * exposure);
 			g = 1.0F - exp(-g * exposure);
 			b = 1.0F - exp(-b * exposure);
-		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1) {
+			
+//			Source: Unknown
+		} else if(this.toneMapperType == TONE_MAPPER_TYPE_REINHARD_MODIFIED_2) {
 			final float exposure = this.toneMapperExposure;
 			
 			r *= exposure;
 			g *= exposure;
 			b *= exposure;
 			
-//			Calculate the maximum pixel color component values:
-			final float rMaximum = max(r - 0.004F, 0.0F);
-			final float gMaximum = max(g - 0.004F, 0.0F);
-			final float bMaximum = max(b - 0.004F, 0.0F);
+			final float lWhite = 4.0F;
 			
-//			Perform Tone Mapping and Gamma Correction:
-			r = (rMaximum * (6.2F * rMaximum + 0.5F)) / (rMaximum * (6.2F * rMaximum + 1.7F) + 0.06F);
-			g = (gMaximum * (6.2F * gMaximum + 0.5F)) / (gMaximum * (6.2F * gMaximum + 1.7F) + 0.06F);
-			b = (bMaximum * (6.2F * bMaximum + 0.5F)) / (bMaximum * (6.2F * bMaximum + 1.7F) + 0.06F);
-		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_2) {
+			r = r * (1.0F + r / (lWhite * lWhite)) / (1.0F + r);
+			g = g * (1.0F + g / (lWhite * lWhite)) / (1.0F + g);
+			b = b * (1.0F + b / (lWhite * lWhite)) / (1.0F + b);
+			
+//			Source: https://www.shadertoy.com/view/WdjSW3
+		} else if(this.toneMapperType == TONE_MAPPER_TYPE_FILMIC_CURVE_ACES_MODIFIED) {
 			final float exposure = this.toneMapperExposure;
 			
 			r *= exposure;
@@ -2365,44 +1996,8 @@ public final class RendererKernel extends AbstractKernel {
 			r = saturate((r * (2.51F * r + 0.03F)) / (r * (2.43F * r + 0.59F) + 0.14F), 0.0F, 1.0F);
 			g = saturate((g * (2.51F * g + 0.03F)) / (g * (2.43F * g + 0.59F) + 0.14F), 0.0F, 1.0F);
 			b = saturate((b * (2.51F * b + 0.03F)) / (b * (2.43F * b + 0.59F) + 0.14F), 0.0F, 1.0F);
-		} else if(this.toneMappingAndGammaCorrection == TONE_MAPPING_AND_GAMMA_CORRECTION_LINEAR) {
-			final float exposure = this.toneMapperExposure;
 			
-			r *= exposure;
-			g *= exposure;
-			b *= exposure;
-			
-//			Calculate the maximum component value of the 'normalized' accumulated pixel color component values:
-			final float maximumComponentValue = max(r, max(g, b));
-			
-//			Check if the maximum component value is greater than 1.0:
-			if(maximumComponentValue > 1.0F) {
-//				Calculate the reciprocal of the maximum component value, such that no division is needed further on:
-				final float maximumComponentValueReciprocal = 1.0F / maximumComponentValue;
-				
-//				Multiply the 'normalized' accumulated pixel color component values with the reciprocal of the maximum component value for Tone Mapping:
-				r *= maximumComponentValueReciprocal;
-				g *= maximumComponentValueReciprocal;
-				b *= maximumComponentValueReciprocal;
-			}
-		}
-		
-		if(this.effectGrayScale == 1) {
-//			Perform a Grayscale effect based on Luminosity:
-			r = r * 0.21F + g * 0.72F + b * 0.07F;
-			g = r;
-			b = r;
-		}
-		
-		if(this.effectSepiaTone == 1) {
-//			Perform a Sepia effect:
-			final float r1 = r * 0.393F + g * 0.769F + b * 0.189F;
-			final float g1 = r * 0.349F + g * 0.686F + b * 0.168F;
-			final float b1 = r * 0.272F + g * 0.534F + b * 0.131F;
-			
-			r = r1;
-			g = g1;
-			b = b1;
+//			Source: https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
 		}
 		
 		final int primitiveOffsetFromPrimaryRay = this.primitiveOffsetsForPrimaryRay[pixelIndex];
@@ -2411,19 +2006,17 @@ public final class RendererKernel extends AbstractKernel {
 			g += 1.0F;
 		}
 		
-		if(this.toneMappingAndGammaCorrection != TONE_MAPPING_AND_GAMMA_CORRECTION_FILMIC_CURVE_1) {
-			final float breakPoint = this.colorSpaceBreakPoint;
-			final float gamma = this.colorSpaceGamma;
-			final float gammaReciprocal = 1.0F / gamma;
-			final float segmentOffset = this.colorSpaceSegmentOffset;
-			final float slope = this.colorSpaceSlope;
-			final float slopeMatch = this.colorSpaceSlopeMatch;
-			
-//			Gamma correct the 'normalized' accumulated pixel color components using sRGB as color space:
-			r = r <= 0.0F ? 0.0F : r >= 1.0F ? 1.0F : r <= breakPoint ? r * slope : slopeMatch * pow(r, gammaReciprocal) - segmentOffset;
-			g = g <= 0.0F ? 0.0F : g >= 1.0F ? 1.0F : g <= breakPoint ? g * slope : slopeMatch * pow(g, gammaReciprocal) - segmentOffset;
-			b = b <= 0.0F ? 0.0F : b >= 1.0F ? 1.0F : b <= breakPoint ? b * slope : slopeMatch * pow(b, gammaReciprocal) - segmentOffset;
-		}
+		final float breakPoint = this.colorSpaceBreakPoint;
+		final float gamma = this.colorSpaceGamma;
+		final float gammaReciprocal = 1.0F / gamma;
+		final float segmentOffset = this.colorSpaceSegmentOffset;
+		final float slope = this.colorSpaceSlope;
+		final float slopeMatch = this.colorSpaceSlopeMatch;
+		
+//		Gamma correct the 'normalized' accumulated pixel color components using sRGB as color space:
+		r = r <= 0.0F ? 0.0F : r >= 1.0F ? 1.0F : r <= breakPoint ? r * slope : slopeMatch * pow(r, gammaReciprocal) - segmentOffset;
+		g = g <= 0.0F ? 0.0F : g >= 1.0F ? 1.0F : g <= breakPoint ? g * slope : slopeMatch * pow(g, gammaReciprocal) - segmentOffset;
+		b = b <= 0.0F ? 0.0F : b >= 1.0F ? 1.0F : b <= breakPoint ? b * slope : slopeMatch * pow(b, gammaReciprocal) - segmentOffset;
 		
 //		Multiply the 'normalized' accumulated pixel color components with 255.0 and clamp them to the range [0.0, 255.0], so they can be displayed:
 		r = min(max(r * 255.0F + 0.5F, 0.0F), 255.0F);

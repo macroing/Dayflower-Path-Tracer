@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.1.2
+Dayflower - Path Tracer v.0.1.3
 ===============================
 Dayflower - Path Tracer is a photorealistic realtime renderer written in Java.
 
@@ -14,116 +14,98 @@ ________________________________________________________________________________
 
 Supported Features
 ------------------
-| Category               | Feature                                                    |
-| ---------------------- | ---------------------------------------------------------- |
-| Acceleration Structure | Bounding Volume Hierarchy (BVH)                            |
-| Camera                 | Depth of Field                                             |
-| Camera                 | Field of View                                              |
-| Camera                 | Free Movement                                              |
-| Camera                 | Fisheye Camera Lens                                        |
-| Camera                 | Thin Camera Lens                                           |
-| Effect                 | Blur                                                       |
-| Effect                 | Detect Edges                                               |
-| Effect                 | Emboss                                                     |
-| Effect                 | Gradient - Horizontal                                      |
-| Effect                 | Gradient - Vertical                                        |
-| Effect                 | Grayscale - Luminosity                                     |
-| Effect                 | Sepia Tone                                                 |
-| Effect                 | Sharpen                                                    |
-| Light                  | Perez Sun and Sky Model                                    |
-| Light                  | Primitive-based Area Light via an Emission Texture         |
-| Material               | Clear Coat                                                 |
-| Material               | Glass                                                      |
-| Material               | Lambertian                                                 |
-| Material               | Phong                                                      |
-| Material               | Reflection                                                 |
-| Normal Mapping         | Image Texture                                              |
-| Normal Mapping         | Noise                                                      |
-| Rendering Algorithm    | Ambient Occlusion                                          |
-| Rendering Algorithm    | Path Tracing                                               |
-| Rendering Algorithm    | Ray Casting                                                |
-| Rendering Algorithm    | Ray Marching                                               |
-| Rendering Algorithm    | Ray Tracing                                                |
-| Rendering Algorithm    | Wireframe                                                  |
-| Shape                  | Plane                                                      |
-| Shape                  | Sphere                                                     |
-| Shape                  | Terrain                                                    |
-| Shape                  | Triangle                                                   |
-| Shape                  | Triangle Mesh                                              |
-| Texture                | Blend                                                      |
-| Texture                | Checkerboard                                               |
-| Texture                | Constant                                                   |
-| Texture                | Fractional Brownian Motion                                 |
-| Texture                | Image                                                      |
-| Texture                | Surface Normal                                             |
-| Tone Mapper            | Filmic Curve v.1                                           |
-| Tone Mapper            | Filmic Curve v.2                                           |
-| Tone Mapper            | Linear                                                     |
-| Tone Mapper            | Reinhard v.1                                               |
-| Tone Mapper            | Reinhard v.2                                               |
+| Category               | Feature                                            |
+| ---------------------- | -------------------------------------------------- |
+| Acceleration Structure | Bounding Volume Hierarchy (BVH)                    |
+| Camera                 | Depth of Field                                     |
+| Camera                 | Field of View                                      |
+| Camera                 | Free Movement                                      |
+| Camera                 | Fisheye Camera Lens                                |
+| Camera                 | Thin Camera Lens                                   |
+| Light                  | Perez Sun and Sky Model                            |
+| Light                  | Primitive-based Area Light via an Emission Texture |
+| Material               | Clear Coat                                         |
+| Material               | Glass                                              |
+| Material               | Lambertian                                         |
+| Material               | Phong                                              |
+| Material               | Reflection                                         |
+| Normal Mapping         | Image Texture                                      |
+| Normal Mapping         | Noise                                              |
+| Rendering Algorithm    | Ambient Occlusion                                  |
+| Rendering Algorithm    | Path Tracing                                       |
+| Rendering Algorithm    | Ray Casting                                        |
+| Rendering Algorithm    | Ray Marching                                       |
+| Rendering Algorithm    | Ray Tracing                                        |
+| Rendering Algorithm    | Wireframe                                          |
+| Shape                  | Plane                                              |
+| Shape                  | Sphere                                             |
+| Shape                  | Terrain                                            |
+| Shape                  | Triangle                                           |
+| Shape                  | Triangle Mesh                                      |
+| Texture                | Blend                                              |
+| Texture                | Checkerboard                                       |
+| Texture                | Constant                                           |
+| Texture                | Fractional Brownian Motion                         |
+| Texture                | Image                                              |
+| Texture                | Surface Normal                                     |
+| Tone Mapper            | Filmic Curve ACES Modified                         |
+| Tone Mapper            | Reinhard                                           |
+| Tone Mapper            | Reinhard Modified v.1                              |
+| Tone Mapper            | Reinhard Modified v.2                              |
 
-______________________________________________________________________________________
+______________________________________________________________________________
 
 Supported Keyboard Controls
 ---------------------------
-| Key         | Description                                                           |
-| ----------- | --------------------------------------------------------------------- |
-| ESCAPE      | Exit or leave the scene if it has been entered like an FPS-game       |
-| ENTER       | Enter the scene like an FPS-game                                      |
-| W           | Walk forward                                                          |
-| A           | Strafe left                                                           |
-| S           | Walk backward                                                         |
-| D           | Strafe right                                                          |
-| Q           | Increase altitude                                                     |
-| E           | Decrease altitude                                                     |
-| R           | Toggle selection of shapes                                            |
-| M           | Toggle the material for the surface instance of the selected shape    |
+| Key         | Description                                                        |
+| ----------- | ------------------------------------------------------------------ |
+| ESCAPE      | Exit or leave the scene if it has been entered like an FPS-game    |
+| ENTER       | Enter the scene like an FPS-game                                   |
+| W           | Walk forward                                                       |
+| A           | Strafe left                                                        |
+| S           | Walk backward                                                      |
+| D           | Strafe right                                                       |
+| Q           | Increase altitude                                                  |
+| E           | Decrease altitude                                                  |
+| R           | Toggle selection of shapes                                         |
+| M           | Toggle the material for the surface instance of the selected shape |
 
-______________________________________________________________________________________
+___________________________________________________________________________________
 
 Supported Mouse Controls
 ------------------------
-| Type        | Description                                                           |
-| ----------- | --------------------------------------------------------------------- |
-| Drag mouse  | Drag mouse to look around                                             |
-| Move mouse  | Move mouse to look around when it has been entered like an FPS-game   |
+| Type        | Description                                                         |
+| ----------- | ------------------------------------------------------------------- |
+| Drag mouse  | Drag mouse to look around                                           |
+| Move mouse  | Move mouse to look around when it has been entered like an FPS-game |
 
-______________________________________________________________________________________
+____________________________________________________________________________________
 
 Supported Menu Controls
 -----------------------
-| Menu Item                      | Description                                        |
-| ------------------------------ | -------------------------------------------------- |
-| File > Save                    | Saves the current image                            |
-| File > Exit                    | Exit                                               |
-| Camera > Walk Lock             | Toggle walk lock                                   |
-| Camera > Fisheye Camera Lens   | Use a Fisheye camera lens                          |
-| Camera > Thin Camera Lens      | Use a Thin camera lens                             |
-| Effect > Blur                  | Toggle the Blur effect                             |
-| Effect > Detect Edges          | Toggle the Detect Edges effect                     |
-| Effect > Emboss                | Toggle the Emboss effect                           |
-| Effect > Gradient (Horizontal) | Toggle the horizontal Gradient effect              |
-| Effect > Gradient (Vertical)   | Toggle the vertical Gradient effect                |
-| Effect > Sharpen               | Toggle the Sharpen effect                          |
-| Effect > Grayscale             | Toggle the Grayscale effect                        |
-| Effect > Sepia Tone            | Toggle the Sepia Tone effect                       |
-| Renderer > Ambient Occlusion   | Use the Ambient Occlusion renderer to render       |
-| Renderer > Path Tracer         | Use the Path Tracer to render                      |
-| Renderer > Ray Caster          | Use the Ray Caster to render                       |
-| Renderer > Ray Marcher         | Use the Ray Marcher to render                      |
-| Renderer > Ray Tracer          | Use the Ray Tracer to render                       |
-| Scene > Normal Mapping         | Toggle Normal Mapping                              |
-| Scene > Wireframes             | Toggle Wireframes                                  |
-| Scene > Enter Scene            | Enter the scene like an FPS-game                   |
-| Scene > Flat Shading           | Use Flat Shading for Triangles                     |
-| Scene > Gouraud Shading        | Use Gouraud Shading for Triangles                  |
-| Tone Mapper > Filmic Curve v.1 | Use the Filmic Curve v.1 Tone Mapper               |
-| Tone Mapper > Filmic Curve v.2 | Use the Filmic Curve v.2 Tone Mapper               |
-| Tone Mapper > Linear           | Use the Linear Tone Mapper                         |
-| Tone Mapper > Reinhard v.1     | Use the Reindard v.1 Tone Mapper                   |
-| Tone Mapper > Reinhard v.2     | Use the Reinhard v.2 Tone Mapper                   |
+| Menu Item                                | Description                                    |
+| ---------------------------------------- | ---------------------------------------------- |
+| File > Save                              | Saves the current image                        |
+| File > Exit                              | Exit                                           |
+| Camera > Walk Lock                       | Toggle walk lock                               |
+| Camera > Fisheye Camera Lens             | Use a Fisheye camera lens                      |
+| Camera > Thin Camera Lens                | Use a Thin camera lens                         |
+| Renderer > Ambient Occlusion             | Use the Ambient Occlusion renderer to render   |
+| Renderer > Path Tracer                   | Use the Path Tracer to render                  |
+| Renderer > Ray Caster                    | Use the Ray Caster to render                   |
+| Renderer > Ray Marcher                   | Use the Ray Marcher to render                  |
+| Renderer > Ray Tracer                    | Use the Ray Tracer to render                   |
+| Scene > Normal Mapping                   | Toggle Normal Mapping                          |
+| Scene > Wireframes                       | Toggle Wireframes                              |
+| Scene > Enter Scene                      | Enter the scene like an FPS-game               |
+| Scene > Flat Shading                     | Use Flat Shading for Triangles                 |
+| Scene > Gouraud Shading                  | Use Gouraud Shading for Triangles              |
+| Tone Mapper > Filmic Curve ACES Modified | Use the tone mapper Filmic Curve ACES Modified |
+| Tone Mapper > Reinhard                   | Use the tone mapper Reinhard                   |
+| Tone Mapper > Reinhard Modified v.1      | Use the tone mapper Reinhard Modified v.1      |
+| Tone Mapper > Reinhard Modified v.2      | Use the tone mapper Reinhard Modified v.2      |
 
-______________________________________________________________________________________
+____________________________________________________________________________________________
 
 Supported Tab Controls
 ----------------------

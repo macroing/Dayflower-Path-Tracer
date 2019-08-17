@@ -1,3 +1,9 @@
+2019-08-17  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		A new modified version of the Reinhard tone mapper has been added.
+	* REMOVE:	All effects have been removed from the window. The source code for the effects has been moved to the Image class, with some modifications. The effects only existed because I wanted to test various image processing algorithms.
+	* REMOVE:	The Linear tone mapper and the old Filmic Curve tone mapper have been removed.
+
 2019-08-01  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* ADD:		It's now possible to change the exposure for all Tone Mappers in the GUI.

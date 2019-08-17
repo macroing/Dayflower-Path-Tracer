@@ -49,7 +49,7 @@ import com.amd.aparapi.Range;
 
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.application.JavaFX;
-import org.dayflower.pathtracer.kernel.ConvolutionKernel;
+import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.RendererKernel;
 import org.dayflower.pathtracer.math.AngleF;
 import org.dayflower.pathtracer.scene.Camera;
@@ -74,7 +74,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	private final AtomicInteger renderPass;
 	private final Configuration configuration;
-	private ConvolutionKernel convolutionKernel;
 	private final Label labelFPS;
 	private final Label labelKernelTime;
 	private final Label labelPosition;
@@ -84,12 +83,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	private Range range;
 	private RendererKernel rendererKernel;
 	private RendererRunnable rendererRunnable;
-	private final Setting settingFilterBlur;
-	private final Setting settingFilterDetectEdges;
-	private final Setting settingFilterEmboss;
-	private final Setting settingFilterGradientHorizontal;
-	private final Setting settingFilterGradientVertical;
-	private final Setting settingFilterSharpen;
 	private Scene scene;
 	private SceneLoader sceneLoader;
 	private Slider sliderPitch;
@@ -112,12 +105,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		this.labelRenderPass = new Label("Pass: 0");
 		this.labelRenderTime = new Label("Time: 00:00:00");
 		this.labelSPS = new Label("SPS: 00000000");
-		this.settingFilterBlur = new Setting("Filter.Blur");
-		this.settingFilterDetectEdges = new Setting("Filter.DetectEdges");
-		this.settingFilterEmboss = new Setting("Filter.Emboss");
-		this.settingFilterGradientHorizontal = new Setting("Filter.Gradient.Horizontal");
-		this.settingFilterGradientVertical = new Setting("Filter.Gradient.Vertical");
-		this.settingFilterSharpen = new Setting("Filter.Sharpen");
 		this.sceneLoader = new SceneLoader(new File(this.configuration.getRootDirectory()), this.configuration.getSceneCompile(), this.configuration.getSceneName());
 		this.timer = new Timer();
 	}
@@ -215,28 +202,14 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		menuBar.getMenus().add(menuCamera);
 		
-//		Create the "Effect" Menu:
-		final CheckMenuItem checkMenuItemBlur = JavaFX.newCheckMenuItem("Blur", e -> this.settingFilterBlur.toggle());
-		final CheckMenuItem checkMenuItemDetectEdges = JavaFX.newCheckMenuItem("Detect Edges", e -> this.settingFilterDetectEdges.toggle());
-		final CheckMenuItem checkMenuItemEmboss = JavaFX.newCheckMenuItem("Emboss", e -> this.settingFilterEmboss.toggle());
-		final CheckMenuItem checkMenuItemGradientHorizontal = JavaFX.newCheckMenuItem("Gradient (Horizontal)", e -> this.settingFilterGradientHorizontal.toggle());
-		final CheckMenuItem checkMenuItemGradientVertical = JavaFX.newCheckMenuItem("Gradient (Vertical)", e -> this.settingFilterGradientVertical.toggle());
-		final CheckMenuItem checkMenuItemSharpen = JavaFX.newCheckMenuItem("Sharpen", e -> this.settingFilterSharpen.toggle());
-		final CheckMenuItem checkMenuItemGrayscale = JavaFX.newCheckMenuItem("Grayscale", e -> doGetRendererKernel().setEffectGrayScale(!doGetRendererKernel().isEffectGrayScale()));
-		final CheckMenuItem checkMenuItemSepiaTone = JavaFX.newCheckMenuItem("Sepia Tone", e -> doGetRendererKernel().setEffectSepiaTone(!doGetRendererKernel().isEffectSepiaTone()));
-		
-		final Menu menuEffect = JavaFX.newMenu("Effect", checkMenuItemBlur, checkMenuItemDetectEdges, checkMenuItemEmboss, checkMenuItemGradientHorizontal, checkMenuItemGradientVertical, checkMenuItemSharpen, checkMenuItemGrayscale, checkMenuItemSepiaTone);
-		
-		menuBar.getMenus().add(menuEffect);
-		
 //		Create the "Renderer" Menu:
 		final ToggleGroup toggleGroupRenderer = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> doGetRendererKernel().setAmbientOcclusion(true), toggleGroupRenderer, doGetRendererKernel().isAmbientOcclusion());
-		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> doGetRendererKernel().setPathTracing(true), toggleGroupRenderer, doGetRendererKernel().isPathTracing());
-		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> doGetRendererKernel().setRayCasting(true), toggleGroupRenderer, doGetRendererKernel().isRayCasting());
-		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> doGetRendererKernel().setRayMarching(true), toggleGroupRenderer, doGetRendererKernel().isRayMarching());
-		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> doGetRendererKernel().setRayTracing(true), toggleGroupRenderer, doGetRendererKernel().isRayTracing());
+		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_AMBIENT_OCCLUSION), toggleGroupRenderer, doGetRendererKernel().isRendererTypeAmbientOcclusion());
+		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_PATH_TRACER), toggleGroupRenderer, doGetRendererKernel().isRendererTypePathTracer());
+		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_CASTER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayCaster());
+		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_MARCHER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayMarcher());
+		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_TRACER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayTracer());
 		
 		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemAmbientOcclusion, radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer);
 		
@@ -260,13 +233,12 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Tone Mapper" Menu:
 		final ToggleGroup toggleGroupToneMapper = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemToneMapperFilmicCurve1 = JavaFX.newRadioMenuItem("Filmic Curve v.1", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionFilmicCurve1(), toggleGroupToneMapper, false);
-		final RadioMenuItem radioMenuItemToneMapperFilmicCurve2 = JavaFX.newRadioMenuItem("Filmic Curve v.2", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionFilmicCurve2(), toggleGroupToneMapper, true);
-		final RadioMenuItem radioMenuItemToneMapperLinear = JavaFX.newRadioMenuItem("Linear", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionLinear(), toggleGroupToneMapper, false);
-		final RadioMenuItem radioMenuItemToneMapperReinhard1 = JavaFX.newRadioMenuItem("Reinhard v.1", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionReinhard1(), toggleGroupToneMapper, false);
-		final RadioMenuItem radioMenuItemToneMapperReinhard2 = JavaFX.newRadioMenuItem("Reinhard v.2", e -> doGetRendererKernel().setToneMappingAndGammaCorrectionReinhard2(), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurveACESModified = JavaFX.newRadioMenuItem("Filmic Curve ACES Modified", e -> doGetRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_FILMIC_CURVE_ACES_MODIFIED), toggleGroupToneMapper, true);
+		final RadioMenuItem radioMenuItemToneMapperReinhard = JavaFX.newRadioMenuItem("Reinhard", e -> doGetRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperReinhardModified1 = JavaFX.newRadioMenuItem("Reinhard Modified v.1", e -> doGetRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD_MODIFIED_1), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperReinhardModified2 = JavaFX.newRadioMenuItem("Reinhard Modified v.2", e -> doGetRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD_MODIFIED_2), toggleGroupToneMapper, false);
 		
-		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurve1, radioMenuItemToneMapperFilmicCurve2, radioMenuItemToneMapperLinear, radioMenuItemToneMapperReinhard1, radioMenuItemToneMapperReinhard2);
+		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurveACESModified, radioMenuItemToneMapperReinhard, radioMenuItemToneMapperReinhardModified1, radioMenuItemToneMapperReinhardModified2);
 		
 		menuBar.getMenus().add(menuToneMapper);
 	}
@@ -280,8 +252,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	protected void configurePixels(final byte[] pixels) {
 		this.pixels0 = pixels;
 		this.pixels1 = pixels.clone();
-		
-		this.convolutionKernel = new ConvolutionKernel(this.pixels1, getKernelWidth(), getKernelHeight());
 		
 		this.range = Range.create(getKernelWidth() * getKernelHeight());
 		
@@ -297,7 +267,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		camera.update();
 		camera.addCameraObserver(this);
 		
-		this.rendererRunnable = new RendererRunnable(this.renderPass, this.convolutionKernel, this.range, this.rendererKernel, this.settingFilterBlur, this.settingFilterDetectEdges, this.settingFilterEmboss, this.settingFilterGradientHorizontal, this.settingFilterGradientVertical, this.settingFilterSharpen, this.pixels0, this.pixels1);
+		this.rendererRunnable = new RendererRunnable(this.renderPass, this.range, this.rendererKernel, this.pixels0, this.pixels1);
 		
 		final
 		Thread thread = new Thread(this.rendererRunnable);
@@ -452,8 +422,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	protected void onExit() {
-		final ConvolutionKernel convolutionKernel = this.convolutionKernel;
-		
 		final RendererKernel rendererKernel = this.rendererKernel;
 		
 		final RendererRunnable rendererRunnable = this.rendererRunnable;
@@ -464,10 +432,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		if(rendererKernel != null) {
 			rendererKernel.dispose();
-		}
-		
-		if(convolutionKernel != null) {
-			convolutionKernel.dispose();
 		}
 	}
 	
@@ -541,7 +505,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		final byte[] pixels1 = this.pixels1;
 		
-		final float velocity = rendererKernel.isRayMarching() ? 1.0F : 5.0F;
+		final float velocity = rendererKernel.isRendererTypeRayMarcher() ? 1.0F : 5.0F;
 		final float movement = velocity;
 		
 		if(isKeyPressed(KeyCode.A)) {
@@ -768,31 +732,17 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		private final AtomicBoolean isRunning;
 		private final AtomicInteger renderPass;
 		private final AtomicLong renderTimeMillis;
-		private final ConvolutionKernel convolutionKernel;
 		private final Range range;
 		private final RendererKernel rendererKernel;
-		private final Setting settingFilterBlur;
-		private final Setting settingFilterDetectEdges;
-		private final Setting settingFilterEmboss;
-		private final Setting settingFilterGradientHorizontal;
-		private final Setting settingFilterGradientVertical;
-		private final Setting settingFilterSharpen;
 		private final byte[] pixels0;
 		private final byte[] pixels1;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		public RendererRunnable(final AtomicInteger renderPass, final ConvolutionKernel convolutionKernel, final Range range, final RendererKernel rendererKernel, final Setting settingFilterBlur, final Setting settingFilterDetectEdges, final Setting settingFilterEmboss, final Setting settingFilterGradientHorizontal, final Setting settingFilterGradientVertical, final Setting settingFilterSharpen, final byte[] pixels0, final byte[] pixels1) {
+		public RendererRunnable(final AtomicInteger renderPass, final Range range, final RendererKernel rendererKernel, final byte[] pixels0, final byte[] pixels1) {
 			this.renderPass = Objects.requireNonNull(renderPass, "renderPass == null");
-			this.convolutionKernel = Objects.requireNonNull(convolutionKernel, "convolutionKernel == null");
 			this.range = Objects.requireNonNull(range, "range == null");
 			this.rendererKernel = Objects.requireNonNull(rendererKernel, "rendererKernel == null");
-			this.settingFilterBlur = Objects.requireNonNull(settingFilterBlur, "settingFilterBlur == null");
-			this.settingFilterDetectEdges = Objects.requireNonNull(settingFilterDetectEdges, "settingFilterDetectEdges == null");
-			this.settingFilterEmboss = Objects.requireNonNull(settingFilterEmboss, "settingFilterEmboss == null");
-			this.settingFilterGradientHorizontal = Objects.requireNonNull(settingFilterGradientHorizontal, "settingFilterGradientHorizontal == null");
-			this.settingFilterGradientVertical = Objects.requireNonNull(settingFilterGradientVertical, "settingFilterGradientVertical == null");
-			this.settingFilterSharpen = Objects.requireNonNull(settingFilterSharpen, "settingFilterSharpen == null");
 			this.pixels0 = Objects.requireNonNull(pixels0, "pixels0 == null");
 			this.pixels1 = Objects.requireNonNull(pixels1, "pixels1 == null");
 			this.isRunning = new AtomicBoolean(true);
@@ -813,18 +763,9 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			
 			final AtomicLong renderTimeMillis = this.renderTimeMillis;
 			
-			final ConvolutionKernel convolutionKernel = this.convolutionKernel;
-			
 			final Range range = this.range;
 			
 			final RendererKernel rendererKernel = this.rendererKernel;
-			
-			final Setting settingFilterBlur = this.settingFilterBlur;
-			final Setting settingFilterDetectEdges = this.settingFilterDetectEdges;
-			final Setting settingFilterEmboss = this.settingFilterEmboss;
-			final Setting settingFilterGradientHorizontal = this.settingFilterGradientHorizontal;
-			final Setting settingFilterGradientVertical = this.settingFilterGradientVertical;
-			final Setting settingFilterSharpen = this.settingFilterSharpen;
 			
 			final byte[] pixels0 = this.pixels0;
 			final byte[] pixels1 = this.pixels1;
@@ -835,48 +776,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 				synchronized(pixels1) {
 					rendererKernel.execute(range);
 					rendererKernel.get(pixels1);
-					
-					if(settingFilterBlur.isEnabled()) {
-						convolutionKernel.update();
-						convolutionKernel.enableBlur();
-						convolutionKernel.execute(range);
-						convolutionKernel.get();
-					}
-					
-					if(settingFilterDetectEdges.isEnabled()) {
-						convolutionKernel.update();
-						convolutionKernel.enableDetectEdges();
-						convolutionKernel.execute(range);
-						convolutionKernel.get();
-					}
-					
-					if(settingFilterEmboss.isEnabled()) {
-						convolutionKernel.update();
-						convolutionKernel.enableEmboss();
-						convolutionKernel.execute(range);
-						convolutionKernel.get();
-					}
-					
-					if(settingFilterGradientHorizontal.isEnabled()) {
-						convolutionKernel.update();
-						convolutionKernel.enableGradientHorizontal();
-						convolutionKernel.execute(range);
-						convolutionKernel.get();
-					}
-					
-					if(settingFilterGradientVertical.isEnabled()) {
-						convolutionKernel.update();
-						convolutionKernel.enableGradientVertical();
-						convolutionKernel.execute(range);
-						convolutionKernel.get();
-					}
-					
-					if(settingFilterSharpen.isEnabled()) {
-						convolutionKernel.update();
-						convolutionKernel.enableSharpen();
-						convolutionKernel.execute(range);
-						convolutionKernel.get();
-					}
 					
 					synchronized(pixels0) {
 						System.arraycopy(pixels1, 0, pixels0, 0, pixels0.length);

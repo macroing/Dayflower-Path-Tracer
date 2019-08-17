@@ -19,6 +19,8 @@
 package org.dayflower.pathtracer.scene.loader;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -36,6 +38,8 @@ import org.dayflower.pathtracer.scene.compiler.SceneCompiler;
 public final class SceneLoader {
 	private final AtomicReference<String> name;
 	private final File directory;
+	private final Map<String, CompiledScene> compiledScenes;
+	private final Map<String, Scene> scenes;
 	private final boolean isCompilingExistingScene;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +95,8 @@ public final class SceneLoader {
 	public SceneLoader(final File directory, final boolean isCompilingExistingScene, final String name) {
 		this.name = new AtomicReference<>(Objects.requireNonNull(name, "name == null"));
 		this.directory = Objects.requireNonNull(directory, "directory == null");
+		this.compiledScenes = new HashMap<>();
+		this.scenes = new HashMap<>();
 		this.isCompilingExistingScene = isCompilingExistingScene;
 	}
 	
@@ -98,27 +104,32 @@ public final class SceneLoader {
 	
 	/**
 	 * Returns a {@link CompiledScene} given the name provided by {@code getName()}.
+	 * <p>
+	 * This method will cache the {@code CompiledScene}. This means that the next call to this method, provided that {@code getName()} returns the same name, will return the same {@code CompiledScene} instance. If you want to clear the cache, consider
+	 * calling {@link #clear()}.
 	 * 
 	 * @return a {@code CompiledScene} given the name provided by {@code getName()}
 	 */
 	public CompiledScene loadCompiledScene() {
-		final Scene scene = loadScene();
-		
-		final File sceneFile = Scenes.getSceneFile(getDirectory(), scene);
-		
-		if(!sceneFile.isFile() || isCompilingExistingScene()) {
-			final
-			SceneCompiler sceneCompiler = new SceneCompiler();
-			sceneCompiler.addSceneCompilerObserver(new PrintingSceneCompilerObserver());
+		return this.compiledScenes.computeIfAbsent(getName(), name -> {
+			final Scene scene = loadScene();
 			
-			final
-			CompiledScene compiledScene = sceneCompiler.compile(scene);
-			compiledScene.write(sceneFile);
+			final File sceneFile = Scenes.getSceneFile(getDirectory(), scene);
 			
-			return compiledScene;
-		}
-		
-		return CompiledScene.read(sceneFile);
+			if(!sceneFile.isFile() || isCompilingExistingScene()) {
+				final
+				SceneCompiler sceneCompiler = new SceneCompiler();
+				sceneCompiler.addSceneCompilerObserver(new PrintingSceneCompilerObserver());
+				
+				final
+				CompiledScene compiledScene = sceneCompiler.compile(scene);
+				compiledScene.write(sceneFile);
+				
+				return compiledScene;
+			}
+			
+			return CompiledScene.read(sceneFile);
+		});
 	}
 	
 	/**
@@ -132,11 +143,14 @@ public final class SceneLoader {
 	
 	/**
 	 * Returns a {@link Scene} given the name provided by {@code getName()}.
+	 * <p>
+	 * This method will cache the {@code Scene}. This means that the next call to this method, provided that {@code getName()} returns the same name, will return the same {@code Scene} instance. If you want to clear the cache, consider calling
+	 * {@link #clear()}.
 	 * 
 	 * @return a {@code Scene} given the name provided by {@code getName()}
 	 */
 	public Scene loadScene() {
-		return Scenes.getSceneByName(getDirectory(), getName());
+		return this.scenes.computeIfAbsent(getName(), name -> Scenes.getSceneByName(getDirectory(), getName()));
 	}
 	
 	/**
@@ -155,6 +169,14 @@ public final class SceneLoader {
 	 */
 	public boolean isCompilingExistingScene() {
 		return this.isCompilingExistingScene;
+	}
+	
+	/**
+	 * Clears the cache with all {@link CompiledScene}s and {@link Scene}s that have already been loaded.
+	 */
+	public void clear() {
+		this.compiledScenes.clear();
+		this.scenes.clear();
 	}
 	
 	/**
