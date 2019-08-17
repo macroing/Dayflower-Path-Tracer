@@ -90,14 +90,45 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	float rendererAOMaximumDistance;
-	float toneMapperExposure;
-	int rendererPTRayDepthMaximum;
-	int rendererPTRayDepthRussianRoulette;
-	int rendererType;
-	final int resolutionX;
-	final int resolutionY;
-	int toneMapperType;
+	/**
+	 * The maximum distance for Ambient Occlusion.
+	 */
+	protected float rendererAOMaximumDistance;
+	
+	/**
+	 * The tone mapper exposure.
+	 */
+	protected float toneMapperExposure;
+	
+	/**
+	 * The maximum ray depth for Path Tracing.
+	 */
+	protected int rendererPTRayDepthMaximum;
+	
+	/**
+	 * The ray depth to begin Russian Roulette path termination for Path Tracing.
+	 */
+	protected int rendererPTRayDepthRussianRoulette;
+	
+	/**
+	 * The renderer type.
+	 */
+	protected int rendererType;
+	
+	/**
+	 * The resolution along the X-axis.
+	 */
+	protected final int resolutionX;
+	
+	/**
+	 * The resolution along the Y-axis.
+	 */
+	protected final int resolutionY;
+	
+	/**
+	 * The tone mapper type.
+	 */
+	protected int toneMapperType;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -108,6 +139,16 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	/**
+	 * Constructs a new {@code AbstractRendererKernel} instance.
+	 * <p>
+	 * If {@code sceneLoader} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param resolutionX the resolution along the X-axis (or width)
+	 * @param resolutionY the resolution along the Y-axis (or height)
+	 * @param sceneLoader a {@link SceneLoader}
+	 * @throws NullPointerException thrown if, and only if, {@code sceneLoader} is {@code null}
+	 */
 	protected AbstractRendererKernel(final int resolutionX, final int resolutionY, final SceneLoader sceneLoader) {
 		this.rendererAOMaximumDistance = 200.0F;
 		this.toneMapperExposure = 1.0F;
