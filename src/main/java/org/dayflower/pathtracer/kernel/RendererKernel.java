@@ -118,7 +118,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private float sunAndSkySunOriginZ;
 	private float sunAndSkyTheta;
 	private float sunAndSkyTurbidity;
-	private float toneMapperExposure;
 	private final float[] colorAverageSamples;
 	private float[] colorCurrentSamples_$local$;
 	private float[] colorTemporarySamples_$private$3;
@@ -1948,7 +1947,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 		float b = this.colorAverageSamples[pixelIndex0 + 2];
 		
 		if(this.toneMapperType == TONE_MAPPER_TYPE_REINHARD) {
-			final float exposure = this.toneMapperExposure;
+			final float exposure = super.toneMapperExposure;
 			
 			r *= exposure;
 			g *= exposure;
@@ -1963,7 +1962,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //			Note:   Not the original source used, but a source nonetheless.
 		} else if(this.toneMapperType == TONE_MAPPER_TYPE_REINHARD_MODIFIED_1) {
 //			Set the exposure:
-			final float exposure = this.toneMapperExposure;
+			final float exposure = super.toneMapperExposure;
 			
 //			Perform Tone Mapping on the 'normalized' accumulated pixel color components:
 			r = 1.0F - exp(-r * exposure);
@@ -1972,7 +1971,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			
 //			Source: Unknown
 		} else if(this.toneMapperType == TONE_MAPPER_TYPE_REINHARD_MODIFIED_2) {
-			final float exposure = this.toneMapperExposure;
+			final float exposure = super.toneMapperExposure;
 			
 			r *= exposure;
 			g *= exposure;
@@ -1986,7 +1985,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			
 //			Source: https://www.shadertoy.com/view/WdjSW3
 		} else if(this.toneMapperType == TONE_MAPPER_TYPE_FILMIC_CURVE_ACES_MODIFIED) {
-			final float exposure = this.toneMapperExposure;
+			final float exposure = super.toneMapperExposure;
 			
 			r *= exposure;
 			g *= exposure;
