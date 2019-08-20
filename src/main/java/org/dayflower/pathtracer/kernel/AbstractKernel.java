@@ -34,6 +34,8 @@ import com.amd.aparapi.Kernel;
  * <li>Methods that approximates sine and cosine based on tables</li>
  * <li>Methods that computes Perlin- and Simplex noise</li>
  * <li>Methods that computes fractional Brownian motion (fBm)</li>
+ * <li>Methods for linear and bilinear interpolation</li>
+ * <li>Additional methods such as smoothstep, modulo and remainder</li>
  * </ul>
  * 
  * @since 1.0.0
@@ -82,100 +84,110 @@ public abstract class AbstractKernel extends Kernel {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private static final float DEGREES_MAXIMUM = 360.0F;
-	private static final float DEGREES_TO_INDEX = (~(-1 << 12) + 1) / DEGREES_MAXIMUM;
-	private static final float NEXT_FLOAT_RECIPROCAL = 1.0F / (1 << 24);
-	private static final float RADIANS = PI / 180.0F;
-	private static final float RADIANS_MAXIMUM = PI * 2.0F;
-	private static final float RADIANS_TO_INDEX = (~(-1 << 12) + 1) / RADIANS_MAXIMUM;
+	private static final float COS_TABLE_AND_SIN_TABLE_DEGREES_MAXIMUM = 360.0F;
+	private static final float COS_TABLE_AND_SIN_TABLE_DEGREES_TO_INDEX = (~(-1 << 12) + 1) / COS_TABLE_AND_SIN_TABLE_DEGREES_MAXIMUM;
+	private static final float COS_TABLE_AND_SIN_TABLE_RADIANS = PI / 180.0F;
+	private static final float COS_TABLE_AND_SIN_TABLE_RADIANS_MAXIMUM = PI * 2.0F;
+	private static final float COS_TABLE_AND_SIN_TABLE_RADIANS_TO_INDEX = (~(-1 << 12) + 1) / COS_TABLE_AND_SIN_TABLE_RADIANS_MAXIMUM;
+	private static final float PRNG_NEXT_FLOAT_RECIPROCAL = 1.0F / (1 << 24);
 	private static final float SIMPLEX_F2 = 0.3660254037844386F;
 	private static final float SIMPLEX_F3 = 1.0F / 3.0F;
 	private static final float SIMPLEX_F4 = 0.30901699437494745F;
 	private static final float SIMPLEX_G2 = 0.21132486540518713F;
 	private static final float SIMPLEX_G3 = 1.0F / 6.0F;
 	private static final float SIMPLEX_G4 = 0.1381966011250105F;
-	private static final int BITS = 12;
-	private static final int COUNT = ~(-1 << BITS) + 1;
-	private static final int MASK_0 = ~(-1 << BITS);
-	private static final long ADDEND = 0xBL;
-	private static final long MASK_1 = (1L << 48L) - 1L;
-	private static final long MULTIPLIER = 0x5DEECE66DL;
+	private static final int COS_TABLE_AND_SIN_TABLE_BITS = 12;
+	private static final int COS_TABLE_AND_SIN_TABLE_COUNT = ~(-1 << COS_TABLE_AND_SIN_TABLE_BITS) + 1;
+	private static final int COS_TABLE_AND_SIN_TABLE_MASK = ~(-1 << COS_TABLE_AND_SIN_TABLE_BITS);
+	private static final long PRNG_ADDEND = 0xBL;
+	private static final long PRNG_MASK = (1L << 48L) - 1L;
+	private static final long PRNG_MULTIPLIER = 0x5DEECE66DL;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
 	 * The global amplitude.
 	 */
-	protected float amplitude;
+	protected float globalAmplitude;
 	
 	/**
 	 * The global frequency.
 	 */
-	protected float frequency;
+	protected float globalFrequency;
 	
 	/**
 	 * The global gain.
 	 */
-	protected float gain;
+	protected float globalGain;
 	
 	/**
 	 * The global lacunarity.
 	 */
-	protected float lacunarity;
+	protected float globalLacunarity;
 	
 	/**
 	 * The cosine table (array) used by this {@code AbstractKernel} instance.
 	 * <p>
 	 * It appears that it cannot be private for Aparapi and OpenCL to work.
 	 */
-	protected float[] cosTable = new float[0];
+	protected float[] cosTable;
 	
 	/**
 	 * A gradient array used by the Simplex noise algorithms.
 	 * <p>
 	 * It appears that it cannot be private for Aparapi and OpenCL to work.
 	 */
-	protected float[] simplexGradient3 = new float[0];
+	protected float[] simplexGradient3;
 	
 	/**
 	 * A gradient array used by the Simplex noise algorithms.
 	 * <p>
 	 * It appears that it cannot be private for Aparapi and OpenCL to work.
 	 */
-	protected float[] simplexGradient4 = new float[0];
+	protected float[] simplexGradient4;
 	
 	/**
 	 * The sine table (array) used by this {@code AbstractKernel} instance.
 	 * <p>
 	 * It appears that it cannot be private for Aparapi and OpenCL to work.
 	 */
-	protected float[] sinTable = new float[0];
+	protected float[] sinTable;
 	
 	/**
 	 * The global octaves.
 	 */
-	protected int octaves;
+	protected int globalOctaves;
+	
+	/**
+	 * The resolution along the X-axis.
+	 */
+	protected int resolutionX;
+	
+	/**
+	 * The resolution along the Y-axis.
+	 */
+	protected int resolutionY;
 	
 	/**
 	 * A permutations array used by the Perlin- and Simplex noise algorithms.
 	 * <p>
 	 * It appears that it cannot be private for Aparapi and OpenCL to work.
 	 */
-	protected int[] permutations = new int[0];
+	protected int[] noisePermutations;
 	
 	/**
 	 * A permutations array used by the Simplex noise algorithms.
 	 * <p>
 	 * It appears that it cannot be private for Aparapi and OpenCL to work.
 	 */
-	protected int[] permutationsModulo12 = new int[0];
+	protected int[] noisePermutationsModulo12;
 	
 	/**
 	 * The seed array used by this {@code AbstractKernel} instance.
 	 * <p>
 	 * It appears that it cannot be private for Aparapi and OpenCL to work.
 	 */
-	protected long[] seeds = new long[0];
+	protected long[] seeds;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -183,19 +195,171 @@ public abstract class AbstractKernel extends Kernel {
 	 * Constructs a new {@code AbstractKernel} instance.
 	 */
 	protected AbstractKernel() {
-		this.amplitude = 0.5F;
-		this.frequency = 0.2F;
-		this.lacunarity = 2.0F;
-		this.gain = 1.0F / this.lacunarity;
-		this.octaves = 2;
+//		Initialize the resolution variables:
+		this.resolutionX = 1;
+		this.resolutionY = 1;
+		
+//		Initialize the global noise variables:
+		this.globalAmplitude = 0.5F;
+		this.globalFrequency = 0.2F;
+		this.globalLacunarity = 2.0F;
+		this.globalGain = 1.0F / this.globalLacunarity;
+		this.globalOctaves = 2;
+		
+//		Initialize the noise variables:
+		this.noisePermutations = new int[1];
+		this.noisePermutationsModulo12 = new int[1];
+		
+//		Initialize the Simplex noise variables:
+		this.simplexGradient3 = new float[1];
+		this.simplexGradient4 = new float[1];
+		
+//		Initialize the cos table and sin table variables:
+		this.cosTable = new float[1];
+		this.sinTable = new float[1];
+		
+//		Initialize the PRNG variables:
+		this.seeds = new long[this.resolutionX * this.resolutionY];
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns the global amplitude.
+	 * 
+	 * @return the global amplitude
+	 */
+	public final float getGlobalAmplitude() {
+		return this.globalAmplitude;
+	}
+	
+	/**
+	 * Returns the global frequency.
+	 * 
+	 * @return the global frequency
+	 */
+	public final float getGlobalFrequency() {
+		return this.globalFrequency;
+	}
+	
+	/**
+	 * Returns the global gain.
+	 * 
+	 * @return the global gain
+	 */
+	public final float getGlobalGain() {
+		return this.globalGain;
+	}
+	
+	/**
+	 * Returns the global lacunarity.
+	 * 
+	 * @return the global lacunarity
+	 */
+	public final float getGlobalLacunarity() {
+		return this.globalLacunarity;
+	}
+	
+	/**
+	 * Returns the global octaves.
+	 * 
+	 * @return the global octaves
+	 */
+	public final int getGlobalOctaves() {
+		return this.globalOctaves;
+	}
+	
+	/**
+	 * Sets the global amplitude.
+	 * 
+	 * @param globalAmplitude the new global amplitude
+	 */
+	public final void setGlobalAmplitude(final float globalAmplitude) {
+		this.globalAmplitude = globalAmplitude;
+	}
+	
+	/**
+	 * Sets the global frequency.
+	 * 
+	 * @param globalFrequency the new global frequency
+	 */
+	public final void setGlobalFrequency(final float globalFrequency) {
+		this.globalFrequency = globalFrequency;
+	}
+	
+	/**
+	 * Sets the global gain.
+	 * 
+	 * @param globalGain the new global gain
+	 */
+	public final void setGlobalGain(final float globalGain) {
+		this.globalGain = globalGain;
+	}
+	
+	/**
+	 * Sets the global lacunarity.
+	 * 
+	 * @param globalLacunarity the new global lacunarity
+	 */
+	public final void setGlobalLacunarity(final float globalLacunarity) {
+		this.globalLacunarity = globalLacunarity;
+	}
+	
+	/**
+	 * Sets the global octaves.
+	 * 
+	 * @param globalOctaves the new global octaves
+	 */
+	public final void setGlobalOctaves(final int globalOctaves) {
+		this.globalOctaves = globalOctaves;
+	}
+	
+	/**
+	 * Updates all necessary variables in this {@code AbstractKernel} instance.
+	 * <p>
+	 * This method should not be called by {@code run()}-reachable code, because it uses a {@code ThreadLocalRandom} to update the PRNG.
+	 * 
+	 * @param resolutionX the resolution along the X-axis
+	 * @param resolutionY the resolution along the Y-axis
+	 */
+	public final void update(final int resolutionX, final int resolutionY) {
+		doUpdateResolution(resolutionX, resolutionY);
+		doUpdateCosTable();
+		doUpdateSinTable();
+		doUpdateNoise();
+		doUpdateSeed();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 //	If you're porting back to the original Aparapi, uncomment this code:
-//	public final float asinpi(final float a) {
+//	protected final float asinpi(final float a) {
 //		return asin(a) * PI_RECIPROCAL;
 //	}
+	
+	/**
+	 * Performs a bilinear interpolation operation on the supplied values.
+	 * <p>
+	 * Returns the bilinearly interpolated value.
+	 * <p>
+	 * Calling this method is equivalent to the following
+	 * <pre>
+	 * {@code
+	 * lerp(lerp(value00, value01, tX), lerp(value10, value11, tX), tY)
+	 * }
+	 * </pre>
+	 * 
+	 * @param value00 a {@code float} value
+	 * @param value01 a {@code float} value
+	 * @param value10 a {@code float} value
+	 * @param value11 a {@code float} value
+	 * @param tX the X-axis factor
+	 * @param tY the Y-axis factor
+	 * @return the bilinearly interpolated value
+	 */
+	protected final float blerp(final float value00, final float value01, final float value10, final float value11, final float tX, final float tY) {
+		return lerp(lerp(value00, value01, tX), lerp(value10, value11, tX), tY);
+	}
 	
 	/**
 	 * Returns a {@code float} value based on four {@code byte}s.
@@ -206,7 +370,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param b3 the fourth {@code byte}
 	 * @return a {@code float} value based on four {@code byte}s
 	 */
-	public final float bytesToFloat(final byte b0, final byte b1, final byte b2, final byte b3) {
+	protected final float bytesToFloat(final byte b0, final byte b1, final byte b2, final byte b3) {
 		final int bits = ((b0 & 0xFF) << 0) | ((b1 & 0xFF) << 8) | ((b2 & 0xFF) << 16) | ((b3 & 0xFF) << 24);
 		
 		final int s = (bits >> 31) == 0 ? 1 : -1;
@@ -224,8 +388,8 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param degrees an angle in degrees
 	 * @return the cosine of the angle {@code degrees}
 	 */
-	public final float cosDegrees(final float degrees) {
-		return this.cosTable[(int)(degrees * DEGREES_TO_INDEX) & MASK_0];
+	protected final float cosDegrees(final float degrees) {
+		return this.cosTable[(int)(degrees * COS_TABLE_AND_SIN_TABLE_DEGREES_TO_INDEX) & COS_TABLE_AND_SIN_TABLE_MASK];
 	}
 	
 	/**
@@ -236,44 +400,47 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param radians an angle in radians
 	 * @return the cosine of the angle {@code radians}
 	 */
-	public final float cosRadians(final float radians) {
-		return this.cosTable[(int)(radians * RADIANS_TO_INDEX) & MASK_0];
+	protected final float cosRadians(final float radians) {
+		return this.cosTable[(int)(radians * COS_TABLE_AND_SIN_TABLE_RADIANS_TO_INDEX) & COS_TABLE_AND_SIN_TABLE_MASK];
 	}
 	
 	/**
-	 * Returns the global amplitude.
+	 * Performs a linear interpolation operation on the supplied values.
+	 * <p>
+	 * Returns the linearly interpolated value.
 	 * 
-	 * @return the global amplitude
+	 * @param value0 a {@code float} value
+	 * @param value1 a {@code float} value
+	 * @param t the factor
+	 * @return the linearly interpolated value
 	 */
-	public final float getAmplitude() {
-		return this.amplitude;
+	@SuppressWarnings("static-method")
+	protected final float lerp(final float value0, final float value1, final float t) {
+		return (1.0F - t) * value0 + t * value1;
 	}
 	
 	/**
-	 * Returns the global frequency.
+	 * Returns the maximum value of {@code a}, {@code b} and {@code c}.
 	 * 
-	 * @return the global frequency
+	 * @param a a {@code float} value
+	 * @param b a {@code float} value
+	 * @param c a {@code float} value
+	 * @return the maximum value of {@code a}, {@code b} and {@code c}
 	 */
-	public final float getFrequency() {
-		return this.frequency;
+	protected final float max(final float a, final float b, final float c) {
+		return max(max(a, b), c);
 	}
 	
 	/**
-	 * Returns the global gain.
+	 * Returns the minimum value of {@code a}, {@code b} and {@code c}.
 	 * 
-	 * @return the global gain
+	 * @param a a {@code float} value
+	 * @param b a {@code float} value
+	 * @param c a {@code float} value
+	 * @return the minimum value of {@code a}, {@code b} and {@code c}
 	 */
-	public final float getGain() {
-		return this.gain;
-	}
-	
-	/**
-	 * Returns the global lacunarity.
-	 * 
-	 * @return the global lacunarity
-	 */
-	public final float getLacunarity() {
-		return this.lacunarity;
+	protected final float min(final float a, final float b, final float c) {
+		return min(min(a, b), c);
 	}
 	
 	/**
@@ -284,7 +451,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param value the value to perform the modulo operation on
 	 * @return the modulo of {@code value}
 	 */
-	public final float modulo(final float value) {
+	protected final float modulo(final float value) {
 		return value - floor(value);
 	}
 	
@@ -295,8 +462,8 @@ public abstract class AbstractKernel extends Kernel {
 	 * 
 	 * @return the next pseudorandom, uniformly distributed {@code float} value between {@code 0.0} and {@code 1.0} from the random number generator's sequence
 	 */
-	public final float nextFloat() {
-		return doNext(24) * NEXT_FLOAT_RECIPROCAL;
+	protected final float nextFloat() {
+		return doNext(24) * PRNG_NEXT_FLOAT_RECIPROCAL;
 	}
 	
 	/**
@@ -307,7 +474,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param z the Z-coordinate
 	 * @return a {@code float} with noise computed by the Perlin algorithm using the coordinates X, Y and Z
 	 */
-	public final float perlinNoiseXYZ(final float x, final float y, final float z) {
+	protected final float perlinNoiseXYZ(final float x, final float y, final float z) {
 //		Calculate the floor of the X-, Y- and Z-coordinates:
 		final float floorX = floor(x);
 		final float floorY = floor(y);
@@ -329,20 +496,20 @@ public abstract class AbstractKernel extends Kernel {
 		final float w = z1 * z1 * z1 * (z1 * (z1 * 6.0F - 15.0F) + 10.0F);
 		
 //		Calculate some hash values:
-		final int a0 = this.permutations[x0] + y0;
-		final int a1 = this.permutations[a0] + z0;
-		final int a2 = this.permutations[a0 + 1] + z0;
-		final int b0 = this.permutations[x0 + 1] + y0;
-		final int b1 = this.permutations[b0] + z0;
-		final int b2 = this.permutations[b0 + 1] + z0;
-		final int hash0 = this.permutations[a1] & 15;
-		final int hash1 = this.permutations[b1] & 15;
-		final int hash2 = this.permutations[a2] & 15;
-		final int hash3 = this.permutations[b2] & 15;
-		final int hash4 = this.permutations[a1 + 1] & 15;
-		final int hash5 = this.permutations[b1 + 1] & 15;
-		final int hash6 = this.permutations[a2 + 1] & 15;
-		final int hash7 = this.permutations[b2 + 1] & 15;
+		final int a0 = this.noisePermutations[x0] + y0;
+		final int a1 = this.noisePermutations[a0] + z0;
+		final int a2 = this.noisePermutations[a0 + 1] + z0;
+		final int b0 = this.noisePermutations[x0 + 1] + y0;
+		final int b1 = this.noisePermutations[b0] + z0;
+		final int b2 = this.noisePermutations[b0 + 1] + z0;
+		final int hash0 = this.noisePermutations[a1] & 15;
+		final int hash1 = this.noisePermutations[b1] & 15;
+		final int hash2 = this.noisePermutations[a2] & 15;
+		final int hash3 = this.noisePermutations[b2] & 15;
+		final int hash4 = this.noisePermutations[a1 + 1] & 15;
+		final int hash5 = this.noisePermutations[b1 + 1] & 15;
+		final int hash6 = this.noisePermutations[a2 + 1] & 15;
+		final int hash7 = this.noisePermutations[b2 + 1] & 15;
 		
 //		Calculate the gradients:
 		final float gradient0U = hash0 < 8 || hash0 == 12 || hash0 == 13 ? x1 : y1;
@@ -390,7 +557,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @return the remainder of {@code x} and {@code y}
 	 */
 	@SuppressWarnings("static-method")
-	public final float remainder(final float x, final float y) {
+	protected final float remainder(final float x, final float y) {
 		final int n = (int)(x / y);
 		
 		return x - n * y;
@@ -410,7 +577,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param b either the minimum or the maximum value
 	 * @return {@code value} if, and only if, {@code min(a, b) <= value <= max(a, b)}, otherwise either {@code a} or {@code b}
 	 */
-	public final float saturate(final float value, final float a, final float b) {
+	protected final float saturate(final float value, final float a, final float b) {
 		final float minimumValue = min(a, b);
 		final float maximumValue = max(a, b);
 		
@@ -429,7 +596,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param y the Y-coordinate
 	 * @return a {@code float} with noise computed by a Simplex-based fractal algorithm using the coordinates X and Y
 	 */
-	public final float simplexFractalXY(final float amplitude, final float frequency, final float gain, final float lacunarity, final int octaves, final float x, final float y) {
+	protected final float simplexFractalXY(final float amplitude, final float frequency, final float gain, final float lacunarity, final int octaves, final float x, final float y) {
 		float result = 0.0F;
 		
 		float currentAmplitude = amplitude;
@@ -458,7 +625,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param z the Z-coordinate
 	 * @return a {@code float} with noise computed by a Simplex-based fractal algorithm using the coordinates X, Y and Z
 	 */
-	public final float simplexFractalXYZ(final float amplitude, final float frequency, final float gain, final float lacunarity, final int octaves, final float x, final float y, final float z) {
+	protected final float simplexFractalXYZ(final float amplitude, final float frequency, final float gain, final float lacunarity, final int octaves, final float x, final float y, final float z) {
 		float result = 0.0F;
 		
 		float currentAmplitude = amplitude;
@@ -488,7 +655,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param w the W-coordinate
 	 * @return a {@code float} with noise computed by a Simplex-based fractal algorithm using the coordinates X, Y, Z and W
 	 */
-	public final float simplexFractalXYZW(final float amplitude, final float frequency, final float gain, final float lacunarity, final int octaves, final float x, final float y, final float z, final float w) {
+	protected final float simplexFractalXYZW(final float amplitude, final float frequency, final float gain, final float lacunarity, final int octaves, final float x, final float y, final float z, final float w) {
 		float result = 0.0F;
 		
 		float currentAmplitude = amplitude;
@@ -516,7 +683,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param y the Y-coordinate
 	 * @return a {@code float} with noise computed by a Simplex-based fractional Brownian motion (fBm) algorithm using the coordinates X and Y
 	 */
-	public final float simplexFractionalBrownianMotionXY(final float frequency, final float gain, final float minimum, final float maximum, final int octaves, final float x, final float y) {
+	protected final float simplexFractionalBrownianMotionXY(final float frequency, final float gain, final float minimum, final float maximum, final int octaves, final float x, final float y) {
 		float currentAmplitude = 1.0F;
 		float maximumAmplitude = 0.0F;
 		
@@ -552,7 +719,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param z the Z-coordinate
 	 * @return a {@code float} with noise computed by a Simplex-based fractional Brownian motion (fBm) algorithm using the coordinates X, Y and Z
 	 */
-	public final float simplexFractionalBrownianMotionXYZ(final float frequency, final float gain, final float minimum, final float maximum, final int octaves, final float x, final float y, final float z) {
+	protected final float simplexFractionalBrownianMotionXYZ(final float frequency, final float gain, final float minimum, final float maximum, final int octaves, final float x, final float y, final float z) {
 		float currentAmplitude = 1.0F;
 		float maximumAmplitude = 0.0F;
 		
@@ -589,7 +756,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param w the W-coordinate
 	 * @return a {@code float} with noise computed by a Simplex-based fractional Brownian motion (fBm) algorithm using the coordinates X, Y, Z and W
 	 */
-	public final float simplexFractionalBrownianMotionXYZW(final float frequency, final float gain, final float minimum, final float maximum, final int octaves, final float x, final float y, final float z, final float w) {
+	protected final float simplexFractionalBrownianMotionXYZW(final float frequency, final float gain, final float minimum, final float maximum, final int octaves, final float x, final float y, final float z, final float w) {
 		float currentAmplitude = 1.0F;
 		float maximumAmplitude = 0.0F;
 		
@@ -619,7 +786,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param y the Y-coordinate
 	 * @return a {@code float} with noise computed by the Simplex algorithm using the coordinates X and Y
 	 */
-	public final float simplexNoiseXY(final float x, final float y) {
+	protected final float simplexNoiseXY(final float x, final float y) {
 		final float s = (x + y) * SIMPLEX_F2;
 		
 		final int i = doFastFloor(x + s);
@@ -641,9 +808,9 @@ public abstract class AbstractKernel extends Kernel {
 		final int ii = i & 0xFF;
 		final int jj = j & 0xFF;
 		
-		final int gi0 = this.permutationsModulo12[ii + this.permutations[jj]];
-		final int gi1 = this.permutationsModulo12[ii + i1 + this.permutations[jj + j1]];
-		final int gi2 = this.permutationsModulo12[ii + 1 + this.permutations[jj + 1]];
+		final int gi0 = this.noisePermutationsModulo12[ii + this.noisePermutations[jj]];
+		final int gi1 = this.noisePermutationsModulo12[ii + i1 + this.noisePermutations[jj + j1]];
+		final int gi2 = this.noisePermutationsModulo12[ii + 1 + this.noisePermutations[jj + 1]];
 		
 		final float t0 = 0.5F - x0 * x0 - y0 * y0;
 		final float n0 = t0 < 0.0F ? 0.0F : (t0 * t0) * (t0 * t0) * doDotXY(this.simplexGradient3[gi0 * 3 + 0], this.simplexGradient3[gi0 * 3 + 1], x0, y0);
@@ -665,7 +832,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param z the Z-coordinate
 	 * @return a {@code float} with noise computed by the Simplex algorithm using the coordinates X, Y and Z
 	 */
-	public final float simplexNoiseXYZ(final float x, final float y, final float z) {
+	protected final float simplexNoiseXYZ(final float x, final float y, final float z) {
 		final float s = (x + y + z) * SIMPLEX_F3;
 		
 		final int i = doFastFloor(x + s);
@@ -747,10 +914,10 @@ public abstract class AbstractKernel extends Kernel {
 		final int jj = j & 0xFF;
 		final int kk = k & 0xFF;
 		
-		final int gi0 = this.permutationsModulo12[ii + this.permutations[jj + this.permutations[kk]]];
-		final int gi1 = this.permutationsModulo12[ii + i1 + this.permutations[jj + j1 + this.permutations[kk + k1]]];
-		final int gi2 = this.permutationsModulo12[ii + i2 + this.permutations[jj + j2 + this.permutations[kk + k2]]];
-		final int gi3 = this.permutationsModulo12[ii + 1 + this.permutations[jj + 1 + this.permutations[kk + 1]]];
+		final int gi0 = this.noisePermutationsModulo12[ii + this.noisePermutations[jj + this.noisePermutations[kk]]];
+		final int gi1 = this.noisePermutationsModulo12[ii + i1 + this.noisePermutations[jj + j1 + this.noisePermutations[kk + k1]]];
+		final int gi2 = this.noisePermutationsModulo12[ii + i2 + this.noisePermutations[jj + j2 + this.noisePermutations[kk + k2]]];
+		final int gi3 = this.noisePermutationsModulo12[ii + 1 + this.noisePermutations[jj + 1 + this.noisePermutations[kk + 1]]];
 		
 		final float t0 = 0.6F - x0 * x0 - y0 * y0 - z0 * z0;
 		final float n0 = t0 < 0.0F ? 0.0F : (t0 * t0) * (t0 * t0) * doDotXYZ(this.simplexGradient3[gi0 * 3 + 0], this.simplexGradient3[gi0 * 3 + 1], this.simplexGradient3[gi0 * 3 + 2], x0, y0, z0);
@@ -776,7 +943,7 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param w the W-coordinate
 	 * @return a {@code float} with noise computed by the Simplex algorithm using the coordinates X, Y, Z and W
 	 */
-	public final float simplexNoiseXYZW(final float x, final float y, final float z, final float w) {
+	protected final float simplexNoiseXYZW(final float x, final float y, final float z, final float w) {
 		final float s = (x + y + z + w) * SIMPLEX_F4;
 		
 		final int i = doFastFloor(x + s);
@@ -867,11 +1034,11 @@ public abstract class AbstractKernel extends Kernel {
 		final int kk = k & 0xFF;
 		final int ll = l & 0xFF;
 		
-		final int gi0 = this.permutations[ii + this.permutations[jj + this.permutations[kk + this.permutations[ll]]]] % 32;
-		final int gi1 = this.permutations[ii + i1 + this.permutations[jj + j1 + this.permutations[kk + k1 + this.permutations[ll + l1]]]] % 32;
-		final int gi2 = this.permutations[ii + i2 + this.permutations[jj + j2 + this.permutations[kk + k2 + this.permutations[ll + l2]]]] % 32;
-		final int gi3 = this.permutations[ii + i3 + this.permutations[jj + j3 + this.permutations[kk + k3 + this.permutations[ll + l3]]]] % 32;
-		final int gi4 = this.permutations[ii + 1 + this.permutations[jj + 1 + this.permutations[kk + 1 + this.permutations[ll + 1]]]] % 32;
+		final int gi0 = this.noisePermutations[ii + this.noisePermutations[jj + this.noisePermutations[kk + this.noisePermutations[ll]]]] % 32;
+		final int gi1 = this.noisePermutations[ii + i1 + this.noisePermutations[jj + j1 + this.noisePermutations[kk + k1 + this.noisePermutations[ll + l1]]]] % 32;
+		final int gi2 = this.noisePermutations[ii + i2 + this.noisePermutations[jj + j2 + this.noisePermutations[kk + k2 + this.noisePermutations[ll + l2]]]] % 32;
+		final int gi3 = this.noisePermutations[ii + i3 + this.noisePermutations[jj + j3 + this.noisePermutations[kk + k3 + this.noisePermutations[ll + l3]]]] % 32;
+		final int gi4 = this.noisePermutations[ii + 1 + this.noisePermutations[jj + 1 + this.noisePermutations[kk + 1 + this.noisePermutations[ll + 1]]]] % 32;
 		
 		final float t0 = 0.6F - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0;
 		final float n0 = t0 < 0.0F ? 0.0F : (t0 * t0) * (t0 * t0) * doDotXYZW(this.simplexGradient4[gi0 * 4 + 0], this.simplexGradient4[gi0 * 4 + 1], this.simplexGradient4[gi0 * 4 + 2], this.simplexGradient4[gi0 * 4 + 3], x0, y0, z0, w0);
@@ -899,8 +1066,8 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param degrees an angle in degrees
 	 * @return the sine of the angle {@code degrees}
 	 */
-	public final float sinDegrees(final float degrees) {
-		return this.sinTable[(int)(degrees * DEGREES_TO_INDEX) & MASK_0];
+	protected final float sinDegrees(final float degrees) {
+		return this.sinTable[(int)(degrees * COS_TABLE_AND_SIN_TABLE_DEGREES_TO_INDEX) & COS_TABLE_AND_SIN_TABLE_MASK];
 	}
 	
 	/**
@@ -911,77 +1078,49 @@ public abstract class AbstractKernel extends Kernel {
 	 * @param radians an angle in radians
 	 * @return the sine of the angle {@code radians}
 	 */
-	public final float sinRadians(final float radians) {
-		return this.sinTable[(int)(radians * RADIANS_TO_INDEX) & MASK_0];
+	protected final float sinRadians(final float radians) {
+		return this.sinTable[(int)(radians * COS_TABLE_AND_SIN_TABLE_RADIANS_TO_INDEX) & COS_TABLE_AND_SIN_TABLE_MASK];
 	}
 	
 	/**
-	 * Returns the global octaves.
-	 * 
-	 * @return the global octaves
-	 */
-	public final int getOctaves() {
-		return this.octaves;
-	}
-	
-	/**
-	 * Sets the global amplitude
-	 * 
-	 * @param amplitude the new global amplitude
-	 */
-	public final void setAmplitude(final float amplitude) {
-		this.amplitude = amplitude;
-	}
-	
-	/**
-	 * Sets the global frequency
-	 * 
-	 * @param frequency the new global frequency
-	 */
-	public final void setFrequency(final float frequency) {
-		this.frequency = frequency;
-	}
-	
-	/**
-	 * Sets the global gain
-	 * 
-	 * @param gain the new global gain
-	 */
-	public final void setGain(final float gain) {
-		this.gain = gain;
-	}
-	
-	/**
-	 * Sets the global lacunarity
-	 * 
-	 * @param lacunarity the new global lacunarity
-	 */
-	public final void setLacunarity(final float lacunarity) {
-		this.lacunarity = lacunarity;
-	}
-	
-	/**
-	 * Sets the global octaves
-	 * 
-	 * @param octaves the new global octaves
-	 */
-	public final void setOctaves(final int octaves) {
-		this.octaves = octaves;
-	}
-	
-	/**
-	 * Updates all necessary variables in this {@code AbstractKernel} instance.
+	 * Performs a smoothstep operation on {@code value} and the edges {@code a} and {@code b}.
 	 * <p>
-	 * This method should not be called by {@code run()}-reachable code, because it uses a {@code ThreadLocalRandom} to update the PRNG.
+	 * Returns a {@code float} value.
 	 * 
-	 * @param width the width of this {@code AbstractKernel} instance
-	 * @param height the height of this {@code AbstractKernel} instance
+	 * @param value a {@code float} value
+	 * @param edgeA one of the edges
+	 * @param edgeB one of the edges
+	 * @return a {@code float} value
 	 */
-	public final void update(final int width, final int height) {
-		doUpdateCosTable();
-		doUpdateSinTable();
-		doUpdateNoise();
-		doUpdateSeed(width, height);
+	protected final float smoothstep(final float value, final float edgeA, final float edgeB) {
+		final float minimumEdge = min(edgeA, edgeB);
+		final float maximumEdge = max(edgeA, edgeB);
+		
+		final float x = saturate((value - minimumEdge) / (maximumEdge - minimumEdge), 0.0F, 1.0F);
+		
+		return x * x * (3.0F - 2.0F * x);
+	}
+	
+	/**
+	 * Returns the resolution along the X-axis.
+	 * <p>
+	 * This is also known as the width.
+	 * 
+	 * @return the resolution along the X-axis
+	 */
+	protected final int getResolutionX() {
+		return this.resolutionX;
+	}
+	
+	/**
+	 * Returns the resolution along the Y-axis.
+	 * <p>
+	 * This is also known as the height.
+	 * 
+	 * @return the resolution along the Y-axis
+	 */
+	protected final int getResolutionY() {
+		return this.resolutionY;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -990,7 +1129,7 @@ public abstract class AbstractKernel extends Kernel {
 		final int index = getGlobalId();
 		
 		final long oldSeed = this.seeds[index];
-		final long newSeed = (oldSeed * MULTIPLIER + ADDEND) & MASK_1;
+		final long newSeed = (oldSeed * PRNG_MULTIPLIER + PRNG_ADDEND) & PRNG_MASK;
 		
 		this.seeds[index] = newSeed;
 		
@@ -998,14 +1137,14 @@ public abstract class AbstractKernel extends Kernel {
 	}
 	
 	private void doUpdateCosTable() {
-		this.cosTable = new float[COUNT];
+		this.cosTable = new float[COS_TABLE_AND_SIN_TABLE_COUNT];
 		
-		for(int i = 0; i < COUNT; i++) {
-			this.cosTable[i] = MathF.cos((i + 0.5F) / COUNT * RADIANS_MAXIMUM);
+		for(int i = 0; i < COS_TABLE_AND_SIN_TABLE_COUNT; i++) {
+			this.cosTable[i] = MathF.cos((i + 0.5F) / COS_TABLE_AND_SIN_TABLE_COUNT * COS_TABLE_AND_SIN_TABLE_RADIANS_MAXIMUM);
 		}
 		
-		for(int i = 0; i < DEGREES_MAXIMUM; i += 90) {
-			this.cosTable[(int)(i * DEGREES_TO_INDEX) & MASK_0] = MathF.cos(i * RADIANS);
+		for(int i = 0; i < COS_TABLE_AND_SIN_TABLE_DEGREES_MAXIMUM; i += 90) {
+			this.cosTable[(int)(i * COS_TABLE_AND_SIN_TABLE_DEGREES_TO_INDEX) & COS_TABLE_AND_SIN_TABLE_MASK] = MathF.cos(i * COS_TABLE_AND_SIN_TABLE_RADIANS);
 		}
 		
 		put(this.cosTable);
@@ -1015,21 +1154,26 @@ public abstract class AbstractKernel extends Kernel {
 		this.simplexGradient3 = new float[] {1.0F, 1.0F, 0.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 0.0F, 1.0F, 0.0F, 1.0F, -1.0F, 0.0F, 1.0F, 1.0F, 0.0F, -1.0F, -1.0F, 0.0F, -1.0F, 0.0F, 1.0F, 1.0F, 0.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F};
 		this.simplexGradient4 = new float[] {0.0F, 1.0F, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, -1.0F, 0.0F, 1.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, -1.0F, 0.0F, -1.0F, 1.0F, 1.0F, 0.0F, -1.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 1.0F, 0.0F, -1.0F, -1.0F, -1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F, 1.0F, -1.0F, 1.0F, 0.0F, -1.0F, 1.0F, 1.0F, 0.0F, -1.0F, -1.0F, -1.0F, 0.0F, 1.0F, 1.0F, -1.0F, 0.0F, 1.0F, -1.0F, -1.0F, 0.0F, -1.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, 1.0F, 0.0F, -1.0F, 1.0F, -1.0F, 0.0F, 1.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, 1.0F, 0.0F, -1.0F, -1.0F, -1.0F, 0.0F, 1.0F, -1.0F, -1.0F, 0.0F, -1.0F, 1.0F, 1.0F, 1.0F, 0.0F, 1.0F, 1.0F, -1.0F, 0.0F, 1.0F, -1.0F, 1.0F, 0.0F, 1.0F, -1.0F, -1.0F, 0.0F, -1.0F, 1.0F, 1.0F, 0.0F, -1.0F, 1.0F, -1.0F, 0.0F, -1.0F, -1.0F, 1.0F, 0.0F, -1.0F, -1.0F, -1.0F, 0.0F};
 		
-		this.permutations = new int[] {151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180, 151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180};
-		this.permutationsModulo12 = new int[this.permutations.length];
+		this.noisePermutations = new int[] {151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180, 151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17, 182, 189, 28, 42, 23, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180};
+		this.noisePermutationsModulo12 = new int[this.noisePermutations.length];
 		
-		for(int i = 0; i < this.permutationsModulo12.length; i++) {
-			this.permutationsModulo12[i] = this.permutations[i] % 12;
+		for(int i = 0; i < this.noisePermutationsModulo12.length; i++) {
+			this.noisePermutationsModulo12[i] = this.noisePermutations[i] % 12;
 		}
 		
+		put(this.noisePermutations);
+		put(this.noisePermutationsModulo12);
 		put(this.simplexGradient3);
 		put(this.simplexGradient4);
-		put(this.permutations);
-		put(this.permutationsModulo12);
 	}
 	
-	private void doUpdateSeed(final int width, final int height) {
-		this.seeds = new long[width * height];
+	private void doUpdateResolution(final int resolutionX, final int resolutionY) {
+		this.resolutionX = resolutionX;
+		this.resolutionY = resolutionY;
+	}
+	
+	private void doUpdateSeed() {
+		this.seeds = new long[this.resolutionX * this.resolutionY];
 		
 		for(int i = 0; i < this.seeds.length; i++) {
 			this.seeds[i] = ThreadLocalRandom.current().nextLong();
@@ -1039,14 +1183,14 @@ public abstract class AbstractKernel extends Kernel {
 	}
 	
 	private void doUpdateSinTable() {
-		this.sinTable = new float[COUNT];
+		this.sinTable = new float[COS_TABLE_AND_SIN_TABLE_COUNT];
 		
-		for(int i = 0; i < COUNT; i++) {
-			this.sinTable[i] = MathF.sin((i + 0.5F) / COUNT * RADIANS_MAXIMUM);
+		for(int i = 0; i < COS_TABLE_AND_SIN_TABLE_COUNT; i++) {
+			this.sinTable[i] = MathF.sin((i + 0.5F) / COS_TABLE_AND_SIN_TABLE_COUNT * COS_TABLE_AND_SIN_TABLE_RADIANS_MAXIMUM);
 		}
 		
-		for(int i = 0; i < DEGREES_MAXIMUM; i += 90) {
-			this.sinTable[(int)(i * DEGREES_TO_INDEX) & MASK_0] = MathF.sin(i * RADIANS);
+		for(int i = 0; i < COS_TABLE_AND_SIN_TABLE_DEGREES_MAXIMUM; i += 90) {
+			this.sinTable[(int)(i * COS_TABLE_AND_SIN_TABLE_DEGREES_TO_INDEX) & COS_TABLE_AND_SIN_TABLE_MASK] = MathF.sin(i * COS_TABLE_AND_SIN_TABLE_RADIANS);
 		}
 		
 		put(this.sinTable);

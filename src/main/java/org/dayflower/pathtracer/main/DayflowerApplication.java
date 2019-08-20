@@ -218,13 +218,13 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Scene" Menu:
 		final ToggleGroup toggleGroupShading = new ToggleGroup();
 		
-		final CheckMenuItem checkMenuItemNormalMapping = JavaFX.newCheckMenuItem("Normal Mapping", e -> doGetRendererKernel().setNormalMapping(!doGetRendererKernel().isNormalMapping()), doGetRendererKernel().isNormalMapping());
-		final CheckMenuItem checkMenuItemWireframes = JavaFX.newCheckMenuItem("Wireframes", e -> doGetRendererKernel().setRenderingWireframes(!doGetRendererKernel().isRenderingWireframes()), doGetRendererKernel().isRenderingWireframes());
+		final CheckMenuItem checkMenuItemNormalMapping = JavaFX.newCheckMenuItem("Normal Mapping", e -> doGetRendererKernel().toggleRendererNormalMapping(), doGetRendererKernel().getRendererNormalMapping() == AbstractRendererKernel.BOOLEAN_TRUE);
+		final CheckMenuItem checkMenuItemWireframes = JavaFX.newCheckMenuItem("Wireframes", e -> doGetRendererKernel().toggleRendererWireframes(), doGetRendererKernel().getRendererWireframes() == AbstractRendererKernel.BOOLEAN_TRUE);
 		
 		final MenuItem menuItemEnterScene = JavaFX.newMenuItem("Enter Scene", e -> enter());
 		
-		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> doGetRendererKernel().setShadingFlat(), toggleGroupShading, doGetRendererKernel().isShadingFlat());
-		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> doGetRendererKernel().setShadingGouraud(), toggleGroupShading, doGetRendererKernel().isShadingGouraud());
+		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> doGetRendererKernel().setShaderType(AbstractRendererKernel.SHADER_TYPE_FLAT), toggleGroupShading, doGetRendererKernel().getShaderType() == AbstractRendererKernel.SHADER_TYPE_FLAT);
+		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> doGetRendererKernel().setShaderType(AbstractRendererKernel.SHADER_TYPE_GOURAUD), toggleGroupShading, doGetRendererKernel().getShaderType() == AbstractRendererKernel.SHADER_TYPE_GOURAUD);
 		
 		final Menu menuScene = JavaFX.newMenu("Scene", checkMenuItemNormalMapping, checkMenuItemWireframes, menuItemEnterScene, radioMenuItemFlatShading, radioMenuItemGouraudShading);
 		
@@ -255,9 +255,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		this.range = Range.create(getKernelWidth() * getKernelHeight());
 		
-		this.rendererKernel = new RendererKernel(getKernelWidth(), getKernelHeight(), this.sceneLoader);
-		this.rendererKernel.updateLocalVariables(this.range.getLocalSize(0));
-		this.rendererKernel.compile(this.pixels1, getKernelWidth(), getKernelHeight());
+		this.rendererKernel = new RendererKernel(this.sceneLoader);
+		this.rendererKernel.update(getKernelWidth(), getKernelHeight(), this.pixels1, this.range.getLocalSize(0));
 		
 		this.scene = this.rendererKernel.getScene();
 		
@@ -342,12 +341,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, doGetSky().getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
 		final CheckBox checkBoxToggleSunAndSky = JavaFX.newCheckBox("Toggle Sun & Sky", this::doOnCheckBoxToggleSunAndSky, true);
-		final CheckBox checkBoxToggleClouds = JavaFX.newCheckBox("Toggle Clouds", this::doOnCheckBoxToggleClouds, false);
 		
 		final
 		VBox vBoxSunAndSky = new VBox();
 		vBoxSunAndSky.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity, checkBoxToggleSunAndSky, checkBoxToggleClouds);
+		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity, checkBoxToggleSunAndSky);
 		
 		final
 		Tab tabSunAndSky = new Tab();
@@ -377,10 +375,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		final Slider sliderMaximumDistance = JavaFX.newSlider(0.0D, 1000.0D, doGetRendererKernel().getRendererAOMaximumDistance(), 50.0D, 200.0D, true, true, true, this::doOnSliderMaximumDistance);
 		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, doGetRendererKernel().getRendererPTRayDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
-		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
-		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
-		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
-		final Slider sliderLacunarity = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getLacunarity(), 1.0D, 5.0D, true, true, false, this::doOnSliderLacunarity);
+		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGlobalAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
+		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGlobalFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
+		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGlobalGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
+		final Slider sliderLacunarity = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGlobalLacunarity(), 1.0D, 5.0D, true, true, false, this::doOnSliderLacunarity);
 		
 		final
 		VBox vBoxRenderer = new VBox();
@@ -529,11 +527,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		}
 		
 		if(isKeyPressed(KeyCode.M, true)) {
-			synchronized(pixels1) {
-				rendererKernel.toggleMaterial();
-				rendererKernel.updateResetStatus();
-				rendererKernel.reset();
-			}
+			rendererKernel.toggleMaterial();
 		}
 		
 		if(isKeyPressed(KeyCode.Q)) {
@@ -568,10 +562,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			camera.forward(movement);
 		}
 		
-		if(isMouseDragging() || isMouseMoving() && isMouseRecentering() || camera.hasUpdated() || rendererKernel.isResetRequired()) {
+		if(isMouseDragging() || isMouseMoving() && isMouseRecentering() || camera.hasUpdated() || rendererKernel.hasChanged()) {
 			synchronized(pixels1) {
-				rendererKernel.updateResetStatus();
-				rendererKernel.reset();
+				rendererKernel.clear();
+				rendererKernel.setChanged(false);
+				rendererKernel.updateCamera();
 				
 				renderPass.set(0);
 				
@@ -601,24 +596,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	}
 	
 	@SuppressWarnings("unused")
-	private void doOnCheckBoxToggleClouds(final ActionEvent e) {
-		synchronized(this.pixels1) {
-			final
-			RendererKernel rendererKernel = this.rendererKernel;
-			rendererKernel.toggleClouds();
-			rendererKernel.updateResetStatus();
-			rendererKernel.reset();
-		}
-	}
-	
-	@SuppressWarnings("unused")
 	private void doOnCheckBoxToggleSunAndSky(final ActionEvent e) {
 		synchronized(this.pixels1) {
 			final
 			RendererKernel rendererKernel = this.rendererKernel;
 			rendererKernel.toggleSunAndSky();
-			rendererKernel.updateResetStatus();
-			rendererKernel.reset();
 		}
 	}
 	
@@ -640,7 +622,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderAmplitude(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setAmplitude(newValue.floatValue());
+		this.rendererKernel.setGlobalAmplitude(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
@@ -665,17 +647,17 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderFrequency(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setFrequency(newValue.floatValue());
+		this.rendererKernel.setGlobalFrequency(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderGain(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setGain(newValue.floatValue());
+		this.rendererKernel.setGlobalGain(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderLacunarity(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setLacunarity(newValue.floatValue());
+		this.rendererKernel.setGlobalLacunarity(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
@@ -775,6 +757,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 				
 				synchronized(pixels1) {
 					rendererKernel.execute(range);
+					rendererKernel.clearFilmFlags();
 					rendererKernel.get(pixels1);
 					
 					synchronized(pixels0) {

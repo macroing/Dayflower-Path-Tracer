@@ -1,8 +1,17 @@
+2019-08-20  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		A new AbstractImageKernel class has been created. The responsibility for this class is the rendering pipeline. It supports Monte Carlo-method based moving agerage sampling, tone mapping, gamma correction and additional effects. All subclasses use this rendering pipeline to render.
+	* CHANGE:	Primitive selection did not work as expected in the Ambient Occlusion renderer. This has been fixed.
+
+2019-08-18  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* REMOVE:	The cloud feature has been removed. It was experimental and did not look good. If a better algorithm is found, it will be added again.
+
 2019-08-17  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* ADD:		A new modified version of the Reinhard tone mapper has been added.
 	* REMOVE:	All effects have been removed from the window. The source code for the effects has been moved to the Image class, with some modifications. The effects only existed because I wanted to test various image processing algorithms.
-	* REMOVE:	The Linear tone mapper and the old Filmic Curve tone mapper have been removed.
+	* REMOVE:	The Linear tone mapper and the old Filmic Curve tone mapper have been removed. The Linear tone mapper did not look good and the old Filmic Curve tone mapper handled gamma correction on its own, which made the default gamma correction code more complicated than it had to be.
 
 2019-08-01  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 

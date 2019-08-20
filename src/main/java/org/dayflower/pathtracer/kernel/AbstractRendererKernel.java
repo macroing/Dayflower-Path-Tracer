@@ -25,14 +25,14 @@ import org.dayflower.pathtracer.scene.compiler.CompiledScene;
 import org.dayflower.pathtracer.scene.loader.SceneLoader;
 
 /**
- * This {@code AbstractRendererKernel} class is an abstract extension of {@link AbstractKernel} with the basic functionality that is needed by Dayflower to render.
+ * This {@code AbstractRendererKernel} class is an abstract extension of {@link AbstractImageKernel} with the basic functionality that is needed by Dayflower to render.
  * <p>
  * The implementations of this class should take care of the rendering itself. Some implementations may run on the CPU, whereas others might run on the GPU.
  * 
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public abstract class AbstractRendererKernel extends AbstractKernel {
+public abstract class AbstractRendererKernel extends AbstractImageKernel {
 	/**
 	 * An {@code int} representation of a {@code boolean} of {@code false}.
 	 */
@@ -44,29 +44,39 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	public static final int BOOLEAN_TRUE = 1;
 	
 	/**
-	 * The renderer type for the Ambient Occlusion, which is {@code 0}.
+	 * The renderer type for the Ambient Occlusion, which is {@code 1}.
 	 */
-	public static final int RENDERER_TYPE_AMBIENT_OCCLUSION = 0;
+	public static final int RENDERER_TYPE_AMBIENT_OCCLUSION = 1;
 	
 	/**
-	 * The renderer type for the Path Tracer, which is {@code 1}.
+	 * The renderer type for the Path Tracer, which is {@code 2}.
 	 */
-	public static final int RENDERER_TYPE_PATH_TRACER = 1;
+	public static final int RENDERER_TYPE_PATH_TRACER = 2;
 	
 	/**
-	 * The renderer type for the Ray Caster, which is {@code 2}.
+	 * The renderer type for the Ray Caster, which is {@code 3}.
 	 */
-	public static final int RENDERER_TYPE_RAY_CASTER = 2;
+	public static final int RENDERER_TYPE_RAY_CASTER = 3;
 	
 	/**
-	 * The renderer type for the Ray Marcher, which is {@code 3}.
+	 * The renderer type for the Ray Marcher, which is {@code 4}.
 	 */
-	public static final int RENDERER_TYPE_RAY_MARCHER = 3;
+	public static final int RENDERER_TYPE_RAY_MARCHER = 4;
 	
 	/**
-	 * The renderer type for the Ray Tracer, which is {@code 4}.
+	 * The renderer type for the Ray Tracer, which is {@code 5}.
 	 */
-	public static final int RENDERER_TYPE_RAY_TRACER = 4;
+	public static final int RENDERER_TYPE_RAY_TRACER = 5;
+	
+	/**
+	 * The shader type for flat shading, which is {@code 1}.
+	 */
+	public static final int SHADER_TYPE_FLAT = 1;
+	
+	/**
+	 * The shader type for Gouraud shading, which is {@code 2}.
+	 */
+	public static final int SHADER_TYPE_GOURAUD = 2;
 	
 	/**
 	 * The tone mapper type for the modified ACES Filmic Curve, which is {@code 1}.
@@ -101,6 +111,11 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	protected float toneMapperExposure;
 	
 	/**
+	 * The normal mapping state for the renderer.
+	 */
+	protected int rendererNormalMapping;
+	
+	/**
 	 * The maximum ray depth for Path Tracing.
 	 */
 	protected int rendererPTRayDepthMaximum;
@@ -116,14 +131,14 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	protected int rendererType;
 	
 	/**
-	 * The resolution along the X-axis.
+	 * The wireframes state for the renderer.
 	 */
-	protected final int resolutionX;
+	protected int rendererWireframes;
 	
 	/**
-	 * The resolution along the Y-axis.
+	 * The shader type.
 	 */
-	protected final int resolutionY;
+	protected int shaderType;
 	
 	/**
 	 * The tone mapper type.
@@ -144,19 +159,18 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	 * <p>
 	 * If {@code sceneLoader} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
-	 * @param resolutionX the resolution along the X-axis (or width)
-	 * @param resolutionY the resolution along the Y-axis (or height)
 	 * @param sceneLoader a {@link SceneLoader}
 	 * @throws NullPointerException thrown if, and only if, {@code sceneLoader} is {@code null}
 	 */
-	protected AbstractRendererKernel(final int resolutionX, final int resolutionY, final SceneLoader sceneLoader) {
+	protected AbstractRendererKernel(final SceneLoader sceneLoader) {
 		this.rendererAOMaximumDistance = 200.0F;
 		this.toneMapperExposure = 1.0F;
+		this.rendererNormalMapping = BOOLEAN_TRUE;
 		this.rendererPTRayDepthMaximum = 5;
 		this.rendererPTRayDepthRussianRoulette = 5;
 		this.rendererType = RENDERER_TYPE_PATH_TRACER;
-		this.resolutionX = resolutionX;
-		this.resolutionY = resolutionY;
+		this.rendererWireframes = BOOLEAN_FALSE;
+		this.shaderType = SHADER_TYPE_GOURAUD;
 		this.toneMapperType = TONE_MAPPER_TYPE_FILMIC_CURVE_ACES_MODIFIED;
 		this.compiledScene = sceneLoader.loadCompiledScene();
 		this.scene = sceneLoader.loadScene();
@@ -283,6 +297,15 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Returns the normal mapping state for the renderer.
+	 * 
+	 * @return the normal mapping state for the renderer
+	 */
+	public final int getRendererNormalMapping() {
+		return this.rendererNormalMapping;
+	}
+	
+	/**
 	 * Returns the maximum ray depth for Path Tracing.
 	 * 
 	 * @return the maximum ray depth for Path Tracing
@@ -310,32 +333,33 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
-	 * Returns the resolution along the X-axis.
-	 * <p>
-	 * This is also known as the width.
+	 * Returns the wireframes state for the renderer.
 	 * 
-	 * @return the resolution along the X-axis
+	 * @return the wireframes state for the renderer
 	 */
-	public final int getResolutionX() {
-		return this.resolutionX;
+	public final int getRendererWireframes() {
+		return this.rendererWireframes;
 	}
 	
 	/**
-	 * Returns the resolution along the Y-axis.
-	 * <p>
-	 * This is also known as the height.
+	 * Returns the shader type that is currently enabled.
 	 * 
-	 * @return the resolution along the Y-axis
+	 * @return the shader type that is currently enabled
 	 */
-	public final int getResolutionY() {
-		return this.resolutionY;
+	public final int getShaderType() {
+		return this.shaderType;
 	}
 	
 	/**
-	 * Resets the changed flag.
+	 * Sets the changed state for this {@code AbstractRendererKernel} instance.
+	 * <p>
+	 * Because this state change feature is global, most callers should only call {@code setChanged(true)}. Only select few should turn off the state change by calling {@code setChanged(false)}. This should preferably be the top-most component that
+	 * governs the overall aspects of the program. Otherwise, certain state changes might be missed.
+	 * 
+	 * @param hasChanged {@code true} if, and only if, a change has occurred, {@code false} otherwise
 	 */
-	public final void resetChanged() {
-		this.hasChanged = false;
+	public final void setChanged(final boolean hasChanged) {
+		this.hasChanged = hasChanged;
 	}
 	
 	/**
@@ -347,6 +371,32 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 		if(Float.compare(this.rendererAOMaximumDistance, rendererAOMaximumDistance) != 0) {
 			this.rendererAOMaximumDistance = rendererAOMaximumDistance;
 			this.hasChanged = true;
+		}
+	}
+	
+	/**
+	 * Sets the normal mapping state for the renderer.
+	 * <p>
+	 * The normal mapping state can be one of:
+	 * <ul>
+	 * <li>{@code BOOLEAN_FALSE}</li>
+	 * <li>{@code BOOLEAN_TRUE}</li>
+	 * </ul>
+	 * 
+	 * @param rendererNormalMapping the normal mapping state for the renderer
+	 */
+	public final void setRendererNormalMapping(final int rendererNormalMapping) {
+		if(this.rendererNormalMapping != rendererNormalMapping) {
+			switch(rendererNormalMapping) {
+				case BOOLEAN_FALSE:
+				case BOOLEAN_TRUE:
+					this.rendererNormalMapping = rendererNormalMapping;
+					this.hasChanged = true;
+					
+					break;
+				default:
+					break;
+			}
 		}
 	}
 	
@@ -407,6 +457,58 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Sets the wireframes state for the renderer.
+	 * <p>
+	 * The wireframes state can be one of:
+	 * <ul>
+	 * <li>{@code BOOLEAN_FALSE}</li>
+	 * <li>{@code BOOLEAN_TRUE}</li>
+	 * </ul>
+	 * 
+	 * @param rendererWireframes the wireframes state for the renderer
+	 */
+	public final void setRendererWireframes(final int rendererWireframes) {
+		if(this.rendererWireframes != rendererWireframes) {
+			switch(rendererWireframes) {
+				case BOOLEAN_FALSE:
+				case BOOLEAN_TRUE:
+					this.rendererWireframes = rendererWireframes;
+					this.hasChanged = true;
+					
+					break;
+				default:
+					break;
+			}
+		}
+	}
+	
+	/**
+	 * Sets the shader type.
+	 * <p>
+	 * The shader type can be one of:
+	 * <ul>
+	 * <li>{@code SHADER_TYPE_FLAT}</li>
+	 * <li>{@code SHADER_TYPE_GOURAUD}</li>
+	 * </ul>
+	 * 
+	 * @param shaderType the shader type
+	 */
+	public final void setShaderType(final int shaderType) {
+		if(this.shaderType != shaderType) {
+			switch(shaderType) {
+				case SHADER_TYPE_FLAT:
+				case SHADER_TYPE_GOURAUD:
+					this.shaderType = shaderType;
+					this.hasChanged = true;
+					
+					break;
+				default:
+					break;
+			}
+		}
+	}
+	
+	/**
 	 * Sets the tone mapper type.
 	 * <p>
 	 * The tone mapper type can be one of:
@@ -449,6 +551,26 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 	}
 	
 	/**
+	 * Toggles the normal mapping state for the renderer.
+	 */
+	public final void toggleRendererNormalMapping() {
+		switch(this.rendererNormalMapping) {
+			case BOOLEAN_FALSE:
+				this.rendererNormalMapping = BOOLEAN_TRUE;
+				this.hasChanged = true;
+				
+				break;
+			case BOOLEAN_TRUE:
+				this.rendererNormalMapping = BOOLEAN_FALSE;
+				this.hasChanged = true;
+				
+				break;
+			default:
+				break;
+		}
+	}
+	
+	/**
 	 * Toggles to the next renderer type.
 	 */
 	public final void toggleRendererType() {
@@ -475,6 +597,46 @@ public abstract class AbstractRendererKernel extends AbstractKernel {
 				break;
 			case RENDERER_TYPE_RAY_TRACER:
 				this.rendererType = RENDERER_TYPE_AMBIENT_OCCLUSION;
+				this.hasChanged = true;
+				
+				break;
+			default:
+				break;
+		}
+	}
+	
+	/**
+	 * Toggles the wireframes state for the renderer.
+	 */
+	public final void toggleRendererWireframes() {
+		switch(this.rendererWireframes) {
+			case BOOLEAN_FALSE:
+				this.rendererWireframes = BOOLEAN_TRUE;
+				this.hasChanged = true;
+				
+				break;
+			case BOOLEAN_TRUE:
+				this.rendererWireframes = BOOLEAN_FALSE;
+				this.hasChanged = true;
+				
+				break;
+			default:
+				break;
+		}
+	}
+	
+	/**
+	 * Toggles to the next shader type.
+	 */
+	public final void toggleShaderType() {
+		switch(this.shaderType) {
+			case SHADER_TYPE_FLAT:
+				this.shaderType = SHADER_TYPE_GOURAUD;
+				this.hasChanged = true;
+				
+				break;
+			case SHADER_TYPE_GOURAUD:
+				this.shaderType = SHADER_TYPE_FLAT;
 				this.hasChanged = true;
 				
 				break;

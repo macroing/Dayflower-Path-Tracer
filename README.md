@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.1.3
+Dayflower - Path Tracer v.0.1.4
 ===============================
 Dayflower - Path Tracer is a photorealistic realtime renderer written in Java.
 
@@ -121,7 +121,6 @@ Supported Tab Controls
 | Sun & Sky > Sun Direction Z     | Change the Z-axis of the sun direction            |
 | Sun & Sky > Turbidity           | Change the turbidity of the sky                   |
 | Sun & Sky > Toggle Sun & Sky    | Toggle the Sun and Sky                            |
-| Sun & Sky > Toggle Clouds       | Toggle the clouds in the Sun and Sky model        |
 | Renderer > Maximum Distance     | Change the maximum distance for Ambient Occlusion |
 | Renderer > Maximum Ray Depth    | Change the maximum ray depth                      |
 | Renderer > Amplitude            | Change the Amplitude of the terrain generation    |
