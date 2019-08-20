@@ -1,5 +1,6 @@
 2019-08-20  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
+	* ADD:		A new surface normal renderer has been added. It will render the surface normals of all surfaces.
 	* ADD:		A simple loading screen has been added. It is shown in the Canvas when things are loading.
 	* ADD:		A new AbstractImageKernel class has been created. The responsibility for this class is the rendering pipeline. It supports Monte Carlo-method based moving agerage sampling, tone mapping, gamma correction and additional effects. All subclasses use this rendering pipeline to render.
 	* CHANGE:	Primitive selection did not work as expected in the Ambient Occlusion renderer. This has been fixed.
