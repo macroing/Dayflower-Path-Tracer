@@ -28,6 +28,8 @@ import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
+import javafx.geometry.VPos;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
@@ -42,7 +44,9 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 import com.amd.aparapi.Range;
@@ -60,6 +64,7 @@ import org.dayflower.pathtracer.scene.loader.SceneLoader;
 import org.dayflower.pathtracer.util.Timer;
 import org.dayflower.pathtracer.util.Files;
 import org.dayflower.pathtracer.util.Image;
+import org.dayflower.pathtracer.util.Strings;
 
 /**
  * An implementation of {@link AbstractApplication} that performs Ambient Occlusion, Path Tracing, Ray Casting, Ray Marching or Ray Tracing.
@@ -72,6 +77,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private final AtomicBoolean isRendering;
 	private final AtomicInteger renderPass;
 	private final Configuration configuration;
 	private final Label labelFPS;
@@ -97,6 +103,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 * Constructs a new {@code TestApplication} instance.
 	 */
 	public DayflowerApplication() {
+		this.isRendering = new AtomicBoolean();
 		this.renderPass = new AtomicInteger();
 		this.configuration = new Configuration();
 		this.labelFPS = new Label("FPS: 0");
@@ -176,6 +183,62 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Called when rendering.
+	 * <p>
+	 * Returns {@code true} if, and only if, rendering to the image is active, {@code false} otherwise.
+	 * 
+	 * @param graphicsContext a {@code GraphicsContext} that can be rendered to
+	 * @return {@code true} if, and only if, rendering to the image is active, {@code false} otherwise
+	 */
+	@Override
+	protected boolean render(final GraphicsContext graphicsContext) {
+		final boolean isRendering = this.isRendering.get();
+		
+		if(isRendering) {
+			final int renderPass = this.renderPass.get();
+			
+			final long renderTimeMillis = this.rendererRunnable.getRenderTimeMillis();
+			final long fPS = renderTimeMillis > 0L ? 1000L / renderTimeMillis : 0L;
+			final long sPS = renderTimeMillis > 0L ? 1000L / renderTimeMillis * getKernelWidth() * getKernelHeight() : 0L;
+			
+			final Camera camera = this.scene.getCamera();
+			
+			final Float x = Float.valueOf(camera.getEyeX());
+			final Float y = Float.valueOf(camera.getEyeY());
+			final Float z = Float.valueOf(camera.getEyeZ());
+			
+			this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
+			this.labelKernelTime.setText(String.format("Kernel Time: %s ms", Long.valueOf(renderTimeMillis)));
+			this.labelPosition.setText(String.format("Position: [%s, %s, %s]", x, y, z));
+			this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass)));
+			this.labelRenderTime.setText(String.format("Time: %s", this.timer.getTime()));
+			this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));
+		} else {
+			final double w = graphicsContext.getCanvas().getWidth();
+			final double h = graphicsContext.getCanvas().getHeight();
+			
+			final int dotCount = (int)(this.timer.getSeconds() % 4L);
+			
+			final String dotString = Strings.repeat(".", dotCount);
+			final String spaceString = Strings.repeat(" ", 3 - dotCount);
+			final String string = dotString + spaceString;
+			
+//			Fill the background:
+			graphicsContext.setFill(Color.BLACK);
+			graphicsContext.fillRect(0.0D, 0.0D, w, h);
+			
+//			Fill the text:
+			graphicsContext.setFont(Font.font("Dialog", 24.0D));
+			graphicsContext.setTextAlign(TextAlignment.CENTER);
+			graphicsContext.setTextBaseline(VPos.CENTER);
+			graphicsContext.setFill(Color.LIMEGREEN);
+			graphicsContext.fillText("Loading" + string, w / 2.0D, h / 2.0D);
+		}
+		
+		return isRendering;
+	}
+	
+	/**
 	 * Called when the {@code MenuBar} can be configured.
 	 * 
 	 * @param menuBar the {@code MenuBar} to configure
@@ -210,8 +273,9 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_CASTER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayCaster());
 		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_MARCHER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayMarcher());
 		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_TRACER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayTracer());
+		final RadioMenuItem radioMenuItemSurfaceNormals = JavaFX.newRadioMenuItem("Surface Normals", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_SURFACE_NORMALS), toggleGroupRenderer, doGetRendererKernel().isRendererTypeSurfaceNormals());
 		
-		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemAmbientOcclusion, radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer);
+		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemAmbientOcclusion, radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer, radioMenuItemSurfaceNormals);
 		
 		menuBar.getMenus().add(menuRenderer);
 		
@@ -266,7 +330,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		camera.update();
 		camera.addCameraObserver(this);
 		
-		this.rendererRunnable = new RendererRunnable(this.renderPass, this.range, this.rendererKernel, this.pixels0, this.pixels1);
+		this.rendererRunnable = new RendererRunnable(this.isRendering, this.renderPass, this.range, this.rendererKernel, this.pixels0, this.pixels1);
 		
 		final
 		Thread thread = new Thread(this.rendererRunnable);
@@ -461,31 +525,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			camera.changeYaw(AngleF.degrees(-x * 0.5F));
 			camera.changePitch(AngleF.degrees(-(y * 0.5F), -90.0F, 90.0F));
 		}
-	}
-	
-	/**
-	 * Called when rendering.
-	 */
-	@Override
-	protected void render() {
-		final int renderPass = this.renderPass.get();
-		
-		final long renderTimeMillis = this.rendererRunnable.getRenderTimeMillis();
-		final long fPS = renderTimeMillis > 0L ? 1000L / renderTimeMillis : 0L;
-		final long sPS = renderTimeMillis > 0L ? 1000L / renderTimeMillis * getKernelWidth() * getKernelHeight() : 0L;
-		
-		final Camera camera = this.scene.getCamera();
-		
-		final Float x = Float.valueOf(camera.getEyeX());
-		final Float y = Float.valueOf(camera.getEyeY());
-		final Float z = Float.valueOf(camera.getEyeZ());
-		
-		this.labelFPS.setText(String.format("FPS: %s", Long.toString(fPS)));
-		this.labelKernelTime.setText(String.format("Kernel Time: %s ms", Long.valueOf(renderTimeMillis)));
-		this.labelPosition.setText(String.format("Position: [%s, %s, %s]", x, y, z));
-		this.labelRenderPass.setText(String.format("Pass: %s", Integer.toString(renderPass)));
-		this.labelRenderTime.setText(String.format("Time: %s", this.timer.getTime()));
-		this.labelSPS.setText(String.format("SPS: %08d", Long.valueOf(sPS)));
 	}
 	
 	/**
@@ -711,6 +750,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private static final class RendererRunnable implements Runnable {
+		private final AtomicBoolean isRendering;
 		private final AtomicBoolean isRunning;
 		private final AtomicInteger renderPass;
 		private final AtomicLong renderTimeMillis;
@@ -721,7 +761,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		public RendererRunnable(final AtomicInteger renderPass, final Range range, final RendererKernel rendererKernel, final byte[] pixels0, final byte[] pixels1) {
+		public RendererRunnable(final AtomicBoolean isRendering, final AtomicInteger renderPass, final Range range, final RendererKernel rendererKernel, final byte[] pixels0, final byte[] pixels1) {
+			this.isRendering = Objects.requireNonNull(isRendering, "isRendering == null");
 			this.renderPass = Objects.requireNonNull(renderPass, "renderPass == null");
 			this.range = Objects.requireNonNull(range, "range == null");
 			this.rendererKernel = Objects.requireNonNull(rendererKernel, "rendererKernel == null");
@@ -739,6 +780,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		@Override
 		public void run() {
+			final AtomicBoolean isRendering = this.isRendering;
 			final AtomicBoolean isRunning = this.isRunning;
 			
 			final AtomicInteger renderPass = this.renderPass;
@@ -752,6 +794,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			final byte[] pixels0 = this.pixels0;
 			final byte[] pixels1 = this.pixels1;
 			
+			isRendering.set(false);
+			
 			while(isRunning.get()) {
 				final long renderTimeMillis0 = System.currentTimeMillis();
 				
@@ -759,6 +803,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 					rendererKernel.execute(range);
 					rendererKernel.clearFilmFlags();
 					rendererKernel.get(pixels1);
+					
+					isRendering.set(true);
 					
 					synchronized(pixels0) {
 						System.arraycopy(pixels1, 0, pixels0, 0, pixels0.length);

@@ -69,6 +69,11 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 	public static final int RENDERER_TYPE_RAY_TRACER = 5;
 	
 	/**
+	 * The renderer type for rendering surface normals, which is {@code 6}.
+	 */
+	public static final int RENDERER_TYPE_SURFACE_NORMALS = 6;
+	
+	/**
 	 * The shader type for flat shading, which is {@code 1}.
 	 */
 	public static final int SHADER_TYPE_FLAT = 1;
@@ -279,6 +284,15 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 	}
 	
 	/**
+	 * Returns {@code true} if, and only if, the renderer type is surface normals, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the renderer type is surface normals, {@code false} otherwise
+	 */
+	public final boolean isRendererTypeSurfaceNormals() {
+		return this.rendererType == RENDERER_TYPE_SURFACE_NORMALS;
+	}
+	
+	/**
 	 * Returns the maximum distance for Ambient Occlusion.
 	 * 
 	 * @return the maximum distance for Ambient Occlusion
@@ -434,6 +448,7 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 	 * <li>{@code RENDERER_TYPE_RAY_CASTER}</li>
 	 * <li>{@code RENDERER_TYPE_RAY_MARCHER}</li>
 	 * <li>{@code RENDERER_TYPE_RAY_TRACER}</li>
+	 * <li>{@code RENDERER_TYPE_SURFACE_NORMALS}</li>
 	 * </ul>
 	 * 
 	 * @param rendererType the renderer type
@@ -446,6 +461,7 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 				case RENDERER_TYPE_RAY_CASTER:
 				case RENDERER_TYPE_RAY_MARCHER:
 				case RENDERER_TYPE_RAY_TRACER:
+				case RENDERER_TYPE_SURFACE_NORMALS:
 					this.rendererType = rendererType;
 					this.hasChanged = true;
 					
@@ -596,6 +612,11 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 				
 				break;
 			case RENDERER_TYPE_RAY_TRACER:
+				this.rendererType = RENDERER_TYPE_SURFACE_NORMALS;
+				this.hasChanged = true;
+				
+				break;
+			case RENDERER_TYPE_SURFACE_NORMALS:
 				this.rendererType = RENDERER_TYPE_AMBIENT_OCCLUSION;
 				this.hasChanged = true;
 				

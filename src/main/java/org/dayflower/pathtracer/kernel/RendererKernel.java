@@ -82,7 +82,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private double[] sunAndSkyPerezRelativeLuminance_$constant$;
 	private double[] sunAndSkyPerezX_$constant$;
 	private double[] sunAndSkyPerezY_$constant$;
-	private float sunAndSkyJacobian;
 	private float sunAndSkyOrthoNormalBasisUX;
 	private float sunAndSkyOrthoNormalBasisUY;
 	private float sunAndSkyOrthoNormalBasisUZ;
@@ -92,12 +91,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private float sunAndSkyOrthoNormalBasisWX;
 	private float sunAndSkyOrthoNormalBasisWY;
 	private float sunAndSkyOrthoNormalBasisWZ;
-	private float sunAndSkySunColorB;
-	private float sunAndSkySunColorG;
-	private float sunAndSkySunColorR;
-	private float sunAndSkySunDirectionWorldX;
-	private float sunAndSkySunDirectionWorldY;
-	private float sunAndSkySunDirectionWorldZ;
 	private float sunAndSkySunDirectionX;
 	private float sunAndSkySunDirectionY;
 	private float sunAndSkySunDirectionZ;
@@ -121,10 +114,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	private int scenePrimitivesCount;
 //	private int scenePrimitivesEmittingLightCount;
 	private int selectedPrimitiveOffset = -1;
-	private int sunAndSkyColHistogramLength;
-	private int sunAndSkyImageHistogramHeight;
 	private int sunAndSkyIsActive;
-	private int sunAndSkySamples;
 	private int[] primitiveOffsetsForPrimaryRay;
 	private int[] sceneBoundingVolumeHierarchies_$constant$;
 	private int[] scenePlanes_$constant$;
@@ -177,11 +167,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 //		Initialize the sun and sky variables:
 		this.sunAndSkyColHistogram_$constant$ = sky.getColHistogram();
-		this.sunAndSkyColHistogramLength = this.sunAndSkyColHistogram_$constant$.length;
 		this.sunAndSkyImageHistogram_$constant$ = sky.getImageHistogram();
-		this.sunAndSkyImageHistogramHeight = sky.getImageHistogramHeight();
 		this.sunAndSkyIsActive = BOOLEAN_TRUE;
-		this.sunAndSkyJacobian = sky.getJacobian();
 		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
 		this.sunAndSkyOrthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
 		this.sunAndSkyOrthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
@@ -194,13 +181,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.sunAndSkyPerezRelativeLuminance_$constant$ = sky.getPerezRelativeLuminance();
 		this.sunAndSkyPerezX_$constant$ = sky.getPerezX();
 		this.sunAndSkyPerezY_$constant$ = sky.getPerezY();
-		this.sunAndSkySamples = sky.getSamples();
-		this.sunAndSkySunColorR = sky.getSunColor().r;
-		this.sunAndSkySunColorG = sky.getSunColor().g;
-		this.sunAndSkySunColorB = sky.getSunColor().b;
-		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
-		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
-		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
 		this.sunAndSkySunDirectionX = sky.getSunDirection().x;
 		this.sunAndSkySunDirectionY = sky.getSunDirection().y;
 		this.sunAndSkySunDirectionZ = sky.getSunDirection().z;
@@ -264,6 +244,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 				doRenderWithRayMarcher();
 			} else if(super.rendererType == RENDERER_TYPE_RAY_TRACER) {
 				doRenderWithRayTracer();
+			} else if(super.rendererType == RENDERER_TYPE_SURFACE_NORMALS) {
+				doRenderSurfaceNormals();
 			} else {
 				doRenderWithPathTracer();
 			}
@@ -419,7 +401,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 	public void updateSky() {
 		final Sky sky = getSky();
 		
-		this.sunAndSkyJacobian = sky.getJacobian();
 		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
 		this.sunAndSkyOrthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
 		this.sunAndSkyOrthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
@@ -429,13 +410,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.sunAndSkyOrthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
 		this.sunAndSkyOrthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
 		this.sunAndSkyOrthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
-		this.sunAndSkySamples = sky.getSamples();
-		this.sunAndSkySunColorB = sky.getSunColor().b;
-		this.sunAndSkySunColorG = sky.getSunColor().g;
-		this.sunAndSkySunColorR = sky.getSunColor().r;
-		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
-		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
-		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
 		this.sunAndSkySunDirectionX = sky.getSunDirection().x;
 		this.sunAndSkySunDirectionY = sky.getSunDirection().y;
 		this.sunAndSkySunDirectionZ = sky.getSunDirection().z;
@@ -1519,9 +1493,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float t = isCheckingForIntersections ? this.intersections_$local$[getLocalId() * SIZE_INTERSECTION + RELATIVE_OFFSET_INTERSECTION_DISTANCE] : INFINITY;
 		
 		if(t >= INFINITY || t > lLengthSquared) {
-			final float wiX = lPositionX - surfaceIntersectionPointX;//surfaceNormalX;
-			final float wiY = lPositionY - surfaceIntersectionPointY;//surfaceNormalY;
-			final float wiZ = lPositionZ - surfaceIntersectionPointZ;//surfaceNormalZ;
+			final float wiX = lPositionX - surfaceIntersectionPointX;
+			final float wiY = lPositionY - surfaceIntersectionPointY;
+			final float wiZ = lPositionZ - surfaceIntersectionPointZ;
 			final float wiLengthReciprocal = rsqrt(wiX * wiX + wiY * wiY + wiZ * wiZ);
 			final float wiNormalizedX = wiX * wiLengthReciprocal;
 			final float wiNormalizedY = wiY * wiLengthReciprocal;
@@ -1677,96 +1651,6 @@ public final class RendererKernel extends AbstractRendererKernel {
 		r += w;
 		g += w;
 		b += w;
-		
-		this.colorTemporarySamples_$private$3[0] = r;
-		this.colorTemporarySamples_$private$3[1] = g;
-		this.colorTemporarySamples_$private$3[2] = b;
-	}
-	
-	@SuppressWarnings("unused")
-	private void doCalculateColorForSkyBySampling(final float directionX, final float directionY, final float directionZ) {
-		float r = 0.0F;
-		float g = 0.0F;
-		float b = 0.0F;
-		
-		final float sunDirectionWorldX = this.sunAndSkySunDirectionWorldX;
-		final float sunDirectionWorldY = this.sunAndSkySunDirectionWorldY;
-		final float sunDirectionWorldZ = this.sunAndSkySunDirectionWorldZ;
-		
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
-		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
-		
-		final float surfaceNormalX = this.intersections_$local$[offsetIntersectionSurfaceNormal];
-		final float surfaceNormalY = this.intersections_$local$[offsetIntersectionSurfaceNormal + 1];
-		final float surfaceNormalZ = this.intersections_$local$[offsetIntersectionSurfaceNormal + 2];
-		final float surfaceNormalShadingX = this.intersections_$local$[offsetIntersectionSurfaceNormalShading];
-		final float surfaceNormalShadingY = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
-		final float surfaceNormalShadingZ = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
-		
-		final float dotProductSunDirectionWorldSurfaceNormal = sunDirectionWorldX * surfaceNormalX + sunDirectionWorldY * surfaceNormalY + sunDirectionWorldZ * surfaceNormalZ;
-		final float dotProductSunDirectionWorldSurfaceNormalShading = sunDirectionWorldX * surfaceNormalShadingX + sunDirectionWorldY * surfaceNormalShadingY + sunDirectionWorldZ * surfaceNormalShadingZ;
-		
-		if(dotProductSunDirectionWorldSurfaceNormal > 0.0F && dotProductSunDirectionWorldSurfaceNormalShading > 0.0F) {
-			r += this.sunAndSkySunColorR;
-			g += this.sunAndSkySunColorG;
-			b += this.sunAndSkySunColorB;
-		}
-		
-		final int samples = this.sunAndSkySamples;
-		final int colHistogramLength = this.sunAndSkyColHistogramLength;
-		final int imageHistogramHeight = this.sunAndSkyImageHistogramHeight;
-		
-//		final int pixelIndex = getLocalId() * SIZE_COLOR_RGB;
-		
-		for(int i = 0; i < samples; i++) {
-			final float randomX = nextFloat();
-			final float randomY = nextFloat();
-			
-			int x = 0;
-			
-			while(randomX >= this.sunAndSkyColHistogram_$constant$[x] && x < colHistogramLength - 1) {
-				x++;
-			}
-			
-			final int rowHistogramStart = x * imageHistogramHeight;
-			final int rowHistogramEnd = rowHistogramStart + imageHistogramHeight - 1;
-			
-			int y = rowHistogramStart;
-			
-			while(randomY >= this.sunAndSkyImageHistogram_$constant$[y] && y < rowHistogramEnd) {
-				y++;
-			}
-			
-			final float u = x == 0 ? randomX / this.sunAndSkyColHistogram_$constant$[0] : (randomX - this.sunAndSkyColHistogram_$constant$[x - 1]) / (this.sunAndSkyColHistogram_$constant$[x] - this.sunAndSkyColHistogram_$constant$[x - 1]);
-			final float v = y == 0 ? randomY / this.sunAndSkyImageHistogram_$constant$[rowHistogramStart] : (randomY - this.sunAndSkyImageHistogram_$constant$[y - 1]) / (this.sunAndSkyImageHistogram_$constant$[y] - this.sunAndSkyImageHistogram_$constant$[y - 1]);
-			
-			final float px = x == 0 ? this.sunAndSkyColHistogram_$constant$[0] : this.sunAndSkyColHistogram_$constant$[x] - this.sunAndSkyColHistogram_$constant$[x - 1];
-			final float py = y == 0 ? this.sunAndSkyImageHistogram_$constant$[rowHistogramStart] : this.sunAndSkyImageHistogram_$constant$[y] - this.sunAndSkyImageHistogram_$constant$[y - 1];
-			
-			final float su = (x + u) / colHistogramLength;
-			final float sv = (y + v) / imageHistogramHeight;
-			
-			final float invP = sin(sv * PI) * this.sunAndSkyJacobian / (samples * px * py);
-			
-			final float theta = u * PI_MULTIPLIED_BY_TWO;
-			final float phi = v * PI;
-			final float sinPhi = sin(phi);
-			
-			final float localX = -sinPhi * cos(theta);
-			final float localY = cos(phi);
-			final float localZ = sinPhi * sin(theta);
-			
-			doCalculateColorForSky(localX, localY, localZ);
-			
-			final float sampleR = this.colorTemporarySamples_$private$3[0];
-			final float sampleG = this.colorTemporarySamples_$private$3[1];
-			final float sampleB = this.colorTemporarySamples_$private$3[2];
-			
-			r += sampleR * invP;
-			g += sampleG * invP;
-			b += sampleB * invP;
-		}
 		
 		this.colorTemporarySamples_$private$3[0] = r;
 		this.colorTemporarySamples_$private$3[1] = g;
@@ -2225,6 +2109,68 @@ public final class RendererKernel extends AbstractRendererKernel {
 				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 			}
 		}
+	}
+	
+	private void doRenderSurfaceNormals() {
+//		Calculate the current offset to the intersections array:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+//		Initialize the origin from the primary ray:
+		float originX = this.rays_$private$6[0];
+		float originY = this.rays_$private$6[1];
+		float originZ = this.rays_$private$6[2];
+		
+//		Initialize the direction from the primary ray:
+		float directionX = this.rays_$private$6[3];
+		float directionY = this.rays_$private$6[4];
+		float directionZ = this.rays_$private$6[5];
+		
+//		Initialize the pixel color to black:
+		float pixelColorR = 0.0F;
+		float pixelColorG = 0.0F;
+		float pixelColorB = 0.0F;
+		
+//		Perform an intersection test:
+		doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, false);
+		
+//		Retrieve the distance to the closest intersected shape, or INFINITY if no shape were intersected:
+		final float distance = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE];
+		
+//		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
+		final int primitivesOffset = (int)(this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET]);
+		
+		this.primitiveOffsetsForPrimaryRay[getGlobalId()] = primitivesOffset;
+		
+//		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
+		if(distance == INFINITY || primitivesOffset == -1) {
+//			Calculate the color for the sky in the current direction:
+			doCalculateColorForSky(directionX, directionY, directionZ);
+			
+//			Add the color for the sky to the current pixel color:
+			pixelColorR = this.colorTemporarySamples_$private$3[0];
+			pixelColorG = this.colorTemporarySamples_$private$3[1];
+			pixelColorB = this.colorTemporarySamples_$private$3[2];
+			
+//			Update the current pixel color:
+			filmAddColor(pixelColorR, pixelColorG, pixelColorB);
+			
+			return;
+		}
+		
+//		Retrieve the offset of the surface normal in the intersections array:
+		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
+		
+//		Retrieve the surface normal from the intersections array:
+		final float surfaceNormalShadingX = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0];
+		final float surfaceNormalShadingY = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
+		final float surfaceNormalShadingZ = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
+		
+		pixelColorR = (surfaceNormalShadingX + 1.0F) * 0.5F;
+		pixelColorG = (surfaceNormalShadingY + 1.0F) * 0.5F;
+		pixelColorB = (surfaceNormalShadingZ + 1.0F) * 0.5F;
+		
+//		Update the current pixel color:
+		filmAddColor(pixelColorR, pixelColorG, pixelColorB);
 	}
 	
 	private void doRenderWireframes() {
@@ -3254,9 +3200,9 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final int colorRGB = doShaderPhongReflectionModel0(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
 //			final int colorRGB = doShaderPhongReflectionModel1(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
 			
-			pixelColorR += ((colorRGB >> 16) & 0xFF) / 255.0F;
-			pixelColorG += ((colorRGB >> 8) & 0xFF) / 255.0F;
-			pixelColorB += (colorRGB & 0xFF) / 255.0F;
+			pixelColorR += ((colorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+			pixelColorG += ((colorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+			pixelColorB += ((colorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
 			
 			if(material == ReflectionMaterial.TYPE) {
 //				Calculate the dot product between the surface normal of the intersected shape and the current ray direction:

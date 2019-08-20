@@ -234,19 +234,20 @@ public abstract class AbstractApplication extends Application {
 					}
 				}
 				
+				final GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+				
 				update();
-				render();
+				
+				final boolean hasRendered = render(graphicsContext);
 				
 				if(hasUpdatedCursor.compareAndSet(true, false)) {
 					scene.setCursor(isCursorHidden() ? Cursor.NONE : Cursor.DEFAULT);
 				}
 				
-				if(pixelWriter != null) {
+				if(hasRendered && pixelWriter != null) {
 					synchronized(pixels) {
 						pixelWriter.setPixels(0, 0, getKernelWidth(), getKernelHeight(), pixelFormat, byteBuffer, getKernelWidth() * 4);
 						
-						final
-						GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
 						graphicsContext.drawImage(writableImage, 0.0D, 0.0D, getCanvasWidth(), getCanvasHeight());
 					}
 				}
@@ -527,6 +528,16 @@ public abstract class AbstractApplication extends Application {
 	}
 	
 	/**
+	 * Called when rendering.
+	 * <p>
+	 * Returns {@code true} if, and only if, rendering to the image is active, {@code false} otherwise.
+	 * 
+	 * @param graphicsContext a {@code GraphicsContext} that can be rendered to
+	 * @return {@code true} if, and only if, rendering to the image is active, {@code false} otherwise
+	 */
+	protected abstract boolean render(final GraphicsContext graphicsContext);
+	
+	/**
 	 * Returns the canvas height.
 	 * 
 	 * @return the canvas height
@@ -666,11 +677,6 @@ public abstract class AbstractApplication extends Application {
 	 * @param y the new Y-coordinate
 	 */
 	protected abstract void onMouseMoved(final float x, final float y);
-	
-	/**
-	 * Called when rendering.
-	 */
-	protected abstract void render();
 	
 	/**
 	 * Sets a new canvas height.
