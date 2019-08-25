@@ -45,6 +45,7 @@ import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
+import org.dayflower.pathtracer.scene.texture.UVTexture;
 import org.dayflower.pathtracer.util.FloatArrayThreadLocal;
 
 /**
@@ -1097,6 +1098,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
 		} else if(textureType == SurfaceNormalTexture.TYPE) {
 			return doGetTextureColorFromSurfaceNormalTexture();
+		} else if(textureType == UVTexture.TYPE) {
+			return doGetTextureColorFromUVTexture();
 		} else {
 			return 0;
 		}
@@ -1116,6 +1119,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
 		} else if(textureType == SurfaceNormalTexture.TYPE) {
 			return doGetTextureColorFromSurfaceNormalTexture();
+		} else if(textureType == UVTexture.TYPE) {
+			return doGetTextureColorFromUVTexture();
 		} else {
 			return 0;
 		}
@@ -1370,6 +1375,21 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final int r = (int)(saturate((surfaceNormalShadingX + 1.0F) * 0.5F, 0.0F, 1.0F) * 255.0F + 0.5F);
 		final int g = (int)(saturate((surfaceNormalShadingY + 1.0F) * 0.5F, 0.0F, 1.0F) * 255.0F + 0.5F);
 		final int b = (int)(saturate((surfaceNormalShadingZ + 1.0F) * 0.5F, 0.0F, 1.0F) * 255.0F + 0.5F);
+		
+		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+		
+		return rGB;
+	}
+	
+	private int doGetTextureColorFromUVTexture() {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+		final float u = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES + 0];
+		final float v = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES + 1];
+		
+		final int r = (int)(saturate(u, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int g = (int)(saturate(v, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int b = 0;
 		
 		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
 		

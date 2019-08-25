@@ -8,6 +8,7 @@
  * <li>{@link org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture FractionalBrownianMotionTexture} - An implementation of a fractional Brownian motion (fBm) texture.</li>
  * <li>{@link org.dayflower.pathtracer.scene.texture.ImageTexture ImageTexture} - An implementation of an image-based texture.</li>
  * <li>{@link org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture SurfaceNormalTexture} - An implementation of a surface normal texture.</li>
+ * <li>{@link org.dayflower.pathtracer.scene.texture.UVTexture UVTexture} - An implementation of a UV-coordinates (or texture coordinates) texture.</li>
  * </ul>
  */
 package org.dayflower.pathtracer.scene.texture;

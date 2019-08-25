@@ -43,6 +43,7 @@ import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
 import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
+import org.dayflower.pathtracer.scene.texture.UVTexture;
 import org.dayflower.pathtracer.scene.wavefront.ObjectLoader;
 
 final class Scenes {
@@ -228,14 +229,17 @@ final class Scenes {
 		final Texture textureSphere11Albedo = new BlendTexture(new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.5F, 16), new CheckerboardTexture(Color.GRAY, Color.RED), 0.5F);
 		final Texture textureSphere11Emission = new ConstantTexture(Color.BLACK);
 		final Texture textureSphere11Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere12Albedo = new UVTexture();
+		final Texture textureSphere12Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere12Normal = new ConstantTexture(Color.BLACK);
 		
 //		Normal Mapping showcase:
-		final Texture textureSphere12Albedo = new ConstantTexture(Color.GRAY);
-		final Texture textureSphere12Emission = new ConstantTexture(Color.BLACK);
-		final Texture textureSphere12Normal = ImageTexture.load(new File(getTextureFilename(directory, "bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
-		final Texture textureSphere13Albedo = new ConstantTexture(Color.WHITE);
+		final Texture textureSphere13Albedo = new ConstantTexture(Color.GRAY);
 		final Texture textureSphere13Emission = new ConstantTexture(Color.BLACK);
-		final Texture textureSphere13Normal = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere13Normal = ImageTexture.load(new File(getTextureFilename(directory, "bricks2_normal.jpg")), 0.0F, 4.0F, 4.0F);
+		final Texture textureSphere14Albedo = new ConstantTexture(Color.WHITE);
+		final Texture textureSphere14Emission = new ConstantTexture(Color.BLACK);
+		final Texture textureSphere14Normal = new ConstantTexture(Color.BLACK);
 		
 		final
 		Scene scene = new Scene("Material_Showcase_Scene");
@@ -255,9 +259,10 @@ final class Scenes {
 		scene.addPrimitive(new Primitive(new Sphere(new Point3F(400.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere09Albedo, textureSphere09Emission, textureSphere09Normal, 0.0F,  0.0F)));
 		scene.addPrimitive(new Primitive(new Sphere(new Point3F(440.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere10Albedo, textureSphere10Emission, textureSphere10Normal, 0.0F,  0.0F)));
 		scene.addPrimitive(new Primitive(new Sphere(new Point3F(480.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere11Albedo, textureSphere11Emission, textureSphere11Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(520.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere12Albedo, textureSphere12Emission, textureSphere12Normal, 0.0F,  0.0F)));
 		
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(560.0F,  16.5F, 20.0F),  16.5F), new Surface(new ReflectionMaterial(), textureSphere12Albedo, textureSphere12Emission, textureSphere12Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(600.0F,  16.5F, 20.0F),  16.5F), new Surface(new GlassMaterial(),      textureSphere13Albedo, textureSphere13Emission, textureSphere13Normal, 1.0F, 16.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(600.0F,  16.5F, 20.0F),  16.5F), new Surface(new ReflectionMaterial(), textureSphere13Albedo, textureSphere13Emission, textureSphere13Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(640.0F,  16.5F, 20.0F),  16.5F), new Surface(new GlassMaterial(),      textureSphere14Albedo, textureSphere14Emission, textureSphere14Normal, 1.0F, 16.0F)));
 		
 		scene.getCamera().setEye(295.0F, 42.0F, 332.6F);
 		

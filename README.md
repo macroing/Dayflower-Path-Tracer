@@ -48,6 +48,7 @@ Supported Features
 | Texture                | Fractional Brownian Motion                         |
 | Texture                | Image                                              |
 | Texture                | Surface Normal                                     |
+| Texture                | UV                                                 |
 | Tone Mapper            | Filmic Curve ACES Modified                         |
 | Tone Mapper            | Reinhard                                           |
 | Tone Mapper            | Reinhard Modified v.1                              |

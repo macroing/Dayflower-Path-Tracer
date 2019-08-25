@@ -111,7 +111,7 @@ public final class CPURendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void togglePrimitiveMaterial() {
-		
+//		TODO: Implement!
 	}
 	
 	/**
@@ -122,7 +122,7 @@ public final class CPURendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void togglePrimitiveSelection(final int x, final int y) {
-		
+//		TODO: Implement!
 	}
 	
 	/**
@@ -130,7 +130,7 @@ public final class CPURendererKernel extends AbstractRendererKernel {
 	 */
 	@Override
 	public void toggleSunAndSky() {
-		
+//		TODO: Implement!
 	}
 	
 	/**
@@ -145,6 +145,7 @@ public final class CPURendererKernel extends AbstractRendererKernel {
 	 * @throws NullPointerException thrown if, and only if, {@code imageDataByte} is {@code null}
 	 */
 	@Override
+	@SuppressWarnings("deprecation")
 	public void update(final int resolutionX, final int resolutionY, final byte[] imageDataByte, final int localSize) {
 		update(resolutionX, resolutionY, imageDataByte);
 		
