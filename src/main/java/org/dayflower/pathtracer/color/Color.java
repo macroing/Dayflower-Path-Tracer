@@ -832,6 +832,48 @@ public final class Color {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Blends the two {@code Color}s {@code colorA} and {@code colorB} based on {@code factor}.
+	 * <p>
+	 * Returns a new {@code Color} instance with the blending performed.
+	 * <p>
+	 * Calling this method is equivalent to calling {@code Color.blend(colorA, colorB, factor, factor, factor)}.
+	 * <p>
+	 * If either {@code colorA} or {@code colorB} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param colorA one of the {@code Color}s to blend with
+	 * @param colorB one of the {@code Color}s to blend with
+	 * @param factor the factor to use in the blending process
+	 * @return a new {@code Color} instance with the blending performed
+	 * @throws NullPointerException thrown if, and only if, either {@code colorA} or {@code colorB} are {@code null}
+	 */
+	public static Color blend(final Color colorA, final Color colorB, final float factor) {
+		return blend(colorA, colorB, factor, factor, factor);
+	}
+	
+	/**
+	 * Blends the two {@code Color}s {@code colorA} and {@code colorB} based on {@code factorR}, {@code factorG} and {@code factorB}.
+	 * <p>
+	 * Returns a new {@code Color} instance with the blending performed.
+	 * <p>
+	 * If either {@code colorA} or {@code colorB} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param colorA one of the {@code Color}s to blend with
+	 * @param colorB one of the {@code Color}s to blend with
+	 * @param factorR the factor to use for the R-component values in the blending process
+	 * @param factorG the factor to use for the G-component values in the blending process
+	 * @param factorB the factor to use for the B-component values in the blending process
+	 * @return a new {@code Color} instance with the blending performed
+	 * @throws NullPointerException thrown if, and only if, either {@code colorA} or {@code colorB} are {@code null}
+	 */
+	public static Color blend(final Color colorA, final Color colorB, final float factorR, final float factorG, final float factorB) {
+		final float r = (1.0F - factorR) * colorA.r + factorR * colorB.r;
+		final float g = (1.0F - factorG) * colorA.g + factorG * colorB.g;
+		final float b = (1.0F - factorB) * colorA.b + factorB * colorB.b;
+		
+		return new Color(r, g, b);
+	}
+	
+	/**
 	 * Returns the A component value of {@code aRGB}.
 	 * 
 	 * @param aRGB an {@code int} with the ARGB-component values

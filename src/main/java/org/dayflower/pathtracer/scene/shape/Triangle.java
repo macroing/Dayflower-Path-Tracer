@@ -20,12 +20,16 @@ package org.dayflower.pathtracer.scene.shape;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.dayflower.pathtracer.math.Matrix44F;
+import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
 import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Ray3F;
 import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
+import org.dayflower.pathtracer.scene.ShapeIntersection;
 
 /**
  * A {@link Shape} implementation that implements a triangle.
@@ -33,7 +37,7 @@ import org.dayflower.pathtracer.scene.Shape;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Triangle implements Shape {
+public final class Triangle extends Shape {
 	/**
 	 * The relative offset of the A Position Offset parameter in the {@code float} array. The value is {@code 0}.
 	 */
@@ -91,6 +95,15 @@ public final class Triangle implements Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private static final float EPSILON = 0.0001F;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * The surface normal of this {@code Triangle} instance.
+	 */
+	public final Vector3F surfaceNormal;
+	
 	/**
 	 * The {@link Vertex} A.
 	 */
@@ -119,12 +132,73 @@ public final class Triangle implements Shape {
 	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
 	 */
 	public Triangle(final Vertex a, final Vertex b, final Vertex c) {
+		super(TYPE);
+		
 		this.a = Objects.requireNonNull(a, "a == null");
 		this.b = Objects.requireNonNull(b, "b == null");
 		this.c = Objects.requireNonNull(c, "c == null");
+		this.surfaceNormal = Vector3F.normalNormalized(this.a.position, this.b.position, this.c.position);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns an {@code Optional} of {@link ShapeIntersection} with the optional intersection given a specified {@link Ray3F}.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return an {@code Optional} of {@code ShapeIntersection} with the optional intersection given a specified {@code Ray3F}
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	@Override
+	public Optional<ShapeIntersection> intersection(final Ray3F ray) {
+//		Initialize the positions of the vertices A, B and C:
+		final Point3F positionA = this.a.position;
+		final Point3F positionB = this.b.position;
+		final Point3F positionC = this.c.position;
+		
+//		Initialize the origin of the ray:
+		final Point3F origin = ray.origin;
+		
+//		Initialize the direction of the ray:
+		final Vector3F direction = ray.direction;
+		
+//		Calculate the edges from vertex A to vertex B and vertex A to vertex C:
+		final Vector3F edgeAB = Vector3F.direction(positionA, positionB);
+		final Vector3F edgeAC = Vector3F.direction(positionA, positionC);
+		
+		final Vector3F v0 = direction.crossProduct(edgeAC);
+		
+		final float determinant = edgeAB.dotProduct(v0);
+		final float determinantReciprocal = 1.0F / determinant;
+		
+		if(determinant > -EPSILON && determinant < EPSILON) {
+			return Optional.empty();
+		}
+		
+		final Vector3F v1 = Vector3F.direction(positionA, origin);
+		
+//		Calculate the Barycentric coordinate U:
+		final float u = v1.dotProduct(v0) * determinantReciprocal;
+		
+		if(u < 0.0F || u > 1.0F) {
+			return Optional.empty();
+		}
+		
+		final Vector3F v2 = v1.crossProduct(edgeAB);
+		
+//		Calculate the Barycentric coordinate V:
+		final float v = direction.dotProduct(v2) * determinantReciprocal;
+		
+		if(v < 0.0F || u + v > 1.0F) {
+			return Optional.empty();
+		}
+		
+		final float t = edgeAC.dotProduct(v2) * determinantReciprocal;
+		
+		return t > EPSILON ? Optional.of(doCreateShapeIntersection(ray, t)) : Optional.empty();
+	}
 	
 	/**
 	 * Returns a {@code String} representation of this {@code Triangle} instance.
@@ -245,6 +319,15 @@ public final class Triangle implements Shape {
 	}
 	
 	/**
+	 * Returns the surface normal of this {@code Triangle} instance.
+	 * 
+	 * @return the surface normal of this {@code Triangle} instance
+	 */
+	public Vector3F getSurfaceNormal() {
+		return this.surfaceNormal;
+	}
+	
+	/**
 	 * Returns the {@link Vertex} denoted by A.
 	 * 
 	 * @return the {@code Vertex} denoted by A
@@ -307,16 +390,6 @@ public final class Triangle implements Shape {
 	}
 	
 	/**
-	 * Returns the type of this {@code Triangle} instance.
-	 * 
-	 * @return the type of this {@code Triangle} instance
-	 */
-	@Override
-	public int getType() {
-		return TYPE;
-	}
-	
-	/**
 	 * Returns a hash code for this {@code Triangle} instance.
 	 * 
 	 * @return a hash code for this {@code Triangle} instance
@@ -372,6 +445,59 @@ public final class Triangle implements Shape {
 		}
 		
 		return minimum;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private ShapeIntersection doCreateShapeIntersection(final Ray3F ray, final float t) {
+//		Initialize the origin of the ray:
+		final Point3F origin = ray.origin;
+		
+//		Initialize the direction of the ray:
+		final Vector3F direction = ray.direction;
+		
+//		Initialize the texture coordinates of the vertices A, B and C:
+		final Point2F textureCoordinatesA = this.a.textureCoordinates;
+		final Point2F textureCoordinatesB = this.b.textureCoordinates;
+		final Point2F textureCoordinatesC = this.c.textureCoordinates;
+		
+//		Initialize the positions of the vertices A, B and C:
+		final Point3F positionA = this.a.position;
+		final Point3F positionB = this.b.position;
+		final Point3F positionC = this.c.position;
+		
+//		Initialize the normals of the vertices A, B and C:
+		final Vector3F normalA = this.a.normal;
+		final Vector3F normalB = this.b.normal;
+		final Vector3F normalC = this.c.normal;
+		
+//		Calculate the edges from vertex A to vertex B and vertex A to vertex C:
+		final Vector3F edgeAB = Vector3F.direction(positionA, positionB);
+		final Vector3F edgeAC = Vector3F.direction(positionA, positionC);
+		
+		final Vector3F v0 = direction.crossProduct(edgeAC);
+		final Vector3F v1 = Vector3F.direction(positionA, origin);
+		final Vector3F v2 = v1.crossProduct(edgeAB);
+		
+		final float determinant = edgeAB.dotProduct(v0);
+		final float determinantReciprocal = 1.0F / determinant;
+		
+		final float barycentricU = v1.dotProduct(v0) * determinantReciprocal;
+		final float barycentricV = direction.dotProduct(v2) * determinantReciprocal;
+		final float barycentricW = 1.0F - barycentricU - barycentricV;
+		
+		final float u = barycentricW * textureCoordinatesA.x + barycentricU * textureCoordinatesB.x + barycentricV * textureCoordinatesC.x;
+		final float v = barycentricW * textureCoordinatesA.y + barycentricU * textureCoordinatesB.y + barycentricV * textureCoordinatesC.y;
+		
+		final Point2F textureCoordinates = new Point2F(u, v);
+		
+		final Point3F surfaceIntersectionPoint = origin.pointAt(direction, t);
+		
+		final Vector3F surfaceNormal = Vector3F.normalNormalized(normalA, normalB, normalC, barycentricU, barycentricV, barycentricW);
+		
+		final OrthoNormalBasis33F orthoNormalBasis = new OrthoNormalBasis33F(surfaceNormal);
+		
+		return new ShapeIntersection(orthoNormalBasis, textureCoordinates, surfaceIntersectionPoint, this, surfaceNormal, t);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////

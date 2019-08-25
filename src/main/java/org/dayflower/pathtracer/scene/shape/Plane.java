@@ -18,11 +18,18 @@
  */
 package org.dayflower.pathtracer.scene.shape;
 
-import java.util.Objects;
+import static org.dayflower.pathtracer.math.MathF.abs;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
+import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Ray3F;
 import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
+import org.dayflower.pathtracer.scene.ShapeIntersection;
 
 /**
  * A {@link Shape} implementation that implements a plane.
@@ -30,7 +37,7 @@ import org.dayflower.pathtracer.scene.Shape;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Plane implements Shape {
+public final class Plane extends Shape {
 	/**
 	 * The relative offset of the A Offset parameter in the {@code float} array. The value is {@code 0}.
 	 */
@@ -60,6 +67,10 @@ public final class Plane implements Shape {
 	 * The type number associated with a {@code Plane}. The number is {@code 3}.
 	 */
 	public static final int TYPE = 3;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static final float EPSILON = 0.0001F;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -96,6 +107,8 @@ public final class Plane implements Shape {
 	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
 	 */
 	public Plane(final Point3F a, final Point3F b, final Point3F c) {
+		super(TYPE);
+		
 		this.a = Objects.requireNonNull(a, "a == null");
 		this.b = Objects.requireNonNull(b, "b == null");
 		this.c = Objects.requireNonNull(c, "c == null");
@@ -103,6 +116,38 @@ public final class Plane implements Shape {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns an {@code Optional} of {@link ShapeIntersection} with the optional intersection given a specified {@link Ray3F}.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return an {@code Optional} of {@code ShapeIntersection} with the optional intersection given a specified {@code Ray3F}
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	@Override
+	public Optional<ShapeIntersection> intersection(final Ray3F ray) {
+		final Vector3F direction = ray.direction;
+		final Vector3F surfaceNormal = this.surfaceNormal;
+		
+		final float dotProduct = surfaceNormal.dotProduct(direction);
+		
+		if(dotProduct < 0.0F || dotProduct > 0.0F) {
+			final Point3F a = this.a;
+			final Point3F origin = ray.origin;
+			
+			final Vector3F originToA = Vector3F.direction(origin, a);
+			
+			final float t = originToA.dotProduct(surfaceNormal) / dotProduct;
+			
+			if(t > EPSILON) {
+				return Optional.of(doCreateShapeIntersection(ray, t));
+			}
+		}
+		
+		return Optional.empty();
+	}
 	
 	/**
 	 * Returns the point A.
@@ -188,16 +233,6 @@ public final class Plane implements Shape {
 	}
 	
 	/**
-	 * Returns the type of this {@code Plane} instance.
-	 * 
-	 * @return the type of this {@code Plane} instance
-	 */
-	@Override
-	public int getType() {
-		return TYPE;
-	}
-	
-	/**
 	 * Returns a hash code for this {@code Plane} instance.
 	 * 
 	 * @return a hash code for this {@code Plane} instance
@@ -205,5 +240,49 @@ public final class Plane implements Shape {
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.a, this.b, this.c, this.surfaceNormal);
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private ShapeIntersection doCreateShapeIntersection(final Ray3F ray, final float t) {
+		final Point3F surfaceIntersectionPoint = ray.origin.pointAt(ray.direction, t);
+		
+		final float x = abs(this.surfaceNormal.x);
+		final float y = abs(this.surfaceNormal.y);
+		final float z = abs(this.surfaceNormal.z);
+		
+		final boolean isX = x > y && x > z;
+		final boolean isY = y > z;
+		
+		final float aX = isX ? this.a.y      : isY ? this.a.z      : this.a.x;
+		final float aY = isX ? this.a.z      : isY ? this.a.x      : this.a.y;
+		final float bX = isX ? this.c.y - aX : isY ? this.c.z - aX : this.c.x - aX;
+		final float bY = isX ? this.c.z - aY : isY ? this.c.x - aY : this.c.y - aY;
+		final float cX = isX ? this.b.y - aX : isY ? this.b.z - aX : this.b.x - aX;
+		final float cY = isX ? this.b.z - aY : isY ? this.b.x - aY : this.b.y - aY;
+		
+		final float determinant = bX * cY - bY * cX;
+		final float determinantReciprocal = 1.0F / determinant;
+		
+		final float bNU = -bY * determinantReciprocal;
+		final float bNV =  bX * determinantReciprocal;
+		final float bND = (bY * aX - bX * aY) * determinantReciprocal;
+		final float cNU =  cY * determinantReciprocal;
+		final float cNV = -cX * determinantReciprocal;
+		final float cND = (cX * aY - cY * aX) * determinantReciprocal;
+		
+		final float hU = isX ? surfaceIntersectionPoint.y : isY ? surfaceIntersectionPoint.z : surfaceIntersectionPoint.x;
+		final float hV = isX ? surfaceIntersectionPoint.z : isY ? surfaceIntersectionPoint.x : surfaceIntersectionPoint.y;
+		
+		final float u = hU * bNU + hV * bNV + bND;
+		final float v = hU * cNU + hV * cNV + cND;
+		
+		final Point2F textureCoordinates = new Point2F(u, v);
+		
+		final Vector3F surfaceNormal = this.surfaceNormal;
+		
+		final OrthoNormalBasis33F orthoNormalBasis = new OrthoNormalBasis33F(surfaceNormal);
+		
+		return new ShapeIntersection(orthoNormalBasis, textureCoordinates, surfaceIntersectionPoint, this, surfaceNormal, t);
 	}
 }

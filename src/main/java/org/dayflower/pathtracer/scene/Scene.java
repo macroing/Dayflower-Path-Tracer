@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+
+import org.dayflower.pathtracer.math.Ray3F;
 
 /**
  * A {@code Scene} contains various {@link Shape}s and {@link Texture}s.
@@ -74,6 +77,33 @@ public final class Scene {
 	 */
 	public List<Primitive> getPrimitives() {
 		return new ArrayList<>(this.primitives);
+	}
+	
+	/**
+	 * Returns an {@code Optional} of {@link PrimitiveIntersection} with the optional intersection given a specified {@link Ray3F}.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return an {@code Optional} of {@code PrimitiveIntersection} with the optional intersection given a specified {@code Ray3F}
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	public Optional<PrimitiveIntersection> intersection(final Ray3F ray) {
+		PrimitiveIntersection primitiveIntersection = null;
+		
+		for(final Primitive primitive : this.primitives) {
+			final Optional<PrimitiveIntersection> currentOptionalPrimitiveIntersection = primitive.intersection(ray);
+			
+			if(currentOptionalPrimitiveIntersection.isPresent()) {
+				final PrimitiveIntersection currentPrimitiveIntersection = currentOptionalPrimitiveIntersection.get();
+				
+				if(primitiveIntersection == null || currentPrimitiveIntersection.getShapeIntersection().getT() < primitiveIntersection.getShapeIntersection().getT()) {
+					primitiveIntersection = currentPrimitiveIntersection;
+				}
+			}
+		}
+		
+		return Optional.ofNullable(primitiveIntersection);
 	}
 	
 	/**

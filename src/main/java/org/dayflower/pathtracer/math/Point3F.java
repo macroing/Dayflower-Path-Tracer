@@ -113,6 +113,19 @@ public final class Point3F {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Returns a {@code Point3F} offset from this {@code Point3F} in the direction of {@code v}.
+	 * <p>
+	 * If {@code v} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param v a {@link Vector3F} with the direction of the {@code Point3F} to return
+	 * @return a {@code Point3F} offset from this {@code Point3F} in the direction of {@code v}
+	 * @throws NullPointerException thrown if, and only if, {@code v} is {@code null}
+	 */
+	public Point3F add(final Vector3F v) {
+		return new Point3F(this.x + v.x, this.y + v.y, this.z + v.z);
+	}
+	
+	/**
 	 * Returns a {@code Point3F} offset from this {@code Point3F} in the direction of {@code v} and with the distance of {@code t}.
 	 * <p>
 	 * If {@code v} is {@code null}, a {@code NullPointerException} will be thrown.

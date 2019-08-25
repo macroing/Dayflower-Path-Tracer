@@ -18,10 +18,13 @@
  */
 package org.dayflower.pathtracer.scene;
 
+import static org.dayflower.pathtracer.math.MathF.PI_DIVIDED_BY_360;
+import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO;
 import static org.dayflower.pathtracer.math.MathF.atan;
 import static org.dayflower.pathtracer.math.MathF.cos;
 import static org.dayflower.pathtracer.math.MathF.max;
 import static org.dayflower.pathtracer.math.MathF.min;
+import static org.dayflower.pathtracer.math.MathF.nextFloat;
 import static org.dayflower.pathtracer.math.MathF.sin;
 import static org.dayflower.pathtracer.math.MathF.sqrt;
 import static org.dayflower.pathtracer.math.MathF.tan;
@@ -31,8 +34,12 @@ import static org.dayflower.pathtracer.math.MathF.toRadians;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.dayflower.pathtracer.math.AngleF;
+import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Ray3F;
 import org.dayflower.pathtracer.math.Vector3F;
 
 /**
@@ -278,6 +285,121 @@ public final class Camera {
 	 */
 	public AngleF getYaw() {
 		return this.yaw;
+	}
+	
+	/**
+	 * Returns an optional {@link Ray3F}.
+	 * 
+	 * @param x the X-coordinate
+	 * @param y the Y-coordinate
+	 * @param sampleX the X-coordinate of the sample
+	 * @param sampleY the Y-coordinate of the sample
+	 * @return an optional {@code Ray3F}
+	 */
+	public Optional<Ray3F> createPrimaryRay(final float x, final float y, final float sampleX, final float sampleY) {
+		final float apertureRadius = getApertureRadius();
+		
+		final float fieldOfViewX = tan(getFieldOfViewX() * PI_DIVIDED_BY_360);
+		final float fieldOfViewY = tan(-getFieldOfViewY() * PI_DIVIDED_BY_360);
+		
+		final float focalDistance = getFocalDistance();
+		
+		final float resolutionX = getResolutionX();
+		final float resolutionY = getResolutionY();
+		
+		final Point3F eye = getEye();
+		
+		final Vector3F orthoNormalBasisU = getOrthoNormalBasisU();
+		final Vector3F orthoNormalBasisV = getOrthoNormalBasisV();
+		final Vector3F orthoNormalBasisW = getOrthoNormalBasisW();
+		
+		final float sx = 2.0F * ((sampleX + x) / (resolutionX - 1.0F)) - 1.0F;
+		final float sy = 2.0F * ((sampleY + y) / (resolutionY - 1.0F)) - 1.0F;
+		
+		float w = 1.0F;
+		
+		if(isFisheyeCameraLens()) {
+			final float dotProduct = sx * sx + sy * sy;
+			
+			if(dotProduct > 1.0F) {
+				return Optional.empty();
+			}
+			
+			w = sqrt(1.0F - dotProduct);
+		}
+		
+		final Vector3F horizontal = orthoNormalBasisU.multiply(fieldOfViewX);
+		final Vector3F vertical = orthoNormalBasisV.multiply(fieldOfViewY);
+		final Vector3F middle = new Vector3F(eye).add(orthoNormalBasisW.multiply(w));
+		
+		final Point3F pointOnPlaneOneUnitAwayFromEye = new Point3F(middle.add(horizontal.multiply(sx)).add(vertical.multiply(sy)));
+		
+		final Point3F pointOnImagePlane = eye.add(Vector3F.direction(eye, pointOnPlaneOneUnitAwayFromEye).multiply(focalDistance));
+		
+		Point3F aperturePoint = eye;
+		
+		if(apertureRadius > 0.00001F) {
+			final float random1 = nextFloat();
+			final float random2 = nextFloat();
+			
+			final float angle = PI_MULTIPLIED_BY_TWO * random1;
+			
+			final float distance = apertureRadius * sqrt(random2);
+			
+			final float apertureX = cos(angle) * distance;
+			final float apertureY = sin(angle) * distance;
+			
+			aperturePoint = eye.add(orthoNormalBasisU.multiply(apertureX)).add(orthoNormalBasisV.multiply(apertureY));
+		}
+		
+		final Vector3F apertureToImagePlane = Vector3F.direction(aperturePoint, pointOnImagePlane);
+		
+		return Optional.of(new Ray3F(aperturePoint, apertureToImagePlane.normalize()));
+	}
+	
+	/**
+	 * Returns the orthonormal basis.
+	 * 
+	 * @return the orthonormal basis
+	 */
+	public OrthoNormalBasis33F getOrthoNormalBasis() {
+		return new OrthoNormalBasis33F(getOrthoNormalBasisW(), getOrthoNormalBasisV(), getOrthoNormalBasisU());
+	}
+	
+	/**
+	 * Returns the eye.
+	 * 
+	 * @return the eye
+	 */
+	public Point3F getEye() {
+		return new Point3F(getEyeX(), getEyeY(), getEyeZ());
+	}
+	
+	/**
+	 * Returns the orthonormal basis U.
+	 * 
+	 * @return the orthonormal basis U
+	 */
+	public Vector3F getOrthoNormalBasisU() {
+		return new Vector3F(getOrthoNormalBasisUX(), getOrthoNormalBasisUY(), getOrthoNormalBasisUZ());
+	}
+	
+	/**
+	 * Returns the orthonormal basis V.
+	 * 
+	 * @return the orthonormal basis V
+	 */
+	public Vector3F getOrthoNormalBasisV() {
+		return new Vector3F(getOrthoNormalBasisVX(), getOrthoNormalBasisVY(), getOrthoNormalBasisVZ());
+	}
+	
+	/**
+	 * Returns the orthonormal basis W.
+	 * 
+	 * @return the orthonormal basis W
+	 */
+	public Vector3F getOrthoNormalBasisW() {
+		return new Vector3F(getOrthoNormalBasisWX(), getOrthoNormalBasisWY(), getOrthoNormalBasisWZ());
 	}
 	
 	/**

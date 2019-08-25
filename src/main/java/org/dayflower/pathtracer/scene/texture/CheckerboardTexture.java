@@ -19,12 +19,14 @@
 package org.dayflower.pathtracer.scene.texture;
 
 import static org.dayflower.pathtracer.math.MathF.cos;
+import static org.dayflower.pathtracer.math.MathF.modulo;
 import static org.dayflower.pathtracer.math.MathF.sin;
 import static org.dayflower.pathtracer.math.MathF.toRadians;
 
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
 
 /**
@@ -79,6 +81,7 @@ public final class CheckerboardTexture implements Texture {
 	private final Color color0;
 	private final Color color1;
 	private final float degrees;
+	private final float radians;
 	private final float scaleU;
 	private final float scaleV;
 	
@@ -157,6 +160,7 @@ public final class CheckerboardTexture implements Texture {
 		this.scaleU = scaleU;
 		this.scaleV = scaleV;
 		this.degrees = degrees;
+		this.radians = toRadians(this.degrees);
 	}
 	
 	/**
@@ -193,6 +197,47 @@ public final class CheckerboardTexture implements Texture {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns a {@link Color} with the color of this {@code CheckerboardTexture} at {@code primitiveIntersection}.
+	 * <p>
+	 * If {@code primitiveIntersection} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param primitiveIntersection a {@link PrimitiveIntersection}
+	 * @return a {@code Color} with the color of this {@code CheckerboardTexture} at {@code primitiveIntersection}
+	 * @throws NullPointerException thrown if, and only if, {@code primitiveIntersection} is {@code null}
+	 */
+	@Override
+	public Color getColor(final PrimitiveIntersection primitiveIntersection) {
+		final Color color0 = getColor0();
+		final Color color1 = getColor1();
+		
+		final float u = primitiveIntersection.getShapeIntersection().getTextureCoordinates().x;
+		final float v = primitiveIntersection.getShapeIntersection().getTextureCoordinates().y;
+		
+		final float scaleU = getScaleU();
+		final float scaleV = getScaleV();
+		
+		final float cosAngle = cos(getRadians());
+		final float sinAngle = sin(getRadians());
+		
+		final float textureU = modulo((u * cosAngle - v * sinAngle) * scaleU);
+		final float textureV = modulo((v * cosAngle + u * sinAngle) * scaleV);
+		
+		final boolean isDarkU = textureU > 0.5F;
+		final boolean isDarkV = textureV > 0.5F;
+		final boolean isDark = isDarkU ^ isDarkV;
+		
+		final float textureMultiplier = isDark ? 0.8F : 1.2F;
+		
+		Color color = isDark ? color0 : color1;
+		
+		if(color0.equals(color1)) {
+			color = color.multiply(textureMultiplier);
+		}
+		
+		return color;
+	}
 	
 	/**
 	 * Returns one of the two {@link Color}s assigned to this {@code CheckerboardTexture} instance.
@@ -242,6 +287,8 @@ public final class CheckerboardTexture implements Texture {
 			return false;
 		} else if(Float.compare(this.degrees, CheckerboardTexture.class.cast(object).degrees) != 0) {
 			return false;
+		} else if(Float.compare(this.radians, CheckerboardTexture.class.cast(object).radians) != 0) {
+			return false;
 		} else if(Float.compare(this.scaleU, CheckerboardTexture.class.cast(object).scaleU) != 0) {
 			return false;
 		} else if(Float.compare(this.scaleV, CheckerboardTexture.class.cast(object).scaleV) != 0) {
@@ -268,6 +315,15 @@ public final class CheckerboardTexture implements Texture {
 	 */
 	public float getDegrees() {
 		return this.degrees;
+	}
+	
+	/**
+	 * Returns the angle in radians that this {@code CheckerboardTexture} instance should be rotated.
+	 * 
+	 * @return the angle in radians that this {@code CheckerboardTexture} instance should be rotated
+	 */
+	public float getRadians() {
+		return this.radians;
 	}
 	
 	/**
@@ -300,8 +356,8 @@ public final class CheckerboardTexture implements Texture {
 			getSize(),
 			getColor0().multiply(255.0F).toRGB(),
 			getColor1().multiply(255.0F).toRGB(),
-			cos(toRadians(getDegrees())),
-			sin(toRadians(getDegrees())),
+			cos(getRadians()),
+			sin(getRadians()),
 			getScaleU(),
 			getScaleV()
 		};
@@ -334,6 +390,6 @@ public final class CheckerboardTexture implements Texture {
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.color0, this.color1, Float.valueOf(this.degrees), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV));
+		return Objects.hash(this.color0, this.color1, Float.valueOf(this.degrees), Float.valueOf(this.radians), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV));
 	}
 }

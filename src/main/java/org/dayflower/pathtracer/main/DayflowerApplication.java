@@ -54,7 +54,8 @@ import com.amd.aparapi.Range;
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.application.JavaFX;
 import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
-import org.dayflower.pathtracer.kernel.RendererKernel;
+import org.dayflower.pathtracer.kernel.CPURendererKernel;
+import org.dayflower.pathtracer.kernel.GPURendererKernel;
 import org.dayflower.pathtracer.math.AngleF;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
@@ -77,6 +78,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private AbstractRendererKernel abstractRendererKernel;
 	private final AtomicBoolean isRendering;
 	private final AtomicInteger renderPass;
 	private final Configuration configuration;
@@ -87,7 +89,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	private final Label labelRenderTime;
 	private final Label labelSPS;
 	private Range range;
-	private RendererKernel rendererKernel;
 	private RendererRunnable rendererRunnable;
 	private Scene scene;
 	private SceneLoader sceneLoader;
@@ -268,12 +269,12 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Renderer" Menu:
 		final ToggleGroup toggleGroupRenderer = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_AMBIENT_OCCLUSION), toggleGroupRenderer, doGetRendererKernel().isRendererTypeAmbientOcclusion());
-		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_PATH_TRACER), toggleGroupRenderer, doGetRendererKernel().isRendererTypePathTracer());
-		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_CASTER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayCaster());
-		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_MARCHER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayMarcher());
-		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_TRACER), toggleGroupRenderer, doGetRendererKernel().isRendererTypeRayTracer());
-		final RadioMenuItem radioMenuItemSurfaceNormals = JavaFX.newRadioMenuItem("Surface Normals", e -> doGetRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_SURFACE_NORMALS), toggleGroupRenderer, doGetRendererKernel().isRendererTypeSurfaceNormals());
+		final RadioMenuItem radioMenuItemAmbientOcclusion = JavaFX.newRadioMenuItem("Ambient Occlusion", e -> doGetAbstractRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_AMBIENT_OCCLUSION), toggleGroupRenderer, doGetAbstractRendererKernel().isRendererTypeAmbientOcclusion());
+		final RadioMenuItem radioMenuItemPathTracer = JavaFX.newRadioMenuItem("Path Tracer", e -> doGetAbstractRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_PATH_TRACER), toggleGroupRenderer, doGetAbstractRendererKernel().isRendererTypePathTracer());
+		final RadioMenuItem radioMenuItemRayCaster = JavaFX.newRadioMenuItem("Ray Caster", e -> doGetAbstractRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_CASTER), toggleGroupRenderer, doGetAbstractRendererKernel().isRendererTypeRayCaster());
+		final RadioMenuItem radioMenuItemRayMarcher = JavaFX.newRadioMenuItem("Ray Marcher", e -> doGetAbstractRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_MARCHER), toggleGroupRenderer, doGetAbstractRendererKernel().isRendererTypeRayMarcher());
+		final RadioMenuItem radioMenuItemRayTracer = JavaFX.newRadioMenuItem("Ray Tracer", e -> doGetAbstractRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_RAY_TRACER), toggleGroupRenderer, doGetAbstractRendererKernel().isRendererTypeRayTracer());
+		final RadioMenuItem radioMenuItemSurfaceNormals = JavaFX.newRadioMenuItem("Surface Normals", e -> doGetAbstractRendererKernel().setRendererType(AbstractRendererKernel.RENDERER_TYPE_SURFACE_NORMALS), toggleGroupRenderer, doGetAbstractRendererKernel().isRendererTypeSurfaceNormals());
 		
 		final Menu menuRenderer = JavaFX.newMenu("Renderer", radioMenuItemAmbientOcclusion, radioMenuItemPathTracer, radioMenuItemRayCaster, radioMenuItemRayMarcher, radioMenuItemRayTracer, radioMenuItemSurfaceNormals);
 		
@@ -282,13 +283,13 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Scene" Menu:
 		final ToggleGroup toggleGroupShading = new ToggleGroup();
 		
-		final CheckMenuItem checkMenuItemNormalMapping = JavaFX.newCheckMenuItem("Normal Mapping", e -> doGetRendererKernel().toggleRendererNormalMapping(), doGetRendererKernel().getRendererNormalMapping() == AbstractRendererKernel.BOOLEAN_TRUE);
-		final CheckMenuItem checkMenuItemWireframes = JavaFX.newCheckMenuItem("Wireframes", e -> doGetRendererKernel().toggleRendererWireframes(), doGetRendererKernel().getRendererWireframes() == AbstractRendererKernel.BOOLEAN_TRUE);
+		final CheckMenuItem checkMenuItemNormalMapping = JavaFX.newCheckMenuItem("Normal Mapping", e -> doGetAbstractRendererKernel().toggleRendererNormalMapping(), doGetAbstractRendererKernel().getRendererNormalMapping() == AbstractRendererKernel.BOOLEAN_TRUE);
+		final CheckMenuItem checkMenuItemWireframes = JavaFX.newCheckMenuItem("Wireframes", e -> doGetAbstractRendererKernel().toggleRendererWireframes(), doGetAbstractRendererKernel().getRendererWireframes() == AbstractRendererKernel.BOOLEAN_TRUE);
 		
 		final MenuItem menuItemEnterScene = JavaFX.newMenuItem("Enter Scene", e -> enter());
 		
-		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> doGetRendererKernel().setShaderType(AbstractRendererKernel.SHADER_TYPE_FLAT), toggleGroupShading, doGetRendererKernel().getShaderType() == AbstractRendererKernel.SHADER_TYPE_FLAT);
-		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> doGetRendererKernel().setShaderType(AbstractRendererKernel.SHADER_TYPE_GOURAUD), toggleGroupShading, doGetRendererKernel().getShaderType() == AbstractRendererKernel.SHADER_TYPE_GOURAUD);
+		final RadioMenuItem radioMenuItemFlatShading = JavaFX.newRadioMenuItem("Flat Shading", e -> doGetAbstractRendererKernel().setShaderType(AbstractRendererKernel.SHADER_TYPE_FLAT), toggleGroupShading, doGetAbstractRendererKernel().getShaderType() == AbstractRendererKernel.SHADER_TYPE_FLAT);
+		final RadioMenuItem radioMenuItemGouraudShading = JavaFX.newRadioMenuItem("Gouraud Shading", e -> doGetAbstractRendererKernel().setShaderType(AbstractRendererKernel.SHADER_TYPE_GOURAUD), toggleGroupShading, doGetAbstractRendererKernel().getShaderType() == AbstractRendererKernel.SHADER_TYPE_GOURAUD);
 		
 		final Menu menuScene = JavaFX.newMenu("Scene", checkMenuItemNormalMapping, checkMenuItemWireframes, menuItemEnterScene, radioMenuItemFlatShading, radioMenuItemGouraudShading);
 		
@@ -297,10 +298,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the "Tone Mapper" Menu:
 		final ToggleGroup toggleGroupToneMapper = new ToggleGroup();
 		
-		final RadioMenuItem radioMenuItemToneMapperFilmicCurveACESModified = JavaFX.newRadioMenuItem("Filmic Curve ACES Modified", e -> doGetRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_FILMIC_CURVE_ACES_MODIFIED), toggleGroupToneMapper, true);
-		final RadioMenuItem radioMenuItemToneMapperReinhard = JavaFX.newRadioMenuItem("Reinhard", e -> doGetRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD), toggleGroupToneMapper, false);
-		final RadioMenuItem radioMenuItemToneMapperReinhardModified1 = JavaFX.newRadioMenuItem("Reinhard Modified v.1", e -> doGetRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD_MODIFIED_1), toggleGroupToneMapper, false);
-		final RadioMenuItem radioMenuItemToneMapperReinhardModified2 = JavaFX.newRadioMenuItem("Reinhard Modified v.2", e -> doGetRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD_MODIFIED_2), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperFilmicCurveACESModified = JavaFX.newRadioMenuItem("Filmic Curve ACES Modified", e -> doGetAbstractRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_FILMIC_CURVE_ACES_MODIFIED), toggleGroupToneMapper, true);
+		final RadioMenuItem radioMenuItemToneMapperReinhard = JavaFX.newRadioMenuItem("Reinhard", e -> doGetAbstractRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperReinhardModified1 = JavaFX.newRadioMenuItem("Reinhard Modified v.1", e -> doGetAbstractRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD_MODIFIED_1), toggleGroupToneMapper, false);
+		final RadioMenuItem radioMenuItemToneMapperReinhardModified2 = JavaFX.newRadioMenuItem("Reinhard Modified v.2", e -> doGetAbstractRendererKernel().setToneMapperType(AbstractRendererKernel.TONE_MAPPER_TYPE_REINHARD_MODIFIED_2), toggleGroupToneMapper, false);
 		
 		final Menu menuToneMapper = JavaFX.newMenu("Tone Mapper", radioMenuItemToneMapperFilmicCurveACESModified, radioMenuItemToneMapperReinhard, radioMenuItemToneMapperReinhardModified1, radioMenuItemToneMapperReinhardModified2);
 		
@@ -319,10 +320,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		this.range = Range.create(getKernelWidth() * getKernelHeight());
 		
-		this.rendererKernel = new RendererKernel(this.sceneLoader);
-		this.rendererKernel.update(getKernelWidth(), getKernelHeight(), this.pixels1, this.range.getLocalSize(0));
+//		this.abstractRendererKernel = new CPURendererKernel(this.sceneLoader);
+		this.abstractRendererKernel = new GPURendererKernel(this.sceneLoader);
+		this.abstractRendererKernel.update(getKernelWidth(), getKernelHeight(), this.pixels1, this.range.getLocalSize(0));
 		
-		this.scene = this.rendererKernel.getScene();
+		this.scene = this.abstractRendererKernel.getScene();
 		
 		final
 		Camera camera = this.scene.getCamera();
@@ -330,7 +332,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		camera.update();
 		camera.addCameraObserver(this);
 		
-		this.rendererRunnable = new RendererRunnable(this.isRendering, this.renderPass, this.range, this.rendererKernel, this.pixels0, this.pixels1);
+		this.rendererRunnable = new RendererRunnable(this.abstractRendererKernel, this.isRendering, this.renderPass, this.range, this.pixels0, this.pixels1);
 		
 		final
 		Thread thread = new Thread(this.rendererRunnable);
@@ -437,12 +439,12 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		labelRayMarcher.setFont(Font.font(16.0D));
 		labelRayMarcher.setPadding(new Insets(10.0D, 0.0D, 10.0D, 0.0D));
 		
-		final Slider sliderMaximumDistance = JavaFX.newSlider(0.0D, 1000.0D, doGetRendererKernel().getRendererAOMaximumDistance(), 50.0D, 200.0D, true, true, true, this::doOnSliderMaximumDistance);
-		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, doGetRendererKernel().getRendererPTRayDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
-		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGlobalAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
-		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGlobalFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
-		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGlobalGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
-		final Slider sliderLacunarity = JavaFX.newSlider(0.0D, 10.0D, doGetRendererKernel().getGlobalLacunarity(), 1.0D, 5.0D, true, true, false, this::doOnSliderLacunarity);
+		final Slider sliderMaximumDistance = JavaFX.newSlider(0.0D, 1000.0D, doGetAbstractRendererKernel().getRendererAOMaximumDistance(), 50.0D, 200.0D, true, true, true, this::doOnSliderMaximumDistance);
+		final Slider sliderMaximumRayDepth = JavaFX.newSlider(0.0D, 20.0D, doGetAbstractRendererKernel().getRendererPTRayDepthMaximum(), 1.0D, 5.0D, true, true, true, this::doOnSliderMaximumRayDepth);
+		final Slider sliderAmplitude = JavaFX.newSlider(0.0D, 10.0D, doGetAbstractRendererKernel().getGlobalAmplitude(), 1.0D, 5.0D, true, true, false, this::doOnSliderAmplitude);
+		final Slider sliderFrequency = JavaFX.newSlider(0.0D, 10.0D, doGetAbstractRendererKernel().getGlobalFrequency(), 1.0D, 5.0D, true, true, false, this::doOnSliderFrequency);
+		final Slider sliderGain = JavaFX.newSlider(0.0D, 10.0D, doGetAbstractRendererKernel().getGlobalGain(), 1.0D, 5.0D, true, true, false, this::doOnSliderGain);
+		final Slider sliderLacunarity = JavaFX.newSlider(0.0D, 10.0D, doGetAbstractRendererKernel().getGlobalLacunarity(), 1.0D, 5.0D, true, true, false, this::doOnSliderLacunarity);
 		
 		final
 		VBox vBoxRenderer = new VBox();
@@ -460,7 +462,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 //		Create the Tab with the settings for the tone mappers:
 		final Label labelExposure = new Label("Exposure");
 		
-		final Slider sliderExposure = JavaFX.newSlider(0.0D, 2.0D, doGetRendererKernel().getToneMapperExposure(), 0.2D, 0.4D, true, true, false, this::doOnSliderExposure);
+		final Slider sliderExposure = JavaFX.newSlider(0.0D, 2.0D, doGetAbstractRendererKernel().getToneMapperExposure(), 0.2D, 0.4D, true, true, false, this::doOnSliderExposure);
 		
 		final
 		VBox vBoxToneMapper = new VBox();
@@ -484,7 +486,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	 */
 	@Override
 	protected void onExit() {
-		final RendererKernel rendererKernel = this.rendererKernel;
+		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
 		
 		final RendererRunnable rendererRunnable = this.rendererRunnable;
 		
@@ -492,8 +494,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			rendererRunnable.stop();
 		}
 		
-		if(rendererKernel != null) {
-			rendererKernel.dispose();
+		if(abstractRendererKernel != null) {
+			abstractRendererKernel.dispose();
 		}
 	}
 	
@@ -536,13 +538,13 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		final Camera camera = this.scene.getCamera();
 		
-		final RendererKernel rendererKernel = this.rendererKernel;
+		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
 		
 		final Timer timer = this.timer;
 		
 		final byte[] pixels1 = this.pixels1;
 		
-		final float velocity = rendererKernel.isRendererTypeRayMarcher() ? 1.0F : 5.0F;
+		final float velocity = abstractRendererKernel.isRendererTypeRayMarcher() ? 1.0F : 5.0F;
 		final float movement = velocity;
 		
 		if(isKeyPressed(KeyCode.A)) {
@@ -566,7 +568,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		}
 		
 		if(isKeyPressed(KeyCode.M, true)) {
-			rendererKernel.toggleMaterial();
+			abstractRendererKernel.togglePrimitiveMaterial();
 		}
 		
 		if(isKeyPressed(KeyCode.Q)) {
@@ -575,21 +577,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		if(isKeyPressed(KeyCode.R, true)) {
 			synchronized(pixels1) {
-				final int mouseX = getMouseX();
-				final int mouseY = getMouseY();
-				final int index = mouseY * getKernelWidth() + mouseX;
-				
-				final int[] primitiveOffsetsForPrimaryRay = rendererKernel.getPrimitiveOffsetsForPrimaryRay();
-				
-				if(index >= 0 && index < primitiveOffsetsForPrimaryRay.length) {
-					final int selectedPrimitiveOffset = primitiveOffsetsForPrimaryRay[index];
-					
-					if(selectedPrimitiveOffset == rendererKernel.getSelectedPrimitiveOffset()) {
-						rendererKernel.setSelectedPrimitiveOffset(-1);
-					} else {
-						rendererKernel.setSelectedPrimitiveOffset(selectedPrimitiveOffset);
-					}
-				}
+				abstractRendererKernel.togglePrimitiveSelection(getMouseX(), getMouseY());
 			}
 		}
 		
@@ -601,11 +589,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			camera.forward(movement);
 		}
 		
-		if(isMouseDragging() || isMouseMoving() && isMouseRecentering() || camera.hasUpdated() || rendererKernel.hasChanged()) {
+		if(isMouseDragging() || isMouseMoving() && isMouseRecentering() || camera.hasUpdated() || abstractRendererKernel.hasChanged()) {
 			synchronized(pixels1) {
-				rendererKernel.clear();
-				rendererKernel.setChanged(false);
-				rendererKernel.updateCamera();
+				abstractRendererKernel.clear();
+				abstractRendererKernel.setChanged(false);
+				abstractRendererKernel.updateCamera();
 				
 				renderPass.set(0);
 				
@@ -615,6 +603,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private AbstractRendererKernel doGetAbstractRendererKernel() {
+		return this.abstractRendererKernel;
+	}
 	
 	private Camera doGetCamera() {
 		return this.scene.getCamera();
@@ -626,10 +618,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		}
 	}
 	
-	private RendererKernel doGetRendererKernel() {
-		return this.rendererKernel;
-	}
-	
 	private Sky doGetSky() {
 		return this.scene.getSky();
 	}
@@ -638,8 +626,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	private void doOnCheckBoxToggleSunAndSky(final ActionEvent e) {
 		synchronized(this.pixels1) {
 			final
-			RendererKernel rendererKernel = this.rendererKernel;
-			rendererKernel.toggleSunAndSky();
+			AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
+			abstractRendererKernel.toggleSunAndSky();
 		}
 	}
 	
@@ -661,7 +649,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderAmplitude(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setGlobalAmplitude(newValue.floatValue());
+		this.abstractRendererKernel.setGlobalAmplitude(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
@@ -671,7 +659,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderExposure(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setToneMapperExposure(newValue.floatValue());
+		this.abstractRendererKernel.setToneMapperExposure(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
@@ -686,27 +674,27 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderFrequency(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setGlobalFrequency(newValue.floatValue());
+		this.abstractRendererKernel.setGlobalFrequency(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderGain(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setGlobalGain(newValue.floatValue());
+		this.abstractRendererKernel.setGlobalGain(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderLacunarity(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setGlobalLacunarity(newValue.floatValue());
+		this.abstractRendererKernel.setGlobalLacunarity(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderMaximumDistance(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setRendererAOMaximumDistance(newValue.floatValue());
+		this.abstractRendererKernel.setRendererAOMaximumDistance(newValue.floatValue());
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderMaximumRayDepth(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
-		this.rendererKernel.setRendererPTRayDepthMaximum(newValue.intValue());
+		this.abstractRendererKernel.setRendererPTRayDepthMaximum(newValue.intValue());
 	}
 	
 	@SuppressWarnings("unused")
@@ -718,28 +706,28 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	private void doOnSliderSunDirectionWorldX(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.scene.getSky().setSunDirectionWorldX(newValue.floatValue());
 		
-		this.rendererKernel.updateSky();
+		this.abstractRendererKernel.updateSunAndSky();
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldY(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.scene.getSky().setSunDirectionWorldY(newValue.floatValue());
 		
-		this.rendererKernel.updateSky();
+		this.abstractRendererKernel.updateSunAndSky();
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderSunDirectionWorldZ(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.scene.getSky().setSunDirectionWorldZ(newValue.floatValue());
 		
-		this.rendererKernel.updateSky();
+		this.abstractRendererKernel.updateSunAndSky();
 	}
 	
 	@SuppressWarnings("unused")
 	private void doOnSliderTurbidity(final ObservableValue<? extends Number> observableValue, final Number oldValue, final Number newValue) {
 		this.scene.getSky().setTurbidity(newValue.floatValue());
 		
-		this.rendererKernel.updateSky();
+		this.abstractRendererKernel.updateSunAndSky();
 	}
 	
 	@SuppressWarnings("unused")
@@ -750,22 +738,22 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private static final class RendererRunnable implements Runnable {
+		private final AbstractRendererKernel abstractRendererKernel;
 		private final AtomicBoolean isRendering;
 		private final AtomicBoolean isRunning;
 		private final AtomicInteger renderPass;
 		private final AtomicLong renderTimeMillis;
 		private final Range range;
-		private final RendererKernel rendererKernel;
 		private final byte[] pixels0;
 		private final byte[] pixels1;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		public RendererRunnable(final AtomicBoolean isRendering, final AtomicInteger renderPass, final Range range, final RendererKernel rendererKernel, final byte[] pixels0, final byte[] pixels1) {
+		public RendererRunnable(final AbstractRendererKernel abstractRendererKernel, final AtomicBoolean isRendering, final AtomicInteger renderPass, final Range range, final byte[] pixels0, final byte[] pixels1) {
+			this.abstractRendererKernel = Objects.requireNonNull(abstractRendererKernel, "abstractRendererKernel == null");
 			this.isRendering = Objects.requireNonNull(isRendering, "isRendering == null");
 			this.renderPass = Objects.requireNonNull(renderPass, "renderPass == null");
 			this.range = Objects.requireNonNull(range, "range == null");
-			this.rendererKernel = Objects.requireNonNull(rendererKernel, "rendererKernel == null");
 			this.pixels0 = Objects.requireNonNull(pixels0, "pixels0 == null");
 			this.pixels1 = Objects.requireNonNull(pixels1, "pixels1 == null");
 			this.isRunning = new AtomicBoolean(true);
@@ -780,6 +768,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		
 		@Override
 		public void run() {
+			final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
+			
 			final AtomicBoolean isRendering = this.isRendering;
 			final AtomicBoolean isRunning = this.isRunning;
 			
@@ -788,8 +778,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			final AtomicLong renderTimeMillis = this.renderTimeMillis;
 			
 			final Range range = this.range;
-			
-			final RendererKernel rendererKernel = this.rendererKernel;
 			
 			final byte[] pixels0 = this.pixels0;
 			final byte[] pixels1 = this.pixels1;
@@ -800,9 +788,9 @@ public final class DayflowerApplication extends AbstractApplication implements C
 				final long renderTimeMillis0 = System.currentTimeMillis();
 				
 				synchronized(pixels1) {
-					rendererKernel.execute(range);
-					rendererKernel.clearFilmFlags();
-					rendererKernel.get(pixels1);
+					abstractRendererKernel.execute(range);
+					abstractRendererKernel.clearFilmFlags();
+					abstractRendererKernel.get(pixels1);
 					
 					isRendering.set(true);
 					

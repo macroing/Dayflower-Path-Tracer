@@ -18,9 +18,18 @@
  */
 package org.dayflower.pathtracer.scene.shape;
 
-import java.util.Objects;
+import static org.dayflower.pathtracer.math.MathF.sin;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
+import org.dayflower.pathtracer.math.Point2F;
+import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Ray3F;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
+import org.dayflower.pathtracer.scene.ShapeIntersection;
 
 /**
  * A {@link Shape} implementation that implements a noise-based terrain.
@@ -28,7 +37,7 @@ import org.dayflower.pathtracer.scene.Shape;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Terrain implements Shape {
+public final class Terrain extends Shape {
 	/**
 	 * The relative offset of the Frequency parameter in the {@code float} array. The value is {@code 0}.
 	 */
@@ -66,6 +75,10 @@ public final class Terrain implements Shape {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private static final float EPSILON = 0.0001F;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private final float frequency;
 	private final float gain;
 	private final float maximum;
@@ -84,6 +97,8 @@ public final class Terrain implements Shape {
 	 * @param octaves the octaves to use
 	 */
 	public Terrain(final float frequency, final float gain, final float minimum, final float maximum, final int octaves) {
+		super(TYPE);
+		
 		this.frequency = frequency;
 		this.gain = gain;
 		this.minimum = minimum;
@@ -92,6 +107,56 @@ public final class Terrain implements Shape {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns an {@code Optional} of {@link ShapeIntersection} with the optional intersection given a specified {@link Ray3F}.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return an {@code Optional} of {@code ShapeIntersection} with the optional intersection given a specified {@code Ray3F}
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	@Override
+	public Optional<ShapeIntersection> intersection(final Ray3F ray) {
+		final Point3F origin = ray.getOrigin();
+		
+		final Vector3F direction = ray.getDirection();
+		
+		final float scale = 10.0F;
+		final float scaleReciprocal = 1.0F / scale;
+		
+		float t = 0.0F;
+		
+		final float tMinimum = 0.001F;
+		final float tMaximum = 10.0F;
+		
+		float tDelta = 0.01F;
+		
+		float lH = 0.0F;
+		float lY = 0.0F;
+		
+		for(float tCurrent = tMinimum; tCurrent < tMaximum; tCurrent += tDelta) {
+			final float surfaceIntersectionPointX = origin.x * scaleReciprocal + direction.x * tCurrent;
+			final float surfaceIntersectionPointY = origin.y * scaleReciprocal + direction.y * tCurrent;
+			final float surfaceIntersectionPointZ = origin.z * scaleReciprocal + direction.z * tCurrent;
+			
+			final float h = sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ);
+			
+			if(surfaceIntersectionPointY < h) {
+				t = tCurrent - tDelta + tDelta * (lH - lY) / (surfaceIntersectionPointY - lY - h + lH);
+				
+				tCurrent = tMaximum;
+			}
+			
+			tDelta = 0.01F * tCurrent;
+			
+			lH = h;
+			lY = surfaceIntersectionPointY;
+		}
+		
+		return t > EPSILON ? Optional.of(doCreateShapeIntersection(ray, t)) : Optional.empty();
+	}
 	
 	/**
 	 * Compares {@code object} to this {@code Terrain} instance for equality.
@@ -178,16 +243,6 @@ public final class Terrain implements Shape {
 	}
 	
 	/**
-	 * Returns the type of this {@code Terrain} instance.
-	 * 
-	 * @return the type of this {@code Terrain} instance
-	 */
-	@Override
-	public int getType() {
-		return TYPE;
-	}
-	
-	/**
 	 * Returns a hash code for this {@code Terrain} instance.
 	 * 
 	 * @return a hash code for this {@code Terrain} instance
@@ -195,5 +250,35 @@ public final class Terrain implements Shape {
 	@Override
 	public int hashCode() {
 		return Objects.hash(Float.valueOf(this.frequency), Float.valueOf(this.gain), Float.valueOf(this.maximum), Float.valueOf(this.minimum), Integer.valueOf(this.octaves));
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private ShapeIntersection doCreateShapeIntersection(final Ray3F ray, final float t) {
+		final float scale = 10.0F;
+		final float scaleReciprocal = 1.0F / scale;
+		
+		final float surfaceIntersectionPointX = ray.origin.x * scaleReciprocal + ray.direction.x * t;
+		final float surfaceIntersectionPointY = ray.origin.y * scaleReciprocal + ray.direction.y * t;
+		final float surfaceIntersectionPointZ = ray.origin.z * scaleReciprocal + ray.direction.z * t;
+		
+		final float epsilon = 0.02F;
+		
+		final float surfaceNormalX = (sin(surfaceIntersectionPointX - epsilon) * sin(surfaceIntersectionPointZ)) - (sin(surfaceIntersectionPointX + epsilon) * sin(surfaceIntersectionPointZ));
+		final float surfaceNormalY = 2.0F * epsilon;
+		final float surfaceNormalZ = (sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ - epsilon)) - (sin(surfaceIntersectionPointX) * sin(surfaceIntersectionPointZ + epsilon));
+		
+		final float u = surfaceIntersectionPointX;
+		final float v = surfaceIntersectionPointZ;
+		
+		final Point2F textureCoordinates = new Point2F(u, v);
+		
+		final Point3F surfaceIntersectionPoint = new Point3F(surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ);
+		
+		final Vector3F surfaceNormal = new Vector3F(surfaceNormalX, surfaceNormalY, surfaceNormalZ).normalize();
+		
+		final OrthoNormalBasis33F orthoNormalBasis = new OrthoNormalBasis33F(surfaceNormal);
+		
+		return new ShapeIntersection(orthoNormalBasis, textureCoordinates, surfaceIntersectionPoint, this, surfaceNormal, t);
 	}
 }

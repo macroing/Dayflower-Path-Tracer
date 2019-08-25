@@ -18,6 +18,8 @@
  */
 package org.dayflower.pathtracer.scene;
 
+import org.dayflower.pathtracer.color.Color;
+
 /**
  * A {@code Texture} is a model of a texture.
  * 
@@ -36,6 +38,17 @@ public interface Texture {
 	int RELATIVE_OFFSET_TYPE = 0;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns a {@link Color} with the color of this {@code Texture} at {@code primitiveIntersection}.
+	 * <p>
+	 * If {@code primitiveIntersection} is {@code null}, a {@code NullPointerException} may be thrown. But no guarantees can be made.
+	 * 
+	 * @param primitiveIntersection a {@link PrimitiveIntersection}
+	 * @return a {@code Color} with the color of this {@code Texture} at {@code primitiveIntersection}
+	 * @throws NullPointerException thrown if, and only if, {@code primitiveIntersection} is {@code null}
+	 */
+	Color getColor(final PrimitiveIntersection primitiveIntersection);
 	
 	/**
 	 * Returns {@code true} if, and only if, this {@code Texture} instance is emissive, {@code false} otherwise.

@@ -389,11 +389,33 @@ public final class Vector3F {
 	 * @throws NullPointerException thrown if, and only if, either {@code a}, {@code b} or {@code c} are {@code null}
 	 */
 	public static Vector3F normal(final Point3F a, final Point3F b, final Point3F c) {
-		final Vector3F edge0 = direction(a, b);
-		final Vector3F edge1 = direction(a, c);
-		final Vector3F normal = edge0.crossProduct(edge1);
+		final Vector3F edgeAB = direction(a, b);
+		final Vector3F edgeAC = direction(a, c);
+		final Vector3F normal = edgeAB.crossProduct(edgeAC);
 		
 		return normal;
+	}
+	
+	/**
+	 * Returns a normal {@code Vector3F} computed by Barycentric interpolation.
+	 * <p>
+	 * If either {@code normalA}, {@code normalB} or {@code normalC} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param normalA the normal of the vertex {@code A}
+	 * @param normalB the normal of the vertex {@code B}
+	 * @param normalC the normal of the vertex {@code C}
+	 * @param barycentricU the Barycentric U-coordinate
+	 * @param barycentricV the Barycentric V-coordinate
+	 * @param barycentricW the Barycentric W-coordinate
+	 * @return a normal {@code Vector3F} computed by Barycentric interpolation
+	 * @throws NullPointerException thrown if, and only if, either {@code normalA}, {@code normalB} or {@code normalC} are {@code null}
+	 */
+	public static Vector3F normal(final Vector3F normalA, final Vector3F normalB, final Vector3F normalC, final float barycentricU, final float barycentricV, final float barycentricW) {
+		final float x = normalA.x * barycentricW + normalB.x * barycentricU + normalC.x * barycentricV;
+		final float y = normalA.y * barycentricW + normalB.y * barycentricU + normalC.y * barycentricV;
+		final float z = normalA.z * barycentricW + normalB.z * barycentricU + normalC.z * barycentricV;
+		
+		return new Vector3F(x, y, z);
 	}
 	
 	/**
@@ -409,6 +431,24 @@ public final class Vector3F {
 	 */
 	public static Vector3F normalNormalized(final Point3F a, final Point3F b, final Point3F c) {
 		return normal(a, b, c).normalize();
+	}
+	
+	/**
+	 * Returns a normalized normal {@code Vector3F} computed by Barycentric interpolation.
+	 * <p>
+	 * If either {@code normalA}, {@code normalB} or {@code normalC} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param normalA the normal of the vertex {@code A}
+	 * @param normalB the normal of the vertex {@code B}
+	 * @param normalC the normal of the vertex {@code C}
+	 * @param barycentricU the Barycentric U-coordinate
+	 * @param barycentricV the Barycentric V-coordinate
+	 * @param barycentricW the Barycentric W-coordinate
+	 * @return a normalized normal {@code Vector3F} computed by Barycentric interpolation
+	 * @throws NullPointerException thrown if, and only if, either {@code normalA}, {@code normalB} or {@code normalC} are {@code null}
+	 */
+	public static Vector3F normalNormalized(final Vector3F normalA, final Vector3F normalB, final Vector3F normalC, final float barycentricU, final float barycentricV, final float barycentricW) {
+		return normal(normalA, normalB, normalC, barycentricU, barycentricV, barycentricW).normalize();
 	}
 	
 	/**

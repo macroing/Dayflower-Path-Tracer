@@ -3,7 +3,7 @@ Some tasks may require some other tasks to be completed, before they can be star
 
 Renderer:
 
-	* ADD:		Add a new version of the renderer that uses the API:s of Dayflower and runs on the CPU (a CPU-renderer). This would make it easier to test things out, before adding them to the GPU-renderer.
+	* ADD:		Add a new version of the renderer that uses the API:s of Dayflower and runs on the CPU (a CPU-renderer). This would make it easier to test things out, before adding them to the GPU-renderer. This has been started on.
 
 Scene:
 

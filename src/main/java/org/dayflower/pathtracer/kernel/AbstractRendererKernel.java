@@ -567,6 +567,19 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 	}
 	
 	/**
+	 * Toggles the material for the selected primitive.
+	 */
+	public abstract void togglePrimitiveMaterial();
+	
+	/**
+	 * Toggles the primitive selection.
+	 * 
+	 * @param x the X-coordinate
+	 * @param y the Y-coordinate
+	 */
+	public abstract void togglePrimitiveSelection(final int x, final int y);
+	
+	/**
 	 * Toggles the normal mapping state for the renderer.
 	 */
 	public final void toggleRendererNormalMapping() {
@@ -665,4 +678,32 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 				break;
 		}
 	}
+	
+	/**
+	 * Toggles the sun and sky.
+	 */
+	public abstract void toggleSunAndSky();
+	
+	/**
+	 * Updates all necessary variables in this {@code AbstractRendererKernel} instance.
+	 * <p>
+	 * If {@code imageDataByte} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param resolutionX the resolution along the X-axis
+	 * @param resolutionY the resolution along the Y-axis
+	 * @param imageDataByte a {@code byte} array with image data
+	 * @param localSize the local size
+	 * @throws NullPointerException thrown if, and only if, {@code imageDataByte} is {@code null}
+	 */
+	public abstract void update(final int resolutionX, final int resolutionY, final byte[] imageDataByte, final int localSize);
+	
+	/**
+	 * Updates the {@link Camera} and the variables related to it.
+	 */
+	public abstract void updateCamera();
+	
+	/**
+	 * Updates the variables related to the sun and sky.
+	 */
+	public abstract void updateSunAndSky();
 }

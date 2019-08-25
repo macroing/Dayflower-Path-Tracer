@@ -18,7 +18,9 @@
  */
 package org.dayflower.pathtracer.scene.texture;
 
+import static org.dayflower.pathtracer.math.MathF.abs;
 import static org.dayflower.pathtracer.math.MathF.cos;
+import static org.dayflower.pathtracer.math.MathF.remainder;
 import static org.dayflower.pathtracer.math.MathF.sin;
 import static org.dayflower.pathtracer.math.MathF.toRadians;
 
@@ -41,6 +43,7 @@ import javax.imageio.ImageIO;
 
 import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
+import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
 
 /**
@@ -94,6 +97,7 @@ public final class ImageTexture implements Texture {
 	
 	private final float degrees;
 	private final float height;
+	private final float radians;
 	private final float scaleU;
 	private final float scaleV;
 	private final float width;
@@ -108,9 +112,45 @@ public final class ImageTexture implements Texture {
 		this.scaleU = scaleU;
 		this.scaleV = scaleV;
 		this.data = data;
+		this.radians = toRadians(this.degrees);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns a {@link Color} with the color of this {@code ImageTexture} at {@code primitiveIntersection}.
+	 * <p>
+	 * If {@code primitiveIntersection} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param primitiveIntersection a {@link PrimitiveIntersection}
+	 * @return a {@code Color} with the color of this {@code ImageTexture} at {@code primitiveIntersection}
+	 * @throws NullPointerException thrown if, and only if, {@code primitiveIntersection} is {@code null}
+	 */
+	@Override
+	public Color getColor(final PrimitiveIntersection primitiveIntersection) {
+		final float u = primitiveIntersection.getShapeIntersection().getTextureCoordinates().x;
+		final float v = primitiveIntersection.getShapeIntersection().getTextureCoordinates().y;
+		
+		final float width = getWidth();
+		final float height = getHeight();
+		
+		final float scaleU = getScaleU();
+		final float scaleV = getScaleV();
+		
+		final float cosAngle = cos(getRadians());
+		final float sinAngle = sin(getRadians());
+		
+		final float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
+		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
+		
+		final int index = (int)((y * width + x));
+		
+		if(index >= 0 && index < this.data.length) {
+			return new Color(this.data[index]);
+		}
+		
+		return new Color();
+	}
 	
 	/**
 	 * Performs a Gamma Correction redo operation.
@@ -170,6 +210,8 @@ public final class ImageTexture implements Texture {
 			return false;
 		} else if(Float.compare(this.height, ImageTexture.class.cast(object).height) != 0) {
 			return false;
+		} else if(Float.compare(this.radians, ImageTexture.class.cast(object).radians) != 0) {
+			return false;
 		} else if(Float.compare(this.scaleU, ImageTexture.class.cast(object).scaleU) != 0) {
 			return false;
 		} else if(Float.compare(this.scaleV, ImageTexture.class.cast(object).scaleV) != 0) {
@@ -218,6 +260,15 @@ public final class ImageTexture implements Texture {
 	}
 	
 	/**
+	 * Returns the angle in radians that this {@code ImageTexture} instance should be rotated.
+	 * 
+	 * @return the angle in radians that this {@code ImageTexture} instance should be rotated
+	 */
+	public float getRadians() {
+		return this.radians;
+	}
+	
+	/**
 	 * Returns the scale factor in the U-direction assigned to this {@code ImageTexture} instance.
 	 * 
 	 * @return the scale factor in the U-direction assigned to this {@code ImageTexture} instance
@@ -257,8 +308,8 @@ public final class ImageTexture implements Texture {
 		
 		array[0] = TYPE;
 		array[1] = size;
-		array[2] = cos(toRadians(getDegrees()));
-		array[3] = sin(toRadians(getDegrees()));
+		array[2] = cos(getRadians());
+		array[3] = sin(getRadians());
 		array[4] = getWidth();
 		array[5] = getHeight();
 		array[6] = getScaleU();
@@ -309,7 +360,7 @@ public final class ImageTexture implements Texture {
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(Float.valueOf(this.degrees), Float.valueOf(this.height), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV), Float.valueOf(this.width), Integer.valueOf(Arrays.hashCode(this.data)));
+		return Objects.hash(Float.valueOf(this.degrees), Float.valueOf(this.height), Float.valueOf(this.radians), Float.valueOf(this.scaleU), Float.valueOf(this.scaleV), Float.valueOf(this.width), Integer.valueOf(Arrays.hashCode(this.data)));
 	}
 	
 	/**

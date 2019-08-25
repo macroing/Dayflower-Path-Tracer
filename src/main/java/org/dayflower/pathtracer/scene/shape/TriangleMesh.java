@@ -21,8 +21,11 @@ package org.dayflower.pathtracer.scene.shape;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 
+import org.dayflower.pathtracer.math.Ray3F;
 import org.dayflower.pathtracer.scene.Shape;
+import org.dayflower.pathtracer.scene.ShapeIntersection;
 
 /**
  * A {@code TriangleMesh} represents a triangle mesh.
@@ -32,11 +35,15 @@ import org.dayflower.pathtracer.scene.Shape;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class TriangleMesh implements Shape {
+public final class TriangleMesh extends Shape {
 	/**
 	 * The type number associated with a {@code TriangleMesh}. The number is {@code 5}.
 	 */
 	public static final int TYPE = 5;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static final float EPSILON = 0.0001F;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -55,6 +62,8 @@ public final class TriangleMesh implements Shape {
 	 * @throws NullPointerException thrown if, and only if, {@code triangles} is {@code null}
 	 */
 	public TriangleMesh(final List<Triangle> triangles) {
+		super(TYPE);
+		
 		this.triangles = new ArrayList<>(triangles);
 	}
 	
@@ -67,6 +76,38 @@ public final class TriangleMesh implements Shape {
 	 */
 	public List<Triangle> getTriangles() {
 		return new ArrayList<>(this.triangles);
+	}
+	
+	/**
+	 * Returns an {@code Optional} of {@link ShapeIntersection} with the optional intersection given a specified {@link Ray3F}.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return an {@code Optional} of {@code ShapeIntersection} with the optional intersection given a specified {@code Ray3F}
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	@Override
+	public Optional<ShapeIntersection> intersection(final Ray3F ray) {
+		Objects.requireNonNull(ray, "ray == null");
+		
+		ShapeIntersection shapeIntersection = null;
+		
+		for(final Triangle triangle : this.triangles) {
+			final Optional<ShapeIntersection> optionalShapeIntersection = triangle.intersection(ray);
+			
+			if(optionalShapeIntersection.isPresent()) {
+				final ShapeIntersection currentShapeIntersection = optionalShapeIntersection.get();
+				
+				final float t = currentShapeIntersection.getT();
+				
+				if(t > EPSILON && (shapeIntersection == null || t < shapeIntersection.getT())) {
+					shapeIntersection = currentShapeIntersection;
+				}
+			}
+		}
+		
+		return Optional.ofNullable(shapeIntersection);
 	}
 	
 	/**
@@ -108,16 +149,6 @@ public final class TriangleMesh implements Shape {
 	@Override
 	public int getSize() {
 		return this.triangles.size() * Triangle.SIZE;
-	}
-	
-	/**
-	 * Returns the type of this {@code TriangleMesh} instance.
-	 * 
-	 * @return the type of this {@code TriangleMesh} instance
-	 */
-	@Override
-	public int getType() {
-		return TYPE;
 	}
 	
 	/**

@@ -20,6 +20,9 @@ package org.dayflower.pathtracer.scene.texture;
 
 import java.util.Objects;
 
+import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.math.Vector3F;
+import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
 
 /**
@@ -74,6 +77,26 @@ public final class SurfaceNormalTexture implements Texture {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns a {@link Color} with the color of this {@code SurfaceNormalTexture} at {@code primitiveIntersection}.
+	 * <p>
+	 * If {@code primitiveIntersection} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param primitiveIntersection a {@link PrimitiveIntersection}
+	 * @return a {@code Color} with the color of this {@code SurfaceNormalTexture} at {@code primitiveIntersection}
+	 * @throws NullPointerException thrown if, and only if, {@code primitiveIntersection} is {@code null}
+	 */
+	@Override
+	public Color getColor(final PrimitiveIntersection primitiveIntersection) {
+		final Vector3F surfaceNormal = primitiveIntersection.getShapeIntersection().getSurfaceNormal();
+		
+		final float r = (surfaceNormal.x + 1.0F) * 0.5F;
+		final float g = (surfaceNormal.y + 1.0F) * 0.5F;
+		final float b = (surfaceNormal.z + 1.0F) * 0.5F;
+		
+		return new Color(r, g, b);
+	}
 	
 	/**
 	 * Returns a {@code String} representation of this {@code SurfaceNormalTexture} instance.

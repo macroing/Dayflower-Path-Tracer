@@ -19,8 +19,10 @@
 package org.dayflower.pathtracer.scene;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import org.dayflower.pathtracer.math.Matrix44F;
+import org.dayflower.pathtracer.math.Ray3F;
 
 /**
  * A {@code Primitive} represents a primitive that is associated with a {@link Shape} and a {@link Surface}.
@@ -109,6 +111,27 @@ public final class Primitive {
 	 */
 	public Matrix44F getWorldToObject() {
 		return this.worldToObject;
+	}
+	
+	/**
+	 * Returns an {@code Optional} of {@link PrimitiveIntersection} with the optional intersection given a specified {@link Ray3F}.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return an {@code Optional} of {@code PrimitiveIntersection} with the optional intersection given a specified {@code Ray3F}
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	public Optional<PrimitiveIntersection> intersection(final Ray3F ray) {
+		final Optional<ShapeIntersection> optionalShapeIntersection = this.shape.intersection(Objects.requireNonNull(ray, "ray == null"));
+		
+		if(optionalShapeIntersection.isPresent()) {
+			final ShapeIntersection shapeIntersection = optionalShapeIntersection.get();
+			
+			return Optional.of(new PrimitiveIntersection(this, shapeIntersection));
+		}
+		
+		return Optional.empty();
 	}
 	
 	/**

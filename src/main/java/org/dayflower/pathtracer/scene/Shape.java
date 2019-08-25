@@ -18,24 +18,70 @@
  */
 package org.dayflower.pathtracer.scene;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import org.dayflower.pathtracer.math.Ray3F;
+
 /**
  * A {@code Shape} is a model of a shape.
  * 
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public interface Shape {
+public abstract class Shape {
+	private final int type;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Constructs a new {@code Shape} instance.
+	 * 
+	 * @param type the type of this {@code Shape} instance
+	 */
+	protected Shape(final int type) {
+		this.type = type;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns an {@code Optional} of {@link ShapeIntersection} with the optional intersection given a specified {@link Ray3F}.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} may be thrown. But no guarantees can be made.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return an {@code Optional} of {@code ShapeIntersection} with the optional intersection given a specified {@code Ray3F}
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	public abstract Optional<ShapeIntersection> intersection(final Ray3F ray);
+	
+	/**
+	 * Returns {@code true} if, and only if, the specified {@link Ray3F} intersects this {@code Shape} instance, {@code false} otherwise.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return {@code true} if, and only if, the specified {@code Ray3F} intersects this {@code Shape} instance, {@code false} otherwise
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	public final boolean intersects(final Ray3F ray) {
+		return intersection(Objects.requireNonNull(ray, "ray == null")).isPresent();
+	}
+	
 	/**
 	 * Returns the size of this {@code Shape} instance.
 	 * 
 	 * @return the size of this {@code Shape} instance
 	 */
-	int getSize();
+	public abstract int getSize();
 	
 	/**
 	 * Returns the type of this {@code Shape} instance.
 	 * 
 	 * @return the type of this {@code Shape} instance
 	 */
-	int getType();
+	public final int getType() {
+		return this.type;
+	}
 }

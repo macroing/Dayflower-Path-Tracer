@@ -38,6 +38,11 @@ public final class MathF {
 	public static final float PI = toFloat(Math.PI);
 	
 	/**
+	 * A {@code float} representation of pi divided by {@code 360.0F}.
+	 */
+	public static final float PI_DIVIDED_BY_360 = PI / 360.0F;
+	
+	/**
 	 * A {@code float} representation of pi divided by {@code 4.0F}.
 	 */
 	public static final float PI_DIVIDED_BY_FOUR = PI / 4.0F;
@@ -51,6 +56,11 @@ public final class MathF {
 	 * A {@code float} representation of pi multiplied by {@code 2.0F}.
 	 */
 	public static final float PI_MULTIPLIED_BY_TWO = PI * 2.0F;
+	
+	/**
+	 * A {@code float} representation of the reciprocal of pi multiplied by {@code 2.0F}.
+	 */
+	public static final float PI_MULTIPLIED_BY_TWO_RECIPROCAL = 1.0F / PI_MULTIPLIED_BY_TWO;
 	
 	/**
 	 * A {@code float} representation of the reciprocal of pi.
@@ -106,6 +116,16 @@ public final class MathF {
 	 */
 	public static float asin(final float value) {
 		return toFloat(Math.asin(value));
+	}
+	
+	/**
+	 * Returns the arc sine of {@code value} divided by {@link #PI}.
+	 * 
+	 * @param value a {@code float} value
+	 * @return the arc sine of {@code value} divided by {@code PI}
+	 */
+	public static float asinpi(final float value) {
+		return asin(value) * PI_RECIPROCAL;
 	}
 	
 	/**
@@ -233,6 +253,19 @@ public final class MathF {
 	 */
 	public static float pow(final float base, final float exponent) {
 		return toFloat(Math.pow(base, exponent));
+	}
+	
+	/**
+	 * Returns the remainder of {@code x} and {@code y}.
+	 * 
+	 * @param x the left hand side of the remainder operation
+	 * @param y the right hand side of the remainder operation
+	 * @return the remainder of {@code x} and {@code y}
+	 */
+	public static float remainder(final float x, final float y) {
+		final int n = (int)(x / y);
+		
+		return x - n * y;
 	}
 	
 	/**

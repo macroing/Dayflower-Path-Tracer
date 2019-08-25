@@ -18,10 +18,21 @@
  */
 package org.dayflower.pathtracer.scene.shape;
 
-import java.util.Objects;
+import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO_RECIPROCAL;
+import static org.dayflower.pathtracer.math.MathF.asinpi;
+import static org.dayflower.pathtracer.math.MathF.atan2;
+import static org.dayflower.pathtracer.math.MathF.sqrt;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
+import org.dayflower.pathtracer.math.Point2F;
 import org.dayflower.pathtracer.math.Point3F;
+import org.dayflower.pathtracer.math.Ray3F;
+import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
+import org.dayflower.pathtracer.scene.ShapeIntersection;
 
 /**
  * A {@link Shape} implementation that implements a sphere.
@@ -29,7 +40,7 @@ import org.dayflower.pathtracer.scene.Shape;
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class Sphere implements Shape {
+public final class Sphere extends Shape {
 	/**
 	 * The relative offset of the Position Offset parameter in the {@code float} array. The value is {@code 0}.
 	 */
@@ -49,6 +60,10 @@ public final class Sphere implements Shape {
 	 * The type number associated with a {@code Sphere}. The number is {@code 1}.
 	 */
 	public static final int TYPE = 1;
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static final float EPSILON = 0.0001F;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -79,11 +94,53 @@ public final class Sphere implements Shape {
 	 * @throws NullPointerException thrown if, and only if, {@code position} is {@code null}
 	 */
 	public Sphere(final Point3F position, final float radius) {
+		super(TYPE);
+		
 		this.position = Objects.requireNonNull(position, "position == null");
 		this.radius = radius;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns an {@code Optional} of {@link ShapeIntersection} with the optional intersection given a specified {@link Ray3F}.
+	 * <p>
+	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param ray a {@code Ray3F}
+	 * @return an {@code Optional} of {@code ShapeIntersection} with the optional intersection given a specified {@code Ray3F}
+	 * @throws NullPointerException thrown if, and only if, {@code ray} is {@code null}
+	 */
+	@Override
+	public Optional<ShapeIntersection> intersection(final Ray3F ray) {
+		final Point3F origin = ray.origin;
+		final Point3F position = this.position;
+		
+		final Vector3F direction = ray.direction;
+		final Vector3F originToPosition = Vector3F.direction(origin, position);
+		
+		final float originToPositionDotDirection = originToPosition.dotProduct(direction);
+		final float originToPositionLengthSquared = originToPosition.lengthSquared();
+		final float radius = this.radius;
+		final float determinantSquared = originToPositionDotDirection * originToPositionDotDirection - originToPositionLengthSquared + radius * radius;
+		
+		if(determinantSquared >= 0.0F) {
+			final float determinant = sqrt(determinantSquared);
+			
+			final float t0 = originToPositionDotDirection - determinant;
+			final float t1 = originToPositionDotDirection + determinant;
+			
+			if(t0 > EPSILON) {
+				return Optional.of(doCreateShapeIntersection(ray, t0));
+			}
+			
+			if(t1 > EPSILON) {
+				return Optional.of(doCreateShapeIntersection(ray, t1));
+			}
+		}
+		
+		return Optional.empty();
+	}
 	
 	/**
 	 * Returns the center position of this {@code Sphere}.
@@ -183,16 +240,6 @@ public final class Sphere implements Shape {
 	}
 	
 	/**
-	 * Returns the type of this {@code Sphere} instance.
-	 * 
-	 * @return the type of this {@code Sphere} instance
-	 */
-	@Override
-	public int getType() {
-		return TYPE;
-	}
-	
-	/**
 	 * Returns a hash code for this {@code Sphere} instance.
 	 * 
 	 * @return a hash code for this {@code Sphere} instance
@@ -200,5 +247,24 @@ public final class Sphere implements Shape {
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.position, Float.valueOf(this.radius));
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private ShapeIntersection doCreateShapeIntersection(final Ray3F ray, final float t) {
+		final Point3F surfaceIntersectionPoint = ray.origin.pointAt(ray.direction, t);
+		
+		final Vector3F surfaceNormal = Vector3F.direction(this.position, surfaceIntersectionPoint).normalize();
+		
+		final Vector3F direction = surfaceNormal.negate();
+		
+		final float u = 0.5F + atan2(direction.z, direction.x) * PI_MULTIPLIED_BY_TWO_RECIPROCAL;
+		final float v = 0.5F - asinpi(direction.y);
+		
+		final Point2F textureCoordinates = new Point2F(u, v);
+		
+		final OrthoNormalBasis33F orthoNormalBasis = new OrthoNormalBasis33F(surfaceNormal);
+		
+		return new ShapeIntersection(orthoNormalBasis, textureCoordinates, surfaceIntersectionPoint, this, surfaceNormal, t);
 	}
 }

@@ -48,12 +48,21 @@ import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 import org.dayflower.pathtracer.util.FloatArrayThreadLocal;
 
 /**
- * An extension of the {@code AbstractRendererKernel} class that performs Ambient Occlusion, Path Tracing, Ray Casting, Ray Marching and Ray Tracing.
+ * A {@code GPURendererKernel} is an extension of the {@code AbstractRendererKernel} class that performs 3D-rendering on the GPU.
+ * <p>
+ * The main algorithms that are supported are the following:
+ * <ul>
+ * <li>Ambient Occlusion</li>
+ * <li>Path Tracer</li>
+ * <li>Ray Caster</li>
+ * <li>Ray Marcher</li>
+ * <li>Ray Tracer</li>
+ * </ul>
  * 
  * @since 1.0.0
  * @author J&#246;rgen Lundgren
  */
-public final class RendererKernel extends AbstractRendererKernel {
+public final class GPURendererKernel extends AbstractRendererKernel {
 	private static final float COLOR_RECIPROCAL = 1.0F / 255.0F;
 	private static final float REFRACTIVE_INDEX_AIR = 1.0F;
 	private static final float REFRACTIVE_INDEX_GLASS = 1.5F;
@@ -115,7 +124,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //	private int scenePrimitivesEmittingLightCount;
 	private int selectedPrimitiveOffset = -1;
 	private int sunAndSkyIsActive;
-	private int[] primitiveOffsetsForPrimaryRay;
+	private int[] primitiveOffsets;
 	private int[] sceneBoundingVolumeHierarchies_$constant$;
 	private int[] scenePlanes_$constant$;
 	private int[] scenePrimitives_$constant$;
@@ -125,14 +134,14 @@ public final class RendererKernel extends AbstractRendererKernel {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Constructs a new {@code RendererKernel} instance.
+	 * Constructs a new {@code GPURendererKernel} instance.
 	 * <p>
 	 * If {@code sceneLoader} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
 	 * @param sceneLoader the {@link SceneLoader} to use
 	 * @throws NullPointerException thrown if, and only if, {@code sceneLoader} is {@code null}
 	 */
-	public RendererKernel(final SceneLoader sceneLoader) {
+	public GPURendererKernel(final SceneLoader sceneLoader) {
 		super(sceneLoader);
 		
 		final Scene scene = sceneLoader.loadScene();
@@ -191,47 +200,16 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.sunAndSkyZenithRelativeLuminance = sky.getZenithRelativeLuminance();
 		this.sunAndSkyZenithX = sky.getZenithX();
 		this.sunAndSkyZenithY = sky.getZenithY();
-		
-		this.rays_$private$6 = new float[SIZE_RAY];
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Returns the selected primitive offset.
-	 * 
-	 * @return the selected primitive offset
-	 */
-	public int getSelectedPrimitiveOffset() {
-		return this.selectedPrimitiveOffset;
-	}
-	
-	/**
-	 * Returns the primitive offsets for all primary rays.
-	 * 
-	 * @return the primitive offsets for all primary rays
-	 */
-	public int[] getPrimitiveOffsetsForPrimaryRay() {
-		get(this.primitiveOffsetsForPrimaryRay);
-		
-		return this.primitiveOffsetsForPrimaryRay;
-	}
-	
-	/**
-	 * Called when this {@code RendererKernel} is run in JTP mode.
-	 */
-	@NoCL
-	public void noOpenCL() {
-		this.colorTemporarySamples_$private$3 = this.colorTemporarySamplesThreadLocal.get();
-		this.rays_$private$6 = this.raysThreadLocal.get();
-	}
 	
 	/**
 	 * Performs the rendering.
 	 */
 	@Override
 	public void run() {
-		noOpenCL();
+		doNoOpenCL();
 		
 		if(doCreatePrimaryRay()) {
 			if(super.rendererType == RENDERER_TYPE_AMBIENT_OCCLUSION) {
@@ -257,11 +235,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 			filmSetColor(0.0F, 0.0F, 0.0F);
 		}
 		
-		final int primitiveOffsetsForPrimaryRayOffset = getGlobalId();
-		final int primitiveOffsetFromPrimaryRay = this.primitiveOffsetsForPrimaryRay[primitiveOffsetsForPrimaryRayOffset];
+		final int primitiveOffsetsOffset = getGlobalId();
+		final int primitiveOffset = this.primitiveOffsets[primitiveOffsetsOffset];
 		
 		final float r = 0.0F;
-		final float g = primitiveOffsetFromPrimaryRay > -1 && primitiveOffsetFromPrimaryRay == this.selectedPrimitiveOffset ? 1.0F : 0.0F;
+		final float g = primitiveOffset > -1 && primitiveOffset == this.selectedPrimitiveOffset ? 1.0F : 0.0F;
 		final float b = 0.0F;
 		
 		imageBegin();
@@ -282,19 +260,11 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
-	 * Sets the selected primitive offset.
-	 * 
-	 * @param selectedPrimitiveOffset the selected primitive offset
+	 * Toggles the material for the selected primitive.
 	 */
-	public void setSelectedPrimitiveOffset(final int selectedPrimitiveOffset) {
-		this.selectedPrimitiveOffset = selectedPrimitiveOffset;
-	}
-	
-	/**
-	 * Toggles the material for the selected shape.
-	 */
-	public void toggleMaterial() {
-		final int selectedPrimitiveOffset = getSelectedPrimitiveOffset();
+	@Override
+	public void togglePrimitiveMaterial() {
+		final int selectedPrimitiveOffset = this.selectedPrimitiveOffset;
 		
 		if(selectedPrimitiveOffset != -1) {
 			final int surfacesOffset = this.scenePrimitives_$constant$[selectedPrimitiveOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
@@ -324,8 +294,34 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
+	 * Toggles the primitive selection.
+	 * 
+	 * @param x the X-coordinate
+	 * @param y the Y-coordinate
+	 */
+	@Override
+	public void togglePrimitiveSelection(final int x, final int y) {
+		final int index = y * getResolutionX() + x;
+		
+		get(this.primitiveOffsets);
+		
+		final int[] primitiveOffsets = this.primitiveOffsets;
+		
+		if(index >= 0 && index < primitiveOffsets.length) {
+			final int primitiveOffset = primitiveOffsets[index];
+			
+			if(primitiveOffset == this.selectedPrimitiveOffset) {
+				this.selectedPrimitiveOffset = -1;
+			} else {
+				this.selectedPrimitiveOffset = primitiveOffset;
+			}
+		}
+	}
+	
+	/**
 	 * Toggles the sun and sky.
 	 */
+	@Override
 	public void toggleSunAndSky() {
 		if(this.sunAndSkyIsActive == BOOLEAN_FALSE) {
 			this.sunAndSkyIsActive = BOOLEAN_TRUE;
@@ -337,7 +333,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
-	 * Updates all necessary variables in this {@code RendererKernel} instance.
+	 * Updates all necessary variables in this {@code GPURendererKernel} instance.
 	 * <p>
 	 * If {@code imageDataByte} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * 
@@ -347,6 +343,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 	 * @param localSize the local size
 	 * @throws NullPointerException thrown if, and only if, {@code imageDataByte} is {@code null}
 	 */
+	@Override
 	public void update(final int resolutionX, final int resolutionY, final byte[] imageDataByte, final int localSize) {
 		update(resolutionX, resolutionY, imageDataByte);
 		
@@ -354,9 +351,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 		this.colorTemporarySamples_$private$3 = new float[SIZE_COLOR_RGB];
 		
 		this.intersections_$local$ = new float[localSize * SIZE_INTERSECTION];
-		this.primitiveOffsetsForPrimaryRay = new int[resolutionX * resolutionY];
+		this.primitiveOffsets = new int[resolutionX * resolutionY];
+		this.rays_$private$6 = new float[SIZE_RAY];
 		
-		Arrays.fill(this.primitiveOffsetsForPrimaryRay, -1);
+		Arrays.fill(this.primitiveOffsets, -1);
 		
 		setExplicit(true);
 //		setExecutionMode(EXECUTION_MODE.JTP);
@@ -381,12 +379,13 @@ public final class RendererKernel extends AbstractRendererKernel {
 		put(this.sunAndSkyPerezX_$constant$);
 		put(this.sunAndSkyPerezY_$constant$);
 		
-		put(this.primitiveOffsetsForPrimaryRay);
+		put(this.primitiveOffsets);
 	}
 	
 	/**
 	 * Updates the {@link Camera} and the variables related to it.
 	 */
+	@Override
 	public void updateCamera() {
 		final
 		Camera camera = getCamera();
@@ -396,9 +395,10 @@ public final class RendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
-	 * Updates the variables related to the {@link Sky}.
+	 * Updates the variables related to the sun and sky.
 	 */
-	public void updateSky() {
+	@Override
+	public void updateSunAndSky() {
 		final Sky sky = getSky();
 		
 		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
@@ -903,12 +903,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 		
 //		Check that the dot product is not 0.0:
 		if(dotProduct < 0.0F || dotProduct > 0.0F) {
-//			Calculate the distance:
-			final float distance = ((aX - originX) * surfaceNormalX + (aY - originY) * surfaceNormalY + (aZ - originZ) * surfaceNormalZ) / dotProduct;
+//			Calculate t:
+			final float t = ((aX - originX) * surfaceNormalX + (aY - originY) * surfaceNormalY + (aZ - originZ) * surfaceNormalZ) / dotProduct;
 			
-//			Check that the distance is greater than an epsilon value and return it if so:
-			if(distance > EPSILON) {
-				return distance;
+//			Check that t is greater than an epsilon value and return it if so:
+			if(t > EPSILON) {
+				return t;
 			}
 		}
 		
@@ -925,28 +925,28 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Calculate the dot product between the ray direction and the direction to the sphere center position:
 		final float b = x * directionX + y * directionY + z * directionZ;
 		
-//		Calculate the determinant:
-		final float determinant0 = b * b - (x * x + y * y + z * z) + radius * radius;
+//		Calculate the squared determinant:
+		final float determinantSquared = b * b - (x * x + y * y + z * z) + radius * radius;
 		
-//		Check that the determinant is positive:
-		if(determinant0 >= 0.0F) {
-//			Calculate the square root of the determinant:
-			final float determinant1 = sqrt(determinant0);
+//		Check that the squared determinant is positive:
+		if(determinantSquared >= 0.0F) {
+//			Calculate the determinant from the squared determinant:
+			final float determinant = sqrt(determinantSquared);
 			
-//			Calculate the first distance:
-			final float distance1 = b - determinant1;
+//			Calculate the first t:
+			final float t0 = b - determinant;
 			
-//			Check that the first distance is greater than an epsilon value and return it if so:
-			if(distance1 > EPSILON) {
-				return distance1;
+//			Check that the first t is greater than an epsilon value and return it if so:
+			if(t0 > EPSILON) {
+				return t0;
 			}
 			
-//			Calculate the second distance:
-			final float distance2 = b + determinant1;
+//			Calculate the second t:
+			final float t1 = b + determinant;
 			
-//			Check that the second distance is greater than an epsilon value and return it if so:
-			if(distance2 > EPSILON) {
-				return distance2;
+//			Check that the second t is greater than an epsilon value and return it if so:
+			if(t1 > EPSILON) {
+				return t1;
 			}
 		}
 		
@@ -1776,15 +1776,8 @@ public final class RendererKernel extends AbstractRendererKernel {
 		final float surfaceNormal1Z = surfaceNormal0Z * lengthReciprocal;
 		
 //		Calculate the UV-coordinates:
-		final float direction0X = positionX - surfaceIntersectionPointX;
-		final float direction0Y = positionY - surfaceIntersectionPointY;
-		final float direction0Z = positionZ - surfaceIntersectionPointZ;
-		final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
-		final float direction1X = direction0X * direction0LengthReciprocal;
-		final float direction1Y = direction0Y * direction0LengthReciprocal;
-		final float direction1Z = direction0Z * direction0LengthReciprocal;
-		final float u = 0.5F + atan2(direction1Z, direction1X) * PI_MULTIPLIED_BY_TWO_RECIPROCAL;
-		final float v = 0.5F - asinpi(direction1Y);
+		final float u = 0.5F + atan2(-surfaceNormal1Z, -surfaceNormal1X) * PI_MULTIPLIED_BY_TWO_RECIPROCAL;
+		final float v = 0.5F - asinpi(-surfaceNormal1Y);
 		
 //		Get the intersections offset:
 		final int intersectionsOffset0 = getLocalId() * SIZE_INTERSECTION;
@@ -1948,6 +1941,12 @@ public final class RendererKernel extends AbstractRendererKernel {
 			this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal5Y;
 			this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal5Z;
 		}
+	}
+	
+	@NoCL
+	private void doNoOpenCL() {
+		this.colorTemporarySamples_$private$3 = this.colorTemporarySamplesThreadLocal.get();
+		this.rays_$private$6 = this.raysThreadLocal.get();
 	}
 	
 	private void doPerformNormalMappingViaNoise(final int primitivesOffset) {
@@ -2139,7 +2138,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Retrieve the offset in the shapes array of the closest intersected shape, or -1 if no shape were intersected:
 		final int primitivesOffset = (int)(this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET]);
 		
-		this.primitiveOffsetsForPrimaryRay[getGlobalId()] = primitivesOffset;
+		this.primitiveOffsets[getGlobalId()] = primitivesOffset;
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 		if(distance == INFINITY || primitivesOffset == -1) {
@@ -2320,7 +2319,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Retrieve the offset in the primitives array of the closest intersected primitive, or -1 if no primitive were intersected:
 		final int primitivesOffset = (int)(this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET]);
 		
-		this.primitiveOffsetsForPrimaryRay[getGlobalId()] = primitivesOffset;
+		this.primitiveOffsets[getGlobalId()] = primitivesOffset;
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 		if(distance != INFINITY && primitivesOffset != -1) {
@@ -2457,7 +2456,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			final int primitivesOffset = (int)(this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET]);
 			
 			if(depthCurrent == 0) {
-				this.primitiveOffsetsForPrimaryRay[getGlobalId()] = primitivesOffset;
+				this.primitiveOffsets[getGlobalId()] = primitivesOffset;
 			}
 			
 //			Test that an intersection was actually made, and if not, return black color (or possibly the background color):
@@ -2989,7 +2988,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 //		Retrieve the offset to the surfaces array for the given shape:
 		final int surfacesOffset = this.scenePrimitives_$constant$[primitivesOffset + Primitive.RELATIVE_OFFSET_SURFACE_OFFSET];
 		
-		this.primitiveOffsetsForPrimaryRay[getGlobalId()] = primitivesOffset;
+		this.primitiveOffsets[getGlobalId()] = primitivesOffset;
 		
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 		if(distance == INFINITY || primitivesOffset == -1) {
@@ -3145,7 +3144,7 @@ public final class RendererKernel extends AbstractRendererKernel {
 			primitivesOffset = (int)(this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET]);
 			
 			if(depthCurrent == 0) {
-				this.primitiveOffsetsForPrimaryRay[getGlobalId()] = primitivesOffset;
+				this.primitiveOffsets[getGlobalId()] = primitivesOffset;
 			}
 			
 //			Test that an intersection was actually made, and if not, return black color (or possibly the background color):

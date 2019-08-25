@@ -21,6 +21,7 @@ package org.dayflower.pathtracer.scene.texture;
 import java.util.Objects;
 
 import org.dayflower.pathtracer.color.Color;
+import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
 
 /**
@@ -104,6 +105,22 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	 */
 	public Color getAddend() {
 		return this.addend;
+	}
+	
+	/**
+	 * Returns a {@link Color} with the color of this {@code FractionalBrownianMotionTexture} at {@code primitiveIntersection}.
+	 * <p>
+	 * If {@code primitiveIntersection} is {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param primitiveIntersection a {@link PrimitiveIntersection}
+	 * @return a {@code Color} with the color of this {@code FractionalBrownianMotionTexture} at {@code primitiveIntersection}
+	 * @throws NullPointerException thrown if, and only if, {@code primitiveIntersection} is {@code null}
+	 */
+	@Override
+	public Color getColor(final PrimitiveIntersection primitiveIntersection) {
+		Objects.requireNonNull(primitiveIntersection, "primitiveIntersection == null");
+		
+		return new Color();
 	}
 	
 	/**

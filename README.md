@@ -95,6 +95,7 @@ Supported Menu Controls
 | Renderer > Ray Caster                    | Use the Ray Caster to render                   |
 | Renderer > Ray Marcher                   | Use the Ray Marcher to render                  |
 | Renderer > Ray Tracer                    | Use the Ray Tracer to render                   |
+| Renderer > Surface Normal                | Use the Surface Normal renderer                |
 | Scene > Normal Mapping                   | Toggle Normal Mapping                          |
 | Scene > Wireframes                       | Toggle Wireframes                              |
 | Scene > Enter Scene                      | Enter the scene like an FPS-game               |
