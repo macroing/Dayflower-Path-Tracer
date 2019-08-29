@@ -34,82 +34,79 @@ import org.dayflower.pathtracer.color.ColorSpace;
  */
 public final class RGBColorSpace extends ColorSpace {
 	/**
+	 * An {@code RGBColorSpace} for the Adobe color space.
+	 */
+	public static final RGBColorSpace ADOBE = new RGBColorSpace(0.0F, 2.2F, 0.6400F, 0.3300F, 0.2100F, 0.7100F, 0.1500F, 0.0600F, 0.31271F, 0.32902F);
+	
+	/**
+	 * An {@code RGBColorSpace} for the Apple color space.
+	 */
+	public static final RGBColorSpace APPLE = new RGBColorSpace(0.0F, 1.8F, 0.6250F, 0.3400F, 0.2800F, 0.5950F, 0.1550F, 0.0700F, 0.31271F, 0.32902F);
+	
+	/**
+	 * An {@code RGBColorSpace} for the CIE color space.
+	 */
+	public static final RGBColorSpace CIE = new RGBColorSpace(0.0F, 2.2F, 0.7350F, 0.2650F, 0.2740F, 0.7170F, 0.1670F, 0.0090F, 1.0F / 3.0F, 1.0F / 3.0F);
+	
+	/**
+	 * An {@code RGBColorSpace} for the EBU color space.
+	 */
+	public static final RGBColorSpace EBU = new RGBColorSpace(0.018F, 20.0F / 9.0F, 0.6400F, 0.3300F, 0.2900F, 0.6000F, 0.1500F, 0.0600F, 0.31271F, 0.32902F);
+	
+	/**
+	 * An {@code RGBColorSpace} for the HDTV color space.
+	 */
+	public static final RGBColorSpace HDTV = new RGBColorSpace(0.018F, 20.0F / 9.0F, 0.6400F, 0.3300F, 0.3000F, 0.6000F, 0.1500F, 0.0600F, 0.31271F, 0.32902F);
+	
+	/**
+	 * An {@code RGBColorSpace} for the NTSC color space.
+	 */
+	public static final RGBColorSpace NTSC = new RGBColorSpace(0.018F, 20.0F / 9.0F, 0.6700F, 0.3300F, 0.2100F, 0.7100F, 0.1400F, 0.0800F, 0.31010F, 0.31620F);
+	
+	/**
+	 * An {@code RGBColorSpace} for the SMPTE-240M color space.
+	 */
+	public static final RGBColorSpace SMPTE_240M = new RGBColorSpace(0.018F, 20.0F / 9.0F, 0.6300F, 0.3400F, 0.3100F, 0.5950F, 0.1550F, 0.0700F, 0.31271F, 0.32902F);
+	
+	/**
+	 * An {@code RGBColorSpace} for the SMPTE-C color space.
+	 */
+	public static final RGBColorSpace SMPTE_C = new RGBColorSpace(0.018F, 20.0F / 9.0F, 0.6300F, 0.3400F, 0.3100F, 0.5950F, 0.1550F, 0.0700F, 0.31271F, 0.32902F);
+	
+	/**
 	 * An {@code RGBColorSpace} for the sRGB color space.
 	 */
 	public static final RGBColorSpace SRGB = new RGBColorSpace(0.00304F, 2.4F, 0.6400F, 0.3300F, 0.3000F, 0.6000F, 0.1500F, 0.0600F, 0.31271F, 0.32902F);
 	
+	/**
+	 * An {@code RGBColorSpace} for the Wide Gamut color space.
+	 */
+	public static final RGBColorSpace WIDE_GAMUT = new RGBColorSpace(0.0F, 2.2F, 0.7347F, 0.2653F, 0.1152F, 0.8264F, 0.1566F, 0.0177F, 0.3457F, 0.3585F);
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private final MatrixRGBToXYZ matrixRGBToXYZ;
+	private final MatrixXYZToRGB matrixXYZToRGB;
 	private final float breakPoint;
 	private final float gamma;
 	private final float segmentOffset;
 	private final float slope;
 	private final float slopeMatch;
-	private final float[] matrixRGBToXYZ = new float[12];
-	private final float[] matrixXYZToRGB = new float[12];
-	private final int[] gammaCurve = new int[256];
-	private final int[] gammaCurveReciprocal = new int[256];
+	private final int[] gammaCurve;
+	private final int[] gammaCurveReciprocal;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private RGBColorSpace(final float breakPoint, final float gamma, final float xR, final float yR, final float xG, final float yG, final float xB, final float yB, final float xW, final float yW) {
+		this.matrixXYZToRGB = MatrixXYZToRGB.create(xR, yR, xG, yG, xB, yB, xW, yW);
+		this.matrixRGBToXYZ = this.matrixXYZToRGB.toMatrixRGBToXYZ(xW, yW);
 		this.breakPoint = breakPoint;
 		this.gamma = gamma;
-		this.slope = breakPoint > 0.0F ? 1.0F / (gamma / pow(breakPoint, 1.0F / gamma - 1.0F) - gamma * breakPoint + breakPoint) : 1.0F;
-		this.slopeMatch = breakPoint > 0.0F ? gamma * this.slope / pow(breakPoint, 1.0F / gamma - 1.0F) : 1.0F;
-		this.segmentOffset = breakPoint > 0.0F ? this.slopeMatch * pow(breakPoint, 1.0F / gamma) - this.slope * breakPoint : 0.0F;
-		
-		for(int i = 0; i < 256; i++) {
-			final float value = i / 255.0F;
-			
-			this.gammaCurve[i] = saturate((int)(redoGammaCorrection(value) * 255.0F + 0.5F));
-			this.gammaCurveReciprocal[i] = saturate((int)(undoGammaCorrection(value) * 255.0F + 0.5F));
-		}
-		
-		final float zR = 1.0F - (xR + yR);
-		final float zG = 1.0F - (xG + yG);
-		final float zB = 1.0F - (xB + yB);
-		final float zW = 1.0F - (xW + yW);
-		final float rX = (yG * zB) - (yB * zG);
-		final float rY = (xB * zG) - (xG * zB);
-		final float rZ = (xG * yB) - (xB * yG);
-		final float rW = ((rX * xW) + (rY * yW) + (rZ * zW)) / yW;
-		final float gX = (yB * zR) - (yR * zB);
-		final float gY = (xR * zB) - (xB * zR);
-		final float gZ = (xB * yR) - (xR * yB);
-		final float gW = ((gX * xW) + (gY * yW) + (gZ * zW)) / yW;
-		final float bX = (yR * zG) - (yG * zR);
-		final float bY = (xG * zR) - (xR * zG);
-		final float bZ = (xR * yG) - (xG * yR);
-		final float bW = ((bX * xW) + (bY * yW) + (bZ * zW)) / yW;
-		
-		this.matrixRGBToXYZ[ 0] = rX / rW;
-		this.matrixRGBToXYZ[ 1] = rY / rW;
-		this.matrixRGBToXYZ[ 2] = rZ / rW;
-		this.matrixRGBToXYZ[ 3] = gX / gW;
-		this.matrixRGBToXYZ[ 4] = gY / gW;
-		this.matrixRGBToXYZ[ 5] = gZ / gW;
-		this.matrixRGBToXYZ[ 6] = bX / bW;
-		this.matrixRGBToXYZ[ 7] = bY / bW;
-		this.matrixRGBToXYZ[ 8] = bZ / bW;
-		this.matrixRGBToXYZ[ 9] = rW;
-		this.matrixRGBToXYZ[10] = gW;
-		this.matrixRGBToXYZ[11] = bW;
-		
-		final float s = 1.0F / (getRX() * (getGY() * getBZ() - getBY() * getGZ()) - getRY() * (getGX() * getBZ() - getBX() * getGZ()) + getRZ() * (getGX() * getBY() - getBX() * getGY()));
-		
-		this.matrixXYZToRGB[ 0] = s * (getGY() * getBZ() - getGZ() * getBY());
-		this.matrixXYZToRGB[ 1] = s * (getGZ() * getBX() - getGX() * getBZ());
-		this.matrixXYZToRGB[ 2] = s * (getGX() * getBY() - getGY() * getBX());
-		this.matrixXYZToRGB[ 3] = s * (getRZ() * getBY() - getRY() * getBZ());
-		this.matrixXYZToRGB[ 4] = s * (getRX() * getBZ() - getRZ() * getBX());
-		this.matrixXYZToRGB[ 5] = s * (getRY() * getBX() - getRX() * getBY());
-		this.matrixXYZToRGB[ 6] = s * (getRY() * getGZ() - getRZ() * getGY());
-		this.matrixXYZToRGB[ 7] = s * (getRZ() * getGX() - getRX() * getGZ());
-		this.matrixXYZToRGB[ 8] = s * (getRX() * getGY() - getRY() * getGX());
-		this.matrixXYZToRGB[ 9] = xW;
-		this.matrixXYZToRGB[10] = yW;
-		this.matrixXYZToRGB[11] = zW;
+		this.slope = doCreateSlope(breakPoint, gamma);
+		this.slopeMatch = doCreateSlopeMatch(breakPoint, gamma, this.slope);
+		this.segmentOffset = doCreateSegmentOffset(breakPoint, gamma, this.slope, this.slopeMatch);
+		this.gammaCurve = doCreateGammaCurve();
+		this.gammaCurveReciprocal = doCreateGammaCurveReciprocal();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,15 +123,7 @@ public final class RGBColorSpace extends ColorSpace {
 	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
 	 */
 	public Color convertRGBToXYZ(final Color color) {
-		final float r = color.r;
-		final float g = color.g;
-		final float b = color.b;
-		
-		final float x = getXR() * r + getXG() * g + getXB() * b;
-		final float y = getYR() * r + getYG() * g + getYB() * b;
-		final float z = getZR() * r + getZG() * g + getZB() * b;
-		
-		return new Color(x, y, z);
+		return this.matrixRGBToXYZ.convertRGBToXYZ(color);
 	}
 	
 	/**
@@ -149,51 +138,7 @@ public final class RGBColorSpace extends ColorSpace {
 	 * @throws NullPointerException thrown if, and only if, {@code color} is {@code null}
 	 */
 	public Color convertXYZToRGB(final Color color) {
-		final float x = color.r;
-		final float y = color.g;
-		final float z = color.b;
-		
-		final float r = getRX() * x + getRY() * y + getRZ() * z;
-		final float g = getGX() * x + getGY() * y + getGZ() * z;
-		final float b = getBX() * x + getBY() * y + getBZ() * z;
-		
-		return new Color(r, g, b);
-	}
-	
-	/**
-	 * Returns the BW component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the BW component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getBW() {
-		return this.matrixRGBToXYZ[11];
-	}
-	
-	/**
-	 * Returns the BX component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the BX component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getBX() {
-		return this.matrixRGBToXYZ[6];
-	}
-	
-	/**
-	 * Returns the BY component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the BY component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getBY() {
-		return this.matrixRGBToXYZ[7];
-	}
-	
-	/**
-	 * Returns the BZ component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the BZ component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getBZ() {
-		return this.matrixRGBToXYZ[8];
+		return this.matrixXYZToRGB.convertXYZToRGB(color);
 	}
 	
 	/**
@@ -206,84 +151,12 @@ public final class RGBColorSpace extends ColorSpace {
 	}
 	
 	/**
-	 * Returns the GW component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the GW component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getGW() {
-		return this.matrixRGBToXYZ[10];
-	}
-	
-	/**
-	 * Returns the GX component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the GX component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getGX() {
-		return this.matrixRGBToXYZ[3];
-	}
-	
-	/**
-	 * Returns the GY component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the GY component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getGY() {
-		return this.matrixRGBToXYZ[4];
-	}
-	
-	/**
-	 * Returns the GZ component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the GZ component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getGZ() {
-		return this.matrixRGBToXYZ[5];
-	}
-	
-	/**
 	 * Returns the gamma value.
 	 * 
 	 * @return the gamma value
 	 */
 	public float getGamma() {
 		return this.gamma;
-	}
-	
-	/**
-	 * Returns the RW component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the RW component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getRW() {
-		return this.matrixRGBToXYZ[9];
-	}
-	
-	/**
-	 * Returns the RX component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the RX component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getRX() {
-		return this.matrixRGBToXYZ[0];
-	}
-	
-	/**
-	 * Returns the RY component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the RY component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getRY() {
-		return this.matrixRGBToXYZ[1];
-	}
-	
-	/**
-	 * Returns the RZ component of the matrix that converts from RGB color space to XYZ color space.
-	 * 
-	 * @return the RZ component of the matrix that converts from RGB color space to XYZ color space
-	 */
-	public float getRZ() {
-		return this.matrixRGBToXYZ[2];
 	}
 	
 	/**
@@ -314,120 +187,12 @@ public final class RGBColorSpace extends ColorSpace {
 	}
 	
 	/**
-	 * Returns the XB component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the XB component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getXB() {
-		return this.matrixXYZToRGB[6];
-	}
-	
-	/**
-	 * Returns the XG component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the XG component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getXG() {
-		return this.matrixXYZToRGB[3];
-	}
-	
-	/**
-	 * Returns the XR component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the XR component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getXR() {
-		return this.matrixXYZToRGB[0];
-	}
-	
-	/**
-	 * Returns the XW component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the XW component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getXW() {
-		return this.matrixXYZToRGB[9];
-	}
-	
-	/**
-	 * Returns the YB component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the YB component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getYB() {
-		return this.matrixXYZToRGB[7];
-	}
-	
-	/**
-	 * Returns the YG component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the YG component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getYG() {
-		return this.matrixXYZToRGB[4];
-	}
-	
-	/**
-	 * Returns the YR component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the YR component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getYR() {
-		return this.matrixXYZToRGB[1];
-	}
-	
-	/**
-	 * Returns the YW component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the YW component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getYW() {
-		return this.matrixXYZToRGB[10];
-	}
-	
-	/**
-	 * Returns the ZB component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the ZB component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getZB() {
-		return this.matrixXYZToRGB[8];
-	}
-	
-	/**
-	 * Returns the ZG component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the ZG component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getZG() {
-		return this.matrixXYZToRGB[5];
-	}
-	
-	/**
-	 * Returns the ZR component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the ZR component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getZR() {
-		return this.matrixXYZToRGB[2];
-	}
-	
-	/**
-	 * Returns the ZW component of the matrix that converts from XYZ color space to RGB color space.
-	 * 
-	 * @return the ZW component of the matrix that converts from XYZ color space to RGB color space
-	 */
-	public float getZW() {
-		return this.matrixXYZToRGB[11];
-	}
-	
-	/**
-	 * Call this method to redo Gamma Correction on {@code value}.
+	 * Call this method to redo gamma correction on {@code value}.
 	 * <p>
-	 * Returns {@code value} with Gamma Correction.
+	 * Returns {@code value} with gamma correction.
 	 * 
 	 * @param value a {@code float} value
-	 * @return {@code value} with Gamma Correction
+	 * @return {@code value} with gamma correction
 	 */
 	@Override
 	public float redoGammaCorrection(final float value) {
@@ -443,12 +208,12 @@ public final class RGBColorSpace extends ColorSpace {
 	}
 	
 	/**
-	 * Call this method to undo Gamma Correction on {@code value}.
+	 * Call this method to undo gamma correction on {@code value}.
 	 * <p>
-	 * Returns {@code value} without Gamma Correction.
+	 * Returns {@code value} without gamma correction.
 	 * 
 	 * @param value a {@code float} value
-	 * @return {@code value} without Gamma Correction
+	 * @return {@code value} without gamma correction
 	 */
 	@Override
 	public float undoGammaCorrection(final float value) {
@@ -464,34 +229,213 @@ public final class RGBColorSpace extends ColorSpace {
 	}
 	
 	/**
-	 * Converts the RGB-component values of {@code rGB} from non-linear to linear representations.
+	 * Converts the component values of {@code colorRGB} from non-linear to linear representations.
 	 * <p>
-	 * Returns a linear representation of {@code rGB}
+	 * Returns a linear representation of {@code colorRGB}
 	 * 
-	 * @param rGB the RGB-component values to convert
-	 * @return a linear representation of {@code rGB}
+	 * @param colorRGB the component values to convert
+	 * @return a linear representation of {@code colorRGB}
 	 */
-	public int convertRGBToLinear(final int rGB) {
-		final int r = this.gammaCurveReciprocal[(rGB >> 16) & 0xFF];
-		final int g = this.gammaCurveReciprocal[(rGB >>  8) & 0xFF];
-		final int b = this.gammaCurveReciprocal[(rGB >>  0) & 0xFF];
+	public int convertRGBToLinear(final int colorRGB) {
+		final int r = this.gammaCurveReciprocal[(colorRGB >> 16) & 0xFF];
+		final int g = this.gammaCurveReciprocal[(colorRGB >>  8) & 0xFF];
+		final int b = this.gammaCurveReciprocal[(colorRGB >>  0) & 0xFF];
 		
 		return (r << 16) | (g << 8) | b;
 	}
 	
 	/**
-	 * Converts the RGB-component values of {@code rGB} from linear to non-linear representations.
+	 * Converts the component values of {@code colorRGB} from linear to non-linear representations.
 	 * <p>
-	 * Returns a non-linear representation of {@code rGB}
+	 * Returns a non-linear representation of {@code colorRGB}
 	 * 
-	 * @param rGB the RGB-component values to convert
-	 * @return a non-linear representation of {@code rGB}
+	 * @param colorRGB the component values to convert
+	 * @return a non-linear representation of {@code colorRGB}
 	 */
-	public int convertRGBToNonLinear(final int rGB) {
-		final int r = this.gammaCurve[(rGB >> 16) & 0xFF];
-		final int g = this.gammaCurve[(rGB >>  8) & 0xFF];
-		final int b = this.gammaCurve[(rGB >>  0) & 0xFF];
+	public int convertRGBToNonLinear(final int colorRGB) {
+		final int r = this.gammaCurve[(colorRGB >> 16) & 0xFF];
+		final int g = this.gammaCurve[(colorRGB >>  8) & 0xFF];
+		final int b = this.gammaCurve[(colorRGB >>  0) & 0xFF];
 		
 		return (r << 16) | (g << 8) | b;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private int[] doCreateGammaCurve() {
+		final int[] gammaCurve = new int[256];
+		
+		for(int i = 0; i < 256; i++) {
+			gammaCurve[i] = saturate((int)(redoGammaCorrection(i / 255.0F) * 255.0F + 0.5F));
+		}
+		
+		return gammaCurve;
+	}
+	
+	private int[] doCreateGammaCurveReciprocal() {
+		final int[] gammaCurveReciprocal = new int[256];
+		
+		for(int i = 0; i < 256; i++) {
+			gammaCurveReciprocal[i] = saturate((int)(undoGammaCorrection(i / 255.0F) * 255.0F + 0.5F));
+		}
+		
+		return gammaCurveReciprocal;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	private static float doCreateSegmentOffset(final float breakPoint, final float gamma, final float slope, final float slopeMatch) {
+		return breakPoint > 0.0F ? slopeMatch * pow(breakPoint, 1.0F / gamma) - slope * breakPoint : 0.0F;
+	}
+	
+	private static float doCreateSlope(final float breakPoint, final float gamma) {
+		return breakPoint > 0.0F ? 1.0F / (gamma / pow(breakPoint, 1.0F / gamma - 1.0F) - gamma * breakPoint + breakPoint) : 1.0F;
+	}
+	
+	private static float doCreateSlopeMatch(final float breakPoint, final float gamma, final float slope) {
+		return breakPoint > 0.0F ? gamma * slope / pow(breakPoint, 1.0F / gamma - 1.0F) : 1.0F;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@SuppressWarnings("unused")
+	private static final class MatrixRGBToXYZ {
+		public final float elementXB;
+		public final float elementXG;
+		public final float elementXR;
+		public final float elementXW;
+		public final float elementYB;
+		public final float elementYG;
+		public final float elementYR;
+		public final float elementYW;
+		public final float elementZB;
+		public final float elementZG;
+		public final float elementZR;
+		public final float elementZW;
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		public MatrixRGBToXYZ(final float elementXR, final float elementYR, final float elementZR, final float elementXG, final float elementYG, final float elementZG, final float elementXB, final float elementYB, final float elementZB, final float elementXW, final float elementYW, final float elementZW) {
+			this.elementXR = elementXR;
+			this.elementYR = elementYR;
+			this.elementZR = elementZR;
+			this.elementXG = elementXG;
+			this.elementYG = elementYG;
+			this.elementZG = elementZG;
+			this.elementXB = elementXB;
+			this.elementYB = elementYB;
+			this.elementZB = elementZB;
+			this.elementXW = elementXW;
+			this.elementYW = elementYW;
+			this.elementZW = elementZW;
+		}
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		public Color convertRGBToXYZ(final Color color) {
+			final float r = color.r;
+			final float g = color.g;
+			final float b = color.b;
+			
+			final float x = this.elementXR * r + this.elementXG * g + this.elementXB * b;
+			final float y = this.elementYR * r + this.elementYG * g + this.elementYB * b;
+			final float z = this.elementZR * r + this.elementZG * g + this.elementZB * b;
+			
+			return new Color(x, y, z);
+		}
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	@SuppressWarnings("unused")
+	private static final class MatrixXYZToRGB {
+		public final float elementBW;
+		public final float elementBX;
+		public final float elementBY;
+		public final float elementBZ;
+		public final float elementGW;
+		public final float elementGX;
+		public final float elementGY;
+		public final float elementGZ;
+		public final float elementRW;
+		public final float elementRX;
+		public final float elementRY;
+		public final float elementRZ;
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		public MatrixXYZToRGB(final float elementRX, final float elementRY, final float elementRZ, final float elementGX, final float elementGY, final float elementGZ, final float elementBX, final float elementBY, final float elementBZ, final float elementRW, final float elementGW, final float elementBW) {
+			this.elementRX = elementRX;
+			this.elementRY = elementRY;
+			this.elementRZ = elementRZ;
+			this.elementGX = elementGX;
+			this.elementGY = elementGY;
+			this.elementGZ = elementGZ;
+			this.elementBX = elementBX;
+			this.elementBY = elementBY;
+			this.elementBZ = elementBZ;
+			this.elementRW = elementRW;
+			this.elementGW = elementGW;
+			this.elementBW = elementBW;
+		}
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		public Color convertXYZToRGB(final Color color) {
+			final float x = color.r;
+			final float y = color.g;
+			final float z = color.b;
+			
+			final float r = this.elementRX * x + this.elementRY * y + this.elementRZ * z;
+			final float g = this.elementGX * x + this.elementGY * y + this.elementGZ * z;
+			final float b = this.elementBX * x + this.elementBY * y + this.elementBZ * z;
+			
+			return new Color(r, g, b);
+		}
+		
+		public MatrixRGBToXYZ toMatrixRGBToXYZ(final float xW, final float yW) {
+			final float a = this.elementRX * (this.elementGY * this.elementBZ - this.elementBY * this.elementGZ);
+			final float b = this.elementRY * (this.elementGX * this.elementBZ - this.elementBX * this.elementGZ);
+			final float c = this.elementRZ * (this.elementGX * this.elementBY - this.elementBX * this.elementGY);
+			final float s = 1.0F / (a - b + c);
+			
+			final float elementXR = s * (this.elementGY * this.elementBZ - this.elementGZ * this.elementBY);
+			final float elementYR = s * (this.elementGZ * this.elementBX - this.elementGX * this.elementBZ);
+			final float elementZR = s * (this.elementGX * this.elementBY - this.elementGY * this.elementBX);
+			final float elementXG = s * (this.elementRZ * this.elementBY - this.elementRY * this.elementBZ);
+			final float elementYG = s * (this.elementRX * this.elementBZ - this.elementRZ * this.elementBX);
+			final float elementZG = s * (this.elementRY * this.elementBX - this.elementRX * this.elementBY);
+			final float elementXB = s * (this.elementRY * this.elementGZ - this.elementRZ * this.elementGY);
+			final float elementYB = s * (this.elementRZ * this.elementGX - this.elementRX * this.elementGZ);
+			final float elementZB = s * (this.elementRX * this.elementGY - this.elementRY * this.elementGX);
+			final float elementXW = xW;
+			final float elementYW = yW;
+			final float elementZW = 1.0F - (xW + yW);
+			
+			return new MatrixRGBToXYZ(elementXR, elementYR, elementZR, elementXG, elementYG, elementZG, elementXB, elementYB, elementZB, elementXW, elementYW, elementZW);
+		}
+		
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		
+		public static MatrixXYZToRGB create(final float xR, final float yR, final float xG, final float yG, final float xB, final float yB, final float xW, final float yW) {
+			final float zR = 1.0F - (xR + yR);
+			final float zG = 1.0F - (xG + yG);
+			final float zB = 1.0F - (xB + yB);
+			final float zW = 1.0F - (xW + yW);
+			final float rX = (yG * zB) - (yB * zG);
+			final float rY = (xB * zG) - (xG * zB);
+			final float rZ = (xG * yB) - (xB * yG);
+			final float rW = ((rX * xW) + (rY * yW) + (rZ * zW)) / yW;
+			final float gX = (yB * zR) - (yR * zB);
+			final float gY = (xR * zB) - (xB * zR);
+			final float gZ = (xB * yR) - (xR * yB);
+			final float gW = ((gX * xW) + (gY * yW) + (gZ * zW)) / yW;
+			final float bX = (yR * zG) - (yG * zR);
+			final float bY = (xG * zR) - (xR * zG);
+			final float bZ = (xR * yG) - (xG * yR);
+			final float bW = ((bX * xW) + (bY * yW) + (bZ * zW)) / yW;
+			
+			return new MatrixXYZToRGB(rX / rW, rY / rW, rZ / rW, gX / gW, gY / gW, gZ / gW, bX / bW, bY / bW, bZ / bW, rW, gW, bW);
+		}
 	}
 }
