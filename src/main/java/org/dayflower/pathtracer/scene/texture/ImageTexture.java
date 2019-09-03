@@ -140,16 +140,48 @@ public final class ImageTexture implements Texture {
 		final float cosAngle = cos(getRadians());
 		final float sinAngle = sin(getRadians());
 		
-		final float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
-		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
+		final float u0 = (u * cosAngle - v * sinAngle);
+		final float v0 = (v * cosAngle + u * sinAngle);
+		final float u1 = remainder(u0 * scaleU * width, width);
+		final float v1 = remainder(v0 * scaleV * height, height);
+		final float u2 = u1 >= 0.0F ? u1 : width - abs(u1);
+		final float v2 = v1 >= 0.0F ? v1 : height - abs(v1);
 		
-		final int index = (int)((y * width + x));
+		final int x = (int)(u2);
+		final int y = (int)(v2);
 		
-		if(index >= 0 && index < this.data.length) {
-			return new Color(this.data[index]);
-		}
+		final int x00 = x + 0;
+		final int y00 = y + 0;
+		final int x01 = x + 1;
+		final int y01 = y + 0;
+		final int x10 = x + 0;
+		final int y10 = y + 1;
+		final int x11 = x + 1;
+		final int y11 = y + 1;
 		
-		return new Color();
+		final int w = (int)(width);
+		
+		final int index00 = y00 * w + x00;
+		final int index01 = y01 * w + x01;
+		final int index10 = y10 * w + x10;
+		final int index11 = y11 * w + x11;
+		
+		final int colorRGB00 = index00 >= 0 && index00 < this.data.length ? this.data[index00] : 0;
+		final int colorRGB01 = index01 >= 0 && index01 < this.data.length ? this.data[index01] : 0;
+		final int colorRGB10 = index10 >= 0 && index10 < this.data.length ? this.data[index10] : 0;
+		final int colorRGB11 = index11 >= 0 && index11 < this.data.length ? this.data[index11] : 0;
+		
+		final float factorX = u2 - x;
+		final float factorY = v2 - y;
+		
+		final Color color00 = new Color(colorRGB00);
+		final Color color01 = new Color(colorRGB01);
+		final Color color10 = new Color(colorRGB10);
+		final Color color11 = new Color(colorRGB11);
+		
+		final Color color = Color.blend(Color.blend(color00, color01, factorX), Color.blend(color10, color11, factorX), factorY);
+		
+		return color;
 	}
 	
 	/**

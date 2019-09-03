@@ -1094,8 +1094,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		} else if(textureType == FractionalBrownianMotionTexture.TYPE) {
 			return doGetTextureColorFromFractionalBrownianMotionTexture(texturesOffset);
 		} else if(textureType == ImageTexture.TYPE) {
-//			return doGetTextureColorFromImageTexture(texturesOffset);
-			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
+			return doGetTextureColorFromImageTexture(texturesOffset);
+//			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
 		} else if(textureType == SurfaceNormalTexture.TYPE) {
 			return doGetTextureColorFromSurfaceNormalTexture();
 		} else if(textureType == UVTexture.TYPE) {
@@ -1115,8 +1115,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		} else if(textureType == FractionalBrownianMotionTexture.TYPE) {
 			return doGetTextureColorFromFractionalBrownianMotionTexture(texturesOffset);
 		} else if(textureType == ImageTexture.TYPE) {
-//			return doGetTextureColorFromImageTexture(texturesOffset);
-			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
+			return doGetTextureColorFromImageTexture(texturesOffset);
+//			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
 		} else if(textureType == SurfaceNormalTexture.TYPE) {
 			return doGetTextureColorFromSurfaceNormalTexture();
 		} else if(textureType == UVTexture.TYPE) {
@@ -1272,97 +1272,64 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
 		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
 		
-		final float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
-		final float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
+		final float u0 = (u * cosAngle - v * sinAngle);
+		final float v0 = (v * cosAngle + u * sinAngle);
+		final float u1 = remainder(u0 * scaleU * width, width);
+		final float v1 = remainder(v0 * scaleV * height, height);
+		final float u2 = u1 >= 0.0F ? u1 : width - abs(u1);
+		final float v2 = v1 >= 0.0F ? v1 : height - abs(v1);
 		
-		final int index = (int)((y * width + x));
+		final int x = (int)(u2);
+		final int y = (int)(v2);
 		
-		final int rGB = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index]);
+		final int x00 = x + 0;
+		final int y00 = y + 0;
+		final int x01 = x + 1;
+		final int y01 = y + 0;
+		final int x10 = x + 0;
+		final int y10 = y + 1;
+		final int x11 = x + 1;
+		final int y11 = y + 1;
 		
-		return rGB;
-	}
-	
-	private int doGetTextureColorFromImageTextureBilinearInterpolation(final int texturesOffset) {
-		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
-		final int offsetUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
+		final int w = (int)(width);
+		final int resolution = (int)(width * height);
 		
-		final float u = this.intersections_$local$[offsetUVCoordinates];
-		final float v = this.intersections_$local$[offsetUVCoordinates + 1];
-		final float width = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
-		final float height = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
-		final float scaleU = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
-		final float scaleV = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
-//		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
-//		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
+		final int index00 = y00 * w + x00;
+		final int index01 = y01 * w + x01;
+		final int index10 = y10 * w + x10;
+		final int index11 = y11 * w + x11;
 		
-//		float x = remainder(abs((int)((u * cosAngle - v * sinAngle) * (width * scaleU))), width);
-//		float y = remainder(abs((int)((v * cosAngle + u * sinAngle) * (height * scaleV))), height);
-		float x = u * scaleU;
-		float y = v * scaleV;
+		final int colorRGB00 = index00 >= 0 && index00 < resolution ? (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index00]) : 0;
+		final int colorRGB01 = index01 >= 0 && index01 < resolution ? (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index01]) : 0;
+		final int colorRGB10 = index10 >= 0 && index10 < resolution ? (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index10]) : 0;
+		final int colorRGB11 = index11 >= 0 && index11 < resolution ? (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index11]) : 0;
 		
-		x = x - (int)(x);
-		y = y - (int)(y);
+		final float colorR00 = ((colorRGB00 >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorG00 = ((colorRGB00 >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorB00 = ((colorRGB00 >>  0) & 0xFF) * COLOR_RECIPROCAL;
 		
-		if(x < 0.0F) {
-			x++;
-		}
+		final float colorR01 = ((colorRGB01 >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorG01 = ((colorRGB01 >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorB01 = ((colorRGB01 >>  0) & 0xFF) * COLOR_RECIPROCAL;
 		
-		if(y < 0.0F) {
-			y++;
-		}
+		final float colorR10 = ((colorRGB10 >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorG10 = ((colorRGB10 >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorB10 = ((colorRGB10 >>  0) & 0xFF) * COLOR_RECIPROCAL;
 		
-		final float dx = x * (width - 1.0F);
-		final float dy = y * (height - 1.0F);
+		final float colorR11 = ((colorRGB11 >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorG11 = ((colorRGB11 >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorB11 = ((colorRGB11 >>  0) & 0xFF) * COLOR_RECIPROCAL;
 		
-		final int ix0 = (int)(dx);
-		final int iy0 = (int)(dy);
-		final int ix1 = (int)(remainder(ix0 + 1, width));
-		final int iy1 = (int)(remainder(iy0 + 1, height));
+		final float factorX = u2 - x;
+		final float factorY = v2 - y;
 		
-		float u0 = dx - ix0;
-		float v0 = dy - iy0;
+		final int colorR = (int)(saturate(blerp(colorR00, colorR01, colorR10, colorR11, factorX, factorY), 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int colorG = (int)(saturate(blerp(colorG00, colorG01, colorG10, colorG11, factorX, factorY), 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int colorB = (int)(saturate(blerp(colorB00, colorB01, colorB10, colorB11, factorX, factorY), 0.0F, 1.0F) * 255.0F + 0.5F);
 		
-		u0 = u0 * u0 * (3.0F - (2.0F * u0));
-		v0 = v0 * v0 * (3.0F - (2.0F * v0));
+		final int colorRGB = ((colorR & 0xFF) << 16) | ((colorG & 0xFF) << 8) | (colorB & 0xFF);
 		
-		final float k00 = (1.0F - u0) * (1.0F - v0);
-		final float k01 = (1.0F - u0) * v0;
-		final float k10 = u0 * (1.0F - v0);
-		final float k11 = u0 * v0;
-		
-		final int index00 = iy0 * (int)(width) + ix0;
-		final int index01 = iy1 * (int)(width) + ix0;
-		final int index10 = iy0 * (int)(width) + ix1;
-		final int index11 = iy1 * (int)(width) + ix1;
-		
-		final int rGB00 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index00]);
-		final int rGB01 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index01]);
-		final int rGB10 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index10]);
-		final int rGB11 = (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index11]);
-		
-		final float r00 = ((rGB00 >> 16) & 0xFF) * COLOR_RECIPROCAL;
-		final float g00 = ((rGB00 >>  8) & 0xFF) * COLOR_RECIPROCAL;
-		final float b00 = ((rGB00 >>  0) & 0xFF) * COLOR_RECIPROCAL;
-		
-		final float r01 = ((rGB01 >> 16) & 0xFF) * COLOR_RECIPROCAL;
-		final float g01 = ((rGB01 >>  8) & 0xFF) * COLOR_RECIPROCAL;
-		final float b01 = ((rGB01 >>  0) & 0xFF) * COLOR_RECIPROCAL;
-		
-		final float r10 = ((rGB10 >> 16) & 0xFF) * COLOR_RECIPROCAL;
-		final float g10 = ((rGB10 >>  8) & 0xFF) * COLOR_RECIPROCAL;
-		final float b10 = ((rGB10 >>  0) & 0xFF) * COLOR_RECIPROCAL;
-		
-		final float r11 = ((rGB11 >> 16) & 0xFF) * COLOR_RECIPROCAL;
-		final float g11 = ((rGB11 >>  8) & 0xFF) * COLOR_RECIPROCAL;
-		final float b11 = ((rGB11 >>  0) & 0xFF) * COLOR_RECIPROCAL;
-		
-		final int r = (int)(saturate(r00 * k00 + r01 * k01 + r10 * k10 + r11 * k11, 0.0F, 1.0F) * 255.0F + 0.5F);
-		final int g = (int)(saturate(g00 * k00 + g01 * k01 + g10 * k10 + g11 * k11, 0.0F, 1.0F) * 255.0F + 0.5F);
-		final int b = (int)(saturate(b00 * k00 + b01 * k01 + b10 * k10 + b11 * k11, 0.0F, 1.0F) * 255.0F + 0.5F);
-		
-		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
-		
-		return rGB;
+		return colorRGB;
 	}
 	
 	private int doGetTextureColorFromSurfaceNormalTexture() {

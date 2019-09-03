@@ -1083,7 +1083,7 @@ public abstract class AbstractKernel extends Kernel {
 	}
 	
 	/**
-	 * Performs a smoothstep operation on {@code value} and the edges {@code a} and {@code b}.
+	 * Performs a smoothstep operation on {@code value} and the edges {@code edgeA} and {@code edgeB}.
 	 * <p>
 	 * Returns a {@code float} value.
 	 * 
