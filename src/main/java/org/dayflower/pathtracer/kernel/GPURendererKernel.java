@@ -1095,7 +1095,6 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			return doGetTextureColorFromFractionalBrownianMotionTexture(texturesOffset);
 		} else if(textureType == ImageTexture.TYPE) {
 			return doGetTextureColorFromImageTexture(texturesOffset);
-//			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
 		} else if(textureType == SurfaceNormalTexture.TYPE) {
 			return doGetTextureColorFromSurfaceNormalTexture();
 		} else if(textureType == UVTexture.TYPE) {
@@ -1116,7 +1115,6 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			return doGetTextureColorFromFractionalBrownianMotionTexture(texturesOffset);
 		} else if(textureType == ImageTexture.TYPE) {
 			return doGetTextureColorFromImageTexture(texturesOffset);
-//			return doGetTextureColorFromImageTextureBilinearInterpolation(texturesOffset);
 		} else if(textureType == SurfaceNormalTexture.TYPE) {
 			return doGetTextureColorFromSurfaceNormalTexture();
 		} else if(textureType == UVTexture.TYPE) {
@@ -1843,30 +1841,33 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float surfaceIntersectionPointZ = originZ + directionZ * distance;
 		
 //		Calculate the Barycentric-coordinates:
-		final float edge0X = bPositionX - aPositionX;
-		final float edge0Y = bPositionY - aPositionY;
-		final float edge0Z = bPositionZ - aPositionZ;
-		final float edge1X = cPositionX - aPositionX;
-		final float edge1Y = cPositionY - aPositionY;
-		final float edge1Z = cPositionZ - aPositionZ;
-		final float v0X = directionY * edge1Z - directionZ * edge1Y;
-		final float v0Y = directionZ * edge1X - directionX * edge1Z;
-		final float v0Z = directionX * edge1Y - directionY * edge1X;
-		final float determinant = edge0X * v0X + edge0Y * v0Y + edge0Z * v0Z;
-		final float determinantReciprocal = 1.0F / determinant;
+		final float edgeABX = bPositionX - aPositionX;
+		final float edgeABY = bPositionY - aPositionY;
+		final float edgeABZ = bPositionZ - aPositionZ;
+		final float edgeACX = cPositionX - aPositionX;
+		final float edgeACY = cPositionY - aPositionY;
+		final float edgeACZ = cPositionZ - aPositionZ;
+		
+		final float v0X = directionY * edgeACZ - directionZ * edgeACY;
+		final float v0Y = directionZ * edgeACX - directionX * edgeACZ;
+		final float v0Z = directionX * edgeACY - directionY * edgeACX;
 		final float v1X = originX - aPositionX;
 		final float v1Y = originY - aPositionY;
 		final float v1Z = originZ - aPositionZ;
-		final float u0 = (v1X * v0X + v1Y * v0Y + v1Z * v0Z) * determinantReciprocal;
-		final float v2X = v1Y * edge0Z - v1Z * edge0Y;
-		final float v2Y = v1Z * edge0X - v1X * edge0Z;
-		final float v2Z = v1X * edge0Y - v1Y * edge0X;
-		final float v0 = (directionX * v2X + directionY * v2Y + directionZ * v2Z) * determinantReciprocal;
-		final float w = 1.0F - u0 - v0;
+		final float v2X = v1Y * edgeABZ - v1Z * edgeABY;
+		final float v2Y = v1Z * edgeABX - v1X * edgeABZ;
+		final float v2Z = v1X * edgeABY - v1Y * edgeABX;
+		
+		final float determinant = edgeABX * v0X + edgeABY * v0Y + edgeABZ * v0Z;
+		final float determinantReciprocal = 1.0F / determinant;
+		
+		final float barycentricU = (v1X * v0X + v1Y * v0Y + v1Z * v0Z) * determinantReciprocal;
+		final float barycentricV = (directionX * v2X + directionY * v2Y + directionZ * v2Z) * determinantReciprocal;
+		final float barycentricW = 1.0F - barycentricU - barycentricV;
 		
 //		Calculate the UV-coordinates:
-		final float u1 = w * aTextureCoordinatesU + u0 * bTextureCoordinatesU + v0 * cTextureCoordinatesU;
-		final float v1 = w * aTextureCoordinatesV + u0 * bTextureCoordinatesV + v0 * cTextureCoordinatesV;
+		final float u = barycentricW * aTextureCoordinatesU + barycentricU * bTextureCoordinatesU + barycentricV * cTextureCoordinatesU;
+		final float v = barycentricW * aTextureCoordinatesV + barycentricU * bTextureCoordinatesV + barycentricV * cTextureCoordinatesV;
 		
 //		Get the intersections offset:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
@@ -1882,52 +1883,38 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint] = surfaceIntersectionPointX;
 		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointY;
 		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZ;
-		this.intersections_$local$[offsetIntersectionUVCoordinates] = u1;
-		this.intersections_$local$[offsetIntersectionUVCoordinates + 1] = v1;
+		this.intersections_$local$[offsetIntersectionUVCoordinates] = u;
+		this.intersections_$local$[offsetIntersectionUVCoordinates + 1] = v;
+		
+		float surfaceNormal0X = 0.0F;
+		float surfaceNormal0Y = 0.0F;
+		float surfaceNormal0Z = 0.0F;
 		
 		if(super.shaderType == SHADER_TYPE_FLAT) {
 //			Calculate the surface normal for Flat Shading:
-			final float surfaceNormal0X = edge0Y * edge1Z - edge0Z * edge1Y;
-			final float surfaceNormal0Y = edge0Z * edge1X - edge0X * edge1Z;
-			final float surfaceNormal0Z = edge0X * edge1Y - edge0Y * edge1X;
-			final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
-			final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
-			final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
-			final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
-			final float dotProduct = aSurfaceNormalX != 0.0F && aSurfaceNormalY != 0.0F && aSurfaceNormalZ != 0.0F ? surfaceNormal1X * aSurfaceNormalX + surfaceNormal1Y * aSurfaceNormalY + surfaceNormal1Z * aSurfaceNormalZ : 0.0F;
-			final float surfaceNormal2X = dotProduct < 0.0F ? -surfaceNormal1X : surfaceNormal1X;
-			final float surfaceNormal2Y = dotProduct < 0.0F ? -surfaceNormal1Y : surfaceNormal1Y;
-			final float surfaceNormal2Z = dotProduct < 0.0F ? -surfaceNormal1Z : surfaceNormal1Z;
-			
-//			Update the intersections array based on Flat Shading:
-			this.intersections_$local$[offsetIntersectionSurfaceNormal] = surfaceNormal2X;
-			this.intersections_$local$[offsetIntersectionSurfaceNormal + 1] = surfaceNormal2Y;
-			this.intersections_$local$[offsetIntersectionSurfaceNormal + 2] = surfaceNormal2Z;
-			this.intersections_$local$[offsetIntersectionSurfaceNormalShading] = surfaceNormal2X;
-			this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal2Y;
-			this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal2Z;
+			surfaceNormal0X = edgeABY * edgeACZ - edgeABZ * edgeACY;
+			surfaceNormal0Y = edgeABZ * edgeACX - edgeABX * edgeACZ;
+			surfaceNormal0Z = edgeABX * edgeACY - edgeABY * edgeACX;
 		} else if(super.shaderType == SHADER_TYPE_GOURAUD) {
 //			Calculate the surface normal for Gouraud Shading:
-			final float surfaceNormal3X = aSurfaceNormalX * w + bSurfaceNormalX * u0 + cSurfaceNormalX * v0;
-			final float surfaceNormal3Y = aSurfaceNormalY * w + bSurfaceNormalY * u0 + cSurfaceNormalY * v0;
-			final float surfaceNormal3Z = aSurfaceNormalZ * w + bSurfaceNormalZ * u0 + cSurfaceNormalZ * v0;
-			final float surfaceNormal3LengthReciprocal = rsqrt(surfaceNormal3X * surfaceNormal3X + surfaceNormal3Y * surfaceNormal3Y + surfaceNormal3Z * surfaceNormal3Z);
-			final float surfaceNormal4X = surfaceNormal3X * surfaceNormal3LengthReciprocal;
-			final float surfaceNormal4Y = surfaceNormal3Y * surfaceNormal3LengthReciprocal;
-			final float surfaceNormal4Z = surfaceNormal3Z * surfaceNormal3LengthReciprocal;
-			final float dotProduct = aSurfaceNormalX != 0.0F && aSurfaceNormalY != 0.0F && aSurfaceNormalZ != 0.0F ? surfaceNormal4X * aSurfaceNormalX + surfaceNormal4Y * aSurfaceNormalY + surfaceNormal4Z * aSurfaceNormalZ : 0.0F;
-			final float surfaceNormal5X = dotProduct < 0.0F ? -surfaceNormal4X : surfaceNormal4X;
-			final float surfaceNormal5Y = dotProduct < 0.0F ? -surfaceNormal4Y : surfaceNormal4Y;
-			final float surfaceNormal5Z = dotProduct < 0.0F ? -surfaceNormal4Z : surfaceNormal4Z;
-			
-//			Update the intersections array based on Gouraud Shading:
-			this.intersections_$local$[offsetIntersectionSurfaceNormal] = surfaceNormal5X;
-			this.intersections_$local$[offsetIntersectionSurfaceNormal + 1] = surfaceNormal5Y;
-			this.intersections_$local$[offsetIntersectionSurfaceNormal + 2] = surfaceNormal5Z;
-			this.intersections_$local$[offsetIntersectionSurfaceNormalShading] = surfaceNormal5X;
-			this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal5Y;
-			this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal5Z;
+			surfaceNormal0X = aSurfaceNormalX * barycentricW + bSurfaceNormalX * barycentricU + cSurfaceNormalX * barycentricV;
+			surfaceNormal0Y = aSurfaceNormalY * barycentricW + bSurfaceNormalY * barycentricU + cSurfaceNormalY * barycentricV;
+			surfaceNormal0Z = aSurfaceNormalZ * barycentricW + bSurfaceNormalZ * barycentricU + cSurfaceNormalZ * barycentricV;
 		}
+		
+		final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
+		
+		final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
+		final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
+		final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
+		
+//		Update the intersections array based on Flat Shading:
+		this.intersections_$local$[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
+		this.intersections_$local$[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
+		this.intersections_$local$[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
+		this.intersections_$local$[offsetIntersectionSurfaceNormalShading] = surfaceNormal1X;
+		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
+		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 	}
 	
 	@NoCL
