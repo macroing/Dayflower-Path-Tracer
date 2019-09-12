@@ -35,7 +35,7 @@ public final class MathF {
 	/**
 	 * A {@code float} representation of pi.
 	 */
-	public static final float PI = toFloat(Math.PI);
+	public static final float PI = (float)(Math.PI);
 	
 	/**
 	 * A {@code float} representation of pi divided by {@code 180.0F}.
