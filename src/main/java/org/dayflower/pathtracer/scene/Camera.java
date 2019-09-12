@@ -741,7 +741,18 @@ public final class Camera {
 	 */
 	public void setFieldOfViewX(final float fieldOfViewX) {
 		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_X] = fieldOfViewX;
-		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_Y] = toDegrees(atan(tan(toRadians(fieldOfViewX) * 0.5F) * (getResolutionX() / getResolutionY())) * 2.0F);
+		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_Y] = toDegrees(2.0F * atan(tan(toRadians(fieldOfViewX) * 0.5F) * (getResolutionY() / getResolutionX())));
+		this.hasUpdated = true;
+	}
+	
+	/**
+	 * Sets the value for the Field of View Y parameter and calculates the value for the Field of View X parameter.
+	 * 
+	 * @param fieldOfViewY the new value for the Field of View Y parameter
+	 */
+	public void setFieldOfViewY(final float fieldOfViewY) {
+		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_Y] = fieldOfViewY;
+		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_X] = toDegrees(2.0F * atan(tan(toRadians(fieldOfViewY) * 0.5F) * (getResolutionX() / getResolutionY())));
 		this.hasUpdated = true;
 	}
 	
