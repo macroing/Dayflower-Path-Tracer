@@ -226,6 +226,7 @@ public final class Camera {
 	private AngleF pitch;
 	private AngleF yaw;
 	private boolean hasUpdated;
+	private boolean isSettingFieldOfViewX;
 	private boolean isWalkLockEnabled;
 	private float[] array;
 	private final List<CameraObserver> cameraObservers;
@@ -743,6 +744,7 @@ public final class Camera {
 		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_X] = fieldOfViewX;
 		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_Y] = toDegrees(2.0F * atan(tan(toRadians(fieldOfViewX) * 0.5F) * (getResolutionY() / getResolutionX())));
 		this.hasUpdated = true;
+		this.isSettingFieldOfViewX = true;
 	}
 	
 	/**
@@ -754,6 +756,7 @@ public final class Camera {
 		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_Y] = fieldOfViewY;
 		this.array[ABSOLUTE_OFFSET_FIELD_OF_VIEW_X] = toDegrees(2.0F * atan(tan(toRadians(fieldOfViewY) * 0.5F) * (getResolutionX() / getResolutionY())));
 		this.hasUpdated = true;
+		this.isSettingFieldOfViewX = false;
 	}
 	
 	/**
@@ -805,7 +808,11 @@ public final class Camera {
 		this.array[ABSOLUTE_OFFSET_RESOLUTION_Y] = resolutionY;
 		this.hasUpdated = true;
 		
-		setFieldOfViewX(getFieldOfViewX());
+		if(this.isSettingFieldOfViewX) {
+			setFieldOfViewX(getFieldOfViewX());
+		} else {
+			setFieldOfViewY(getFieldOfViewY());
+		}
 	}
 	
 	/**
