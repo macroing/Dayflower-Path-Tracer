@@ -18,7 +18,7 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import static org.dayflower.pathtracer.math.MathF.PI_DIVIDED_BY_360;
+import static org.dayflower.pathtracer.math.MathF.PI_DIVIDED_BY_180;
 import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO;
 import static org.dayflower.pathtracer.math.MathF.atan;
 import static org.dayflower.pathtracer.math.MathF.cos;
@@ -299,8 +299,8 @@ public final class Camera {
 	public Optional<Ray3F> createPrimaryRay(final float x, final float y, final float sampleX, final float sampleY) {
 		final float apertureRadius = getApertureRadius();
 		
-		final float fieldOfViewX = tan(getFieldOfViewX() * PI_DIVIDED_BY_360);
-		final float fieldOfViewY = tan(-getFieldOfViewY() * PI_DIVIDED_BY_360);
+		final float fieldOfViewX = tan(getFieldOfViewX() * 0.5F * PI_DIVIDED_BY_180);
+		final float fieldOfViewY = tan(-getFieldOfViewY() * 0.5F * PI_DIVIDED_BY_180);
 		
 		final float focalDistance = getFocalDistance();
 		

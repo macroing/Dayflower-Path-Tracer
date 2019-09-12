@@ -38,19 +38,9 @@ public final class MathF {
 	public static final float PI = toFloat(Math.PI);
 	
 	/**
-	 * A {@code float} representation of pi divided by {@code 360.0F}.
+	 * A {@code float} representation of pi divided by {@code 180.0F}.
 	 */
-	public static final float PI_DIVIDED_BY_360 = PI / 360.0F;
-	
-	/**
-	 * A {@code float} representation of pi divided by {@code 4.0F}.
-	 */
-	public static final float PI_DIVIDED_BY_FOUR = PI / 4.0F;
-	
-	/**
-	 * A {@code float} representation of pi divided by {@code 2.0F}.
-	 */
-	public static final float PI_DIVIDED_BY_TWO = PI / 2.0F;
+	public static final float PI_DIVIDED_BY_180 = PI / 180.0F;
 	
 	/**
 	 * A {@code float} representation of pi multiplied by {@code 2.0F}.
@@ -392,7 +382,7 @@ public final class MathF {
 	 * @param a a value
 	 * @param b a value
 	 * @param c a value
-	 * @return a {@code double} array with a length of {@code 2} containing the result
+	 * @return a {@code float} array with a length of {@code 2} containing the result
 	 */
 	public static float[] solveQuadraticSystem(final float a, final float b, final float c) {
 		final float[] result = new float[] {Float.NaN, Float.NaN};

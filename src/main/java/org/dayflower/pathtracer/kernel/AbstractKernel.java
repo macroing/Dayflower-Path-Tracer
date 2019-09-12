@@ -18,6 +18,9 @@
  */
 package org.dayflower.pathtracer.kernel;
 
+import static org.dayflower.pathtracer.math.MathF.PI_DIVIDED_BY_180;
+import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO;
+
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.dayflower.pathtracer.math.MathF;
@@ -52,42 +55,12 @@ public abstract class AbstractKernel extends Kernel {
 	 */
 	public static final float INFINITY = 100000.0F;
 	
-	/**
-	 * The {@code float} value that is closer than any other to pi, the ratio of the circumference of a circle to its diameter.
-	 */
-	public static final float PI = (float)(Math.PI);
-	
-	/**
-	 * The {@code float} value that is closer than any other to pi, the ratio of the circumference of a circle to its diameter, divided by {@code 180.0F}.
-	 */
-	public static final float PI_DIVIDED_BY_180 = PI / 180.0F;
-	
-	/**
-	 * The {@code float} value that is closer than any other to pi, the ratio of the circumference of a circle to its diameter, divided by {@code 360.0F}.
-	 */
-	public static final float PI_DIVIDED_BY_360 = PI / 360.0F;
-	
-	/**
-	 * The {@code float} value that is closer than any other to pi, the ratio of the circumference of a circle to its diameter, multiplied by {@code 2.0F}.
-	 */
-	public static final float PI_MULTIPLIED_BY_TWO = PI * 2.0F;
-	
-	/**
-	 * The reciprocal of the {@code float} value that is closer than any other to pi, the ratio of the circumference of a circle to its diameter, multiplied by {@code 2.0F}.
-	 */
-	public static final float PI_MULTIPLIED_BY_TWO_RECIPROCAL = 1.0F / PI_MULTIPLIED_BY_TWO;
-	
-	/**
-	 * The reciprocal of the {@code float} value that is closer than any other to pi, the ratio of the circumference of a circle to its diameter.
-	 */
-	public static final float PI_RECIPROCAL = 1.0F / PI;
-	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private static final float COS_TABLE_AND_SIN_TABLE_DEGREES_MAXIMUM = 360.0F;
 	private static final float COS_TABLE_AND_SIN_TABLE_DEGREES_TO_INDEX = (~(-1 << 12) + 1) / COS_TABLE_AND_SIN_TABLE_DEGREES_MAXIMUM;
-	private static final float COS_TABLE_AND_SIN_TABLE_RADIANS = PI / 180.0F;
-	private static final float COS_TABLE_AND_SIN_TABLE_RADIANS_MAXIMUM = PI * 2.0F;
+	private static final float COS_TABLE_AND_SIN_TABLE_RADIANS = PI_DIVIDED_BY_180;
+	private static final float COS_TABLE_AND_SIN_TABLE_RADIANS_MAXIMUM = PI_MULTIPLIED_BY_TWO;
 	private static final float COS_TABLE_AND_SIN_TABLE_RADIANS_TO_INDEX = (~(-1 << 12) + 1) / COS_TABLE_AND_SIN_TABLE_RADIANS_MAXIMUM;
 	private static final float PRNG_NEXT_FLOAT_RECIPROCAL = 1.0F / (1 << 24);
 	private static final float SIMPLEX_F2 = 0.3660254037844386F;

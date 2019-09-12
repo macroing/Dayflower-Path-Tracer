@@ -18,6 +18,12 @@
  */
 package org.dayflower.pathtracer.kernel;
 
+import static org.dayflower.pathtracer.math.MathF.PI;
+import static org.dayflower.pathtracer.math.MathF.PI_DIVIDED_BY_180;
+import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO;
+import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO_RECIPROCAL;
+import static org.dayflower.pathtracer.math.MathF.PI_RECIPROCAL;
+
 import java.util.Arrays;
 
 import org.dayflower.pathtracer.scene.Camera;
@@ -469,9 +475,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		
 //		Calculate the Field of View:
 		final float fieldOfViewX0 = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_FIELD_OF_VIEW_X];
-		final float fieldOfViewX1 = tan(fieldOfViewX0 * PI_DIVIDED_BY_360);
+		final float fieldOfViewX1 = tan(fieldOfViewX0 * 0.5F * PI_DIVIDED_BY_180);
 		final float fieldOfViewY0 = this.sceneCamera_$constant$[Camera.ABSOLUTE_OFFSET_FIELD_OF_VIEW_Y];
-		final float fieldOfViewY1 = tan(-fieldOfViewY0 * PI_DIVIDED_BY_360);
+		final float fieldOfViewY1 = tan(-fieldOfViewY0 * 0.5F * PI_DIVIDED_BY_180);
 		
 //		Calculate the horizontal direction:
 		final float horizontalX = uX * fieldOfViewX1;
