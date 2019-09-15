@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Surface;
@@ -45,6 +43,8 @@ import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 import org.dayflower.pathtracer.scene.texture.UVTexture;
 import org.dayflower.pathtracer.scene.wavefront.ObjectLoader;
+import org.macroing.image4j.Color;
+import org.macroing.math4j.Point3F;
 
 final class Scenes {
 	private Scenes() {

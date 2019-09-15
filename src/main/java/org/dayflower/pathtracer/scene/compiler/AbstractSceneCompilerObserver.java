@@ -18,9 +18,6 @@
  */
 package org.dayflower.pathtracer.scene.compiler;
 
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Surface;
@@ -32,6 +29,9 @@ import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.TriangleMesh;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * An {@code AbstractSceneCompilerObserver} is an abstract implementation of {@link SceneCompilerObserver} that does nothing by default.

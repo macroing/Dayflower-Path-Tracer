@@ -18,7 +18,7 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
+import org.macroing.image4j.RGBColorSpace;
 
 /**
  * An abstract extension of the {@code AbstractKernel} class that adds additional features.
@@ -526,6 +526,8 @@ public abstract class AbstractImageKernel extends AbstractKernel {
 	 * This method uses a modified version of the ACES filmic curve algorithm.
 	 * <p>
 	 * To use the original ACES filmic curve, set {@code exposure} to {@code 0.6F}.
+	 * 
+	 * @param exposure the exposure to apply to the image
 	 */
 	protected final void imageSetFilmicCurveACESModified(final float exposure) {
 		imageSetFilmicCurve(exposure, 2.51F, 0.03F, 2.43F, 0.59F, 0.14F, 0.0F, Float.MIN_VALUE);
@@ -535,6 +537,8 @@ public abstract class AbstractImageKernel extends AbstractKernel {
 	 * Sets the RGB-color of the current pixel to the tone mapped version of the current RGB-color.
 	 * <p>
 	 * This method uses a version of the filmic curve algorithm that also performs gamma correction with a gamma of 2.2.
+	 * 
+	 * @param exposure the exposure to apply to the image
 	 */
 	protected final void imageSetFilmicCurveGammaCorrection22(final float exposure) {
 		imageSetFilmicCurve(exposure, 6.2F, 0.5F, 6.2F, 1.7F, 0.06F, 0.004F, 0.0F);

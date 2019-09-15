@@ -18,10 +18,10 @@
  */
 package org.dayflower.pathtracer.test;
 
-import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.compiler.DynamicCompiledScene;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
+import org.macroing.image4j.Color;
 
 public final class DynamicCompiledSceneTest {
 	private DynamicCompiledSceneTest() {

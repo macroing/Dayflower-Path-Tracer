@@ -18,21 +18,21 @@
  */
 package org.dayflower.pathtracer.scene.shape;
 
-import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO_RECIPROCAL;
-import static org.dayflower.pathtracer.math.MathF.asinpi;
-import static org.dayflower.pathtracer.math.MathF.atan2;
-import static org.dayflower.pathtracer.math.MathF.sqrt;
+import static org.macroing.math4j.MathF.PI_MULTIPLIED_BY_TWO_RECIPROCAL;
+import static org.macroing.math4j.MathF.asinpi;
+import static org.macroing.math4j.MathF.atan2;
+import static org.macroing.math4j.MathF.sqrt;
 
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Ray3F;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.ShapeIntersection;
+import org.macroing.math4j.OrthoNormalBasis33F;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Ray3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A {@link Shape} implementation that implements a sphere.
@@ -252,7 +252,7 @@ public final class Sphere extends Shape {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private ShapeIntersection doCreateShapeIntersection(final Ray3F ray, final float t) {
-		final Point3F surfaceIntersectionPoint = ray.origin.pointAt(ray.direction, t);
+		final Point3F surfaceIntersectionPoint = ray.origin.add(ray.direction, t);
 		
 		final Vector3F surfaceNormal = Vector3F.direction(this.position, surfaceIntersectionPoint).normalize();
 		

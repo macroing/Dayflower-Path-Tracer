@@ -56,7 +56,6 @@ import org.dayflower.pathtracer.application.JavaFX;
 import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
 import org.dayflower.pathtracer.kernel.CPURendererKernel;
 import org.dayflower.pathtracer.kernel.GPURendererKernel;
-import org.dayflower.pathtracer.math.AngleF;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
 import org.dayflower.pathtracer.scene.Scene;
@@ -64,8 +63,9 @@ import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.loader.SceneLoader;
 import org.dayflower.pathtracer.util.Timer;
 import org.dayflower.pathtracer.util.Files;
-import org.dayflower.pathtracer.util.Image;
 import org.dayflower.pathtracer.util.Strings;
+import org.macroing.image4j.Image;
+import org.macroing.math4j.AngleF;
 
 /**
  * An implementation of {@link AbstractApplication} that performs Ambient Occlusion, Path Tracing, Ray Casting, Ray Marching or Ray Tracing.
@@ -406,12 +406,13 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final Slider sliderSunDirectionWorldZ = JavaFX.newSlider(-1.0D, 1.0D, doGetSky().getSunDirectionWorld().z, 0.1D, 0.5D, true, true, false, this::doOnSliderSunDirectionWorldZ);
 		final Slider sliderTurbidity = JavaFX.newSlider(2.0D, 8.0D, doGetSky().getTurbidity(), 0.5D, 1.0D, true, true, false, this::doOnSliderTurbidity);
 		
-		final CheckBox checkBoxToggleSunAndSky = JavaFX.newCheckBox("Toggle Sun & Sky", this::doOnCheckBoxToggleSunAndSky, true);
+		final CheckBox checkBoxToggleSky = JavaFX.newCheckBox("Toggle Sky", this::doOnCheckBoxToggleSky, true);
+		final CheckBox checkBoxToggleSun = JavaFX.newCheckBox("Toggle Sun", this::doOnCheckBoxToggleSun, true);
 		
 		final
 		VBox vBoxSunAndSky = new VBox();
 		vBoxSunAndSky.setPadding(new Insets(10.0D, 10.0D, 10.0D, 10.0D));
-		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity, checkBoxToggleSunAndSky);
+		vBoxSunAndSky.getChildren().addAll(labelSunDirectionWorldX, sliderSunDirectionWorldX, labelSunDirectionWorldY, sliderSunDirectionWorldY, labelSunDirectionWorldZ, sliderSunDirectionWorldZ, labelTurbidity, sliderTurbidity, checkBoxToggleSky, checkBoxToggleSun);
 		
 		final
 		Tab tabSunAndSky = new Tab();
@@ -614,7 +615,7 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	
 	private Image doCreateImage() {
 		synchronized(this.pixels1) {
-			return new Image(getCanvasWidth(), getCanvasHeight(), this.pixels1);
+			return Image.toImage(getCanvasWidth(), getCanvasHeight(), this.pixels1);
 		}
 	}
 	
@@ -623,11 +624,20 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	}
 	
 	@SuppressWarnings("unused")
-	private void doOnCheckBoxToggleSunAndSky(final ActionEvent e) {
+	private void doOnCheckBoxToggleSky(final ActionEvent e) {
 		synchronized(this.pixels1) {
 			final
 			AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
-			abstractRendererKernel.toggleSunAndSky();
+			abstractRendererKernel.toggleSky();
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	private void doOnCheckBoxToggleSun(final ActionEvent e) {
+		synchronized(this.pixels1) {
+			final
+			AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
+			abstractRendererKernel.toggleSun();
 		}
 	}
 	

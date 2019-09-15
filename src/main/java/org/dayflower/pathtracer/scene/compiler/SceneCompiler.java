@@ -24,9 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Shape;
@@ -43,6 +40,9 @@ import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 import org.dayflower.pathtracer.scene.texture.BlendTexture;
 import org.dayflower.pathtracer.util.Arrays2;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A class that compiles {@link Scene}s so they can be used by Dayflower - Path Tracer.

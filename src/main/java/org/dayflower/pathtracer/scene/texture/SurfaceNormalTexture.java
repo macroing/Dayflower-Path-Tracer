@@ -20,10 +20,10 @@ package org.dayflower.pathtracer.scene.texture;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
+import org.macroing.image4j.Color;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A {@code SurfaceNormalTexture} is a {@link Texture} implementation that shows the surface normal at a surface.

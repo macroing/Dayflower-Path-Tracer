@@ -18,7 +18,7 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import org.dayflower.pathtracer.color.Color;
+import org.macroing.image4j.Color;
 
 /**
  * A {@code Texture} is a model of a texture.

@@ -22,14 +22,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.Matrix44F;
-import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Ray3F;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.ShapeIntersection;
+import org.macroing.math4j.Matrix44F;
+import org.macroing.math4j.OrthoNormalBasis33F;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Ray3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A {@link Shape} implementation that implements a triangle.
@@ -223,7 +223,7 @@ public final class Triangle extends Shape {
 	 * @throws NullPointerException thrown if, and only if, either {@code w} or {@code v} are {@code null}
 	 */
 	public Triangle rotate(final Vector3F w, final Vector3F v) {
-		final Matrix44F m = Matrix44F.rotate(w, v);
+		final Matrix44F m = Matrix44F.rotation(w, v);
 		
 		return new Triangle(getA().transform(m), getB().transform(m), getC().transform(m));
 	}
@@ -411,7 +411,7 @@ public final class Triangle extends Shape {
 	 * @throws NullPointerException thrown if, and only if, either {@code triangles} or any of its elements are {@code null}
 	 */
 	public static Point3F maximum(final List<Triangle> triangles) {
-		Point3F maximum = Point3F.MINIMUM;
+		Point3F maximum = new Point3F(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
 		
 		for(final Triangle triangle : triangles) {
 			final Point3F a = triangle.a.position;
@@ -434,7 +434,7 @@ public final class Triangle extends Shape {
 	 * @throws NullPointerException thrown if, and only if, either {@code triangles} or any of its elements are {@code null}
 	 */
 	public static Point3F minimum(final List<Triangle> triangles) {
-		Point3F minimum = Point3F.MAXIMUM;
+		Point3F minimum = new Point3F(Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE);
 		
 		for(final Triangle triangle : triangles) {
 			final Point3F a = triangle.a.position;
@@ -491,7 +491,7 @@ public final class Triangle extends Shape {
 		
 		final Point2F textureCoordinates = new Point2F(u, v);
 		
-		final Point3F surfaceIntersectionPoint = origin.pointAt(direction, t);
+		final Point3F surfaceIntersectionPoint = origin.add(direction, t);
 		
 		final Vector3F surfaceNormal = Vector3F.normalNormalized(normalA, normalB, normalC, barycentricU, barycentricV, barycentricW);
 		
@@ -655,7 +655,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateX(final float x) {
-			return new Vertex(this.textureCoordinates, this.position.translateX(x), this.normal);
+			return new Vertex(this.textureCoordinates, new Point3F(this.position.x + x, this.position.y, this.position.z), this.normal);
 		}
 		
 		/**
@@ -667,7 +667,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateY(final float y) {
-			return new Vertex(this.textureCoordinates, this.position.translateY(y), this.normal);
+			return new Vertex(this.textureCoordinates, new Point3F(this.position.x, this.position.y + y, this.position.z), this.normal);
 		}
 		
 		/**
@@ -679,7 +679,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateZ(final float z) {
-			return new Vertex(this.textureCoordinates, this.position.translateZ(z), this.normal);
+			return new Vertex(this.textureCoordinates, new Point3F(this.position.x, this.position.y, this.position.z + z), this.normal);
 		}
 	}
 }

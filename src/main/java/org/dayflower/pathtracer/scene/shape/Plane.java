@@ -18,18 +18,18 @@
  */
 package org.dayflower.pathtracer.scene.shape;
 
-import static org.dayflower.pathtracer.math.MathF.abs;
+import static org.macroing.math4j.MathF.abs;
 
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Ray3F;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.ShapeIntersection;
+import org.macroing.math4j.OrthoNormalBasis33F;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Ray3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A {@link Shape} implementation that implements a plane.
@@ -245,7 +245,7 @@ public final class Plane extends Shape {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private ShapeIntersection doCreateShapeIntersection(final Ray3F ray, final float t) {
-		final Point3F surfaceIntersectionPoint = ray.origin.pointAt(ray.direction, t);
+		final Point3F surfaceIntersectionPoint = ray.origin.add(ray.direction, t);
 		
 		final float x = abs(this.surfaceNormal.x);
 		final float y = abs(this.surfaceNormal.y);

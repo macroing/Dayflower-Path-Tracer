@@ -18,16 +18,16 @@
  */
 package org.dayflower.pathtracer.scene.texture;
 
-import static org.dayflower.pathtracer.math.MathF.cos;
-import static org.dayflower.pathtracer.math.MathF.modulo;
-import static org.dayflower.pathtracer.math.MathF.sin;
-import static org.dayflower.pathtracer.math.MathF.toRadians;
+import static org.macroing.math4j.MathF.cos;
+import static org.macroing.math4j.MathF.fractionalPart;
+import static org.macroing.math4j.MathF.sin;
+import static org.macroing.math4j.MathF.toRadians;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
+import org.macroing.image4j.Color;
 
 /**
  * A {@code CheckerboardTexture} is a {@link Texture} implementation that models a texture with a checkerboard pattern.
@@ -221,8 +221,8 @@ public final class CheckerboardTexture implements Texture {
 		final float cosAngle = cos(getRadians());
 		final float sinAngle = sin(getRadians());
 		
-		final float textureU = modulo((u * cosAngle - v * sinAngle) * scaleU);
-		final float textureV = modulo((v * cosAngle + u * sinAngle) * scaleV);
+		final float textureU = fractionalPart((u * cosAngle - v * sinAngle) * scaleU);
+		final float textureV = fractionalPart((v * cosAngle + u * sinAngle) * scaleV);
 		
 		final boolean isDarkU = textureU > 0.5F;
 		final boolean isDarkV = textureV > 0.5F;
@@ -305,7 +305,10 @@ public final class CheckerboardTexture implements Texture {
 	 */
 	@Override
 	public boolean isEmissive() {
-		return !this.color0.isBlack() || !this.color1.isBlack();
+		final boolean isColor0Black = this.color0.r <= 0.0F && this.color0.g <= 0.0F && this.color0.b <= 0.0F;
+		final boolean isColor1Black = this.color1.r <= 0.0F && this.color1.g <= 0.0F && this.color1.b <= 0.0F;
+		
+		return !isColor0Black || !isColor1Black;
 	}
 	
 	/**
@@ -354,8 +357,8 @@ public final class CheckerboardTexture implements Texture {
 		return new float[] {
 			getType(),
 			getSize(),
-			getColor0().multiply(255.0F).toRGB(),
-			getColor1().multiply(255.0F).toRGB(),
+			getColor0().pack(),
+			getColor1().pack(),
 			cos(getRadians()),
 			sin(getRadians()),
 			getScaleU(),

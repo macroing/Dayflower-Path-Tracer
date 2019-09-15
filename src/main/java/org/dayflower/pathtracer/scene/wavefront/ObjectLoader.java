@@ -31,10 +31,6 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.material.LambertianMaterial;
@@ -42,6 +38,10 @@ import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
 import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
+import org.macroing.image4j.Color;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * This {@code ObjectLoader} class is used for loading Wavefront Object (.obj) models into {@link Primitive} instances.

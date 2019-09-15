@@ -18,9 +18,9 @@
  */
 package org.dayflower.pathtracer.scene.bvh;
 
-import static org.dayflower.pathtracer.math.MathF.abs;
-import static org.dayflower.pathtracer.math.MathF.max;
-import static org.dayflower.pathtracer.math.MathF.min;
+import static org.macroing.math4j.MathF.abs;
+import static org.macroing.math4j.MathF.max;
+import static org.macroing.math4j.MathF.min;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.Point3F;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.util.Strings;
+import org.macroing.math4j.Point3F;
 
 /**
  * A {@code BoundingVolumeHierarchy} is an implementation of an acceleration structure called a Bounding Volume Hierarchy (BVH).
@@ -132,8 +132,8 @@ public final class BoundingVolumeHierarchy {
 			final
 			LeafNode leafNode = new LeafNode(0);
 			leafNode.addTriangle(triangle);
-			leafNode.setMaximum(Point3F.maximumX(p0, p1, p2), Point3F.maximumY(p0, p1, p2), Point3F.maximumZ(p0, p1, p2));
-			leafNode.setMinimum(Point3F.minimumX(p0, p1, p2), Point3F.minimumY(p0, p1, p2), Point3F.minimumZ(p0, p1, p2));
+			leafNode.setMaximum(max(p0.x, p1.x, p2.x), max(p0.y, p1.y, p2.y), max(p0.z, p1.z, p2.z));
+			leafNode.setMinimum(min(p0.x, p1.x, p2.x), min(p0.y, p1.y, p2.y), min(p0.z, p1.z, p2.z));
 			
 			leafNodes.add(leafNode);
 			

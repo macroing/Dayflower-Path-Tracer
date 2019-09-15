@@ -1,3 +1,14 @@
+2019-09-15  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		A dependency to the library Math4J has been added.
+	* ADD:		A dependency to the library Image4J has been added.
+	* ADD:		Explicit sun lighting has been added. It can be toggled in the GUI.
+	* REMOVE:	The class Image in the package org.dayflower.pathtracer.util has been removed. It has been replaced by Image4J.
+	* REMOVE:	All classes and interfaces in the package org.dayflower.pathtracer.color have been removed. They have been replaced by Image4J.
+	* REMOVE:	All classes and interfaces in the package org.dayflower.pathtracer.color.colorspace have been removed. They have been replaced by Image4J.
+	* REMOVE:	All classes and interfaces in the package org.dayflower.pathtracer.color.spectralcurve have been removed. They have been replaced by Image4J.
+	* REMOVE:	All classes and interfaces in the package org.dayflower.pathtracer.math have been removed. They have been replaced by Math4J.
+
 2019-08-25  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* ADD:		A new UVTexture class has been added.

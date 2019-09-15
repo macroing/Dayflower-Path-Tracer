@@ -20,9 +20,9 @@ package org.dayflower.pathtracer.scene.texture;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
+import org.macroing.image4j.Color;
 
 /**
  * A {@code BlendTexture} is a {@link Texture} implementation that blends two other {@code Texture}s together.

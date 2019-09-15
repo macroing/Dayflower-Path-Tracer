@@ -20,13 +20,13 @@ package org.dayflower.pathtracer.kernel;
 
 import java.util.Optional;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.math.Ray3F;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Texture;
 import org.dayflower.pathtracer.scene.loader.SceneLoader;
+import org.macroing.image4j.Color;
+import org.macroing.math4j.Ray3F;
 
 /**
  * A {@code CPURendererKernel} is an extension of the {@code AbstractRendererKernel} class that performs 3D-rendering on the CPU.
@@ -126,10 +126,18 @@ public final class CPURendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
-	 * Toggles the sun and sky.
+	 * Toggles the sky.
 	 */
 	@Override
-	public void toggleSunAndSky() {
+	public void toggleSky() {
+//		TODO: Implement!
+	}
+	
+	/**
+	 * Toggles the sun.
+	 */
+	@Override
+	public void toggleSun() {
 //		TODO: Implement!
 	}
 	

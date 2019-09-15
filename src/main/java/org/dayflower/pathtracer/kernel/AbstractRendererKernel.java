@@ -680,9 +680,14 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 	}
 	
 	/**
-	 * Toggles the sun and sky.
+	 * Toggles the sky.
 	 */
-	public abstract void toggleSunAndSky();
+	public abstract void toggleSky();
+	
+	/**
+	 * Toggles the sun.
+	 */
+	public abstract void toggleSun();
 	
 	/**
 	 * Updates all necessary variables in this {@code AbstractRendererKernel} instance.

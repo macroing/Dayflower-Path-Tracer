@@ -18,22 +18,23 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import static org.dayflower.pathtracer.math.MathF.PI;
-import static org.dayflower.pathtracer.math.MathF.acos;
-import static org.dayflower.pathtracer.math.MathF.max;
-import static org.dayflower.pathtracer.math.MathF.saturate;
-import static org.dayflower.pathtracer.math.MathF.sin;
+import static org.macroing.math4j.MathF.PI;
+import static org.macroing.math4j.MathF.acos;
+import static org.macroing.math4j.MathF.max;
+import static org.macroing.math4j.MathF.saturate;
+import static org.macroing.math4j.MathF.sin;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.color.SpectralCurve;
-import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
-import org.dayflower.pathtracer.color.spectralcurve.ChromaticSpectralCurve;
-import org.dayflower.pathtracer.color.spectralcurve.ConstantSpectralCurve;
-import org.dayflower.pathtracer.color.spectralcurve.IrregularSpectralCurve;
-import org.dayflower.pathtracer.color.spectralcurve.RegularSpectralCurve;
-import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Vector3F;
+import org.macroing.image4j.Color;
+import org.macroing.image4j.RGBColorSpace;
+import org.macroing.image4j.XYZColor;
+import org.macroing.image4j.spectralcurve.SpectralCurve;
+import org.macroing.image4j.spectralcurve.ChromaticSpectralCurve;
+import org.macroing.image4j.spectralcurve.ConstantSpectralCurve;
+import org.macroing.image4j.spectralcurve.IrregularSpectralCurve;
+import org.macroing.image4j.spectralcurve.RegularSpectralCurve;
+import org.macroing.math4j.OrthoNormalBasis33F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * This {@code Sky} class implements the Perez Sun and Sky Model.
@@ -295,12 +296,12 @@ public final class Sky {
 		this.sunDirectionWorld = sunDirectionWorld.normalize();
 		this.turbidity = turbidity;
 		this.sunDirection = this.sunDirectionWorld.transformReverse(this.orthoNormalBasis).normalize();
-		this.sunOrigin = new Point3F().pointAt(this.sunDirectionWorld, 10000.0F);
+		this.sunOrigin = new Point3F().add(this.sunDirectionWorld, 10000.0F);
 		this.theta = acos(saturate(this.sunDirection.z, -1.0F, 1.0F));
 		
 		if(this.sunDirection.z > 0.0F) {
 			this.radiance = doCalculateAttenuatedSunlight(this.theta, turbidity);
-			this.sunColor = RGBColorSpace.SRGB.convertXYZToRGB(this.radiance.toXYZ().multiply(1.0e-4F)).constrain();
+			this.sunColor = RGBColorSpace.SRGB.convertXYZToRGB(this.radiance.toXYZ().multiply(1.0e-4F)).minTo0();
 		} else {
 			this.radiance = new ConstantSpectralCurve(0.0F);
 			this.sunColor = Color.BLACK;
@@ -423,13 +424,13 @@ public final class Sky {
 		final double x = doCalculatePerezFunction(this.perezX, theta, gamma, this.zenithX);
 		final double y = doCalculatePerezFunction(this.perezY, theta, gamma, this.zenithY);
 		
-		final Color color = ChromaticSpectralCurve.getXYZ((float)(x), (float)(y));
+		final XYZColor color = ChromaticSpectralCurve.getXYZ((float)(x), (float)(y));
 		
-		final float x0 = (float)(color.r * relativeLuminance / color.g);
+		final float x0 = (float)(color.x * relativeLuminance / color.y);
 		final float y0 = (float)(relativeLuminance);
-		final float z0 = (float)(color.b * relativeLuminance / color.g);
+		final float z0 = (float)(color.z * relativeLuminance / color.y);
 		
-		return RGBColorSpace.SRGB.convertXYZToRGB(new Color(x0, y0, z0));
+		return RGBColorSpace.SRGB.convertXYZToRGB(new XYZColor(x0, y0, z0));
 	}
 	
 	private double doCalculatePerezFunction(final double[] lam, final double theta, final double gamma, final double lvz) {

@@ -20,10 +20,10 @@ package org.dayflower.pathtracer.scene;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Vector3F;
+import org.macroing.math4j.OrthoNormalBasis33F;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A {@code ShapeIntersection} contains the properties of an intersected {@link Shape}.

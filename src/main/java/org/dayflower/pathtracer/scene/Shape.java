@@ -21,7 +21,7 @@ package org.dayflower.pathtracer.scene;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.Ray3F;
+import org.macroing.math4j.Ray3F;
 
 /**
  * A {@code Shape} is a model of a shape.

@@ -20,9 +20,9 @@ package org.dayflower.pathtracer.scene.texture;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
+import org.macroing.image4j.Color;
 
 /**
  * A {@code ConstantTexture} is a {@link Texture} implementation that models a texture with a constant color.
@@ -138,7 +138,7 @@ public final class ConstantTexture implements Texture {
 	 */
 	@Override
 	public boolean isEmissive() {
-		return !this.color.isBlack();
+		return !(this.color.r <= 0.0F && this.color.g <= 0.0F && this.color.b <= 0.0F);
 	}
 	
 	/**
@@ -151,7 +151,7 @@ public final class ConstantTexture implements Texture {
 		return new float[] {
 			getType(),
 			getSize(),
-			getColor().multiply(255.0F).toRGB()
+			getColor().pack()
 		};
 	}
 	

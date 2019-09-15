@@ -18,29 +18,29 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import static org.dayflower.pathtracer.math.MathF.PI_DIVIDED_BY_180;
-import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO;
-import static org.dayflower.pathtracer.math.MathF.atan;
-import static org.dayflower.pathtracer.math.MathF.cos;
-import static org.dayflower.pathtracer.math.MathF.max;
-import static org.dayflower.pathtracer.math.MathF.min;
-import static org.dayflower.pathtracer.math.MathF.nextFloat;
-import static org.dayflower.pathtracer.math.MathF.sin;
-import static org.dayflower.pathtracer.math.MathF.sqrt;
-import static org.dayflower.pathtracer.math.MathF.tan;
-import static org.dayflower.pathtracer.math.MathF.toDegrees;
-import static org.dayflower.pathtracer.math.MathF.toRadians;
+import static org.macroing.math4j.MathF.PI_DIVIDED_BY_180;
+import static org.macroing.math4j.MathF.PI_MULTIPLIED_BY_TWO;
+import static org.macroing.math4j.MathF.atan;
+import static org.macroing.math4j.MathF.cos;
+import static org.macroing.math4j.MathF.max;
+import static org.macroing.math4j.MathF.min;
+import static org.macroing.math4j.MathF.random;
+import static org.macroing.math4j.MathF.sin;
+import static org.macroing.math4j.MathF.sqrt;
+import static org.macroing.math4j.MathF.tan;
+import static org.macroing.math4j.MathF.toDegrees;
+import static org.macroing.math4j.MathF.toRadians;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.AngleF;
-import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Ray3F;
-import org.dayflower.pathtracer.math.Vector3F;
+import org.macroing.math4j.AngleF;
+import org.macroing.math4j.OrthoNormalBasis33F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Ray3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A {@code Camera} represents a camera in the scene from which to render an image.
@@ -340,8 +340,8 @@ public final class Camera {
 		Point3F aperturePoint = eye;
 		
 		if(apertureRadius > 0.00001F) {
-			final float random1 = nextFloat();
-			final float random2 = nextFloat();
+			final float random1 = random();
+			final float random2 = random();
 			
 			final float angle = PI_MULTIPLIED_BY_TWO * random1;
 			

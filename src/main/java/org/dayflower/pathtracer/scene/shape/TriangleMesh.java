@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.Ray3F;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.ShapeIntersection;
+import org.macroing.math4j.Ray3F;
 
 /**
  * A {@code TriangleMesh} represents a triangle mesh.

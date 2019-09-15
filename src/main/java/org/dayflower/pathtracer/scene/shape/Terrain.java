@@ -18,18 +18,18 @@
  */
 package org.dayflower.pathtracer.scene.shape;
 
-import static org.dayflower.pathtracer.math.MathF.sin;
+import static org.macroing.math4j.MathF.sin;
 
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.OrthoNormalBasis33F;
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Ray3F;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Shape;
 import org.dayflower.pathtracer.scene.ShapeIntersection;
+import org.macroing.math4j.OrthoNormalBasis33F;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Ray3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A {@link Shape} implementation that implements a noise-based terrain.

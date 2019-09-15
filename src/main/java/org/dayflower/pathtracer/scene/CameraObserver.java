@@ -18,7 +18,7 @@
  */
 package org.dayflower.pathtracer.scene;
 
-import org.dayflower.pathtracer.math.AngleF;
+import org.macroing.math4j.AngleF;
 
 /**
  * A {@code CameraObserver} can be used to observe changes to a {@link Camera} instance.

@@ -18,11 +18,11 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import static org.dayflower.pathtracer.math.MathF.PI;
-import static org.dayflower.pathtracer.math.MathF.PI_DIVIDED_BY_180;
-import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO;
-import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO_RECIPROCAL;
-import static org.dayflower.pathtracer.math.MathF.PI_RECIPROCAL;
+import static org.macroing.math4j.MathF.PI;
+import static org.macroing.math4j.MathF.PI_DIVIDED_BY_180;
+import static org.macroing.math4j.MathF.PI_MULTIPLIED_BY_TWO;
+import static org.macroing.math4j.MathF.PI_MULTIPLIED_BY_TWO_RECIPROCAL;
+import static org.macroing.math4j.MathF.PI_RECIPROCAL;
 
 import java.util.Arrays;
 
@@ -107,6 +107,12 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private float sunAndSkyOrthoNormalBasisWX;
 	private float sunAndSkyOrthoNormalBasisWY;
 	private float sunAndSkyOrthoNormalBasisWZ;
+	private float sunAndSkySunColorB;
+	private float sunAndSkySunColorG;
+	private float sunAndSkySunColorR;
+	private float sunAndSkySunDirectionWorldX;
+	private float sunAndSkySunDirectionWorldY;
+	private float sunAndSkySunDirectionWorldZ;
 	private float sunAndSkySunDirectionX;
 	private float sunAndSkySunDirectionY;
 	private float sunAndSkySunDirectionZ;
@@ -130,7 +136,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private int scenePrimitivesCount;
 //	private int scenePrimitivesEmittingLightCount;
 	private int selectedPrimitiveOffset = -1;
-	private int sunAndSkyIsActive;
+	private int sunAndSkyIsSkyActive;
+	private int sunAndSkyIsSunActive;
 	private int[] primitiveOffsets;
 	private int[] sceneBoundingVolumeHierarchies_$constant$;
 	private int[] scenePlanes_$constant$;
@@ -184,7 +191,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //		Initialize the sun and sky variables:
 		this.sunAndSkyColHistogram_$constant$ = sky.getColHistogram();
 		this.sunAndSkyImageHistogram_$constant$ = sky.getImageHistogram();
-		this.sunAndSkyIsActive = BOOLEAN_TRUE;
+		this.sunAndSkyIsSkyActive = BOOLEAN_TRUE;
+		this.sunAndSkyIsSunActive = BOOLEAN_TRUE;
 		this.sunAndSkyOrthoNormalBasisUX = sky.getOrthoNormalBasis().u.x;
 		this.sunAndSkyOrthoNormalBasisUY = sky.getOrthoNormalBasis().u.y;
 		this.sunAndSkyOrthoNormalBasisUZ = sky.getOrthoNormalBasis().u.z;
@@ -197,6 +205,12 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.sunAndSkyPerezRelativeLuminance_$constant$ = sky.getPerezRelativeLuminance();
 		this.sunAndSkyPerezX_$constant$ = sky.getPerezX();
 		this.sunAndSkyPerezY_$constant$ = sky.getPerezY();
+		this.sunAndSkySunColorB = sky.getSunColor().b;
+		this.sunAndSkySunColorG = sky.getSunColor().g;
+		this.sunAndSkySunColorR = sky.getSunColor().r;
+		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
+		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
+		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
 		this.sunAndSkySunDirectionX = sky.getSunDirection().x;
 		this.sunAndSkySunDirectionY = sky.getSunDirection().y;
 		this.sunAndSkySunDirectionZ = sky.getSunDirection().z;
@@ -326,14 +340,28 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	}
 	
 	/**
-	 * Toggles the sun and sky.
+	 * Toggles the sky.
 	 */
 	@Override
-	public void toggleSunAndSky() {
-		if(this.sunAndSkyIsActive == BOOLEAN_FALSE) {
-			this.sunAndSkyIsActive = BOOLEAN_TRUE;
+	public void toggleSky() {
+		if(this.sunAndSkyIsSkyActive == BOOLEAN_FALSE) {
+			this.sunAndSkyIsSkyActive = BOOLEAN_TRUE;
 		} else {
-			this.sunAndSkyIsActive = BOOLEAN_FALSE;
+			this.sunAndSkyIsSkyActive = BOOLEAN_FALSE;
+		}
+		
+		setChanged(true);
+	}
+	
+	/**
+	 * Toggles the sky.
+	 */
+	@Override
+	public void toggleSun() {
+		if(this.sunAndSkyIsSunActive == BOOLEAN_FALSE) {
+			this.sunAndSkyIsSunActive = BOOLEAN_TRUE;
+		} else {
+			this.sunAndSkyIsSunActive = BOOLEAN_FALSE;
 		}
 		
 		setChanged(true);
@@ -417,6 +445,12 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.sunAndSkyOrthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
 		this.sunAndSkyOrthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
 		this.sunAndSkyOrthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
+		this.sunAndSkySunColorB = sky.getSunColor().b;
+		this.sunAndSkySunColorG = sky.getSunColor().g;
+		this.sunAndSkySunColorR = sky.getSunColor().r;
+		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
+		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
+		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
 		this.sunAndSkySunDirectionX = sky.getSunDirection().x;
 		this.sunAndSkySunDirectionY = sky.getSunDirection().y;
 		this.sunAndSkySunDirectionZ = sky.getSunDirection().z;
@@ -1538,7 +1572,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		float direction0Y = directionX * this.sunAndSkyOrthoNormalBasisVX + directionY * this.sunAndSkyOrthoNormalBasisVY + directionZ * this.sunAndSkyOrthoNormalBasisVZ;
 		float direction0Z = directionX * this.sunAndSkyOrthoNormalBasisWX + directionY * this.sunAndSkyOrthoNormalBasisWY + directionZ * this.sunAndSkyOrthoNormalBasisWZ;
 		
-		if(direction0Z < 0.0F || this.sunAndSkyIsActive == BOOLEAN_FALSE) {
+		if(direction0Z < 0.0F || this.sunAndSkyIsSkyActive == BOOLEAN_FALSE) {
 //			Update the colorTemporarySamples_$local$ array with black:
 			this.colorTemporarySamples_$private$3[0] = 0.01F;
 			this.colorTemporarySamples_$private$3[1] = 0.01F;
@@ -1642,6 +1676,62 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		r += w;
 		g += w;
 		b += w;
+		
+		this.colorTemporarySamples_$private$3[0] = r;
+		this.colorTemporarySamples_$private$3[1] = g;
+		this.colorTemporarySamples_$private$3[2] = b;
+	}
+	
+	private void doCalculateColorForSun(final float surfaceIntersectionPointX, final float surfaceIntersectionPointY, final float surfaceIntersectionPointZ, final float surfaceNormalX, final float surfaceNormalY, final float surfaceNormalZ, final float albedoColorR, final float albedoColorG, final float albedoColorB) {
+		if(this.sunAndSkyIsSunActive == BOOLEAN_FALSE) {
+			this.colorTemporarySamples_$private$3[0] = 0.0F;
+			this.colorTemporarySamples_$private$3[1] = 0.0F;
+			this.colorTemporarySamples_$private$3[2] = 0.0F;
+			
+			return;
+		}
+		
+		final float sunDirectionWorldX = this.sunAndSkySunDirectionWorldX;
+		final float sunDirectionWorldY = this.sunAndSkySunDirectionWorldY;
+		final float sunDirectionWorldZ = this.sunAndSkySunDirectionWorldZ;
+		
+		final float dotProduct = sunDirectionWorldX * surfaceNormalX + sunDirectionWorldY * surfaceNormalY + sunDirectionWorldZ * surfaceNormalZ;
+		
+		float r = 0.0F;
+		float g = 0.0F;
+		float b = 0.0F;
+		
+		if(dotProduct > 0.0F) {
+			final float originX = surfaceIntersectionPointX;
+			final float originY = surfaceIntersectionPointY;
+			final float originZ = surfaceIntersectionPointZ;
+			
+			final float directionX = sunDirectionWorldX;
+			final float directionY = sunDirectionWorldY;
+			final float directionZ = sunDirectionWorldZ;
+			
+			final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, true);
+			
+			if(t == INFINITY) {
+				doCalculateColorForSky(directionX, directionY, directionZ);
+				
+				float sunColorR = this.colorTemporarySamples_$private$3[0] + this.sunAndSkySunColorR;
+				float sunColorG = this.colorTemporarySamples_$private$3[1] + this.sunAndSkySunColorG;
+				float sunColorB = this.colorTemporarySamples_$private$3[2] + this.sunAndSkySunColorB;
+				
+				final float sunColorMax = max(sunColorR, sunColorG, sunColorB);
+				
+				if(sunColorMax > 1.0F) {
+					sunColorR = sunColorR / sunColorMax;
+					sunColorG = sunColorG / sunColorMax;
+					sunColorB = sunColorB / sunColorMax;
+				}
+				
+				r = albedoColorR * (sunColorR * dotProduct * 2.0F * PI) * PI_RECIPROCAL;
+				g = albedoColorG * (sunColorG * dotProduct * 2.0F * PI) * PI_RECIPROCAL;
+				b = albedoColorB * (sunColorB * dotProduct * 2.0F * PI) * PI_RECIPROCAL;
+			}
+		}
 		
 		this.colorTemporarySamples_$private$3[0] = r;
 		this.colorTemporarySamples_$private$3[1] = g;
@@ -2445,9 +2535,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				doCalculateColorForSky(directionX, directionY, directionZ);
 				
 //				Add the color for the sky to the current pixel color:
-				pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0];
-				pixelColorG += radianceMultiplierG * this.colorTemporarySamples_$private$3[1];
-				pixelColorB += radianceMultiplierB * this.colorTemporarySamples_$private$3[2];
+				pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0] * PI_RECIPROCAL;
+				pixelColorG += radianceMultiplierG * this.colorTemporarySamples_$private$3[1] * PI_RECIPROCAL;
+				pixelColorB += radianceMultiplierB * this.colorTemporarySamples_$private$3[2] * PI_RECIPROCAL;
 				
 //				Update the current pixel color:
 				filmAddColor(pixelColorR, pixelColorG, pixelColorB);
@@ -2491,10 +2581,25 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			float emissionColorG = ((emissionColorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
 			float emissionColorB = ((emissionColorRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
 			
+//			Retrieve the material type of the intersected shape:
+			final int material = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
+			
+			if(material == LambertianMaterial.TYPE) {
+				doCalculateColorForSun(surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, albedoColorR, albedoColorG, albedoColorB);
+			} else {
+				this.colorTemporarySamples_$private$3[0] = 0.0F;
+				this.colorTemporarySamples_$private$3[1] = 0.0F;
+				this.colorTemporarySamples_$private$3[2] = 0.0F;
+			}
+			
+			final float sunColorR = this.colorTemporarySamples_$private$3[0];
+			final float sunColorG = this.colorTemporarySamples_$private$3[1];
+			final float sunColorB = this.colorTemporarySamples_$private$3[2];
+			
 //			Add the current radiance multiplied by the emission of the intersected primitive to the current pixel color:
-			pixelColorR += radianceMultiplierR * emissionColorR;
-			pixelColorG += radianceMultiplierG * emissionColorG;
-			pixelColorB += radianceMultiplierB * emissionColorB;
+			pixelColorR += radianceMultiplierR * (emissionColorR + sunColorR);
+			pixelColorG += radianceMultiplierG * (emissionColorG + sunColorG);
+			pixelColorB += radianceMultiplierB * (emissionColorB + sunColorB);
 			
 //			Increment the current depth:
 			depthCurrent++;
@@ -2518,9 +2623,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 						doCalculateColorForSky(directionX, directionY, directionZ);
 						
 //						Add the color for the sky to the current pixel color:
-						pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0];
-						pixelColorG += radianceMultiplierG * this.colorTemporarySamples_$private$3[1];
-						pixelColorB += radianceMultiplierB * this.colorTemporarySamples_$private$3[2];
+						pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0] * PI_RECIPROCAL;
+						pixelColorG += radianceMultiplierG * this.colorTemporarySamples_$private$3[1] * PI_RECIPROCAL;
+						pixelColorB += radianceMultiplierB * this.colorTemporarySamples_$private$3[2] * PI_RECIPROCAL;
 					}
 					
 //					Update the current pixel color:
@@ -2537,9 +2642,6 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				albedoColorG *= probabilityDensityFunctionReciprocal;
 				albedoColorB *= probabilityDensityFunctionReciprocal;
 			}
-			
-//			Retrieve the material type of the intersected shape:
-			final int material = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
 //			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
 			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
@@ -2928,9 +3030,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			doCalculateColorForSky(directionX, directionY, directionZ);
 			
 //			Add the color for the sky to the current pixel color:
-			pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0];
-			pixelColorG += radianceMultiplierG * this.colorTemporarySamples_$private$3[1];
-			pixelColorB += radianceMultiplierB * this.colorTemporarySamples_$private$3[2];
+			pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0] * PI_RECIPROCAL;
+			pixelColorG += radianceMultiplierG * this.colorTemporarySamples_$private$3[1] * PI_RECIPROCAL;
+			pixelColorB += radianceMultiplierB * this.colorTemporarySamples_$private$3[2] * PI_RECIPROCAL;
 		}
 		
 //		Update the current pixel color:

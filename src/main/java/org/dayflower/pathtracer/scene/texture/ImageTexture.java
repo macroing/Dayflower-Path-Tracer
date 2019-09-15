@@ -18,11 +18,11 @@
  */
 package org.dayflower.pathtracer.scene.texture;
 
-import static org.dayflower.pathtracer.math.MathF.abs;
-import static org.dayflower.pathtracer.math.MathF.cos;
-import static org.dayflower.pathtracer.math.MathF.remainder;
-import static org.dayflower.pathtracer.math.MathF.sin;
-import static org.dayflower.pathtracer.math.MathF.toRadians;
+import static org.macroing.math4j.MathF.abs;
+import static org.macroing.math4j.MathF.cos;
+import static org.macroing.math4j.MathF.remainder;
+import static org.macroing.math4j.MathF.sin;
+import static org.macroing.math4j.MathF.toRadians;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -41,10 +41,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import javax.imageio.ImageIO;
 
-import org.dayflower.pathtracer.color.Color;
-import org.dayflower.pathtracer.color.colorspace.RGBColorSpace;
 import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
+import org.macroing.image4j.Color;
+import org.macroing.image4j.PackedIntComponentOrder;
+import org.macroing.image4j.RGBColorSpace;
 
 /**
  * An {@code ImageTexture} is a {@link Texture} implementation that models a texture based on an image.
@@ -193,7 +194,7 @@ public final class ImageTexture implements Texture {
 	 */
 	public ImageTexture redoGammaCorrection() {
 		for(int i = 0; i < this.data.length; i++) {
-			this.data[i] = new Color(this.data[i]).redoGammaCorrection(RGBColorSpace.SRGB).multiply(255.0F).toRGB();
+			this.data[i] = new Color(this.data[i]).redoGammaCorrection(RGBColorSpace.SRGB).pack();
 		}
 		
 		return this;
@@ -208,7 +209,7 @@ public final class ImageTexture implements Texture {
 	 */
 	public ImageTexture undoGammaCorrection() {
 		for(int i = 0; i < this.data.length; i++) {
-			this.data[i] = new Color(this.data[i]).undoGammaCorrection(RGBColorSpace.SRGB).multiply(255.0F).toRGB();
+			this.data[i] = new Color(this.data[i]).undoGammaCorrection(RGBColorSpace.SRGB).pack();
 		}
 		
 		return this;
@@ -495,7 +496,7 @@ public final class ImageTexture implements Texture {
 			final int g = ThreadLocalRandom.current().nextInt(0, 256);
 			final int b = ThreadLocalRandom.current().nextInt(0, 256);
 			
-			final int rGB = Color.toRGB(r, g, b);
+			final int rGB = PackedIntComponentOrder.ARGB.pack(r, g, b);
 			
 			data[i] = rGB;
 		}

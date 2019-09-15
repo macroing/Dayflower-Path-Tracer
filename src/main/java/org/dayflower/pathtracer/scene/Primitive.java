@@ -21,8 +21,8 @@ package org.dayflower.pathtracer.scene;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.dayflower.pathtracer.math.Matrix44F;
-import org.dayflower.pathtracer.math.Ray3F;
+import org.macroing.math4j.Matrix44F;
+import org.macroing.math4j.Ray3F;
 
 /**
  * A {@code Primitive} represents a primitive that is associated with a {@link Shape} and a {@link Surface}.

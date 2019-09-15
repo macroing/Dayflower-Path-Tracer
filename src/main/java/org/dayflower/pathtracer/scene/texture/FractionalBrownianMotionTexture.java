@@ -20,9 +20,9 @@ package org.dayflower.pathtracer.scene.texture;
 
 import java.util.Objects;
 
-import org.dayflower.pathtracer.color.Color;
 import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Texture;
+import org.macroing.image4j.Color;
 
 /**
  * A {@code FractionalBrownianMotionTexture} is a {@link Texture} implementation that uses fractional Brownian motion (fBm) to compute its image data.
@@ -178,7 +178,10 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	 */
 	@Override
 	public boolean isEmissive() {
-		return !this.addend.isBlack() || !this.multiplier.isBlack();
+		final boolean isAddendBlack = this.addend.r <= 0.0F && this.addend.g <= 0.0F && this.addend.b <= 0.0F;
+		final boolean isMultiplierBlack = this.multiplier.r <= 0.0F && this.multiplier.g <= 0.0F && this.multiplier.b <= 0.0F;
+		
+		return !isAddendBlack || !isMultiplierBlack;
 	}
 	
 	/**
@@ -209,8 +212,8 @@ public final class FractionalBrownianMotionTexture implements Texture {
 		return new float[] {
 			getType(),
 			getSize(),
-			getAddend().multiply(255.0F).toRGB(),
-			getMultiplier().multiply(255.0F).toRGB(),
+			getAddend().pack(),
+			getMultiplier().pack(),
 			getFrequency(),
 			getGain(),
 			getOctaves()

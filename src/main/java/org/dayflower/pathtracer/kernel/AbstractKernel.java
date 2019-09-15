@@ -18,12 +18,12 @@
  */
 package org.dayflower.pathtracer.kernel;
 
-import static org.dayflower.pathtracer.math.MathF.PI_DIVIDED_BY_180;
-import static org.dayflower.pathtracer.math.MathF.PI_MULTIPLIED_BY_TWO;
+import static org.macroing.math4j.MathF.PI_DIVIDED_BY_180;
+import static org.macroing.math4j.MathF.PI_MULTIPLIED_BY_TWO;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.dayflower.pathtracer.math.MathF;
+import org.macroing.math4j.MathF;
 
 import com.amd.aparapi.Kernel;
 

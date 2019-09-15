@@ -20,12 +20,12 @@ package org.dayflower.pathtracer.scene.compiler;
 
 import java.util.function.Consumer;
 
-import org.dayflower.pathtracer.math.Point2F;
-import org.dayflower.pathtracer.math.Point3F;
-import org.dayflower.pathtracer.math.Vector3F;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
+import org.macroing.math4j.Point2F;
+import org.macroing.math4j.Point3F;
+import org.macroing.math4j.Vector3F;
 
 /**
  * A {@code DynamicCompiledScene} represents a dynamic and compiled version of a {@link Scene} instance.
