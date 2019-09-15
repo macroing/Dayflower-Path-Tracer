@@ -1695,20 +1695,57 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float sunDirectionWorldY = this.sunAndSkySunDirectionWorldY;
 		final float sunDirectionWorldZ = this.sunAndSkySunDirectionWorldZ;
 		
-		final float dotProduct = sunDirectionWorldX * surfaceNormalX + sunDirectionWorldY * surfaceNormalY + sunDirectionWorldZ * surfaceNormalZ;
+		final float exponent = 500.0F;
+		final float u = nextFloat();
+		final float v = nextFloat();
+		final float phi = PI_MULTIPLIED_BY_TWO * u;
+		final float cosTheta = pow(1.0F - v, 1.0F / (exponent + 1.0F));
+		final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
+		final float x = cos(phi) * sinTheta;
+		final float y = sin(phi) * sinTheta;
+		final float z = cosTheta;
+		
+		final float sunDirectionWorldWNormalizedX = sunDirectionWorldX;
+		final float sunDirectionWorldWNormalizedY = sunDirectionWorldY;
+		final float sunDirectionWorldWNormalizedZ = sunDirectionWorldZ;
+		
+		final boolean isY = abs(sunDirectionWorldWNormalizedX) > 0.1F;
+		
+		final float sunDirectionWorldUX = (isY ? 1.0F : 0.0F) * sunDirectionWorldWNormalizedZ;
+		final float sunDirectionWorldUY = -((isY ? 0.0F : 1.0F) * sunDirectionWorldWNormalizedZ);
+		final float sunDirectionWorldUZ = (isY ? 0.0F : 1.0F) * sunDirectionWorldWNormalizedY - (isY ? 1.0F : 0.0F) * sunDirectionWorldWNormalizedX;
+		final float sunDirectionWorldULengthReciprocal = rsqrt(sunDirectionWorldUX * sunDirectionWorldUX + sunDirectionWorldUY * sunDirectionWorldUY + sunDirectionWorldUZ * sunDirectionWorldUZ);
+		final float sunDirectionWorldUNormalizedX = sunDirectionWorldUX * sunDirectionWorldULengthReciprocal;
+		final float sunDirectionWorldUNormalizedY = sunDirectionWorldUY * sunDirectionWorldULengthReciprocal;
+		final float sunDirectionWorldUNormalizedZ = sunDirectionWorldUZ * sunDirectionWorldULengthReciprocal;
+		
+		final float sunDirectionWorldVNormalizedX = sunDirectionWorldWNormalizedY * sunDirectionWorldUNormalizedZ - sunDirectionWorldWNormalizedZ * sunDirectionWorldUNormalizedY;
+		final float sunDirectionWorldVNormalizedY = sunDirectionWorldWNormalizedZ * sunDirectionWorldUNormalizedX - sunDirectionWorldWNormalizedX * sunDirectionWorldUNormalizedZ;
+		final float sunDirectionWorldVNormalizedZ = sunDirectionWorldWNormalizedX * sunDirectionWorldUNormalizedY - sunDirectionWorldWNormalizedY * sunDirectionWorldUNormalizedX;
+		
+		final float phongDirectionX = sunDirectionWorldUNormalizedX * x + sunDirectionWorldVNormalizedX * y + sunDirectionWorldWNormalizedX * z;
+		final float phongDirectionY = sunDirectionWorldUNormalizedY * x + sunDirectionWorldVNormalizedY * y + sunDirectionWorldWNormalizedY * z;
+		final float phongDirectionZ = sunDirectionWorldUNormalizedZ * x + sunDirectionWorldVNormalizedZ * y + sunDirectionWorldWNormalizedZ * z;
+		final float phongDirectionLengthReciprocal = rsqrt(phongDirectionX * phongDirectionX + phongDirectionY * phongDirectionY + phongDirectionZ * phongDirectionZ);
+		final float phongDirectionNormalizedX = phongDirectionX * phongDirectionLengthReciprocal;
+		final float phongDirectionNormalizedY = phongDirectionY * phongDirectionLengthReciprocal;
+		final float phongDirectionNormalizedZ = phongDirectionZ * phongDirectionLengthReciprocal;
+		
+		final float dotProduct0 = phongDirectionNormalizedX * sunDirectionWorldX + phongDirectionNormalizedY * sunDirectionWorldY + phongDirectionNormalizedZ * sunDirectionWorldZ;
+		final float dotProduct1 = phongDirectionNormalizedX * surfaceNormalX + phongDirectionNormalizedY * surfaceNormalY + phongDirectionNormalizedZ * surfaceNormalZ;
 		
 		float r = 0.0F;
 		float g = 0.0F;
 		float b = 0.0F;
 		
-		if(dotProduct > 0.0F) {
+		if(dotProduct0 > 0.0F && dotProduct1 > 0.0F) {
 			final float originX = surfaceIntersectionPointX;
 			final float originY = surfaceIntersectionPointY;
 			final float originZ = surfaceIntersectionPointZ;
 			
-			final float directionX = sunDirectionWorldX;
-			final float directionY = sunDirectionWorldY;
-			final float directionZ = sunDirectionWorldZ;
+			final float directionX = phongDirectionNormalizedX;
+			final float directionY = phongDirectionNormalizedY;
+			final float directionZ = phongDirectionNormalizedZ;
 			
 			final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, true);
 			
@@ -1727,9 +1764,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 					sunColorB = sunColorB / sunColorMax;
 				}
 				
-				r = albedoColorR * (sunColorR * dotProduct * 2.0F * PI) * PI_RECIPROCAL;
-				g = albedoColorG * (sunColorG * dotProduct * 2.0F * PI) * PI_RECIPROCAL;
-				b = albedoColorB * (sunColorB * dotProduct * 2.0F * PI) * PI_RECIPROCAL;
+				r = albedoColorR * (sunColorR * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
+				g = albedoColorG * (sunColorG * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
+				b = albedoColorB * (sunColorB * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
 			}
 		}
 		
@@ -2584,7 +2621,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //			Retrieve the material type of the intersected shape:
 			final int material = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
-			if(material == LambertianMaterial.TYPE) {
+			if(material == ClearCoatMaterial.TYPE || material == LambertianMaterial.TYPE || material == PhongMaterial.TYPE) {
 				doCalculateColorForSun(surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, albedoColorR, albedoColorG, albedoColorB);
 			} else {
 				this.colorTemporarySamples_$private$3[0] = 0.0F;
