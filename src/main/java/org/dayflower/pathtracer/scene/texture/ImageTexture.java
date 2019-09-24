@@ -90,9 +90,9 @@ public final class ImageTexture implements Texture {
 	public static final int RELATIVE_OFFSET_WIDTH = 4;
 	
 	/**
-	 * The type number associated with a {@code ImageTexture}. The number is {@code 5}.
+	 * The type number associated with a {@code ImageTexture}. The number is {@code 6}.
 	 */
-	public static final int TYPE = 5;
+	public static final int TYPE = 6;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

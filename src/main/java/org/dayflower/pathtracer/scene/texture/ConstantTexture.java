@@ -42,9 +42,9 @@ public final class ConstantTexture implements Texture {
 	public static final int SIZE = 3;
 	
 	/**
-	 * The type number associated with a {@code ConstantTexture}. The number is {@code 3}.
+	 * The type number associated with a {@code ConstantTexture}. The number is {@code 4}.
 	 */
-	public static final int TYPE = 3;
+	public static final int TYPE = 4;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -138,7 +138,7 @@ public final class ConstantTexture implements Texture {
 	 */
 	@Override
 	public boolean isEmissive() {
-		return !(this.color.r <= 0.0F && this.color.g <= 0.0F && this.color.b <= 0.0F);
+		return !this.color.isBlack();
 	}
 	
 	/**

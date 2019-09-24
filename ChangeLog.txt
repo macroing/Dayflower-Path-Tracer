@@ -1,3 +1,9 @@
+2019-09-25  Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		A new BullseyeTexture has been added. Because the numbers associated with all Texture implementations are based on their names in alphabetic order, most Texture implementations will be associated with a new number.
+	* CHANGE:	Update version to 0.1.6.
+	* CHANGE:	Update to the latest version of Image4J and Math4J.
+
 2019-09-15  Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* ADD:		A dependency to the library Math4J has been added.

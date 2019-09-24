@@ -62,9 +62,9 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	public static final int SIZE = 7;
 	
 	/**
-	 * The type number associated with a {@code FractionalBrownianMotionTexture}. The number is {@code 4}.
+	 * The type number associated with a {@code FractionalBrownianMotionTexture}. The number is {@code 5}.
 	 */
-	public static final int TYPE = 4;
+	public static final int TYPE = 5;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -178,10 +178,7 @@ public final class FractionalBrownianMotionTexture implements Texture {
 	 */
 	@Override
 	public boolean isEmissive() {
-		final boolean isAddendBlack = this.addend.r <= 0.0F && this.addend.g <= 0.0F && this.addend.b <= 0.0F;
-		final boolean isMultiplierBlack = this.multiplier.r <= 0.0F && this.multiplier.g <= 0.0F && this.multiplier.b <= 0.0F;
-		
-		return !isAddendBlack || !isMultiplierBlack;
+		return !this.addend.isBlack() || !this.multiplier.isBlack();
 	}
 	
 	/**

@@ -72,9 +72,9 @@ public final class CheckerboardTexture implements Texture {
 	public static final int SIZE = 8;
 	
 	/**
-	 * The type number associated with a {@code CheckerboardTexture}. The number is {@code 2}.
+	 * The type number associated with a {@code CheckerboardTexture}. The number is {@code 3}.
 	 */
-	public static final int TYPE = 2;
+	public static final int TYPE = 3;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -305,10 +305,7 @@ public final class CheckerboardTexture implements Texture {
 	 */
 	@Override
 	public boolean isEmissive() {
-		final boolean isColor0Black = this.color0.r <= 0.0F && this.color0.g <= 0.0F && this.color0.b <= 0.0F;
-		final boolean isColor1Black = this.color1.r <= 0.0F && this.color1.g <= 0.0F && this.color1.b <= 0.0F;
-		
-		return !isColor0Black || !isColor1Black;
+		return !this.color0.isBlack() || !this.color1.isBlack();
 	}
 	
 	/**

@@ -46,6 +46,7 @@ import org.dayflower.pathtracer.scene.shape.Terrain;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 import org.dayflower.pathtracer.scene.texture.BlendTexture;
+import org.dayflower.pathtracer.scene.texture.BullseyeTexture;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.dayflower.pathtracer.scene.texture.FractionalBrownianMotionTexture;
@@ -1127,6 +1128,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		
 		if(textureType == BlendTexture.TYPE) {
 			return doGetTextureColorFromBlendTexture(texturesOffset);
+		} else if(textureType == BullseyeTexture.TYPE) {
+			return doGetTextureColorFromBullseyeTexture(texturesOffset);
 		} else if(textureType == CheckerboardTexture.TYPE) {
 			return doGetTextureColorFromCheckerboardTexture(texturesOffset);
 		} else if(textureType == ConstantTexture.TYPE) {
@@ -1147,7 +1150,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private int doGetTextureColor2(final int texturesOffset) {
 		final int textureType = (int)(this.sceneTextures_$constant$[texturesOffset + Texture.RELATIVE_OFFSET_TYPE]);
 		
-		if(textureType == CheckerboardTexture.TYPE) {
+		if(textureType == BullseyeTexture.TYPE) {
+			return doGetTextureColorFromBullseyeTexture(texturesOffset);
+		} else if(textureType == CheckerboardTexture.TYPE) {
 			return doGetTextureColorFromCheckerboardTexture(texturesOffset);
 		} else if(textureType == ConstantTexture.TYPE) {
 			return doGetTextureColorFromConstantTexture(texturesOffset);
@@ -1188,6 +1193,52 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final int colorRGB = ((colorR & 0xFF) << 16) | ((colorG & 0xFF) << 8) | (colorB & 0xFF);
 		
 		return colorRGB;
+	}
+	
+	private int doGetTextureColorFromBullseyeTexture(final int texturesOffset) {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+		final int offsetSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+		final int offsetColorA = texturesOffset + BullseyeTexture.RELATIVE_OFFSET_COLOR_A;
+		final int offsetColorB = texturesOffset + BullseyeTexture.RELATIVE_OFFSET_COLOR_B;
+		
+		final float x = this.intersections_$local$[offsetSurfaceIntersectionPoint + 0];
+		final float y = this.intersections_$local$[offsetSurfaceIntersectionPoint + 1];
+		final float z = this.intersections_$local$[offsetSurfaceIntersectionPoint + 2];
+		
+		final int colorARGB = (int)(this.sceneTextures_$constant$[offsetColorA]);
+		final int colorBRGB = (int)(this.sceneTextures_$constant$[offsetColorB]);
+		
+		final float colorAR = ((colorARGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorAG = ((colorARGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorAB = ((colorARGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float colorBR = ((colorBRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorBG = ((colorBRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
+		final float colorBB = ((colorBRGB >>  0) & 0xFF) * COLOR_RECIPROCAL;
+		
+		final float length = sqrt(x * x + y * y + z * z);
+		final float value = remainder(length * 0.25F, 1.0F);
+		
+		float colorR = value > 0.5F ? colorAR : colorBR;
+		float colorG = value > 0.5F ? colorAG : colorBG;
+		float colorB = value > 0.5F ? colorAB : colorBB;
+		
+		final float textureMultiplier = value > 0.5F ? 0.8F : 1.2F;
+		
+		if(colorAR == colorBR && colorAG == colorBG && colorAB == colorBB) {
+			colorR *= textureMultiplier;
+			colorG *= textureMultiplier;
+			colorB *= textureMultiplier;
+		}
+		
+		final int r = (int)(saturate(colorR, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int g = (int)(saturate(colorG, 0.0F, 1.0F) * 255.0F + 0.5F);
+		final int b = (int)(saturate(colorB, 0.0F, 1.0F) * 255.0F + 0.5F);
+		
+		final int rGB = ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
+		
+		return rGB;
 	}
 	
 	private int doGetTextureColorFromCheckerboardTexture(final int texturesOffset) {
@@ -1700,7 +1751,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float v = nextFloat();
 		final float phi = PI_MULTIPLIED_BY_TWO * u;
 		final float cosTheta = pow(1.0F - v, 1.0F / (exponent + 1.0F));
-		final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
+		final float sinTheta = sqrt(max(0.0F, 1.0F - cosTheta * cosTheta));
 		final float x = cos(phi) * sinTheta;
 		final float y = sin(phi) * sinTheta;
 		final float z = cosTheta;
@@ -1709,30 +1760,32 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float sunDirectionWorldWNormalizedY = sunDirectionWorldY;
 		final float sunDirectionWorldWNormalizedZ = sunDirectionWorldZ;
 		
-		final boolean isY = abs(sunDirectionWorldWNormalizedX) > 0.1F;
+		final float absSunDirectionWorldWNormalizedX = abs(sunDirectionWorldWNormalizedX);
+		final float absSunDirectionWorldWNormalizedY = abs(sunDirectionWorldWNormalizedY);
+		final float absSunDirectionWorldWNormalizedZ = abs(sunDirectionWorldWNormalizedZ);
 		
-		final float sunDirectionWorldUX = (isY ? 1.0F : 0.0F) * sunDirectionWorldWNormalizedZ;
-		final float sunDirectionWorldUY = -((isY ? 0.0F : 1.0F) * sunDirectionWorldWNormalizedZ);
-		final float sunDirectionWorldUZ = (isY ? 0.0F : 1.0F) * sunDirectionWorldWNormalizedY - (isY ? 1.0F : 0.0F) * sunDirectionWorldWNormalizedX;
-		final float sunDirectionWorldULengthReciprocal = rsqrt(sunDirectionWorldUX * sunDirectionWorldUX + sunDirectionWorldUY * sunDirectionWorldUY + sunDirectionWorldUZ * sunDirectionWorldUZ);
-		final float sunDirectionWorldUNormalizedX = sunDirectionWorldUX * sunDirectionWorldULengthReciprocal;
-		final float sunDirectionWorldUNormalizedY = sunDirectionWorldUY * sunDirectionWorldULengthReciprocal;
-		final float sunDirectionWorldUNormalizedZ = sunDirectionWorldUZ * sunDirectionWorldULengthReciprocal;
+		final float sunDirectionWorldVX = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? 0.0F : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? sunDirectionWorldWNormalizedZ : sunDirectionWorldWNormalizedY;
+		final float sunDirectionWorldVY = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? sunDirectionWorldWNormalizedZ : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? 0.0F : -sunDirectionWorldWNormalizedX;
+		final float sunDirectionWorldVZ = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? -sunDirectionWorldWNormalizedY : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? -sunDirectionWorldWNormalizedX : 0.0F;
+		final float sunDirectionWorldVLengthReciprocal = rsqrt(sunDirectionWorldVX * sunDirectionWorldVX + sunDirectionWorldVY * sunDirectionWorldVY + sunDirectionWorldVZ * sunDirectionWorldVZ);
+		final float sunDirectionWorldVNormalizedX = sunDirectionWorldVX * sunDirectionWorldVLengthReciprocal;
+		final float sunDirectionWorldVNormalizedY = sunDirectionWorldVY * sunDirectionWorldVLengthReciprocal;
+		final float sunDirectionWorldVNormalizedZ = sunDirectionWorldVZ * sunDirectionWorldVLengthReciprocal;
 		
-		final float sunDirectionWorldVNormalizedX = sunDirectionWorldWNormalizedY * sunDirectionWorldUNormalizedZ - sunDirectionWorldWNormalizedZ * sunDirectionWorldUNormalizedY;
-		final float sunDirectionWorldVNormalizedY = sunDirectionWorldWNormalizedZ * sunDirectionWorldUNormalizedX - sunDirectionWorldWNormalizedX * sunDirectionWorldUNormalizedZ;
-		final float sunDirectionWorldVNormalizedZ = sunDirectionWorldWNormalizedX * sunDirectionWorldUNormalizedY - sunDirectionWorldWNormalizedY * sunDirectionWorldUNormalizedX;
+		final float sunDirectionWorldUNormalizedX = sunDirectionWorldVNormalizedY * sunDirectionWorldWNormalizedZ - sunDirectionWorldVNormalizedZ * sunDirectionWorldWNormalizedY;
+		final float sunDirectionWorldUNormalizedY = sunDirectionWorldVNormalizedZ * sunDirectionWorldWNormalizedX - sunDirectionWorldVNormalizedX * sunDirectionWorldWNormalizedZ;
+		final float sunDirectionWorldUNormalizedZ = sunDirectionWorldVNormalizedX * sunDirectionWorldWNormalizedY - sunDirectionWorldVNormalizedY * sunDirectionWorldWNormalizedX;
 		
-		final float phongDirectionX = sunDirectionWorldUNormalizedX * x + sunDirectionWorldVNormalizedX * y + sunDirectionWorldWNormalizedX * z;
-		final float phongDirectionY = sunDirectionWorldUNormalizedY * x + sunDirectionWorldVNormalizedY * y + sunDirectionWorldWNormalizedY * z;
-		final float phongDirectionZ = sunDirectionWorldUNormalizedZ * x + sunDirectionWorldVNormalizedZ * y + sunDirectionWorldWNormalizedZ * z;
-		final float phongDirectionLengthReciprocal = rsqrt(phongDirectionX * phongDirectionX + phongDirectionY * phongDirectionY + phongDirectionZ * phongDirectionZ);
-		final float phongDirectionNormalizedX = phongDirectionX * phongDirectionLengthReciprocal;
-		final float phongDirectionNormalizedY = phongDirectionY * phongDirectionLengthReciprocal;
-		final float phongDirectionNormalizedZ = phongDirectionZ * phongDirectionLengthReciprocal;
+		final float randomSunDirectionWorldX = sunDirectionWorldUNormalizedX * x + sunDirectionWorldVNormalizedX * y + sunDirectionWorldWNormalizedX * z;
+		final float randomSunDirectionWorldY = sunDirectionWorldUNormalizedY * x + sunDirectionWorldVNormalizedY * y + sunDirectionWorldWNormalizedY * z;
+		final float randomSunDirectionWorldZ = sunDirectionWorldUNormalizedZ * x + sunDirectionWorldVNormalizedZ * y + sunDirectionWorldWNormalizedZ * z;
+		final float randomSunDirectionWorldLengthReciprocal = rsqrt(randomSunDirectionWorldX * randomSunDirectionWorldX + randomSunDirectionWorldY * randomSunDirectionWorldY + randomSunDirectionWorldZ * randomSunDirectionWorldZ);
+		final float randomSunDirectionWorldNormalizedX = randomSunDirectionWorldX * randomSunDirectionWorldLengthReciprocal;
+		final float randomSunDirectionWorldNormalizedY = randomSunDirectionWorldY * randomSunDirectionWorldLengthReciprocal;
+		final float randomSunDirectionWorldNormalizedZ = randomSunDirectionWorldZ * randomSunDirectionWorldLengthReciprocal;
 		
-		final float dotProduct0 = phongDirectionNormalizedX * sunDirectionWorldX + phongDirectionNormalizedY * sunDirectionWorldY + phongDirectionNormalizedZ * sunDirectionWorldZ;
-		final float dotProduct1 = phongDirectionNormalizedX * surfaceNormalX + phongDirectionNormalizedY * surfaceNormalY + phongDirectionNormalizedZ * surfaceNormalZ;
+		final float dotProduct0 = randomSunDirectionWorldNormalizedX * sunDirectionWorldX + randomSunDirectionWorldNormalizedY * sunDirectionWorldY + randomSunDirectionWorldNormalizedZ * sunDirectionWorldZ;
+		final float dotProduct1 = randomSunDirectionWorldNormalizedX * surfaceNormalX + randomSunDirectionWorldNormalizedY * surfaceNormalY + randomSunDirectionWorldNormalizedZ * surfaceNormalZ;
 		
 		float r = 0.0F;
 		float g = 0.0F;
@@ -1743,26 +1796,26 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final float originY = surfaceIntersectionPointY;
 			final float originZ = surfaceIntersectionPointZ;
 			
-			final float directionX = phongDirectionNormalizedX;
-			final float directionY = phongDirectionNormalizedY;
-			final float directionZ = phongDirectionNormalizedZ;
+			final float directionX = randomSunDirectionWorldNormalizedX;
+			final float directionY = randomSunDirectionWorldNormalizedY;
+			final float directionZ = randomSunDirectionWorldNormalizedZ;
 			
 			final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, true);
 			
 			if(t == INFINITY) {
-				doCalculateColorForSky(directionX, directionY, directionZ);
+//				doCalculateColorForSky(directionX, directionY, directionZ);
 				
-				float sunColorR = this.colorTemporarySamples_$private$3[0] + this.sunAndSkySunColorR;
-				float sunColorG = this.colorTemporarySamples_$private$3[1] + this.sunAndSkySunColorG;
-				float sunColorB = this.colorTemporarySamples_$private$3[2] + this.sunAndSkySunColorB;
+				float sunColorR = 1.0F;//this.colorTemporarySamples_$private$3[0] + this.sunAndSkySunColorR;
+				float sunColorG = 1.0F;//this.colorTemporarySamples_$private$3[1] + this.sunAndSkySunColorG;
+				float sunColorB = 1.0F;//this.colorTemporarySamples_$private$3[2] + this.sunAndSkySunColorB;
 				
-				final float sunColorMax = max(sunColorR, sunColorG, sunColorB);
+//				final float sunColorMax = max(sunColorR, sunColorG, sunColorB);
 				
-				if(sunColorMax > 1.0F) {
-					sunColorR = sunColorR / sunColorMax;
-					sunColorG = sunColorG / sunColorMax;
-					sunColorB = sunColorB / sunColorMax;
-				}
+//				if(sunColorMax > 1.0F) {
+//					sunColorR = sunColorR / sunColorMax;
+//					sunColorG = sunColorG / sunColorMax;
+//					sunColorB = sunColorB / sunColorMax;
+//				}
 				
 				r = albedoColorR * (sunColorR * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
 				g = albedoColorG * (sunColorG * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
@@ -2599,6 +2652,18 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final float surfaceNormalShadingY = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
 			final float surfaceNormalShadingZ = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
 			
+//			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
+			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
+			final float dotProductMultipliedByTwo = dotProduct * 2.0F;
+			
+//			Check if the surface normal is correctly oriented:
+			final boolean isCorrectlyOriented = dotProduct < 0.0F;
+			
+//			Retrieve the correctly oriented surface normal:
+			final float surfaceNormalWNormalizedX = isCorrectlyOriented ? surfaceNormalShadingX : -surfaceNormalShadingX;
+			final float surfaceNormalWNormalizedY = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
+			final float surfaceNormalWNormalizedZ = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
+			
 			final int textureOffsetAlbedo = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_TEXTURE_ALBEDO_OFFSET]);
 			final int textureOffsetEmission = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_TEXTURE_EMISSION_OFFSET]);
 			
@@ -2622,7 +2687,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final int material = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
 			if(material == ClearCoatMaterial.TYPE || material == LambertianMaterial.TYPE || material == PhongMaterial.TYPE) {
-				doCalculateColorForSun(surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, albedoColorR, albedoColorG, albedoColorB);
+				doCalculateColorForSun(surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalWNormalizedX, surfaceNormalWNormalizedY, surfaceNormalWNormalizedZ, albedoColorR, albedoColorG, albedoColorB);
 			} else {
 				this.colorTemporarySamples_$private$3[0] = 0.0F;
 				this.colorTemporarySamples_$private$3[1] = 0.0F;
@@ -2679,18 +2744,6 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				albedoColorG *= probabilityDensityFunctionReciprocal;
 				albedoColorB *= probabilityDensityFunctionReciprocal;
 			}
-			
-//			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
-			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
-			final float dotProductMultipliedByTwo = dotProduct * 2.0F;
-			
-//			Check if the surface normal is correctly oriented:
-			final boolean isCorrectlyOriented = dotProduct < 0.0F;
-			
-//			Retrieve the correctly oriented surface normal:
-			final float surfaceNormalWNormalizedX = isCorrectlyOriented ? surfaceNormalShadingX : -surfaceNormalShadingX;
-			final float surfaceNormalWNormalizedY = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
-			final float surfaceNormalWNormalizedZ = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
 			
 			if(material == ClearCoatMaterial.TYPE) {
 				final float a = REFRACTIVE_INDEX_GLASS - REFRACTIVE_INDEX_AIR;
@@ -2887,12 +2940,12 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				radianceMultiplierB *= albedoColorB;
 			} else if(material == PhongMaterial.TYPE) {
 //				Compute power cosine weighted hemisphere sample:
-				final float exponent = 20.0F;
+				final float exponent = 50.0F;
 				final float u = nextFloat();
 				final float v = nextFloat();
 				final float phi = PI_MULTIPLIED_BY_TWO * u;
 				final float cosTheta = pow(1.0F - v, 1.0F / (exponent + 1.0F));
-				final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
+				final float sinTheta = sqrt(max(0.0F, 1.0F - cosTheta * cosTheta));
 				final float x = cos(phi) * sinTheta;
 				final float y = sin(phi) * sinTheta;
 				final float z = cosTheta;
