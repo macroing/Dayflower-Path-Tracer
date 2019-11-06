@@ -38,7 +38,7 @@ public final class UVTexture implements Texture {
 	public static final int SIZE = 2;
 	
 	/**
-	 * The type number associated with a {@code UVTexture}. The number is {@code8}.
+	 * The type number associated with a {@code UVTexture}. The number is {@code 8}.
 	 */
 	public static final int TYPE = 8;
 	

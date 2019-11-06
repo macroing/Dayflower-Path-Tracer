@@ -233,21 +233,24 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	public void run() {
 		doNoOpenCL();
 		
+		final boolean isSkyActive = this.sunAndSkyIsSkyActive == BOOLEAN_TRUE;
+		final boolean isSunActive = this.sunAndSkyIsSunActive == BOOLEAN_TRUE;
+		
 		if(doCreatePrimaryRay()) {
 			if(super.rendererType == RENDERER_TYPE_AMBIENT_OCCLUSION) {
 				doRenderWithAmbientOcclusion(1.0F, 1.0F, 1.0F, 0.0F, 0.0F, 0.0F);
 			} else if(super.rendererType == RENDERER_TYPE_PATH_TRACER) {
-				doRenderWithPathTracer();
+				doRenderWithPathTracer(isSkyActive, isSunActive);
 			} else if(super.rendererType == RENDERER_TYPE_RAY_CASTER) {
-				doRenderWithRayCaster();
+				doRenderWithRayCaster(isSkyActive);
 			} else if(super.rendererType == RENDERER_TYPE_RAY_MARCHER) {
-				doRenderWithRayMarcher();
+				doRenderWithRayMarcher(isSkyActive);
 			} else if(super.rendererType == RENDERER_TYPE_RAY_TRACER) {
-				doRenderWithRayTracer();
+				doRenderWithRayTracer(isSkyActive);
 			} else if(super.rendererType == RENDERER_TYPE_SURFACE_NORMALS) {
-				doRenderSurfaceNormals();
+				doRenderSurfaceNormals(isSkyActive);
 			} else {
-				doRenderWithPathTracer();
+				doRenderWithPathTracer(isSkyActive, isSunActive);
 			}
 			
 			if(super.rendererWireframes == BOOLEAN_TRUE) {
@@ -654,7 +657,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float directionReciprocalY = 1.0F / directionY;
 		final float directionReciprocalZ = 1.0F / directionZ;
 		
-		for(int i = 0; i < this.scenePrimitivesCount; i++) {
+		final int scenePrimitivesCount = this.scenePrimitivesCount;
+		
+		for(int i = 0; i < scenePrimitivesCount; i++) {
 			float currentDistance = INFINITY;
 			
 			final int currentPrimitiveOffset = i * Primitive.SIZE;
@@ -959,40 +964,38 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	}
 	
 	private float doIntersectSphere(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float positionX, final float positionY, final float positionZ, final float radius) {
-//		Calculate the direction to the sphere center:
-		final float x = positionX - originX;
-		final float y = positionY - originY;
-		final float z = positionZ - originZ;
+		final float positionToOriginX = originX - positionX;
+		final float positionToOriginY = originY - positionY;
+		final float positionToOriginZ = originZ - positionZ;
 		
-//		Calculate the dot product between the ray direction and the direction to the sphere center position:
-		final float b = x * directionX + y * directionY + z * directionZ;
+		final float radiusSquared = radius * radius;
 		
-//		Calculate the squared determinant:
-		final float determinantSquared = b * b - (x * x + y * y + z * z) + radius * radius;
+		final float a = directionX * directionX + directionY * directionY + directionZ * directionZ;
+		final float b = 2.0F * (positionToOriginX * directionX + positionToOriginY * directionY + positionToOriginZ * directionZ);
+		final float c = (positionToOriginX * positionToOriginX + positionToOriginY * positionToOriginY + positionToOriginZ * positionToOriginZ) - radiusSquared;
 		
-//		Check that the squared determinant is positive:
-		if(determinantSquared >= 0.0F) {
-//			Calculate the determinant from the squared determinant:
-			final float determinant = sqrt(determinantSquared);
+		final float discriminantSquared = b * b - 4.0F * a * c;
+		
+		if(discriminantSquared >= 0.0F) {
+			final float discriminant = sqrt(discriminantSquared);
 			
-//			Calculate the first t:
-			final float t0 = b - determinant;
+			final float quadratic = -0.5F * (b < 0.0F ? b - discriminant : b + discriminant);
 			
-//			Check that the first t is greater than an epsilon value and return it if so:
+			final float result0 = quadratic / a;
+			final float result1 = quadratic == 0 ? result0 : c / quadratic;
+			
+			final float t0 = min(result0, result1);
+			final float t1 = max(result0, result1);
+			
 			if(t0 > EPSILON) {
 				return t0;
 			}
 			
-//			Calculate the second t:
-			final float t1 = b + determinant;
-			
-//			Check that the second t is greater than an epsilon value and return it if so:
 			if(t1 > EPSILON) {
 				return t1;
 			}
 		}
 		
-//		Return no hit:
 		return INFINITY;
 	}
 	
@@ -1617,209 +1620,221 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		return (((int)(r * 255.0F + 0.5F) & 0xFF) << 16) | (((int)(g * 255.0F + 0.5F) & 0xFF) << 8) | (((int)(b * 255.0F + 0.5F) & 0xFF));
 	}
 	
-	private void doCalculateColorForSky(final float directionX, final float directionY, final float directionZ) {
+	private void doCalculateColorForSky(final boolean isSkyActive, final float directionX, final float directionY, final float directionZ) {
 //		Calculate the direction vector:
 		float direction0X = directionX * this.sunAndSkyOrthoNormalBasisUX + directionY * this.sunAndSkyOrthoNormalBasisUY + directionZ * this.sunAndSkyOrthoNormalBasisUZ;
 		float direction0Y = directionX * this.sunAndSkyOrthoNormalBasisVX + directionY * this.sunAndSkyOrthoNormalBasisVY + directionZ * this.sunAndSkyOrthoNormalBasisVZ;
 		float direction0Z = directionX * this.sunAndSkyOrthoNormalBasisWX + directionY * this.sunAndSkyOrthoNormalBasisWY + directionZ * this.sunAndSkyOrthoNormalBasisWZ;
 		
-		if(direction0Z < 0.0F || this.sunAndSkyIsSkyActive == BOOLEAN_FALSE) {
-//			Update the colorTemporarySamples_$local$ array with black:
-			this.colorTemporarySamples_$private$3[0] = 0.01F;
-			this.colorTemporarySamples_$private$3[1] = 0.01F;
-			this.colorTemporarySamples_$private$3[2] = 0.01F;
+		float r = 0.01F;
+		float g = 0.01F;
+		float b = 0.01F;
+		
+		if(direction0Z >= 0.0F && isSkyActive) {
+			direction0Z = max(direction0Z, 0.001F);
 			
-			return;
+//			Recalculate the direction vector:
+			final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
+			final float direction1X = direction0X * direction0LengthReciprocal;
+			final float direction1Y = direction0Y * direction0LengthReciprocal;
+			final float direction1Z = direction0Z * direction0LengthReciprocal;
+			
+//			Calculate the dot product between the direction vector and the sun direction vector:
+			final float dotProduct = direction1X * this.sunAndSkySunDirectionX + direction1Y * this.sunAndSkySunDirectionY + direction1Z * this.sunAndSkySunDirectionZ;
+			
+//			Calculate some theta angles:
+			final double theta0 = this.sunAndSkyTheta;
+			final double theta1 = acos(max(min(direction1Z, 1.0D), -1.0D));
+			
+//			Calculate the cosines of the theta angles:
+			final double cosTheta0 = cos(theta0);
+			final double cosTheta1 = cos(theta1);
+			final double cosTheta1Reciprocal = 1.0D / (cosTheta1 + 0.01D);
+			
+//			Calculate the gamma:
+			final double gamma = acos(max(min(dotProduct, 1.0D), -1.0D));
+			
+//			Calculate the cosine of the gamma:
+			final double cosGamma = cos(gamma);
+			
+//			TODO: Write explanation!
+			final double perezRelativeLuminance0 = this.sunAndSkyPerezRelativeLuminance_$constant$[0];
+			final double perezRelativeLuminance1 = this.sunAndSkyPerezRelativeLuminance_$constant$[1];
+			final double perezRelativeLuminance2 = this.sunAndSkyPerezRelativeLuminance_$constant$[2];
+			final double perezRelativeLuminance3 = this.sunAndSkyPerezRelativeLuminance_$constant$[3];
+			final double perezRelativeLuminance4 = this.sunAndSkyPerezRelativeLuminance_$constant$[4];
+			
+//			TODO: Write explanation!
+			final double zenithRelativeLuminance = this.sunAndSkyZenithRelativeLuminance;
+			
+//			TODO: Write explanation!
+			final double perezX0 = this.sunAndSkyPerezX_$constant$[0];
+			final double perezX1 = this.sunAndSkyPerezX_$constant$[1];
+			final double perezX2 = this.sunAndSkyPerezX_$constant$[2];
+			final double perezX3 = this.sunAndSkyPerezX_$constant$[3];
+			final double perezX4 = this.sunAndSkyPerezX_$constant$[4];
+			
+//			TODO: Write explanation!
+			final double perezY0 = this.sunAndSkyPerezY_$constant$[0];
+			final double perezY1 = this.sunAndSkyPerezY_$constant$[1];
+			final double perezY2 = this.sunAndSkyPerezY_$constant$[2];
+			final double perezY3 = this.sunAndSkyPerezY_$constant$[3];
+			final double perezY4 = this.sunAndSkyPerezY_$constant$[4];
+			
+//			TODO: Write explanation!
+			final double zenithX = this.sunAndSkyZenithX;
+			final double zenithY = this.sunAndSkyZenithY;
+			
+//			TODO: Write explanation!
+			final double relativeLuminanceDenominator = ((1.0D + perezRelativeLuminance0 * exp(perezRelativeLuminance1)) * (1.0D + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * theta0) + perezRelativeLuminance4 * cosTheta0 * cosTheta0));
+			final double relativeLuminanceNumerator = ((1.0D + perezRelativeLuminance0 * exp(perezRelativeLuminance1 * cosTheta1Reciprocal)) * (1.0D + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * gamma) + perezRelativeLuminance4 * cosGamma * cosGamma));
+			final double relativeLuminance = zenithRelativeLuminance * relativeLuminanceNumerator / relativeLuminanceDenominator * 1.0e-4D;
+			
+//			TODO: Write explanation!
+			final double xDenominator = ((1.0D + perezX0 * exp(perezX1)) * (1.0D + perezX2 * exp(perezX3 * theta1) + perezX4 * cosTheta0 * cosTheta0));
+			final double xNumerator = ((1.0D + perezX0 * exp(perezX1 * cosTheta1Reciprocal)) * (1.0D + perezX2 * exp(perezX3 * gamma) + perezX4 * cosGamma * cosGamma));
+			final double x = zenithX * xNumerator / xDenominator;
+			
+//			TODO: Write explanation!
+			final double yDenominator = ((1.0D + perezY0 * exp(perezY1)) * (1.0D + perezY2 * exp(perezY3 * theta1) + perezY4 * cosTheta0 * cosTheta0));
+			final double yNumerator = ((1.0D + perezY0 * exp(perezY1 * cosTheta1Reciprocal)) * (1.0D + perezY2 * exp(perezY3 * gamma) + perezY4 * cosGamma * cosGamma));
+			final double y = zenithY * yNumerator / yDenominator;
+			
+//			Calculates a CIE XYZ color:
+			final float colorCIE0 = 1.0F / (0.0241F + 0.2562F * (float)(x) - 0.7341F * (float)(y));
+			final float colorCIE1 = (-1.3515F - 1.7703F * (float)(x) + 5.9114F * (float)(y)) * colorCIE0;
+			final float colorCIE2 = (0.03F - 31.4424F * (float)(x) + 30.0717F * (float)(y)) * colorCIE0;
+			final float colorCIEX = 10246.121F + colorCIE1 * 187.75537F + colorCIE2 * 213.14803F;
+			final float colorCIEY = 10676.695F + colorCIE1 * 192.59653F + colorCIE2 * 76.29494F;
+			final float colorCIEZ = 12372.504F + colorCIE1 * 3482.8765F + colorCIE2 * -235.71611F;
+			final float colorCIEYReciprocal = 1.0F / colorCIEY;
+			final float colorCIER = (float)(colorCIEX * relativeLuminance * colorCIEYReciprocal);
+			final float colorCIEG = (float)(relativeLuminance);
+			final float colorCIEB = (float)(colorCIEZ * relativeLuminance * colorCIEYReciprocal);
+			
+//			Converts the CIE XYZ color to an sRGB color:
+			r = 3.2410042F * colorCIER + -1.5373994F * colorCIEG + -0.49861607F * colorCIEB;
+			g = -0.9692241F * colorCIER + 1.8759298F * colorCIEG + 0.041554242F * colorCIEB;
+			b = 0.05563942F * colorCIER + -0.20401107F * colorCIEG + 1.0571486F * colorCIEB;
+			
+//			TODO: Write explanation!
+			final float w = max(0.0F, -min(0.0F, min(r, min(g, b))));
+			
+//			TODO: Write explanation!
+			r += w;
+			g += w;
+			b += w;
 		}
-		
-		if(direction0Z < 0.001F) {
-			direction0Z = 0.001F;
-		}
-		
-//		Recalculate the direction vector:
-		final float direction0LengthReciprocal = rsqrt(direction0X * direction0X + direction0Y * direction0Y + direction0Z * direction0Z);
-		final float direction1X = direction0X * direction0LengthReciprocal;
-		final float direction1Y = direction0Y * direction0LengthReciprocal;
-		final float direction1Z = direction0Z * direction0LengthReciprocal;
-		
-//		Calculate the dot product between the direction vector and the sun direction vector:
-		final float dotProduct = direction1X * this.sunAndSkySunDirectionX + direction1Y * this.sunAndSkySunDirectionY + direction1Z * this.sunAndSkySunDirectionZ;
-		
-//		Calculate some theta angles:
-		final double theta0 = this.sunAndSkyTheta;
-		final double theta1 = acos(max(min(direction1Z, 1.0D), -1.0D));
-		
-//		Calculate the cosines of the theta angles:
-		final double cosTheta0 = cos(theta0);
-		final double cosTheta1 = cos(theta1);
-		final double cosTheta1Reciprocal = 1.0D / (cosTheta1 + 0.01D);
-		
-//		Calculate the gamma:
-		final double gamma = acos(max(min(dotProduct, 1.0D), -1.0D));
-		
-//		Calculate the cosine of the gamma:
-		final double cosGamma = cos(gamma);
-		
-//		TODO: Write explanation!
-		final double perezRelativeLuminance0 = this.sunAndSkyPerezRelativeLuminance_$constant$[0];
-		final double perezRelativeLuminance1 = this.sunAndSkyPerezRelativeLuminance_$constant$[1];
-		final double perezRelativeLuminance2 = this.sunAndSkyPerezRelativeLuminance_$constant$[2];
-		final double perezRelativeLuminance3 = this.sunAndSkyPerezRelativeLuminance_$constant$[3];
-		final double perezRelativeLuminance4 = this.sunAndSkyPerezRelativeLuminance_$constant$[4];
-		
-//		TODO: Write explanation!
-		final double zenithRelativeLuminance = this.sunAndSkyZenithRelativeLuminance;
-		
-//		TODO: Write explanation!
-		final double perezX0 = this.sunAndSkyPerezX_$constant$[0];
-		final double perezX1 = this.sunAndSkyPerezX_$constant$[1];
-		final double perezX2 = this.sunAndSkyPerezX_$constant$[2];
-		final double perezX3 = this.sunAndSkyPerezX_$constant$[3];
-		final double perezX4 = this.sunAndSkyPerezX_$constant$[4];
-		
-//		TODO: Write explanation!
-		final double perezY0 = this.sunAndSkyPerezY_$constant$[0];
-		final double perezY1 = this.sunAndSkyPerezY_$constant$[1];
-		final double perezY2 = this.sunAndSkyPerezY_$constant$[2];
-		final double perezY3 = this.sunAndSkyPerezY_$constant$[3];
-		final double perezY4 = this.sunAndSkyPerezY_$constant$[4];
-		
-//		TODO: Write explanation!
-		final double zenithX = this.sunAndSkyZenithX;
-		final double zenithY = this.sunAndSkyZenithY;
-		
-//		TODO: Write explanation!
-		final double relativeLuminanceDenominator = ((1.0D + perezRelativeLuminance0 * exp(perezRelativeLuminance1)) * (1.0D + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * theta0) + perezRelativeLuminance4 * cosTheta0 * cosTheta0));
-		final double relativeLuminanceNumerator = ((1.0D + perezRelativeLuminance0 * exp(perezRelativeLuminance1 * cosTheta1Reciprocal)) * (1.0D + perezRelativeLuminance2 * exp(perezRelativeLuminance3 * gamma) + perezRelativeLuminance4 * cosGamma * cosGamma));
-		final double relativeLuminance = zenithRelativeLuminance * relativeLuminanceNumerator / relativeLuminanceDenominator * 1.0e-4D;
-		
-//		TODO: Write explanation!
-		final double xDenominator = ((1.0D + perezX0 * exp(perezX1)) * (1.0D + perezX2 * exp(perezX3 * theta1) + perezX4 * cosTheta0 * cosTheta0));
-		final double xNumerator = ((1.0D + perezX0 * exp(perezX1 * cosTheta1Reciprocal)) * (1.0D + perezX2 * exp(perezX3 * gamma) + perezX4 * cosGamma * cosGamma));
-		final double x = zenithX * xNumerator / xDenominator;
-		
-//		TODO: Write explanation!
-		final double yDenominator = ((1.0D + perezY0 * exp(perezY1)) * (1.0D + perezY2 * exp(perezY3 * theta1) + perezY4 * cosTheta0 * cosTheta0));
-		final double yNumerator = ((1.0D + perezY0 * exp(perezY1 * cosTheta1Reciprocal)) * (1.0D + perezY2 * exp(perezY3 * gamma) + perezY4 * cosGamma * cosGamma));
-		final double y = zenithY * yNumerator / yDenominator;
-		
-//		Calculates a CIE XYZ color:
-		final float colorCIE0 = 1.0F / (0.0241F + 0.2562F * (float)(x) - 0.7341F * (float)(y));
-		final float colorCIE1 = (-1.3515F - 1.7703F * (float)(x) + 5.9114F * (float)(y)) * colorCIE0;
-		final float colorCIE2 = (0.03F - 31.4424F * (float)(x) + 30.0717F * (float)(y)) * colorCIE0;
-		final float colorCIEX = 10246.121F + colorCIE1 * 187.75537F + colorCIE2 * 213.14803F;
-		final float colorCIEY = 10676.695F + colorCIE1 * 192.59653F + colorCIE2 * 76.29494F;
-		final float colorCIEZ = 12372.504F + colorCIE1 * 3482.8765F + colorCIE2 * -235.71611F;
-		final float colorCIEYReciprocal = 1.0F / colorCIEY;
-		final float colorCIER = (float)(colorCIEX * relativeLuminance * colorCIEYReciprocal);
-		final float colorCIEG = (float)(relativeLuminance);
-		final float colorCIEB = (float)(colorCIEZ * relativeLuminance * colorCIEYReciprocal);
-		
-//		Converts the CIE XYZ color to an sRGB color:
-		float r = 3.2410042F * colorCIER + -1.5373994F * colorCIEG + -0.49861607F * colorCIEB;
-		float g = -0.9692241F * colorCIER + 1.8759298F * colorCIEG + 0.041554242F * colorCIEB;
-		float b = 0.05563942F * colorCIER + -0.20401107F * colorCIEG + 1.0571486F * colorCIEB;
-		
-//		TODO: Write explanation!
-		final float w = max(0.0F, -min(0.0F, min(r, min(g, b))));
-		
-//		TODO: Write explanation!
-		r += w;
-		g += w;
-		b += w;
 		
 		this.colorTemporarySamples_$private$3[0] = r;
 		this.colorTemporarySamples_$private$3[1] = g;
 		this.colorTemporarySamples_$private$3[2] = b;
 	}
 	
-	private void doCalculateColorForSun(final float surfaceIntersectionPointX, final float surfaceIntersectionPointY, final float surfaceIntersectionPointZ, final float surfaceNormalX, final float surfaceNormalY, final float surfaceNormalZ, final float albedoColorR, final float albedoColorG, final float albedoColorB) {
-		if(this.sunAndSkyIsSunActive == BOOLEAN_FALSE) {
-			this.colorTemporarySamples_$private$3[0] = 0.0F;
-			this.colorTemporarySamples_$private$3[1] = 0.0F;
-			this.colorTemporarySamples_$private$3[2] = 0.0F;
-			
-			return;
-		}
-		
-		final float sunDirectionWorldX = this.sunAndSkySunDirectionWorldX;
-		final float sunDirectionWorldY = this.sunAndSkySunDirectionWorldY;
-		final float sunDirectionWorldZ = this.sunAndSkySunDirectionWorldZ;
-		
-		final float exponent = 500.0F;
-		final float u = nextFloat();
-		final float v = nextFloat();
-		final float phi = PI_MULTIPLIED_BY_TWO * u;
-		final float cosTheta = pow(1.0F - v, 1.0F / (exponent + 1.0F));
-		final float sinTheta = sqrt(max(0.0F, 1.0F - cosTheta * cosTheta));
-		final float x = cos(phi) * sinTheta;
-		final float y = sin(phi) * sinTheta;
-		final float z = cosTheta;
-		
-		final float sunDirectionWorldWNormalizedX = sunDirectionWorldX;
-		final float sunDirectionWorldWNormalizedY = sunDirectionWorldY;
-		final float sunDirectionWorldWNormalizedZ = sunDirectionWorldZ;
-		
-		final float absSunDirectionWorldWNormalizedX = abs(sunDirectionWorldWNormalizedX);
-		final float absSunDirectionWorldWNormalizedY = abs(sunDirectionWorldWNormalizedY);
-		final float absSunDirectionWorldWNormalizedZ = abs(sunDirectionWorldWNormalizedZ);
-		
-		final float sunDirectionWorldVX = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? 0.0F : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? sunDirectionWorldWNormalizedZ : sunDirectionWorldWNormalizedY;
-		final float sunDirectionWorldVY = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? sunDirectionWorldWNormalizedZ : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? 0.0F : -sunDirectionWorldWNormalizedX;
-		final float sunDirectionWorldVZ = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? -sunDirectionWorldWNormalizedY : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? -sunDirectionWorldWNormalizedX : 0.0F;
-		final float sunDirectionWorldVLengthReciprocal = rsqrt(sunDirectionWorldVX * sunDirectionWorldVX + sunDirectionWorldVY * sunDirectionWorldVY + sunDirectionWorldVZ * sunDirectionWorldVZ);
-		final float sunDirectionWorldVNormalizedX = sunDirectionWorldVX * sunDirectionWorldVLengthReciprocal;
-		final float sunDirectionWorldVNormalizedY = sunDirectionWorldVY * sunDirectionWorldVLengthReciprocal;
-		final float sunDirectionWorldVNormalizedZ = sunDirectionWorldVZ * sunDirectionWorldVLengthReciprocal;
-		
-		final float sunDirectionWorldUNormalizedX = sunDirectionWorldVNormalizedY * sunDirectionWorldWNormalizedZ - sunDirectionWorldVNormalizedZ * sunDirectionWorldWNormalizedY;
-		final float sunDirectionWorldUNormalizedY = sunDirectionWorldVNormalizedZ * sunDirectionWorldWNormalizedX - sunDirectionWorldVNormalizedX * sunDirectionWorldWNormalizedZ;
-		final float sunDirectionWorldUNormalizedZ = sunDirectionWorldVNormalizedX * sunDirectionWorldWNormalizedY - sunDirectionWorldVNormalizedY * sunDirectionWorldWNormalizedX;
-		
-		final float randomSunDirectionWorldX = sunDirectionWorldUNormalizedX * x + sunDirectionWorldVNormalizedX * y + sunDirectionWorldWNormalizedX * z;
-		final float randomSunDirectionWorldY = sunDirectionWorldUNormalizedY * x + sunDirectionWorldVNormalizedY * y + sunDirectionWorldWNormalizedY * z;
-		final float randomSunDirectionWorldZ = sunDirectionWorldUNormalizedZ * x + sunDirectionWorldVNormalizedZ * y + sunDirectionWorldWNormalizedZ * z;
-		final float randomSunDirectionWorldLengthReciprocal = rsqrt(randomSunDirectionWorldX * randomSunDirectionWorldX + randomSunDirectionWorldY * randomSunDirectionWorldY + randomSunDirectionWorldZ * randomSunDirectionWorldZ);
-		final float randomSunDirectionWorldNormalizedX = randomSunDirectionWorldX * randomSunDirectionWorldLengthReciprocal;
-		final float randomSunDirectionWorldNormalizedY = randomSunDirectionWorldY * randomSunDirectionWorldLengthReciprocal;
-		final float randomSunDirectionWorldNormalizedZ = randomSunDirectionWorldZ * randomSunDirectionWorldLengthReciprocal;
-		
-		final float dotProduct0 = randomSunDirectionWorldNormalizedX * sunDirectionWorldX + randomSunDirectionWorldNormalizedY * sunDirectionWorldY + randomSunDirectionWorldNormalizedZ * sunDirectionWorldZ;
-		final float dotProduct1 = randomSunDirectionWorldNormalizedX * surfaceNormalX + randomSunDirectionWorldNormalizedY * surfaceNormalY + randomSunDirectionWorldNormalizedZ * surfaceNormalZ;
-		
+	private void doCalculateColorForSun(final boolean isSunActive, final float surfaceIntersectionPointX, final float surfaceIntersectionPointY, final float surfaceIntersectionPointZ, final float surfaceNormalX, final float surfaceNormalY, final float surfaceNormalZ, final float albedoColorR, final float albedoColorG, final float albedoColorB) {
 		float r = 0.0F;
 		float g = 0.0F;
 		float b = 0.0F;
 		
-		if(dotProduct0 > 0.0F && dotProduct1 > 0.0F) {
-			final float originX = surfaceIntersectionPointX;
-			final float originY = surfaceIntersectionPointY;
-			final float originZ = surfaceIntersectionPointZ;
+		if(isSunActive) {
+			final float sunDirectionWorldX = this.sunAndSkySunDirectionWorldX;
+			final float sunDirectionWorldY = this.sunAndSkySunDirectionWorldY;
+			final float sunDirectionWorldZ = this.sunAndSkySunDirectionWorldZ;
 			
-			final float directionX = randomSunDirectionWorldNormalizedX;
-			final float directionY = randomSunDirectionWorldNormalizedY;
-			final float directionZ = randomSunDirectionWorldNormalizedZ;
+//			final float exponent = 500.0F;
+//			final float u = nextFloat();
+//			final float v = nextFloat();
+//			final float phi = PI_MULTIPLIED_BY_TWO * u;
+//			final float cosTheta = pow(1.0F - v, 1.0F / (exponent + 1.0F));
+//			final float sinTheta = sqrt(max(0.0F, 1.0F - cosTheta * cosTheta));
+//			final float x = cos(phi) * sinTheta;
+//			final float y = sin(phi) * sinTheta;
+//			final float z = cosTheta;
 			
-			final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, true);
+			final float sunRadius = 500.0F;
+			final float sunRadiusSquared = sunRadius * sunRadius;
 			
-			if(t == INFINITY) {
-//				doCalculateColorForSky(directionX, directionY, directionZ);
+			final float sunOriginX = this.sunAndSkySunOriginX;
+			final float sunOriginY = this.sunAndSkySunOriginY;
+			final float sunOriginZ = this.sunAndSkySunOriginZ;
+			
+			final float directionToSunOriginX = sunOriginX - surfaceIntersectionPointX;
+			final float directionToSunOriginY = sunOriginY - surfaceIntersectionPointY;
+			final float directionToSunOriginZ = sunOriginZ - surfaceIntersectionPointZ;
+			final float directionToSunOriginLengthSquared = directionToSunOriginX * directionToSunOriginX + directionToSunOriginY * directionToSunOriginY + directionToSunOriginZ * directionToSunOriginZ;
+			
+			final float u = nextFloat();
+			final float v = nextFloat();
+			final float sinThetaMaxSquared = sunRadiusSquared / directionToSunOriginLengthSquared;
+			final float cosThetaMax = sqrt(max(0.0F, 1.0F - sinThetaMaxSquared));
+			final float cosTheta = u * (cosThetaMax - 1.0F) + 1.0F;
+			final float sinTheta = sqrt(max(0.0F, 1.0F - cosTheta * cosTheta));
+			final float phi = PI_MULTIPLIED_BY_TWO * v;
+			final float x = cos(phi) * sinTheta;
+			final float y = sin(phi) * sinTheta;
+			final float z = cosTheta;
+			
+			final float sunDirectionWorldWNormalizedX = sunDirectionWorldX;
+			final float sunDirectionWorldWNormalizedY = sunDirectionWorldY;
+			final float sunDirectionWorldWNormalizedZ = sunDirectionWorldZ;
+			
+			final float absSunDirectionWorldWNormalizedX = abs(sunDirectionWorldWNormalizedX);
+			final float absSunDirectionWorldWNormalizedY = abs(sunDirectionWorldWNormalizedY);
+			final float absSunDirectionWorldWNormalizedZ = abs(sunDirectionWorldWNormalizedZ);
+			
+			final float sunDirectionWorldVX = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? 0.0F : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? sunDirectionWorldWNormalizedZ : sunDirectionWorldWNormalizedY;
+			final float sunDirectionWorldVY = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? sunDirectionWorldWNormalizedZ : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? 0.0F : -sunDirectionWorldWNormalizedX;
+			final float sunDirectionWorldVZ = absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedY && absSunDirectionWorldWNormalizedX < absSunDirectionWorldWNormalizedZ ? -sunDirectionWorldWNormalizedY : absSunDirectionWorldWNormalizedY < absSunDirectionWorldWNormalizedZ ? -sunDirectionWorldWNormalizedX : 0.0F;
+			final float sunDirectionWorldVLengthReciprocal = rsqrt(sunDirectionWorldVX * sunDirectionWorldVX + sunDirectionWorldVY * sunDirectionWorldVY + sunDirectionWorldVZ * sunDirectionWorldVZ);
+			final float sunDirectionWorldVNormalizedX = sunDirectionWorldVX * sunDirectionWorldVLengthReciprocal;
+			final float sunDirectionWorldVNormalizedY = sunDirectionWorldVY * sunDirectionWorldVLengthReciprocal;
+			final float sunDirectionWorldVNormalizedZ = sunDirectionWorldVZ * sunDirectionWorldVLengthReciprocal;
+			
+			final float sunDirectionWorldUNormalizedX = sunDirectionWorldVNormalizedY * sunDirectionWorldWNormalizedZ - sunDirectionWorldVNormalizedZ * sunDirectionWorldWNormalizedY;
+			final float sunDirectionWorldUNormalizedY = sunDirectionWorldVNormalizedZ * sunDirectionWorldWNormalizedX - sunDirectionWorldVNormalizedX * sunDirectionWorldWNormalizedZ;
+			final float sunDirectionWorldUNormalizedZ = sunDirectionWorldVNormalizedX * sunDirectionWorldWNormalizedY - sunDirectionWorldVNormalizedY * sunDirectionWorldWNormalizedX;
+			
+			final float randomSunDirectionWorldX = sunDirectionWorldUNormalizedX * x + sunDirectionWorldVNormalizedX * y + sunDirectionWorldWNormalizedX * z;
+			final float randomSunDirectionWorldY = sunDirectionWorldUNormalizedY * x + sunDirectionWorldVNormalizedY * y + sunDirectionWorldWNormalizedY * z;
+			final float randomSunDirectionWorldZ = sunDirectionWorldUNormalizedZ * x + sunDirectionWorldVNormalizedZ * y + sunDirectionWorldWNormalizedZ * z;
+			final float randomSunDirectionWorldLengthReciprocal = rsqrt(randomSunDirectionWorldX * randomSunDirectionWorldX + randomSunDirectionWorldY * randomSunDirectionWorldY + randomSunDirectionWorldZ * randomSunDirectionWorldZ);
+			final float randomSunDirectionWorldNormalizedX = randomSunDirectionWorldX * randomSunDirectionWorldLengthReciprocal;
+			final float randomSunDirectionWorldNormalizedY = randomSunDirectionWorldY * randomSunDirectionWorldLengthReciprocal;
+			final float randomSunDirectionWorldNormalizedZ = randomSunDirectionWorldZ * randomSunDirectionWorldLengthReciprocal;
+			
+			final float dotProduct0 = randomSunDirectionWorldNormalizedX * sunDirectionWorldX + randomSunDirectionWorldNormalizedY * sunDirectionWorldY + randomSunDirectionWorldNormalizedZ * sunDirectionWorldZ;
+			final float dotProduct1 = randomSunDirectionWorldNormalizedX * surfaceNormalX + randomSunDirectionWorldNormalizedY * surfaceNormalY + randomSunDirectionWorldNormalizedZ * surfaceNormalZ;
+			
+			if(dotProduct0 > 0.0F && dotProduct1 > 0.0F) {
+				final float originX = surfaceIntersectionPointX;
+				final float originY = surfaceIntersectionPointY;
+				final float originZ = surfaceIntersectionPointZ;
 				
-				float sunColorR = 1.0F;//this.colorTemporarySamples_$private$3[0] + this.sunAndSkySunColorR;
-				float sunColorG = 1.0F;//this.colorTemporarySamples_$private$3[1] + this.sunAndSkySunColorG;
-				float sunColorB = 1.0F;//this.colorTemporarySamples_$private$3[2] + this.sunAndSkySunColorB;
+				final float directionX = randomSunDirectionWorldNormalizedX;
+				final float directionY = randomSunDirectionWorldNormalizedY;
+				final float directionZ = randomSunDirectionWorldNormalizedZ;
 				
-//				final float sunColorMax = max(sunColorR, sunColorG, sunColorB);
+				final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, true);
 				
-//				if(sunColorMax > 1.0F) {
-//					sunColorR = sunColorR / sunColorMax;
-//					sunColorG = sunColorG / sunColorMax;
-//					sunColorB = sunColorB / sunColorMax;
-//				}
-				
-				r = albedoColorR * (sunColorR * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
-				g = albedoColorG * (sunColorG * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
-				b = albedoColorB * (sunColorB * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
+				if(t >= INFINITY - 0.0001F) {
+//					doCalculateColorForSky(directionX, directionY, directionZ);
+					
+					float sunColorR = 1.0F;//this.colorTemporarySamples_$private$3[0] + this.sunAndSkySunColorR;
+					float sunColorG = 1.0F;//this.colorTemporarySamples_$private$3[1] + this.sunAndSkySunColorG;
+					float sunColorB = 1.0F;//this.colorTemporarySamples_$private$3[2] + this.sunAndSkySunColorB;
+					
+//					final float sunColorMax = max(sunColorR, sunColorG, sunColorB);
+					
+//					if(sunColorMax > 1.0F) {
+//						sunColorR = sunColorR / sunColorMax;
+//						sunColorG = sunColorG / sunColorMax;
+//						sunColorB = sunColorB / sunColorMax;
+//					}
+					
+					r = albedoColorR * (sunColorR * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
+					g = albedoColorG * (sunColorG * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
+					b = albedoColorB * (sunColorB * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
+				}
 			}
 		}
 		
@@ -1941,10 +1956,10 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float surfaceNormal0X = surfaceIntersectionPointX - positionX;
 		final float surfaceNormal0Y = surfaceIntersectionPointY - positionY;
 		final float surfaceNormal0Z = surfaceIntersectionPointZ - positionZ;
-		final float lengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
-		final float surfaceNormal1X = surfaceNormal0X * lengthReciprocal;
-		final float surfaceNormal1Y = surfaceNormal0Y * lengthReciprocal;
-		final float surfaceNormal1Z = surfaceNormal0Z * lengthReciprocal;
+		final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
+		final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
+		final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
+		final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
 		
 //		Calculate the UV-coordinates:
 		final float u = 0.5F + atan2(-surfaceNormal1Z, -surfaceNormal1X) * PI_MULTIPLIED_BY_TWO_RECIPROCAL;
@@ -2270,7 +2285,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		}
 	}
 	
-	private void doRenderSurfaceNormals() {
+	private void doRenderSurfaceNormals(final boolean isSkyActive) {
 //		Calculate the current offset to the intersections array:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
@@ -2303,7 +2318,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 		if(distance == INFINITY || primitivesOffset == -1) {
 //			Calculate the color for the sky in the current direction:
-			doCalculateColorForSky(directionX, directionY, directionZ);
+			doCalculateColorForSky(isSkyActive, directionX, directionY, directionZ);
 			
 //			Add the color for the sky to the current pixel color:
 			pixelColorR = this.colorTemporarySamples_$private$3[0];
@@ -2573,7 +2588,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		filmAddColor(pixelColorR, pixelColorG, pixelColorB);
 	}
 	
-	private void doRenderWithPathTracer() {
+	private void doRenderWithPathTracer(final boolean isSkyActive, final boolean isSunActive) {
 //		Retrieve the maximum depth allowed and the depth at which to use Russian Roulette to test for path termination:
 		final int depthMaximum = this.rendererPTRayDepthMaximum;
 		final int depthRussianRoulette = this.rendererPTRayDepthRussianRoulette;
@@ -2622,7 +2637,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //			Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 			if(distance == INFINITY || primitivesOffset == -1) {
 //				Calculate the color for the sky in the current direction:
-				doCalculateColorForSky(directionX, directionY, directionZ);
+				doCalculateColorForSky(isSkyActive, directionX, directionY, directionZ);
 				
 //				Add the color for the sky to the current pixel color:
 				pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0] * PI_RECIPROCAL;
@@ -2687,7 +2702,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final int material = (int)(this.sceneSurfaces_$constant$[surfacesOffset + Surface.RELATIVE_OFFSET_MATERIAL]);
 			
 			if(material == ClearCoatMaterial.TYPE || material == LambertianMaterial.TYPE || material == PhongMaterial.TYPE) {
-				doCalculateColorForSun(surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalWNormalizedX, surfaceNormalWNormalizedY, surfaceNormalWNormalizedZ, albedoColorR, albedoColorG, albedoColorB);
+				doCalculateColorForSun(isSunActive, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalWNormalizedX, surfaceNormalWNormalizedY, surfaceNormalWNormalizedZ, albedoColorR, albedoColorG, albedoColorB);
 			} else {
 				this.colorTemporarySamples_$private$3[0] = 0.0F;
 				this.colorTemporarySamples_$private$3[1] = 0.0F;
@@ -2722,7 +2737,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //					Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 					if(!isIntersecting) {
 //						Calculate the color for the sky in the current direction:
-						doCalculateColorForSky(directionX, directionY, directionZ);
+						doCalculateColorForSky(isSkyActive, directionX, directionY, directionZ);
 						
 //						Add the color for the sky to the current pixel color:
 						pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0] * PI_RECIPROCAL;
@@ -3117,7 +3132,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 		if(!isIntersecting) {
 //			Calculate the color for the sky in the current direction:
-			doCalculateColorForSky(directionX, directionY, directionZ);
+			doCalculateColorForSky(isSkyActive, directionX, directionY, directionZ);
 			
 //			Add the color for the sky to the current pixel color:
 			pixelColorR += radianceMultiplierR * this.colorTemporarySamples_$private$3[0] * PI_RECIPROCAL;
@@ -3129,7 +3144,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		filmAddColor(pixelColorR, pixelColorG, pixelColorB);
 	}
 	
-	private void doRenderWithRayCaster() {
+	private void doRenderWithRayCaster(final boolean isSkyActive) {
 //		Calculate the current offset to the intersections array:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
@@ -3165,7 +3180,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //		Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 		if(distance == INFINITY || primitivesOffset == -1) {
 //			Calculate the color for the sky in the current direction:
-			doCalculateColorForSky(directionX, directionY, directionZ);
+			doCalculateColorForSky(isSkyActive, directionX, directionY, directionZ);
 			
 //			Add the color for the sky to the current pixel color:
 			pixelColorR = this.colorTemporarySamples_$private$3[0];
@@ -3213,7 +3228,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		filmAddColor(pixelColorR, pixelColorG, pixelColorB);
 	}
 	
-	private void doRenderWithRayMarcher() {
+	private void doRenderWithRayMarcher(final boolean isSkyActive) {
 		float originX = this.rays_$private$6[0];
 		float originY = this.rays_$private$6[1];
 		float originZ = this.rays_$private$6[2];
@@ -3231,7 +3246,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float minT = 0.001F;
 		final float maxT = max(originY, 1.0F) * 20.0F;
 		
-		doCalculateColorForSky(directionX, directionY, directionZ);
+		doCalculateColorForSky(isSkyActive, directionX, directionY, directionZ);
 		
 		float pixelColorR = this.colorTemporarySamples_$private$3[0];
 		float pixelColorG = this.colorTemporarySamples_$private$3[1];
@@ -3277,7 +3292,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		filmAddColor(pixelColorR, pixelColorG, pixelColorB);
 	}
 	
-	private void doRenderWithRayTracer() {
+	private void doRenderWithRayTracer(final boolean isSkyActive) {
 //		Retrieve the maximum depth allowed:
 		final int depthMaximum = 5;
 		
@@ -3322,7 +3337,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //			Test that an intersection was actually made, and if not, return black color (or possibly the background color):
 			if(distance == INFINITY || primitivesOffset == -1) {
 //				Calculate the color for the sky in the current direction:
-				doCalculateColorForSky(directionX, directionY, directionZ);
+				doCalculateColorForSky(isSkyActive, directionX, directionY, directionZ);
 				
 //				Add the color for the sky to the current pixel color:
 				pixelColorR += this.colorTemporarySamples_$private$3[0];
