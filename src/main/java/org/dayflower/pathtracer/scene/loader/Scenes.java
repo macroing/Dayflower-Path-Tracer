@@ -78,6 +78,8 @@ final class Scenes {
 				return newMonkeyScene(directory);
 			case "Terrain_Scene":
 				return newTerrainScene(directory);
+			case "Zealot_Scene":
+				return newZealotScene(directory);
 			default:
 				return newMaterialShowcaseScene(directory);
 		}
@@ -158,26 +160,26 @@ final class Scenes {
 		return scene;
 	}
 	
-	public static Scene newImageScene(@SuppressWarnings("unused") final File directory) {
+	public static Scene newImageScene(/*@SuppressWarnings("unused") */final File directory) {
 		final Texture textureGroundAlbedo = new ConstantTexture(Color.GRAY);
 		final Texture textureGroundEmission = new ConstantTexture(Color.BLACK);
 		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
-//		final Texture textureMonkeyAlbedo = new ConstantTexture(Color.GRAY);
-//		final Texture textureMonkeyEmission = new ConstantTexture(Color.BLACK);
-//		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
-		final Texture textureSphereAlbedo = new BlendTexture(new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.5F, 16), new CheckerboardTexture(Color.GRAY, Color.RED), 0.5F);
-		final Texture textureSphereEmission = new ConstantTexture(Color.BLACK);
-		final Texture textureSphereNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureMonkeyAlbedo = new BlendTexture(new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.25F, 0.5F, 16), new ConstantTexture(new Color(0.5F, 0.1F, 0.5F)), 0.75F);//new ConstantTexture(Color.GRAY);
+		final Texture textureMonkeyEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureMonkeyNormal = new ConstantTexture(Color.BLACK);
+//		final Texture textureSphereAlbedo = new BlendTexture(new FractionalBrownianMotionTexture(new Color(0.05F, 0.05F, 0.05F), Color.WHITE, 0.5F, 0.5F, 16), new CheckerboardTexture(Color.GRAY, Color.RED), 0.5F);
+//		final Texture textureSphereEmission = new ConstantTexture(Color.BLACK);
+//		final Texture textureSphereNormal = new ConstantTexture(Color.BLACK);
 		
-//		final Surface surface = new Surface(new LambertianMaterial(), textureMonkeyAlbedo, textureMonkeyEmission, textureMonkeyNormal, 0.0F, 0.0F);
+		final Surface surface = new Surface(/*new LambertianMaterial()*/new PhongMaterial(), textureMonkeyAlbedo, textureMonkeyEmission, textureMonkeyNormal, 0.0F, 0.0F);
 		
-//		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "smoothMonkey2.obj"), 100.0F, (groupName, materialName) -> surface, 0.0F, 100.0F, 0.0F);
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "smoothMonkey2.obj"), 100.0F, (groupName, materialName) -> surface, 0.0F, 100.0F, 0.0F);
 		
 		final
 		Scene scene = new Scene("Image_Scene");
 		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(new LambertianMaterial(), textureGroundAlbedo, textureGroundEmission, textureGroundNormal, 0.0F, 0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(-8.0F, 32.0F, 250.0F), 32.0F), new Surface(new ClearCoatMaterial(), textureSphereAlbedo, textureSphereEmission, textureSphereNormal, 0.0F, 0.0F)));
-//		scene.addPrimitives(primitives);
+//		scene.addPrimitive(new Primitive(new Sphere(new Point3F(-8.0F, 32.0F, 250.0F), 32.0F), new Surface(new ClearCoatMaterial(), textureSphereAlbedo, textureSphereEmission, textureSphereNormal, 0.0F, 0.0F)));
+		scene.addPrimitives(primitives);
 		scene.getCamera().setEye(-8.75F, 42.0F, 332.6F);
 		
 		return scene;
@@ -303,6 +305,27 @@ final class Scenes {
 		final
 		Scene scene = new Scene("Terrain_Scene");
 		scene.addPrimitive(new Primitive(new Terrain(8.0F, 0.5F, 0.0F, 1.0F, 8), new Surface(new LambertianMaterial(), textureTerrainAlbedo, textureTerrainEmission, textureTerrainNormal)));
+		
+		return scene;
+	}
+	
+	public static Scene newZealotScene(final File directory) {
+		final Texture textureGroundAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture textureGroundEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureZealotAlbedo = ImageTexture.load(new File(getTextureFilename(directory, "Zealot_albedo.png")), 0.0F, 1.0F, 1.0F);//new ConstantTexture(Color.GRAY);
+		final Texture textureZealotEmission = ImageTexture.load(new File(getTextureFilename(directory, "Zealot_emissive.png")), 0.0F, 1.0F, 1.0F);//new ConstantTexture(Color.BLACK);
+		final Texture textureZealotNormal = ImageTexture.load(new File(getTextureFilename(directory, "Zealot_normal.png")), 0.0F, 1.0F, 1.0F);//new ConstantTexture(Color.BLACK);
+		
+		final Surface surface = new Surface(new PhongMaterial(), textureZealotAlbedo, textureZealotEmission, textureZealotNormal, 0.0F, 0.0F);
+		
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "Zealot.obj"), 1.0F, (groupName, materialName) -> surface, 0.0F, 0.0F, 0.0F);
+		
+		final
+		Scene scene = new Scene("Zealot_Scene");
+		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(new LambertianMaterial(), textureGroundAlbedo, textureGroundEmission, textureGroundNormal, 0.0F, 0.0F)));
+		scene.addPrimitives(primitives);
+		scene.getCamera().setEye(0.0F, 42.0F, 70.0F);
 		
 		return scene;
 	}

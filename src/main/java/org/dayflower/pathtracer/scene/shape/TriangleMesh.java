@@ -117,7 +117,7 @@ public final class TriangleMesh extends Shape {
 	 */
 	@Override
 	public String toString() {
-		return String.format("new Mesh(%s)", this.triangles);
+		return String.format("new TriangleMesh(%s)", this.triangles);
 	}
 	
 	/**

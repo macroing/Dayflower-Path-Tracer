@@ -270,14 +270,18 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		imageBegin();
 		imageAddColor(r, g, b);
 		
-		if(super.toneMapperType == TONE_MAPPER_TYPE_REINHARD) {
-			imageSetReinhard(super.toneMapperExposure);
-		} else if(super.toneMapperType == TONE_MAPPER_TYPE_REINHARD_MODIFIED_1) {
-			imageSetReinhardModified1(super.toneMapperExposure);
-		} else if(super.toneMapperType == TONE_MAPPER_TYPE_REINHARD_MODIFIED_2) {
-			imageSetReinhardModified2(super.toneMapperExposure);
-		} else if(super.toneMapperType == TONE_MAPPER_TYPE_FILMIC_CURVE_ACES_MODIFIED) {
-			imageSetFilmicCurveACESModified(super.toneMapperExposure);
+		final int toneMapperType = super.toneMapperType;
+		
+		final float toneMapperExposure = super.toneMapperExposure;
+		
+		if(toneMapperType == TONE_MAPPER_TYPE_REINHARD) {
+			imageSetReinhard(toneMapperExposure);
+		} else if(toneMapperType == TONE_MAPPER_TYPE_REINHARD_MODIFIED_1) {
+			imageSetReinhardModified1(toneMapperExposure);
+		} else if(toneMapperType == TONE_MAPPER_TYPE_REINHARD_MODIFIED_2) {
+			imageSetReinhardModified2(toneMapperExposure);
+		} else if(toneMapperType == TONE_MAPPER_TYPE_FILMIC_CURVE_ACES_MODIFIED) {
+			imageSetFilmicCurveACESModified(toneMapperExposure);
 		}
 		
 		imageRedoGammaCorrection();
@@ -1427,7 +1431,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private int doGetTextureColorFromSurfaceNormalTexture() {
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
-		final float surfaceNormalShadingX = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING];
+		final float surfaceNormalShadingX = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 0];
 		final float surfaceNormalShadingY = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 1];
 		final float surfaceNormalShadingZ = this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING + 2];
 		
@@ -1831,9 +1835,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //						sunColorB = sunColorB / sunColorMax;
 //					}
 					
-					r = albedoColorR * (sunColorR * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
-					g = albedoColorG * (sunColorG * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
-					b = albedoColorB * (sunColorB * dotProduct1 /** 2.0F * PI*/) * PI_RECIPROCAL;
+					r = albedoColorR * sunColorR * dotProduct1 * PI_RECIPROCAL;
+					g = albedoColorG * sunColorG * dotProduct1 * PI_RECIPROCAL;
+					b = albedoColorB * sunColorB * dotProduct1 * PI_RECIPROCAL;
 				}
 			}
 		}
@@ -1924,25 +1928,25 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float orthoNormalBasisUZ = orthoNormalBasisV1X * orthoNormalBasisWY - orthoNormalBasisV1Y * orthoNormalBasisWX;
 		
 //		Update the intersections array:
-		this.intersections_$local$[offsetIntersectionOrthoNormalBasisU] = orthoNormalBasisUX;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 0] = orthoNormalBasisUX;
 		this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 1] = orthoNormalBasisUY;
 		this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 2] = orthoNormalBasisUZ;
-		this.intersections_$local$[offsetIntersectionOrthoNormalBasisV] = orthoNormalBasisV1X;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 0] = orthoNormalBasisV1X;
 		this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 1] = orthoNormalBasisV1Y;
 		this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 2] = orthoNormalBasisV1Z;
-		this.intersections_$local$[offsetIntersectionOrthoNormalBasisW] = orthoNormalBasisWX;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 0] = orthoNormalBasisWX;
 		this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 1] = orthoNormalBasisWY;
 		this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 2] = orthoNormalBasisWZ;
-		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint] = surfaceIntersectionPointX;
+		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 0] = surfaceIntersectionPointX;
 		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointY;
 		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZ;
-		this.intersections_$local$[offsetIntersectionSurfaceNormal] = surfaceNormalX;
+		this.intersections_$local$[offsetIntersectionSurfaceNormal + 0] = surfaceNormalX;
 		this.intersections_$local$[offsetIntersectionSurfaceNormal + 1] = surfaceNormalY;
 		this.intersections_$local$[offsetIntersectionSurfaceNormal + 2] = surfaceNormalZ;
-		this.intersections_$local$[offsetIntersectionSurfaceNormalShading] = surfaceNormalX;
+		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0] = surfaceNormalX;
 		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormalY;
 		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormalZ;
-		this.intersections_$local$[offsetIntersectionUVCoordinates] = u;
+		this.intersections_$local$[offsetIntersectionUVCoordinates + 0] = u;
 		this.intersections_$local$[offsetIntersectionUVCoordinates + 1] = v;
 	}
 	
@@ -2081,10 +2085,10 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		
 //		Update the intersections array:
 		this.intersections_$local$[intersectionsOffset] = distance;
-		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint] = surfaceIntersectionPointX;
+		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 0] = surfaceIntersectionPointX;
 		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointY;
 		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZ;
-		this.intersections_$local$[offsetIntersectionUVCoordinates] = u;
+		this.intersections_$local$[offsetIntersectionUVCoordinates + 0] = u;
 		this.intersections_$local$[offsetIntersectionUVCoordinates + 1] = v;
 		
 		float surfaceNormal0X = 0.0F;
@@ -2110,10 +2114,10 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
 		
 //		Update the intersections array based on Flat Shading:
-		this.intersections_$local$[offsetIntersectionSurfaceNormal] = surfaceNormal1X;
+		this.intersections_$local$[offsetIntersectionSurfaceNormal + 0] = surfaceNormal1X;
 		this.intersections_$local$[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
 		this.intersections_$local$[offsetIntersectionSurfaceNormal + 2] = surfaceNormal1Z;
-		this.intersections_$local$[offsetIntersectionSurfaceNormalShading] = surfaceNormal1X;
+		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0] = surfaceNormal1X;
 		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
 		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 	}

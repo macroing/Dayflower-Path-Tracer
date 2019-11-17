@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.util.Strings;
@@ -115,6 +116,8 @@ public final class BoundingVolumeHierarchy {
 	 * @throws NullPointerException thrown if, and only if, either {@code triangles} or at least one {@code Triangle} in {@code triangles} are {@code null}
 	 */
 	public static BoundingVolumeHierarchy createBoundingVolumeHierarchy(final List<Triangle> triangles) {
+		final AtomicInteger idGenerator = new AtomicInteger();
+		
 		final List<LeafNode> leafNodes = new ArrayList<>(triangles.size());
 		
 		float maximumX = Float.MIN_VALUE;
@@ -130,7 +133,7 @@ public final class BoundingVolumeHierarchy {
 			final Point3F p2 = triangle.c.position;
 			
 			final
-			LeafNode leafNode = new LeafNode(0);
+			LeafNode leafNode = new LeafNode(0, 0);
 			leafNode.addTriangle(triangle);
 			leafNode.setMaximum(max(p0.x, p1.x, p2.x), max(p0.y, p1.y, p2.y), max(p0.z, p1.z, p2.z));
 			leafNode.setMinimum(min(p0.x, p1.x, p2.x), min(p0.y, p1.y, p2.y), min(p0.z, p1.z, p2.z));
@@ -146,7 +149,7 @@ public final class BoundingVolumeHierarchy {
 		}
 		
 		final
-		Node nodeRoot = doCreateBoundingVolumeHierarchy(leafNodes, 0, maximumX, maximumY, maximumZ, minimumX, minimumY, minimumZ);
+		Node nodeRoot = doCreateBoundingVolumeHierarchy(idGenerator, leafNodes, 0, maximumX, maximumY, maximumZ, minimumX, minimumY, minimumZ);
 		nodeRoot.setMaximum(maximumX, maximumY, maximumZ);
 		nodeRoot.setMinimum(minimumX, minimumY, minimumZ);
 		
@@ -171,9 +174,10 @@ public final class BoundingVolumeHierarchy {
 		 * Constructs a new {@code LeafNode} instance.
 		 * 
 		 * @param depth the depth of this {@code LeafNode}
+		 * @param id the ID of this {@code LeafNode}
 		 */
-		public LeafNode(final int depth) {
-			super(depth);
+		public LeafNode(final int depth, final int id) {
+			super(depth, id);
 			
 			this.size = 5;
 		}
@@ -352,6 +356,7 @@ public final class BoundingVolumeHierarchy {
 		private float minimumY = Float.MIN_VALUE;
 		private float minimumZ = Float.MIN_VALUE;
 		private final int depth;
+		private final int id;
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
@@ -359,9 +364,11 @@ public final class BoundingVolumeHierarchy {
 		 * Constructs a new {@code Node} instance.
 		 * 
 		 * @param depth the depth of this {@code Node}
+		 * @param id the ID of this {@code Node}
 		 */
-		protected Node(final int depth) {
+		protected Node(final int depth, final int id) {
 			this.depth = depth;
+			this.id = id;
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -521,6 +528,15 @@ public final class BoundingVolumeHierarchy {
 		}
 		
 		/**
+		 * Returns the ID of this {@code Node} instance.
+		 * 
+		 * @return the ID of this {@code Node} instance
+		 */
+		public final int getId() {
+			return this.id;
+		}
+		
+		/**
 		 * Returns the size of this {@code Node} instance.
 		 * 
 		 * @return the size of this {@code Node} instance
@@ -583,9 +599,10 @@ public final class BoundingVolumeHierarchy {
 		 * Constructs a new {@code TreeNode} instance.
 		 * 
 		 * @param depth the depth of this {@code TreeNode}
+		 * @param id the ID of this {@code TreeNode}
 		 */
-		public TreeNode(final int depth) {
-			super(depth);
+		public TreeNode(final int depth, final int id) {
+			super(depth, id);
 			
 			this.size = 5;
 		}
@@ -785,12 +802,12 @@ public final class BoundingVolumeHierarchy {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	private static Node doCreateBoundingVolumeHierarchy(final List<LeafNode> leafNodes, final int depth, final float maximumX, final float maximumY, final float maximumZ, final float minimumX, final float minimumY, final float minimumZ) {
+	private static Node doCreateBoundingVolumeHierarchy(final AtomicInteger idGenerator, final List<LeafNode> leafNodes, final int depth, final float maximumX, final float maximumY, final float maximumZ, final float minimumX, final float minimumY, final float minimumZ) {
 		final int size0 = leafNodes.size();
 		final int size1 = size0 / 2;
 		
 		if(size0 < 4) {
-			final LeafNode leafNode = new LeafNode(depth);
+			final LeafNode leafNode = new LeafNode(depth, idGenerator.getAndIncrement());
 			
 			for(final LeafNode leafNode0 : leafNodes) {
 				for(final Triangle triangle : leafNode0.getTriangles()) {
@@ -894,7 +911,7 @@ public final class BoundingVolumeHierarchy {
 		}
 		
 		if(bestAxis == -1) {
-			final LeafNode leafNode = new LeafNode(depth);
+			final LeafNode leafNode = new LeafNode(depth, idGenerator.getAndIncrement());
 			
 			for(final LeafNode leafNode0 : leafNodes) {
 				for(final Triangle triangle : leafNode0.getTriangles()) {
@@ -951,17 +968,17 @@ public final class BoundingVolumeHierarchy {
 		}
 		
 		final
-		Node nodeLeft = doCreateBoundingVolumeHierarchy(leafNodesLeft, depth + 1, maximumLeftX, maximumLeftY, maximumLeftZ, minimumLeftX, minimumLeftY, minimumLeftZ);
+		Node nodeLeft = doCreateBoundingVolumeHierarchy(idGenerator, leafNodesLeft, depth + 1, maximumLeftX, maximumLeftY, maximumLeftZ, minimumLeftX, minimumLeftY, minimumLeftZ);
 		nodeLeft.setMaximum(maximumLeftX, maximumLeftY, maximumLeftZ);
 		nodeLeft.setMinimum(minimumLeftX, minimumLeftY, minimumLeftZ);
 		
 		final
-		Node nodeRight = doCreateBoundingVolumeHierarchy(leafNodesRight, depth + 1, maximumRightX, maximumRightY, maximumRightZ, minimumRightX, minimumRightY, minimumRightZ);
+		Node nodeRight = doCreateBoundingVolumeHierarchy(idGenerator, leafNodesRight, depth + 1, maximumRightX, maximumRightY, maximumRightZ, minimumRightX, minimumRightY, minimumRightZ);
 		nodeRight.setMaximum(maximumRightX, maximumRightY, maximumRightZ);
 		nodeRight.setMinimum(minimumRightX, minimumRightY, minimumRightZ);
 		
 		final
-		TreeNode treeNode = new TreeNode(depth);
+		TreeNode treeNode = new TreeNode(depth, idGenerator.getAndIncrement());
 		treeNode.setLeft(nodeLeft);
 		treeNode.setRight(nodeRight);
 		
