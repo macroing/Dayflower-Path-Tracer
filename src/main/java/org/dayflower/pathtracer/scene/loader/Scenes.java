@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 - 2019 J&#246;rgen Lundgren
+ * Copyright 2015 - 2020 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -78,6 +78,8 @@ final class Scenes {
 				return newMonkeyScene(directory);
 			case "Terrain_Scene":
 				return newTerrainScene(directory);
+			case "Wine_Glass_Scene":
+				return newWineGlassScene(directory);
 			case "Zealot_Scene":
 				return newZealotScene(directory);
 			default:
@@ -305,6 +307,27 @@ final class Scenes {
 		final
 		Scene scene = new Scene("Terrain_Scene");
 		scene.addPrimitive(new Primitive(new Terrain(8.0F, 0.5F, 0.0F, 1.0F, 8), new Surface(new LambertianMaterial(), textureTerrainAlbedo, textureTerrainEmission, textureTerrainNormal)));
+		
+		return scene;
+	}
+	
+	public static Scene newWineGlassScene(final File directory) {
+		final Texture textureGroundAlbedo = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.1F, 0.1F);//new ConstantTexture(Color.GRAY);
+		final Texture textureGroundEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureWineGlassAlbedo = new ConstantTexture(Color.GRAY);
+		final Texture textureWineGlassEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureWineGlassNormal = new ConstantTexture(Color.BLACK);
+		
+		final Surface surface = new Surface(new GlassMaterial(), textureWineGlassAlbedo, textureWineGlassEmission, textureWineGlassNormal, 0.0F, 0.0F);
+		
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "Wine_Glass.OBJ"), 50.0F, (groupName, materialName) -> surface, 0.0F, 39.0F, 0.0F);
+		
+		final
+		Scene scene = new Scene("Wine_Glass_Scene");
+		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(new LambertianMaterial(), textureGroundAlbedo, textureGroundEmission, textureGroundNormal, 0.0F, 0.0F)));
+		scene.addPrimitives(primitives);
+		scene.getCamera().setEye(0.0F, 42.0F, 70.0F);
 		
 		return scene;
 	}

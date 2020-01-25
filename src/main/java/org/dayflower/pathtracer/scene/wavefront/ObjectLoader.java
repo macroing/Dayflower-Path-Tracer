@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 - 2019 J&#246;rgen Lundgren
+ * Copyright 2015 - 2020 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -39,6 +39,7 @@ import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
 import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 import org.dayflower.pathtracer.scene.texture.ConstantTexture;
 import org.macroing.image4j.Color;
+import org.macroing.math4j.Matrix44F;
 import org.macroing.math4j.Point2F;
 import org.macroing.math4j.Point3F;
 import org.macroing.math4j.Vector3F;
@@ -140,9 +141,12 @@ public final class ObjectLoader {
 	 */
 	public static List<Primitive> load(final File file, final float scale, final BiFunction<String, String, Surface> surfaceMapper, final float translateX, final float translateY, final float translateZ) {
 		try {
+			final Matrix44F objectToWorld = doCreateObjectToWorld(scale, translateX, translateY, translateZ);
+			final Matrix44F worldToObject = objectToWorld.inverse();
+			
 			final List<Primitive> primitives = new ArrayList<>();
 			
-			final ObjectModel objectModel = new ObjectModel(Objects.requireNonNull(file, "file == null"), scale);
+			final ObjectModel objectModel = new ObjectModel(Objects.requireNonNull(file, "file == null"));
 			
 			final IndexedModel indexedModel = objectModel.toIndexedModel();
 			
@@ -153,6 +157,7 @@ public final class ObjectLoader {
 			final List<String> materials = indexedModel.getMaterials();
 			final List<Triangle> triangles = new ArrayList<>();
 			final List<Vector3F> normals = indexedModel.getNormals();
+			final List<Vector3F> tangents = indexedModel.getTangents();
 			
 			String previousGroup = "";
 			String previousMaterial = "";
@@ -179,23 +184,11 @@ public final class ObjectLoader {
 					previousMaterial = currentMaterial;
 				}
 				
-				final Vertex a = new Vertex(textureCoordinates.get(indexA), positions.get(indexA), normals.get(indexA));
-				final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), normals.get(indexB));
-				final Vertex c = new Vertex(textureCoordinates.get(indexC), positions.get(indexC), normals.get(indexC));
+				final Vertex a = new Vertex(textureCoordinates.get(indexA), positions.get(indexA), normals.get(indexA), tangents.get(indexA));
+				final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), normals.get(indexB), tangents.get(indexB));
+				final Vertex c = new Vertex(textureCoordinates.get(indexC), positions.get(indexC), normals.get(indexC), tangents.get(indexC));
 				
-				Triangle triangle = new Triangle(a, b, c);
-				
-				if(Float.compare(translateX, 0.0F) != 0) {
-					triangle = triangle.translateX(translateX);
-				}
-				
-				if(Float.compare(translateY, 0.0F) != 0) {
-					triangle = triangle.translateY(translateY);
-				}
-				
-				if(Float.compare(translateZ, 0.0F) != 0) {
-					triangle = triangle.translateZ(translateZ);
-				}
+				final Triangle triangle = new Triangle(a, b, c).transformToWorldSpace(objectToWorld, worldToObject).scaleTextureCoordinates(scale);
 				
 				triangles.add(triangle);
 			}
@@ -344,6 +337,16 @@ public final class ObjectLoader {
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	private static Matrix44F doCreateObjectToWorld(final float scale, final float translateX, final float translateY, final float translateZ) {
+		final Matrix44F translation = Matrix44F.translation(translateX, translateY, translateZ);
+		final Matrix44F scaling = Matrix44F.scaling(scale, scale, scale);
+		final Matrix44F objectToWorld = translation.multiply(scaling);
+		
+		return objectToWorld;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private static final class IndexedModel {
 		private final List<Integer> indices = new ArrayList<>();
 		private final List<Point2F> textureCoordinates = new ArrayList<>();
@@ -457,7 +460,7 @@ public final class ObjectLoader {
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
-		public ObjectModel(final File file, final float scale) throws IOException {
+		public ObjectModel(final File file) throws IOException {
 			String group = "";
 			String material = "";
 			
@@ -472,9 +475,9 @@ public final class ObjectLoader {
 					} else if(tokens[0].equals("usemtl")) {
 						material = tokens[1];
 					} else if(tokens[0].equals("v")) {
-						this.positions.add(new Point3F(Float.valueOf(tokens[1]).floatValue() * scale, Float.valueOf(tokens[2]).floatValue() * scale, Float.valueOf(tokens[3]).floatValue() * scale));
+						this.positions.add(new Point3F(Float.valueOf(tokens[1]).floatValue(), Float.valueOf(tokens[2]).floatValue(), Float.valueOf(tokens[3]).floatValue()));
 					} else if(tokens[0].equals("vt")) {
-						this.textureCoordinates.add(new Point2F(Float.valueOf(tokens[1]).floatValue() * scale, 1.0F * scale - Float.valueOf(tokens[2]).floatValue() * scale));
+						this.textureCoordinates.add(new Point2F(Float.valueOf(tokens[1]).floatValue(), Float.valueOf(tokens[2]).floatValue()));
 					} else if(tokens[0].equals("vn")) {
 						this.normals.add(new Vector3F(Float.valueOf(tokens[1]).floatValue(), Float.valueOf(tokens[2]).floatValue(), Float.valueOf(tokens[3]).floatValue()));
 					} else if(tokens[0].equals("f")) {

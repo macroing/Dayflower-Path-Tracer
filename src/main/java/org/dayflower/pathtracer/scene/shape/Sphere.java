@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 - 2019 J&#246;rgen Lundgren
+ * Copyright 2015 - 2020 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -57,9 +57,9 @@ public final class Sphere extends Shape {
 	public static final int SIZE = 2;
 	
 	/**
-	 * The type number associated with a {@code Sphere}. The number is {@code 1}.
+	 * The type number associated with a {@code Sphere}. The number is {@code 2}.
 	 */
-	public static final int TYPE = 1;
+	public static final int TYPE = 2;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

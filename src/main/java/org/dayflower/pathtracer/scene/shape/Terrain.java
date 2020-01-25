@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 - 2019 J&#246;rgen Lundgren
+ * Copyright 2015 - 2020 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -69,9 +69,9 @@ public final class Terrain extends Shape {
 	public static final int SIZE = 5;
 	
 	/**
-	 * The type number associated with a {@code Terrain}. The number is {@code 4}.
+	 * The type number associated with a {@code Terrain}. The number is {@code 3}.
 	 */
-	public static final int TYPE = 4;
+	public static final int TYPE = 3;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	

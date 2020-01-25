@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 - 2019 J&#246;rgen Lundgren
+ * Copyright 2015 - 2020 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -49,6 +49,11 @@ public final class Triangle extends Shape {
 	public static final int RELATIVE_OFFSET_A_SURFACE_NORMAL_OFFSET = 3;
 	
 	/**
+	 * The relative offset of the A Surface Tangent Offset parameter in the {@code float} array. The value is {@code 9}.
+	 */
+	public static final int RELATIVE_OFFSET_A_SURFACE_TANGENT_OFFSET = 9;
+	
+	/**
 	 * The relative offset of the A Texture Coordinates Offset parameter in the {@code float} array. The value is {@code 6}.
 	 */
 	public static final int RELATIVE_OFFSET_A_TEXTURE_COORDINATES_OFFSET = 6;
@@ -62,6 +67,11 @@ public final class Triangle extends Shape {
 	 * The relative offset of the B Surface Normal Offset parameter in the {@code float} array. The value is {@code 4}.
 	 */
 	public static final int RELATIVE_OFFSET_B_SURFACE_NORMAL_OFFSET = 4;
+	
+	/**
+	 * The relative offset of the B Surface Tangent Offset parameter in the {@code float} array. The value is {@code 10}.
+	 */
+	public static final int RELATIVE_OFFSET_B_SURFACE_TANGENT_OFFSET = 10;
 	
 	/**
 	 * The relative offset of the B Texture Coordinates Offset parameter in the {@code float} array. The value is {@code 7}.
@@ -79,6 +89,11 @@ public final class Triangle extends Shape {
 	public static final int RELATIVE_OFFSET_C_SURFACE_NORMAL_OFFSET = 5;
 	
 	/**
+	 * The relative offset of the C Surface Tangent Offset parameter in the {@code float} array. The value is {@code 11}.
+	 */
+	public static final int RELATIVE_OFFSET_C_SURFACE_TANGENT_OFFSET = 11;
+	
+	/**
 	 * The relative offset of the C Texture Coordinates Offset parameter in the {@code float} array. The value is {@code 8}.
 	 */
 	public static final int RELATIVE_OFFSET_C_TEXTURE_COORDINATES_OFFSET = 8;
@@ -86,12 +101,12 @@ public final class Triangle extends Shape {
 	/**
 	 * The size of a {@code Triangle} in the {@code float} array. The size is {@code 9}.
 	 */
-	public static final int SIZE = 9;
+	public static final int SIZE = 12;
 	
 	/**
-	 * The type number associated with a {@code Triangle}. The number is {@code 2}.
+	 * The type number associated with a {@code Triangle}. The number is {@code 4}.
 	 */
-	public static final int TYPE = 2;
+	public static final int TYPE = 4;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -266,6 +281,58 @@ public final class Triangle extends Shape {
 		final float c1Z = centerZ + (c0Z - centerZ) * s;
 		
 		return new Triangle(this.a.setPosition(new Point3F(a1X, a1Y, a1Z)), this.b.setPosition(new Point3F(b1X, b1Y, b1Z)), this.c.setPosition(new Point3F(c1X, c1Y, c1Z)));
+	}
+	
+	/**
+	 * Scales the texture coordinates of this {@code Triangle} instance.
+	 * <p>
+	 * Returns a new scaled version of this {@code Triangle} instance.
+	 * 
+	 * @param scale the scaling factor
+	 * @return a new scaled version of this {@code Triangle} instance
+	 */
+	public Triangle scaleTextureCoordinates(final float scale) {
+		final Point2F oldTextureCoordinatesA = this.a.getTextureCoordinates();
+		final Point2F oldTextureCoordinatesB = this.b.getTextureCoordinates();
+		final Point2F oldTextureCoordinatesC = this.c.getTextureCoordinates();
+		
+		final Point2F newTextureCoordinatesA = new Point2F(oldTextureCoordinatesA.x * scale, scale - oldTextureCoordinatesA.y * scale);
+		final Point2F newTextureCoordinatesB = new Point2F(oldTextureCoordinatesB.x * scale, scale - oldTextureCoordinatesB.y * scale);
+		final Point2F newTextureCoordinatesC = new Point2F(oldTextureCoordinatesC.x * scale, scale - oldTextureCoordinatesC.y * scale);
+		
+		return new Triangle(this.a.setTextureCoordinates(newTextureCoordinatesA), this.b.setTextureCoordinates(newTextureCoordinatesB), this.c.setTextureCoordinates(newTextureCoordinatesC));
+	}
+	
+	/**
+	 * Transforms this {@code Triangle} from World Space to Object Space.
+	 * <p>
+	 * Returns a new {@code Triangle} with the transformation performed.
+	 * <p>
+	 * If either {@code objectToWorld} or {@code worldToObject} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param objectToWorld a {@code Matrix44F}
+	 * @param worldToObject a {@code Matrix44F}
+	 * @return a new {@code Triangle} with the transformation performed
+	 * @throws NullPointerException thrown if, and only if, either {@code objectToWorld} or {@code worldToObject} are {@code null}
+	 */
+	public Triangle transformToObjectSpace(final Matrix44F objectToWorld, final Matrix44F worldToObject) {
+		return new Triangle(this.a.transformToObjectSpace(objectToWorld, worldToObject), this.b.transformToObjectSpace(objectToWorld, worldToObject), this.c.transformToObjectSpace(objectToWorld, worldToObject));
+	}
+	
+	/**
+	 * Transforms this {@code Triangle} from Object Space to World Space.
+	 * <p>
+	 * Returns a new {@code Triangle} with the transformation performed.
+	 * <p>
+	 * If either {@code objectToWorld} or {@code worldToObject} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * 
+	 * @param objectToWorld a {@code Matrix44F}
+	 * @param worldToObject a {@code Matrix44F}
+	 * @return a new {@code Triangle} with the transformation performed
+	 * @throws NullPointerException thrown if, and only if, either {@code objectToWorld} or {@code worldToObject} are {@code null}
+	 */
+	public Triangle transformToWorldSpace(final Matrix44F objectToWorld, final Matrix44F worldToObject) {
+		return new Triangle(this.a.transformToWorldSpace(objectToWorld, worldToObject), this.b.transformToWorldSpace(objectToWorld, worldToObject), this.c.transformToWorldSpace(objectToWorld, worldToObject));
 	}
 	
 	/**
@@ -524,22 +591,29 @@ public final class Triangle extends Shape {
 		 */
 		public final Vector3F normal;
 		
+		/**
+		 * The tangent of this {@code Vertex} instance.
+		 */
+		public final Vector3F tangent;
+		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		
 		/**
 		 * Constructs a new {@code Vertex} instance.
 		 * <p>
-		 * If either {@code textureCoordinates}, {@code position} or {@code normal} are {@code null}, a {@code NullPointerException} will be thrown.
+		 * If either {@code textureCoordinates}, {@code position}, {@code normal} or {@code tangent} are {@code null}, a {@code NullPointerException} will be thrown.
 		 * 
 		 * @param textureCoordinates the texture coordinates of this {@code Vertex}
 		 * @param position the position of this {@code Vertex}
 		 * @param normal the normal of this {@code Vertex}
-		 * @throws NullPointerException thrown if, and only if, either {@code textureCoordinates}, {@code position} or {@code normal} are {@code null}
+		 * @param tangent the tangent of this {@code Vertex}
+		 * @throws NullPointerException thrown if, and only if, either {@code textureCoordinates}, {@code position}, {@code normal} or {@code tangent} are {@code null}
 		 */
-		public Vertex(final Point2F textureCoordinates, final Point3F position, final Vector3F normal) {
+		public Vertex(final Point2F textureCoordinates, final Point3F position, final Vector3F normal, final Vector3F tangent) {
 			this.textureCoordinates = Objects.requireNonNull(textureCoordinates, "textureCoordinates == null");
 			this.position = Objects.requireNonNull(position, "position == null");
 			this.normal = Objects.requireNonNull(normal, "normal == null");
+			this.tangent = Objects.requireNonNull(tangent, "tangent == null");
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -564,6 +638,8 @@ public final class Triangle extends Shape {
 				return false;
 			} else if(!Objects.equals(this.normal, Vertex.class.cast(object).normal)) {
 				return false;
+			} else if(!Objects.equals(this.tangent, Vertex.class.cast(object).tangent)) {
+				return false;
 			} else {
 				return true;
 			}
@@ -576,7 +652,7 @@ public final class Triangle extends Shape {
 		 */
 		@Override
 		public int hashCode() {
-			return Objects.hash(this.textureCoordinates, this.position, this.normal);
+			return Objects.hash(this.textureCoordinates, this.position, this.normal, this.tangent);
 		}
 		
 		/**
@@ -617,6 +693,15 @@ public final class Triangle extends Shape {
 		}
 		
 		/**
+		 * Returns the tangent of this {@code Vertex} instance.
+		 * 
+		 * @return the tangent of this {@code Vertex} instance
+		 */
+		public Vector3F getTangent() {
+			return this.tangent;
+		}
+		
+		/**
 		 * Sets a new position.
 		 * <p>
 		 * Returns a new {@code Vertex} with the new position set.
@@ -628,7 +713,22 @@ public final class Triangle extends Shape {
 		 * @throws NullPointerException thrown if, and only if, {@code position} is {@code null}
 		 */
 		public Vertex setPosition(final Point3F position) {
-			return new Vertex(this.textureCoordinates, position, this.normal);
+			return new Vertex(this.textureCoordinates, position, this.normal, this.tangent);
+		}
+		
+		/**
+		 * Sets new texture coordinates.
+		 * <p>
+		 * Returns a new {@code Vertex} with the new texture coordinates set.
+		 * <p>
+		 * If {@code textureCoordinates} is {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param textureCoordinates the new texture coordinates
+		 * @return a new {@code Vertex} with the new texture coordinates set
+		 * @throws NullPointerException thrown if, and only if, {@code textureCoordinates} is {@code null}
+		 */
+		public Vertex setTextureCoordinates(final Point2F textureCoordinates) {
+			return new Vertex(textureCoordinates, this.position, this.normal, this.tangent);
 		}
 		
 		/**
@@ -643,7 +743,39 @@ public final class Triangle extends Shape {
 		 * @throws NullPointerException thrown if, and only if, {@code m} is {@code null}
 		 */
 		public Vertex transform(final Matrix44F m) {
-			return new Vertex(this.textureCoordinates, this.position.transform(m), this.normal);
+			return new Vertex(this.textureCoordinates, this.position.transform(m), this.normal, this.tangent);
+		}
+		
+		/**
+		 * Transforms this {@code Vertex} from World Space to Object Space.
+		 * <p>
+		 * Returns a new {@code Vertex} with the transformation performed.
+		 * <p>
+		 * If either {@code objectToWorld} or {@code worldToObject} are {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param objectToWorld a {@code Matrix44F}
+		 * @param worldToObject a {@code Matrix44F}
+		 * @return a new {@code Vertex} with the transformation performed
+		 * @throws NullPointerException thrown if, and only if, either {@code objectToWorld} or {@code worldToObject} are {@code null}
+		 */
+		public Vertex transformToObjectSpace(final Matrix44F objectToWorld, final Matrix44F worldToObject) {
+			return new Vertex(this.textureCoordinates, this.position.transform(worldToObject), this.normal.transformTranspose(objectToWorld), this.tangent.transformTranspose(objectToWorld));
+		}
+		
+		/**
+		 * Transforms this {@code Vertex} from Object Space to World Space.
+		 * <p>
+		 * Returns a new {@code Vertex} with the transformation performed.
+		 * <p>
+		 * If either {@code objectToWorld} or {@code worldToObject} are {@code null}, a {@code NullPointerException} will be thrown.
+		 * 
+		 * @param objectToWorld a {@code Matrix44F}
+		 * @param worldToObject a {@code Matrix44F}
+		 * @return a new {@code Vertex} with the transformation performed
+		 * @throws NullPointerException thrown if, and only if, either {@code objectToWorld} or {@code worldToObject} are {@code null}
+		 */
+		public Vertex transformToWorldSpace(final Matrix44F objectToWorld, final Matrix44F worldToObject) {
+			return new Vertex(this.textureCoordinates, this.position.transform(objectToWorld), this.normal.transformTranspose(worldToObject), this.tangent.transformTranspose(worldToObject));
 		}
 		
 		/**
@@ -655,7 +787,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateX(final float x) {
-			return new Vertex(this.textureCoordinates, new Point3F(this.position.x + x, this.position.y, this.position.z), this.normal);
+			return new Vertex(this.textureCoordinates, new Point3F(this.position.x + x, this.position.y, this.position.z), this.normal, this.tangent);
 		}
 		
 		/**
@@ -667,7 +799,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateY(final float y) {
-			return new Vertex(this.textureCoordinates, new Point3F(this.position.x, this.position.y + y, this.position.z), this.normal);
+			return new Vertex(this.textureCoordinates, new Point3F(this.position.x, this.position.y + y, this.position.z), this.normal, this.tangent);
 		}
 		
 		/**
@@ -679,7 +811,7 @@ public final class Triangle extends Shape {
 		 * @return a new {@code Vertex} with the translation performed
 		 */
 		public Vertex translateZ(final float z) {
-			return new Vertex(this.textureCoordinates, new Point3F(this.position.x, this.position.y, this.position.z + z), this.normal);
+			return new Vertex(this.textureCoordinates, new Point3F(this.position.x, this.position.y, this.position.z + z), this.normal, this.tangent);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 - 2019 J&#246;rgen Lundgren
+ * Copyright 2015 - 2020 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -106,7 +106,7 @@ public final class SceneCompiler {
 		
 //		Retrieve all unique Primitives:
 		final List<Primitive> uniquePrimitives = doFindUniquePrimitives(allPrimitives);
-		final List<Primitive> uniquePrimitivesEmittingLight = doFindPrimitivesEmittingLight(uniquePrimitives);
+//		final List<Primitive> uniquePrimitivesEmittingLight = doFindPrimitivesEmittingLight(uniquePrimitives);
 		
 //		Retrieve all unique Shapes:
 		final List<Plane> uniquePlanes = doFindUniquePlanes(allPlanes);
@@ -156,7 +156,7 @@ public final class SceneCompiler {
 		final Map<Texture, Integer> textureMappings = doCreateTextureMappings(uniqueTextures);
 		
 //		Create mappings from Primitives to Integer indices:
-		final Map<Primitive, Integer> primitiveMappings = doCreatePrimitiveMappings(uniquePrimitives);
+//		final Map<Primitive, Integer> primitiveMappings = doCreatePrimitiveMappings(uniquePrimitives);
 		
 //		Create mappings from Point2Fs, Point3Fs and Vector3Fs to Integer indices:
 		final Map<Point2F, Integer> point2FMappings = doCreatePoint2FMappings(uniquePoint2Fs);
@@ -176,12 +176,12 @@ public final class SceneCompiler {
 		final int[] boundingVolumeHierarchies = doCompileBoundingVolumeHierarchies(uniqueBoundingVolumeHierarchyRootNodes, point3FMappings, triangleMappings);
 		final int[] planes = doCompilePlanes(uniquePlanes, point3FMappings, vector3FMappings);
 		final int[] primitives = doCompilePrimitives(uniquePrimitives, uniqueTriangleMeshes, uniqueBoundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings);
-		final int[] primitivesEmittingLight = doCompilePrimitivesEmittingLight(uniquePrimitivesEmittingLight, primitiveMappings);
+//		final int[] primitivesEmittingLight = doCompilePrimitivesEmittingLight(uniquePrimitivesEmittingLight, primitiveMappings);
 		final int[] triangles = doCompileTriangles(uniqueTriangles, point2FMappings, point3FMappings, vector3FMappings);
 		
 		doOnCompilationEnd(scene, System.currentTimeMillis() - currentTimeMillis);
 		
-		return new CompiledScene(scene.getName(), camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, primitivesEmittingLight, triangles);
+		return new CompiledScene(scene.getName(), camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, /*primitivesEmittingLight, */triangles);
 	}
 	
 	/**
@@ -465,24 +465,40 @@ public final class SceneCompiler {
 			} else if(shape instanceof Triangle) {
 				final Triangle triangle = Triangle.class.cast(shape);
 				
-				final Vector3F a = triangle.getA().getNormal();
-				final Vector3F b = triangle.getB().getNormal();
-				final Vector3F c = triangle.getC().getNormal();
+				final Vector3F normalA = triangle.getA().getNormal();
+				final Vector3F normalB = triangle.getB().getNormal();
+				final Vector3F normalC = triangle.getC().getNormal();
 				
-				allVector3Fs.add(a);
-				allVector3Fs.add(b);
-				allVector3Fs.add(c);
+				final Vector3F tangentA = triangle.getA().getTangent();
+				final Vector3F tangentB = triangle.getB().getTangent();
+				final Vector3F tangentC = triangle.getC().getTangent();
+				
+				allVector3Fs.add(normalA);
+				allVector3Fs.add(normalB);
+				allVector3Fs.add(normalC);
+				
+				allVector3Fs.add(tangentA);
+				allVector3Fs.add(tangentB);
+				allVector3Fs.add(tangentC);
 			} else if(shape instanceof TriangleMesh) {
 				final TriangleMesh triangleMesh = TriangleMesh.class.cast(shape);
 				
 				for(final Triangle triangle : triangleMesh.getTriangles()) {
-					final Vector3F a = triangle.getA().getNormal();
-					final Vector3F b = triangle.getB().getNormal();
-					final Vector3F c = triangle.getC().getNormal();
+					final Vector3F normalA = triangle.getA().getNormal();
+					final Vector3F normalB = triangle.getB().getNormal();
+					final Vector3F normalC = triangle.getC().getNormal();
 					
-					allVector3Fs.add(a);
-					allVector3Fs.add(b);
-					allVector3Fs.add(c);
+					final Vector3F tangentA = triangle.getA().getTangent();
+					final Vector3F tangentB = triangle.getB().getTangent();
+					final Vector3F tangentC = triangle.getC().getTangent();
+					
+					allVector3Fs.add(normalA);
+					allVector3Fs.add(normalB);
+					allVector3Fs.add(normalC);
+					
+					allVector3Fs.add(tangentA);
+					allVector3Fs.add(tangentB);
+					allVector3Fs.add(tangentC);
 				}
 			}
 		}
@@ -490,9 +506,9 @@ public final class SceneCompiler {
 		return allVector3Fs;
 	}
 	
-	private static List<Primitive> doFindPrimitivesEmittingLight(final List<Primitive> primitives) {
-		return primitives.stream().filter(primitive -> primitive.getSurface().getTextureEmission().isEmissive()).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
-	}
+//	private static List<Primitive> doFindPrimitivesEmittingLight(final List<Primitive> primitives) {
+//		return primitives.stream().filter(primitive -> primitive.getSurface().getTextureEmission().isEmissive()).collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+//	}
 	
 	private static List<Node> doFindUniqueBoundingVolumeHierarchyRootNodes(final List<Node> boundingVolumeHierarchyRootNodes) {
 		return boundingVolumeHierarchyRootNodes.stream().distinct().collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
@@ -572,15 +588,15 @@ public final class SceneCompiler {
 		return point3FMappings;
 	}
 	
-	private static Map<Primitive, Integer> doCreatePrimitiveMappings(final List<Primitive> primitives) {
-		final Map<Primitive, Integer> primitiveMappings = new HashMap<>();
+//	private static Map<Primitive, Integer> doCreatePrimitiveMappings(final List<Primitive> primitives) {
+//		final Map<Primitive, Integer> primitiveMappings = new HashMap<>();
 		
-		for(int i = 0; i < primitives.size(); i++) {
-			primitiveMappings.put(primitives.get(i), Integer.valueOf(i * Primitive.SIZE));
-		}
+//		for(int i = 0; i < primitives.size(); i++) {
+//			primitiveMappings.put(primitives.get(i), Integer.valueOf(i * Primitive.SIZE));
+//		}
 		
-		return primitiveMappings;
-	}
+//		return primitiveMappings;
+//	}
 	
 	private static Map<Sphere, Integer> doCreateSphereMappings(final List<Sphere> spheres) {
 		final Map<Sphere, Integer> sphereMappings = new HashMap<>();
@@ -946,17 +962,17 @@ public final class SceneCompiler {
 		return Arrays2.toIntArray(primitives, primitive -> doCompilePrimitive(primitive, triangleMeshes, boundingVolumeHierarchyRootNodes, planeMappings, sphereMappings, surfaceMappings, terrainMappings, triangleMappings), 1);
 	}
 	
-	private static int[] doCompilePrimitivesEmittingLight(final List<Primitive> primitivesEmittingLight, final Map<Primitive, Integer> primitiveMappings) {
-		final int[] compiledPrimitivesEmittingLight = new int[primitivesEmittingLight.size() + 1];
+//	private static int[] doCompilePrimitivesEmittingLight(final List<Primitive> primitivesEmittingLight, final Map<Primitive, Integer> primitiveMappings) {
+//		final int[] compiledPrimitivesEmittingLight = new int[primitivesEmittingLight.size() + 1];
 		
-		compiledPrimitivesEmittingLight[0] = primitivesEmittingLight.size();
+//		compiledPrimitivesEmittingLight[0] = primitivesEmittingLight.size();
 		
-		for(int i = 0; i < primitivesEmittingLight.size(); i++) {
-			compiledPrimitivesEmittingLight[i + 1] = primitiveMappings.get(primitivesEmittingLight.get(i)).intValue();
-		}
+//		for(int i = 0; i < primitivesEmittingLight.size(); i++) {
+//			compiledPrimitivesEmittingLight[i + 1] = primitiveMappings.get(primitivesEmittingLight.get(i)).intValue();
+//		}
 		
-		return compiledPrimitivesEmittingLight;
-	}
+//		return compiledPrimitivesEmittingLight;
+//	}
 	
 	private static int[] doCompileTriangle(final Triangle triangle, final Map<Point2F, Integer> point2FMappings, final Map<Point3F, Integer> point3FMappings, final Map<Vector3F, Integer> vector3FMappings) {
 		return new int[] {
@@ -968,7 +984,10 @@ public final class SceneCompiler {
 			doGetVector3FOffset(triangle.getC().getNormal(), vector3FMappings),
 			doGetPoint2FOffset(triangle.getA().getTextureCoordinates(), point2FMappings),
 			doGetPoint2FOffset(triangle.getB().getTextureCoordinates(), point2FMappings),
-			doGetPoint2FOffset(triangle.getC().getTextureCoordinates(), point2FMappings)
+			doGetPoint2FOffset(triangle.getC().getTextureCoordinates(), point2FMappings),
+			doGetVector3FOffset(triangle.getA().getTangent(), vector3FMappings),
+			doGetVector3FOffset(triangle.getB().getTangent(), vector3FMappings),
+			doGetVector3FOffset(triangle.getC().getTangent(), vector3FMappings)
 		};
 	}
 	

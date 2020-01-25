@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 - 2019 J&#246;rgen Lundgren
+ * Copyright 2015 - 2020 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -65,7 +65,7 @@ public final class CompiledScene {
 	private final int[] boundingVolumeHierarchies;
 	private final int[] planes;
 	private final int[] primitives;
-	private final int[] primitivesEmittingLight;
+//	private final int[] primitivesEmittingLight;
 	private final int[] triangles;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ public final class CompiledScene {
 	 * @param triangles the array containing all the compiled {@link Triangle} instances
 	 * @throws NullPointerException thrown if, and only if, at least one of the parameters are {@code null}
 	 */
-	public CompiledScene(final String name, final float[] camera, final float[] point2Fs, final float[] point3Fs, final float[] spheres, final float[] surfaces, final float[] terrains, final float[] textures, final float[] vector3Fs, final int[] boundingVolumeHierarchies, final int[] planes, final int[] primitives, final int[] primitivesEmittingLight, final int[] triangles) {
+	public CompiledScene(final String name, final float[] camera, final float[] point2Fs, final float[] point3Fs, final float[] spheres, final float[] surfaces, final float[] terrains, final float[] textures, final float[] vector3Fs, final int[] boundingVolumeHierarchies, final int[] planes, final int[] primitives, /*final int[] primitivesEmittingLight, */final int[] triangles) {
 		this.name = Objects.requireNonNull(name, "name == null");
 		this.camera = Objects.requireNonNull(camera, "camera == null");
 		this.point2Fs = Objects.requireNonNull(point2Fs, "point2Fs == null");
@@ -104,7 +104,7 @@ public final class CompiledScene {
 		this.boundingVolumeHierarchies = Objects.requireNonNull(boundingVolumeHierarchies, "boundingVolumeHierarchies == null");
 		this.planes = Objects.requireNonNull(planes, "planes == null");
 		this.primitives = Objects.requireNonNull(primitives, "primitives == null");
-		this.primitivesEmittingLight = Objects.requireNonNull(primitivesEmittingLight, "primitivesEmittingLight == null");
+//		this.primitivesEmittingLight = Objects.requireNonNull(primitivesEmittingLight, "primitivesEmittingLight == null");
 		this.triangles = Objects.requireNonNull(triangles, "triangles == null");
 	}
 	
@@ -223,9 +223,9 @@ public final class CompiledScene {
 	 * 
 	 * @return the array containing all the compiled {@code Primitive} instances that emits light
 	 */
-	public int[] getPrimitivesEmittingLight() {
-		return this.primitivesEmittingLight;
-	}
+//	public int[] getPrimitivesEmittingLight() {
+//		return this.primitivesEmittingLight;
+//	}
 	
 	/**
 	 * Returns the array containing all the compiled {@link Triangle} instances.
@@ -262,7 +262,7 @@ public final class CompiledScene {
 			Arrays2.writeFloatArray(dataOutputStream, this.textures);
 			Arrays2.writeFloatArray(dataOutputStream, this.surfaces);
 			Arrays2.writeIntArray(dataOutputStream, this.primitives);
-			Arrays2.writeIntArray(dataOutputStream, this.primitivesEmittingLight);
+//			Arrays2.writeIntArray(dataOutputStream, this.primitivesEmittingLight);
 			Arrays2.writeFloatArray(dataOutputStream, this.camera);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
@@ -340,10 +340,10 @@ public final class CompiledScene {
 			final float[] textures = Arrays2.readFloatArray(dataInputStream);
 			final float[] surfaces = Arrays2.readFloatArray(dataInputStream);
 			final int[] primitives = Arrays2.readIntArray(dataInputStream);
-			final int[] primitivesEmittingLight = Arrays2.readIntArray(dataInputStream);
+//			final int[] primitivesEmittingLight = Arrays2.readIntArray(dataInputStream);
 			final float[] camera = Arrays2.readFloatArray(dataInputStream);
 			
-			return new CompiledScene(name, camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, primitivesEmittingLight, triangles);
+			return new CompiledScene(name, camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, /*primitivesEmittingLight, */triangles);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}

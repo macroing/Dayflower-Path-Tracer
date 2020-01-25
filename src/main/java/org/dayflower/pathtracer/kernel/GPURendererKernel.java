@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 - 2019 J&#246;rgen Lundgren
+ * Copyright 2015 - 2020 J&#246;rgen Lundgren
  * 
  * This file is part of Dayflower.
  * 
@@ -84,9 +84,10 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT = 2;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL = 5;
 	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING = 19;
+	private static final int RELATIVE_OFFSET_INTERSECTION_SURFACE_TANGENT = 24;
 	private static final int RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES = 8;
 	private static final int SIZE_COLOR_RGB = 3;
-	private static final int SIZE_INTERSECTION = 24;
+	private static final int SIZE_INTERSECTION = 27;
 	private static final int SIZE_RAY = 6;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +144,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private int[] sceneBoundingVolumeHierarchies_$constant$;
 	private int[] scenePlanes_$constant$;
 	private int[] scenePrimitives_$constant$;
-	private int[] scenePrimitivesEmittingLight_$constant$;
+//	private int[] scenePrimitivesEmittingLight_$constant$;
 	private int[] sceneTriangles_$constant$;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +186,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.scenePlanes_$constant$ = compiledScene.getPlanes();
 		this.scenePrimitives_$constant$ = compiledScene.getPrimitives();
 		this.scenePrimitivesCount = this.scenePrimitives_$constant$.length / Primitive.SIZE;
-		this.scenePrimitivesEmittingLight_$constant$ = compiledScene.getPrimitivesEmittingLight();
+//		this.scenePrimitivesEmittingLight_$constant$ = compiledScene.getPrimitivesEmittingLight();
 //		this.scenePrimitivesEmittingLightCount = this.scenePrimitivesEmittingLight_$constant$[0];
 		this.sceneTriangles_$constant$ = compiledScene.getTriangles();
 		
@@ -408,7 +409,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		put(this.scenePoint2Fs_$constant$);
 		put(this.scenePoint3Fs_$constant$);
 		put(this.scenePrimitives_$constant$);
-		put(this.scenePrimitivesEmittingLight_$constant$);
+//		put(this.scenePrimitivesEmittingLight_$constant$);
 		put(this.sceneSpheres_$constant$);
 		put(this.sceneSurfaces_$constant$);
 		put(this.sceneTerrains_$constant$);
@@ -896,6 +897,10 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 					final int offsetBSurfaceNormal = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_SURFACE_NORMAL_OFFSET];
 					final int offsetCSurfaceNormal = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_SURFACE_NORMAL_OFFSET];
 					
+					final int offsetASurfaceTangent = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_SURFACE_TANGENT_OFFSET];
+					final int offsetBSurfaceTangent = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_SURFACE_TANGENT_OFFSET];
+					final int offsetCSurfaceTangent = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_SURFACE_TANGENT_OFFSET];
+					
 					final int offsetATextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_TEXTURE_COORDINATES_OFFSET];
 					final int offsetBTextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_TEXTURE_COORDINATES_OFFSET];
 					final int offsetCTextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_TEXTURE_COORDINATES_OFFSET];
@@ -920,6 +925,16 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 					final float cSurfaceNormalY = this.sceneVector3Fs_$constant$[offsetCSurfaceNormal + 1];
 					final float cSurfaceNormalZ = this.sceneVector3Fs_$constant$[offsetCSurfaceNormal + 2];
 					
+					final float aSurfaceTangentX = this.sceneVector3Fs_$constant$[offsetASurfaceTangent + 0];
+					final float aSurfaceTangentY = this.sceneVector3Fs_$constant$[offsetASurfaceTangent + 1];
+					final float aSurfaceTangentZ = this.sceneVector3Fs_$constant$[offsetASurfaceTangent + 2];
+					final float bSurfaceTangentX = this.sceneVector3Fs_$constant$[offsetBSurfaceTangent + 0];
+					final float bSurfaceTangentY = this.sceneVector3Fs_$constant$[offsetBSurfaceTangent + 1];
+					final float bSurfaceTangentZ = this.sceneVector3Fs_$constant$[offsetBSurfaceTangent + 2];
+					final float cSurfaceTangentX = this.sceneVector3Fs_$constant$[offsetCSurfaceTangent + 0];
+					final float cSurfaceTangentY = this.sceneVector3Fs_$constant$[offsetCSurfaceTangent + 1];
+					final float cSurfaceTangentZ = this.sceneVector3Fs_$constant$[offsetCSurfaceTangent + 2];
+					
 					final float aTextureCoordinatesU = this.scenePoint2Fs_$constant$[offsetATextureCoordinates + 0];
 					final float aTextureCoordinatesV = this.scenePoint2Fs_$constant$[offsetATextureCoordinates + 1];
 					final float bTextureCoordinatesU = this.scenePoint2Fs_$constant$[offsetBTextureCoordinates + 0];
@@ -927,7 +942,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 					final float cTextureCoordinatesU = this.scenePoint2Fs_$constant$[offsetCTextureCoordinates + 0];
 					final float cTextureCoordinatesV = this.scenePoint2Fs_$constant$[offsetCTextureCoordinates + 1];
 					
-					doCalculateSurfacePropertiesForTriangle(originX, originY, originZ, directionX, directionY, directionZ, closestDistance, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ, aSurfaceNormalX, aSurfaceNormalY, aSurfaceNormalZ, bSurfaceNormalX, bSurfaceNormalY, bSurfaceNormalZ, cSurfaceNormalX, cSurfaceNormalY, cSurfaceNormalZ, aTextureCoordinatesU, aTextureCoordinatesV, bTextureCoordinatesU, bTextureCoordinatesV, cTextureCoordinatesU, cTextureCoordinatesV);
+					doCalculateSurfacePropertiesForTriangle(originX, originY, originZ, directionX, directionY, directionZ, closestDistance, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ, aSurfaceNormalX, aSurfaceNormalY, aSurfaceNormalZ, bSurfaceNormalX, bSurfaceNormalY, bSurfaceNormalZ, cSurfaceNormalX, cSurfaceNormalY, cSurfaceNormalZ, aSurfaceTangentX, aSurfaceTangentY, aSurfaceTangentZ, bSurfaceTangentX, bSurfaceTangentY, bSurfaceTangentZ, cSurfaceTangentX, cSurfaceTangentY, cSurfaceTangentZ, aTextureCoordinatesU, aTextureCoordinatesV, bTextureCoordinatesU, bTextureCoordinatesV, cTextureCoordinatesU, cTextureCoordinatesV);
 				}
 				
 //				Perform Normal Mapping via Image Texture:
@@ -1424,6 +1439,43 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final int colorB = (int)(saturate(blerp(colorB00, colorB01, colorB10, colorB11, factorX, factorY), 0.0F, 1.0F) * 255.0F + 0.5F);
 		
 		final int colorRGB = ((colorR & 0xFF) << 16) | ((colorG & 0xFF) << 8) | (colorB & 0xFF);
+		
+		return colorRGB;
+	}
+	
+	private int doGetTextureColorFromImageTextureSimple(final int texturesOffset) {
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+		final int offsetTextureCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
+		
+		final float u = this.intersections_$local$[offsetTextureCoordinates + 0];
+		final float v = this.intersections_$local$[offsetTextureCoordinates + 1];
+		
+		final float width = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_WIDTH];
+		final float height = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_HEIGHT];
+		
+		final float scaleU = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_U];
+		final float scaleV = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_SCALE_V];
+		
+		final float cosAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_COS];
+		final float sinAngle = this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_RADIANS_SIN];
+		
+		final float u0 = (u * cosAngle - v * sinAngle);
+		final float v0 = (v * cosAngle + u * sinAngle);
+		final float u1 = remainder(u0 * scaleU * width, width);
+		final float v1 = remainder(v0 * scaleV * height, height);
+		final float u2 = u1 >= 0.0F ? u1 : width - abs(u1);
+		final float v2 = v1 >= 0.0F ? v1 : height - abs(v1);
+		
+		final int x = (int)(u2);
+		final int y = (int)(v2);
+		
+		final int w = (int)(width);
+		final int resolution = (int)(width * height);
+		
+		final int index = y * w + x;
+		
+		final int colorRGB = index >= 0 && index < resolution ? (int)(this.sceneTextures_$constant$[texturesOffset + ImageTexture.RELATIVE_OFFSET_DATA + index]) : 0;
 		
 		return colorRGB;
 	}
@@ -2039,7 +2091,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormalNormalizedZ;
 	}
 	
-	private void doCalculateSurfacePropertiesForTriangle(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float distance, final float aPositionX, final float aPositionY, final float aPositionZ, final float bPositionX, final float bPositionY, final float bPositionZ, final float cPositionX, final float cPositionY, final float cPositionZ, final float aSurfaceNormalX, final float aSurfaceNormalY, final float aSurfaceNormalZ, final float bSurfaceNormalX, final float bSurfaceNormalY, final float bSurfaceNormalZ, final float cSurfaceNormalX, final float cSurfaceNormalY, final float cSurfaceNormalZ, final float aTextureCoordinatesU, final float aTextureCoordinatesV, final float bTextureCoordinatesU, final float bTextureCoordinatesV, final float cTextureCoordinatesU, final float cTextureCoordinatesV) {
+	private void doCalculateSurfacePropertiesForTriangle(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float distance, final float aPositionX, final float aPositionY, final float aPositionZ, final float bPositionX, final float bPositionY, final float bPositionZ, final float cPositionX, final float cPositionY, final float cPositionZ, final float aSurfaceNormalX, final float aSurfaceNormalY, final float aSurfaceNormalZ, final float bSurfaceNormalX, final float bSurfaceNormalY, final float bSurfaceNormalZ, final float cSurfaceNormalX, final float cSurfaceNormalY, final float cSurfaceNormalZ, final float aSurfaceTangentX, final float aSurfaceTangentY, final float aSurfaceTangentZ, final float bSurfaceTangentX, final float bSurfaceTangentY, final float bSurfaceTangentZ, final float cSurfaceTangentX, final float cSurfaceTangentY, final float cSurfaceTangentZ, final float aTextureCoordinatesU, final float aTextureCoordinatesV, final float bTextureCoordinatesU, final float bTextureCoordinatesV, final float cTextureCoordinatesU, final float cTextureCoordinatesV) {
 //		Calculate the surface intersection point:
 		final float surfaceIntersectionPointX = originX + directionX * distance;
 		final float surfaceIntersectionPointY = originY + directionY * distance;
@@ -2073,6 +2125,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 //		Calculate the UV-coordinates:
 		final float u = barycentricW * aTextureCoordinatesU + barycentricU * bTextureCoordinatesU + barycentricV * cTextureCoordinatesU;
 		final float v = barycentricW * aTextureCoordinatesV + barycentricU * bTextureCoordinatesV + barycentricV * cTextureCoordinatesV;
+//		final float u = barycentricU * aTextureCoordinatesU + barycentricV * bTextureCoordinatesU + barycentricW * cTextureCoordinatesU;
+//		final float v = barycentricU * aTextureCoordinatesV + barycentricV * bTextureCoordinatesV + barycentricW * cTextureCoordinatesV;
 		
 //		Get the intersections offset:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
@@ -2081,6 +2135,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final int offsetIntersectionSurfaceIntersectionPoint = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
 		final int offsetIntersectionSurfaceNormal = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
 		final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
+		final int offsetIntersectionSurfaceTangent = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_TANGENT;
 		final int offsetIntersectionUVCoordinates = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES;
 		
 //		Update the intersections array:
@@ -2095,6 +2150,10 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		float surfaceNormal0Y = 0.0F;
 		float surfaceNormal0Z = 0.0F;
 		
+		float surfaceTangent0X = 0.0F;
+		float surfaceTangent0Y = 0.0F;
+		float surfaceTangent0Z = 0.0F;
+		
 		if(super.shaderType == SHADER_TYPE_FLAT) {
 //			Calculate the surface normal for Flat Shading:
 			surfaceNormal0X = edgeABY * edgeACZ - edgeABZ * edgeACY;
@@ -2105,6 +2164,18 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			surfaceNormal0X = aSurfaceNormalX * barycentricW + bSurfaceNormalX * barycentricU + cSurfaceNormalX * barycentricV;
 			surfaceNormal0Y = aSurfaceNormalY * barycentricW + bSurfaceNormalY * barycentricU + cSurfaceNormalY * barycentricV;
 			surfaceNormal0Z = aSurfaceNormalZ * barycentricW + bSurfaceNormalZ * barycentricU + cSurfaceNormalZ * barycentricV;
+			
+			surfaceTangent0X = aSurfaceTangentX * barycentricW + bSurfaceTangentX * barycentricU + cSurfaceTangentX * barycentricV;
+			surfaceTangent0Y = aSurfaceTangentY * barycentricW + bSurfaceTangentY * barycentricU + cSurfaceTangentY * barycentricV;
+			surfaceTangent0Z = aSurfaceTangentZ * barycentricW + bSurfaceTangentZ * barycentricU + cSurfaceTangentZ * barycentricV;
+			
+//			surfaceNormal0X = aSurfaceNormalX * barycentricU + bSurfaceNormalX * barycentricV + cSurfaceNormalX * barycentricW;
+//			surfaceNormal0Y = aSurfaceNormalY * barycentricU + bSurfaceNormalY * barycentricV + cSurfaceNormalY * barycentricW;
+//			surfaceNormal0Z = aSurfaceNormalZ * barycentricU + bSurfaceNormalZ * barycentricV + cSurfaceNormalZ * barycentricW;
+			
+//			surfaceTangent0X = aSurfaceTangentX * barycentricU + bSurfaceTangentX * barycentricV + cSurfaceTangentX * barycentricW;
+//			surfaceTangent0Y = aSurfaceTangentY * barycentricU + bSurfaceTangentY * barycentricV + cSurfaceTangentY * barycentricW;
+//			surfaceTangent0Z = aSurfaceTangentZ * barycentricU + bSurfaceTangentZ * barycentricV + cSurfaceTangentZ * barycentricW;
 		}
 		
 		final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
@@ -2113,6 +2184,12 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
 		final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
 		
+		final float surfaceTangent0LengthReciprocal = rsqrt(surfaceTangent0X * surfaceTangent0X + surfaceTangent0Y * surfaceTangent0Y + surfaceTangent0Z * surfaceTangent0Z);
+		
+		final float surfaceTangent1X = surfaceTangent0X * surfaceTangent0LengthReciprocal;
+		final float surfaceTangent1Y = surfaceTangent0Y * surfaceTangent0LengthReciprocal;
+		final float surfaceTangent1Z = surfaceTangent0Z * surfaceTangent0LengthReciprocal;
+		
 //		Update the intersections array based on Flat Shading:
 		this.intersections_$local$[offsetIntersectionSurfaceNormal + 0] = surfaceNormal1X;
 		this.intersections_$local$[offsetIntersectionSurfaceNormal + 1] = surfaceNormal1Y;
@@ -2120,6 +2197,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0] = surfaceNormal1X;
 		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
 		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
+		this.intersections_$local$[offsetIntersectionSurfaceTangent + 0] = surfaceTangent1X;
+		this.intersections_$local$[offsetIntersectionSurfaceTangent + 1] = surfaceTangent1Y;
+		this.intersections_$local$[offsetIntersectionSurfaceTangent + 2] = surfaceTangent1Z;
 	}
 	
 	@NoCL
@@ -2195,12 +2275,15 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		
 		if(super.rendererNormalMapping == BOOLEAN_TRUE && textureType == ImageTexture.TYPE) {
 //			Calculate the texture color:
-			final int rGB = doGetTextureColorFromImageTexture(texturesOffset);
+			final int rGB = doGetTextureColorFromImageTextureSimple(texturesOffset);
 			
 //			Retrieve the R-, G- and B-component values:
-			final float r = 2.0F * (((rGB >> 16) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
-			final float g = 2.0F * (((rGB >>  8) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
-			final float b = 2.0F * (((rGB >>  0) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
+//			final float r = 2.0F * (((rGB >> 16) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
+//			final float g = 2.0F * (((rGB >>  8) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
+//			final float b = 2.0F * (((rGB >>  0) & 0xFF) * COLOR_RECIPROCAL) - 1.0F;
+			final float r = ((((rGB >> 16) & 0xFF) * COLOR_RECIPROCAL) - 0.5F) * 2.0F;
+			final float g = ((((rGB >>  8) & 0xFF) * COLOR_RECIPROCAL) - 0.5F) * 2.0F;
+			final float b = ((((rGB >>  0) & 0xFF) * COLOR_RECIPROCAL) - 0.0F) * 2.0F;
 			
 //			Retrieve the offset of the surface normal in the intersections array:
 			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
@@ -2241,7 +2324,33 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
 				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
 				
-				this.intersections_$local$[offsetIntersectionSurfaceNormalShading] = surfaceNormal1X;
+				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0] = surfaceNormal1X;
+				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
+				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
+			} else if(type == Triangle.TYPE) {
+				final int offsetIntersectionSurfaceTangent = intersectionsOffset0 + RELATIVE_OFFSET_INTERSECTION_SURFACE_TANGENT;
+				
+				final float uX = this.intersections_$local$[offsetIntersectionSurfaceTangent + 0];
+				final float uY = this.intersections_$local$[offsetIntersectionSurfaceTangent + 1];
+				final float uZ = this.intersections_$local$[offsetIntersectionSurfaceTangent + 2];
+				
+				final float v0X = wY * uZ - wZ * uY;
+				final float v0Y = wZ * uX - wX * uZ;
+				final float v0Z = wX * uY - wY * uX;
+				final float v0LengthReciprocal = rsqrt(v0X * v0X + v0Y * v0Y + v0Z * v0Z);
+				final float v1X = v0X * v0LengthReciprocal;
+				final float v1Y = v0Y * v0LengthReciprocal;
+				final float v1Z = v0Z * v0LengthReciprocal;
+				
+				final float surfaceNormal0X = r * uX + g * v1X + b * wX;
+				final float surfaceNormal0Y = r * uY + g * v1Y + b * wY;
+				final float surfaceNormal0Z = r * uZ + g * v1Z + b * wZ;
+				final float surfaceNormal0LengthReciprocal = rsqrt(surfaceNormal0X * surfaceNormal0X + surfaceNormal0Y * surfaceNormal0Y + surfaceNormal0Z * surfaceNormal0Z);
+				final float surfaceNormal1X = surfaceNormal0X * surfaceNormal0LengthReciprocal;
+				final float surfaceNormal1Y = surfaceNormal0Y * surfaceNormal0LengthReciprocal;
+				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
+				
+				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0] = surfaceNormal1X;
 				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
 				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 			} else {
@@ -2282,7 +2391,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				final float surfaceNormal1Z = surfaceNormal0Z * surfaceNormal0LengthReciprocal;
 				
 //				Update the intersections array:
-				this.intersections_$local$[offsetIntersectionSurfaceNormalShading] = surfaceNormal1X;
+				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0] = surfaceNormal1X;
 				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormal1Y;
 				this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormal1Z;
 			}
@@ -3044,9 +3153,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				
 				if(totalInternalReflection < 0.0F) {
 //					Update the ray origin for the next iteration:
-					originX = surfaceIntersectionPointX + surfaceNormalWNormalizedX * 0.02F;
-					originY = surfaceIntersectionPointY + surfaceNormalWNormalizedY * 0.02F;
-					originZ = surfaceIntersectionPointZ + surfaceNormalWNormalizedZ * 0.02F;
+					originX = surfaceIntersectionPointX + surfaceNormalWNormalizedX * 0.01F;
+					originY = surfaceIntersectionPointY + surfaceNormalWNormalizedY * 0.01F;
+					originZ = surfaceIntersectionPointZ + surfaceNormalWNormalizedZ * 0.01F;
 					
 //					Update the ray direction for the next iteration:
 					directionX = reflectionDirectionX;
