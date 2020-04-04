@@ -80,6 +80,16 @@ public final class Scene {
 	}
 	
 	/**
+	 * Returns an {@code Optional} of {@link Primitive} denoting the currently selected {@code Primitive}.
+	 * 
+	 * @param selectedIndex the selected index
+	 * @return an {@code Optional} of {@link Primitive} denoting the currently selected {@code Primitive}
+	 */
+	public Optional<Primitive> getSelectedPrimitive(final int selectedIndex) {
+		return selectedIndex >= 0 && selectedIndex < this.primitives.size() ? Optional.of(this.primitives.get(selectedIndex)) : Optional.empty();
+	}
+	
+	/**
 	 * Returns an {@code Optional} of {@link PrimitiveIntersection} with the optional intersection given a specified {@link Ray3F}.
 	 * <p>
 	 * If {@code ray} is {@code null}, a {@code NullPointerException} will be thrown.
@@ -122,6 +132,25 @@ public final class Scene {
 	 */
 	public String getName() {
 		return this.name;
+	}
+	
+	/**
+	 * Returns {@code true} if, and only if, the {@link Primitive}s in this {@code Scene} instance needs to be updated, {@code false} otherwise.
+	 * 
+	 * @return {@code true} if, and only if, the {@code Primitive}s in this {@code Scene} instance needs to be updated, {@code false} otherwise
+	 */
+	public boolean isPrimitiveUpdateRequired() {
+		boolean isPrimitiveUpdateRequired = false;
+		
+		for(final Primitive primitive : this.primitives) {
+			if(primitive.isUpdateRequired()) {
+				isPrimitiveUpdateRequired = true;
+				
+				break;
+			}
+		}
+		
+		return isPrimitiveUpdateRequired;
 	}
 	
 	/**

@@ -20,6 +20,7 @@ package org.dayflower.pathtracer.main;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -58,14 +59,18 @@ import org.dayflower.pathtracer.kernel.CPURendererKernel;
 import org.dayflower.pathtracer.kernel.GPURendererKernel;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
+import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.loader.SceneLoader;
+import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.util.Timer;
 import org.dayflower.pathtracer.util.Files;
 import org.dayflower.pathtracer.util.Strings;
 import org.macroing.image4j.Image;
 import org.macroing.math4j.AngleF;
+import org.macroing.math4j.QuaternionF;
+import org.macroing.math4j.Vector3F;
 
 /**
  * An implementation of {@link AbstractApplication} that performs Ambient Occlusion, Path Tracing, Ray Casting, Ray Marching or Ray Tracing.
@@ -530,6 +535,8 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		}
 	}
 	
+//	private long previousTime = System.nanoTime();
+	
 	/**
 	 * Called when updating.
 	 */
@@ -537,7 +544,9 @@ public final class DayflowerApplication extends AbstractApplication implements C
 	protected void update() {
 		final AtomicInteger renderPass = this.renderPass;
 		
-		final Camera camera = this.scene.getCamera();
+		final Scene scene = this.scene;
+		
+		final Camera camera = scene.getCamera();
 		
 		final AbstractRendererKernel abstractRendererKernel = this.abstractRendererKernel;
 		
@@ -548,16 +557,46 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final float velocity = abstractRendererKernel.isRendererTypeRayMarcher() ? 1.0F : 5.0F;
 		final float movement = velocity;
 		
+		final int selectedPrimitiveIndex = abstractRendererKernel.getSelectedPrimitiveIndex();
+		
+		final Optional<Primitive> optionalSelectedPrimitive = scene.getSelectedPrimitive(selectedPrimitiveIndex);
+		
+		final Primitive selectedPrimitive = optionalSelectedPrimitive.orElse(null);
+		
+//		final long currentTime = System.nanoTime();
+		
+//		final float delta = (float)((currentTime - this.previousTime) / 1000000000.0D);
+		
+//		this.previousTime = currentTime;
+		
+//		for(final Primitive primitive : scene.getPrimitives()) {
+//			if(!(primitive.getShape() instanceof Plane)) {
+//				primitive.getTransform().rotate(QuaternionF.fromVector(Vector3F.x(), AngleF.radians(delta)));
+//			}
+//		}
+		
 		if(isKeyPressed(KeyCode.A)) {
-			camera.strafe(-movement);
+			if(selectedPrimitive != null) {
+				selectedPrimitive.getTransform().moveX(1.0F);
+			} else {
+				camera.strafe(-movement);
+			}
 		}
 		
 		if(isKeyPressed(KeyCode.D)) {
-			camera.strafe(movement);
+			if(selectedPrimitive != null) {
+				selectedPrimitive.getTransform().moveX(-1.0F);
+			} else {
+				camera.strafe(movement);
+			}
 		}
 		
 		if(isKeyPressed(KeyCode.E)) {
-			camera.changeAltitude(-0.5F);
+			if(selectedPrimitive != null) {
+				selectedPrimitive.getTransform().moveY(-1.0F);
+			} else {
+				camera.changeAltitude(-0.5F);
+			}
 		}
 		
 		if(isKeyPressed(KeyCode.ENTER, true) && !hasEntered()) {
@@ -573,7 +612,11 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		}
 		
 		if(isKeyPressed(KeyCode.Q)) {
-			camera.changeAltitude(0.5F);
+			if(selectedPrimitive != null) {
+				selectedPrimitive.getTransform().moveY(1.0F);
+			} else {
+				camera.changeAltitude(0.5F);
+			}
 		}
 		
 		if(isKeyPressed(KeyCode.R, true)) {
@@ -583,11 +626,32 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		}
 		
 		if(isKeyPressed(KeyCode.S)) {
-			camera.forward(-movement);
+			if(selectedPrimitive != null) {
+				selectedPrimitive.getTransform().moveZ(1.0F);
+			} else {
+				camera.forward(-movement);
+			}
 		}
 		
 		if(isKeyPressed(KeyCode.W)) {
-			camera.forward(movement);
+			if(selectedPrimitive != null) {
+				selectedPrimitive.getTransform().moveZ(-1.0F);
+			} else {
+				camera.forward(movement);
+			}
+		}
+		
+		if(isKeyPressed(KeyCode.X) && selectedPrimitive != null) {
+			selectedPrimitive.getTransform().rotate(QuaternionF.fromVector(Vector3F.x(), AngleF.degrees(1.0F)));
+		}
+		
+		if(isKeyPressed(KeyCode.Z) && selectedPrimitive != null) {
+			selectedPrimitive.getTransform().rotate(QuaternionF.fromVector(Vector3F.z(), AngleF.degrees(1.0F)));
+		}
+		
+		if(scene.isPrimitiveUpdateRequired()) {
+			abstractRendererKernel.clear();
+			abstractRendererKernel.updatePrimitives();
 		}
 		
 		if(isMouseDragging() || isMouseMoving() && isMouseRecentering() || camera.hasUpdated() || abstractRendererKernel.hasChanged()) {

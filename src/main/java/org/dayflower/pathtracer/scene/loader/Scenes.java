@@ -27,6 +27,7 @@ import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Surface;
 import org.dayflower.pathtracer.scene.Texture;
+import org.dayflower.pathtracer.scene.Transform;
 import org.dayflower.pathtracer.scene.material.ClearCoatMaterial;
 import org.dayflower.pathtracer.scene.material.GlassMaterial;
 import org.dayflower.pathtracer.scene.material.LambertianMaterial;
@@ -46,6 +47,8 @@ import org.dayflower.pathtracer.scene.texture.UVTexture;
 import org.dayflower.pathtracer.scene.wavefront.ObjectLoader;
 import org.macroing.image4j.Color;
 import org.macroing.math4j.Point3F;
+import org.macroing.math4j.QuaternionF;
+import org.macroing.math4j.Vector3F;
 
 final class Scenes {
 	private Scenes() {
@@ -68,6 +71,8 @@ final class Scenes {
 	
 	public static Scene getSceneByName(final File directory, final String name) {
 		switch(name) {
+			case "Girl_Scene":
+				return newGirlScene(directory);
 			case "House_Scene":
 				return newHouseScene(directory);
 			case "Image_Scene":
@@ -85,6 +90,55 @@ final class Scenes {
 			default:
 				return newMaterialShowcaseScene(directory);
 		}
+	}
+	
+	public static Scene newGirlScene(final File directory) {
+		final Texture texturePlaneAlbedo = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.005F, 0.005F, 0.0F);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture texturePlaneEmission = new ConstantTexture(Color.BLACK);
+		final Texture texturePlaneNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshAlbedo = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshAlbedo01___Default = new ConstantTexture(new Color(227, 161, 115));
+		final Texture textureMeshEmission01___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshNormal01___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshAlbedo02___Default = new ConstantTexture(new Color(0.8F, 0.1F, 0.8F));//new ConstantTexture(new Color(32, 53, 98));//new CheckerboardTexture(new Color(0.1F, 0.1F, 0.1F), Color.WHITE, 0.05F, 0.05F, 0.0F);
+		final Texture textureMeshEmission02___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshNormal02___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshAlbedo03___Default = new ConstantTexture(new Color(216, 192, 120));
+		final Texture textureMeshEmission03___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshNormal03___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshAlbedo04___Default = new ConstantTexture(Color.WHITE);
+		final Texture textureMeshEmission04___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshNormal04___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshAlbedo05___Default = new ConstantTexture(new Color(227, 161, 115));
+		final Texture textureMeshEmission05___Default = new ConstantTexture(Color.BLACK);
+		final Texture textureMeshNormal05___Default = new ConstantTexture(Color.BLACK);
+		
+		final Surface surfacePlane = new Surface(new LambertianMaterial(), texturePlaneAlbedo, texturePlaneEmission, texturePlaneNormal, 0.0F, 0.0F);
+		final Surface surfaceMesh = new Surface(new LambertianMaterial(), textureMeshAlbedo, textureMeshEmission, textureMeshNormal, 0.0F, 0.0F);
+		final Surface surfaceMesh01___Default = new Surface(new LambertianMaterial(), textureMeshAlbedo01___Default, textureMeshEmission01___Default, textureMeshNormal01___Default, 0.0F, 0.0F);
+		final Surface surfaceMesh02___Default = new Surface(new ClearCoatMaterial(), textureMeshAlbedo02___Default, textureMeshEmission02___Default, textureMeshNormal02___Default, 0.0F, 0.0F);
+		final Surface surfaceMesh03___Default = new Surface(new ClearCoatMaterial(), textureMeshAlbedo03___Default, textureMeshEmission03___Default, textureMeshNormal03___Default, 0.0F, 0.0F);
+		final Surface surfaceMesh04___Default = new Surface(new ClearCoatMaterial(), textureMeshAlbedo04___Default, textureMeshEmission04___Default, textureMeshNormal04___Default, 0.0F, 0.0F);
+		final Surface surfaceMesh05___Default = new Surface(new LambertianMaterial(), textureMeshAlbedo05___Default, textureMeshEmission05___Default, textureMeshNormal05___Default, 0.0F, 0.0F);
+		
+		final Map<String, Surface> surfaces = new HashMap<>();
+		
+		surfaces.put("01___Default", surfaceMesh01___Default);
+		surfaces.put("02___Default", surfaceMesh02___Default);
+		surfaces.put("03___Default", surfaceMesh03___Default);
+		surfaces.put("04___Default", surfaceMesh04___Default);
+		surfaces.put("05___Default", surfaceMesh05___Default);
+		
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "aphroditegirl.obj"), (groupName, materialName) -> surfaces.getOrDefault(materialName, surfaceMesh), new Transform(new Point3F(0.0F, 10.0F, 0.0F), new QuaternionF(), new Vector3F(1.0F, 1.0F, 1.0F)));
+		
+		final
+		Scene scene = new Scene("Girl_Scene");
+		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), surfacePlane));
+		scene.addPrimitives(primitives);
+		
+		return scene;
 	}
 	
 	public static Scene newHouseScene(final File directory) {
@@ -152,7 +206,7 @@ final class Scenes {
 		surfaces.put("20___Default", surface_20___Default);
 		surfaces.put("double_sopha_wood_right_texture", surface_double_sopha_wood_right_texture);
 		
-		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "house interior.obj"), 1.0F, (groupName, materialName) -> surfaces.getOrDefault(materialName, surface), 0.0F, 10.0F, 0.0F);
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "house interior.obj"), (groupName, materialName) -> surfaces.getOrDefault(materialName, surface), new Transform(new Point3F(0.0F, 10.0F, 0.0F)));
 		
 		final
 		Scene scene = new Scene("House_Scene");
@@ -175,7 +229,7 @@ final class Scenes {
 		
 		final Surface surface = new Surface(/*new LambertianMaterial()*/new PhongMaterial(), textureMonkeyAlbedo, textureMonkeyEmission, textureMonkeyNormal, 0.0F, 0.0F);
 		
-		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "smoothMonkey2.obj"), 100.0F, (groupName, materialName) -> surface, 0.0F, 100.0F, 0.0F);
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "smoothMonkey2.obj"), (groupName, materialName) -> surface, new Transform(new Point3F(0.0F, 100.0F, 0.0F), new QuaternionF(), new Vector3F(100.0F, 100.0F, 100.0F)));
 		
 		final
 		Scene scene = new Scene("Image_Scene");
@@ -254,25 +308,25 @@ final class Scenes {
 		Scene scene = new Scene("Material_Showcase_Scene");
 		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(new LambertianMaterial(), texturePlaneAlbedo, texturePlaneEmission, texturePlaneNormal, 0.0F, 0.0F)));
 		
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F( 40.0F,  16.5F, 20.0F),  16.5F), new Surface(new ClearCoatMaterial(),  textureSphere01Albedo, textureSphere01Emission, textureSphere01Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F( 80.0F,  16.5F, 20.0F),  16.5F), new Surface(new GlassMaterial(),      textureSphere02Albedo, textureSphere02Emission, textureSphere02Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(120.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere03Albedo, textureSphere03Emission, textureSphere03Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(160.0F,  16.5F, 20.0F),  16.5F), new Surface(new ReflectionMaterial(), textureSphere04Albedo, textureSphere04Emission, textureSphere04Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(200.0F,  16.5F, 20.0F),  16.5F), new Surface(new PhongMaterial(),      textureSphere05Albedo, textureSphere05Emission, textureSphere05Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new ClearCoatMaterial(),  textureSphere01Albedo, textureSphere01Emission, textureSphere01Normal, 0.0F,  0.0F), new Transform(new Point3F( 40.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new GlassMaterial(),      textureSphere02Albedo, textureSphere02Emission, textureSphere02Normal, 0.0F,  0.0F), new Transform(new Point3F( 80.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere03Albedo, textureSphere03Emission, textureSphere03Normal, 0.0F,  0.0F), new Transform(new Point3F(120.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new ReflectionMaterial(), textureSphere04Albedo, textureSphere04Emission, textureSphere04Normal, 0.0F,  0.0F), new Transform(new Point3F(160.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new PhongMaterial(),      textureSphere05Albedo, textureSphere05Emission, textureSphere05Normal, 0.0F,  0.0F), new Transform(new Point3F(200.0F,  16.5F, 20.0F))));
 		
-//		scene.addPrimitive(new Primitive(new Sphere(new Point3F(240.0F, 500.0F, 20.0F), 250.0F), new Surface(new LambertianMaterial(), textureLightAlbedo, textureLightEmission, textureLightNormal, 0.0F,  0.0F)));
+//		scene.addPrimitive(new Primitive(new Sphere(new Point3F(), 250.0F), new Surface(new LambertianMaterial(), textureLightAlbedo, textureLightEmission, textureLightNormal, 0.0F,  0.0F), new Transform(new Point3F(240.0F, 500.0F, 20.0F))));
 		
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(280.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere06Albedo, textureSphere06Emission, textureSphere06Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(320.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere07Albedo, textureSphere07Emission, textureSphere07Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(360.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere08Albedo, textureSphere08Emission, textureSphere08Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(400.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere09Albedo, textureSphere09Emission, textureSphere09Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(440.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere10Albedo, textureSphere10Emission, textureSphere10Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(480.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere11Albedo, textureSphere11Emission, textureSphere11Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(520.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere12Albedo, textureSphere12Emission, textureSphere12Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(560.0F,  16.5F, 20.0F),  16.5F), new Surface(new LambertianMaterial(), textureSphere13Albedo, textureSphere13Emission, textureSphere13Normal, 0.0F,  0.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere06Albedo, textureSphere06Emission, textureSphere06Normal, 0.0F,  0.0F), new Transform(new Point3F(280.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere07Albedo, textureSphere07Emission, textureSphere07Normal, 0.0F,  0.0F), new Transform(new Point3F(320.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere08Albedo, textureSphere08Emission, textureSphere08Normal, 0.0F,  0.0F), new Transform(new Point3F(360.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere09Albedo, textureSphere09Emission, textureSphere09Normal, 0.0F,  0.0F), new Transform(new Point3F(400.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere10Albedo, textureSphere10Emission, textureSphere10Normal, 0.0F,  0.0F), new Transform(new Point3F(440.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere11Albedo, textureSphere11Emission, textureSphere11Normal, 0.0F,  0.0F), new Transform(new Point3F(480.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere12Albedo, textureSphere12Emission, textureSphere12Normal, 0.0F,  0.0F), new Transform(new Point3F(520.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new LambertianMaterial(), textureSphere13Albedo, textureSphere13Emission, textureSphere13Normal, 0.0F,  0.0F), new Transform(new Point3F(560.0F,  16.5F, 20.0F))));
 		
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(640.0F,  16.5F, 20.0F),  16.5F), new Surface(new ReflectionMaterial(), textureSphere14Albedo, textureSphere14Emission, textureSphere14Normal, 0.0F,  0.0F)));
-		scene.addPrimitive(new Primitive(new Sphere(new Point3F(680.0F,  16.5F, 20.0F),  16.5F), new Surface(new GlassMaterial(),      textureSphere15Albedo, textureSphere15Emission, textureSphere15Normal, 1.0F, 16.0F)));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new ReflectionMaterial(), textureSphere14Albedo, textureSphere14Emission, textureSphere14Normal, 0.0F,  0.0F), new Transform(new Point3F(640.0F,  16.5F, 20.0F))));
+		scene.addPrimitive(new Primitive(new Sphere(new Point3F(),  16.5F), new Surface(new GlassMaterial(),      textureSphere15Albedo, textureSphere15Emission, textureSphere15Normal, 1.0F, 16.0F), new Transform(new Point3F(680.0F,  16.5F, 20.0F))));
 		
 		scene.getCamera().setEye(295.0F, 42.0F, 332.6F);
 		
@@ -289,7 +343,7 @@ final class Scenes {
 		
 		final Surface surface = new Surface(new PhongMaterial(), textureMonkeyAlbedo, textureMonkeyEmission, textureMonkeyNormal, 0.0F, 0.0F);
 		
-		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "smoothMonkey2.obj"), 100.0F, (groupName, materialName) -> surface, 0.0F, 100.0F, 0.0F);
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "smoothMonkey2.obj"), (groupName, materialName) -> surface, new Transform(new Point3F(10.0F, 100.0F, 10.0F), new QuaternionF(), new Vector3F(1.0F, 1.0F, 1.0F)));
 		
 		final
 		Scene scene = new Scene("Monkey_Scene");
@@ -321,7 +375,7 @@ final class Scenes {
 		
 		final Surface surface = new Surface(new GlassMaterial(), textureWineGlassAlbedo, textureWineGlassEmission, textureWineGlassNormal, 0.0F, 0.0F);
 		
-		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "Wine_Glass.OBJ"), 50.0F, (groupName, materialName) -> surface, 0.0F, 39.0F, 0.0F);
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "Wine_Glass.OBJ"), (groupName, materialName) -> surface, new Transform(new Point3F(0.0F, 39.0F, 0.0F), new QuaternionF(), new Vector3F(50.0F, 50.0F, 50.0F)));
 		
 		final
 		Scene scene = new Scene("Wine_Glass_Scene");
@@ -342,7 +396,7 @@ final class Scenes {
 		
 		final Surface surface = new Surface(new PhongMaterial(), textureZealotAlbedo, textureZealotEmission, textureZealotNormal, 0.0F, 0.0F);
 		
-		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "Zealot.obj"), 1.0F, (groupName, materialName) -> surface, 0.0F, 0.0F, 0.0F);
+		final List<Primitive> primitives = ObjectLoader.load(getModelFilename(directory, "Zealot.obj"), (groupName, materialName) -> surface, new Transform(new Point3F(0.0F, 0.0F, 0.0F)));
 		
 		final
 		Scene scene = new Scene("Zealot_Scene");
@@ -598,47 +652,6 @@ final class Scenes {
 		
 //		return scene;
 //	}
-	
-	/*
-	public static Scene newGirlScene() {
-		final Texture texture1 = new ConstantTexture(new Color(227, 161, 115));
-		final Texture texture2 = new ConstantTexture(new Color(0.8F, 0.1F, 0.8F));//new ConstantTexture(new Color(32, 53, 98));//new CheckerboardTexture(new Color(0.1F, 0.1F, 0.1F), Color.WHITE, 0.05F, 0.05F, 0.0F);
-		final Texture texture3 = new CheckerboardTexture(Color.GRAY, Color.WHITE, 0.005F, 0.005F, 0.0F);//ImageTexture.load(new File(Dayflower.getTextureFilename("Texture_2.png")), 0.0F, 0.008F, 0.008F);
-		final Texture texture4 = new ConstantTexture(Color.BLACK);
-		final Texture texture5 = new ConstantTexture(new Color(216, 192, 120));
-		final Texture texture6 = new ConstantTexture(Color.WHITE);
-		final Texture texture7 = new ConstantTexture(Color.GRAY);
-		
-		final Surface surface = Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture4, texture4);
-		
-		final Map<String, Surface> surfaces = new HashMap<>();
-		
-		surfaces.put("01___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture4));
-		surfaces.put("02___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture2, texture4));
-		surfaces.put("03___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture5, texture4));
-		surfaces.put("04___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture6, texture4));
-		surfaces.put("05___Default", Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture1, texture4));
-		
-		final Mesh mesh = Mesh.loadFromOBJModel(materialName -> surfaces.getOrDefault(materialName, surface), Dayflower.getModelFilename("aphroditegirl.obj"), 100.0F);
-		
-		final List<Triangle> triangles = mesh.getTriangles();
-		
-		final
-		Scene scene = new Scene("Girl_Scene");
-		scene.addShape(new Plane(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture3, texture4), new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.CLEAR_COAT, texture7, texture4), new Point3F(20.0F, 16.5F, 40.0F), 16.5F));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.LAMBERTIAN_DIFFUSE, texture7, texture4), new Point3F(20.0F, 16.5F, 80.0F), 16.5F));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.PHONG_METAL, texture7, texture4), new Point3F(20.0F, 16.5F, 120.0F), 16.5F));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.GLASS, texture7, texture4), new Point3F(20.0F, 16.5F, 160.0F), 16.5F));
-		scene.addShape(new Sphere(Surface.getInstance(Color.BLACK, 0.0F, 0.0F, Material.MIRROR, texture7, texture4), new Point3F(20.0F, 16.5F, 200.0F), 16.5F));
-		
-		for(final Triangle triangle : triangles) {
-			scene.addShape(triangle.translateY(10.0F));
-		}
-		
-		return scene;
-	}
-	*/
 	
 	/*
 	public static Scene newHouseScene2() {

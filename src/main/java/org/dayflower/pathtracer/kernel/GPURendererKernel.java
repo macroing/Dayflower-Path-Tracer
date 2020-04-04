@@ -25,6 +25,7 @@ import static org.macroing.math4j.MathF.PI_MULTIPLIED_BY_TWO_RECIPROCAL;
 import static org.macroing.math4j.MathF.PI_RECIPROCAL;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.Primitive;
@@ -54,6 +55,7 @@ import org.dayflower.pathtracer.scene.texture.ImageTexture;
 import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 import org.dayflower.pathtracer.scene.texture.UVTexture;
 import org.dayflower.pathtracer.util.FloatArrayThreadLocal;
+import org.macroing.math4j.Matrix44F;
 
 /**
  * A {@code GPURendererKernel} is an extension of the {@code AbstractRendererKernel} class that performs 3D-rendering on the GPU.
@@ -88,6 +90,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private static final int RELATIVE_OFFSET_INTERSECTION_TEXTURE_COORDINATES = 8;
 	private static final int SIZE_COLOR_RGB = 3;
 	private static final int SIZE_INTERSECTION = 27;
+	private static final int SIZE_MATRIX = 16;
 	private static final int SIZE_RAY = 6;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,6 +129,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private float[] sceneCamera_$constant$;
 	private float[] scenePoint2Fs_$constant$;
 	private float[] scenePoint3Fs_$constant$;
+	private float[] scenePrimitivesObjectToWorld_$constant$;
+	private float[] scenePrimitivesWorldToObject_$constant$;
 	private float[] sceneSpheres_$constant$;
 	private float[] sceneSurfaces_$constant$;
 	private float[] sceneTerrains_$constant$;
@@ -137,6 +142,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private float[] rays_$private$6;
 	private int scenePrimitivesCount;
 //	private int scenePrimitivesEmittingLightCount;
+	private int selectedPrimitiveIndex = -1;
 	private int selectedPrimitiveOffset = -1;
 	private int sunAndSkyIsSkyActive;
 	private int sunAndSkyIsSunActive;
@@ -177,6 +183,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.sceneCamera_$constant$ = compiledScene.getCamera();
 		this.scenePoint2Fs_$constant$ = compiledScene.getPoint2Fs();
 		this.scenePoint3Fs_$constant$ = compiledScene.getPoint3Fs();
+		this.scenePrimitivesObjectToWorld_$constant$ = compiledScene.getPrimitivesObjectToWorld();
+		this.scenePrimitivesWorldToObject_$constant$ = compiledScene.getPrimitivesWorldToObject();
 		this.sceneSpheres_$constant$ = compiledScene.getSpheres();
 		this.sceneSurfaces_$constant$ = compiledScene.getSurfaces();
 		this.sceneTerrains_$constant$ = compiledScene.getTerrains();
@@ -226,6 +234,16 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns the selected {@link Primitive} index or {@code -1} if no {@code Primitive} has been selected.
+	 * 
+	 * @return the selected {@code Primitive} index or {@code -1} if no {@code Primitive} has been selected
+	 */
+	@Override
+	public int getSelectedPrimitiveIndex() {
+		return this.selectedPrimitiveIndex;
+	}
 	
 	/**
 	 * Performs the rendering.
@@ -341,8 +359,10 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final int primitiveOffset = primitiveOffsets[index];
 			
 			if(primitiveOffset == this.selectedPrimitiveOffset) {
+				this.selectedPrimitiveIndex = -1;
 				this.selectedPrimitiveOffset = -1;
 			} else {
+				this.selectedPrimitiveIndex = primitiveOffset / Primitive.SIZE;
 				this.selectedPrimitiveOffset = primitiveOffset;
 			}
 		}
@@ -410,6 +430,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		put(this.scenePoint3Fs_$constant$);
 		put(this.scenePrimitives_$constant$);
 //		put(this.scenePrimitivesEmittingLight_$constant$);
+		put(this.scenePrimitivesObjectToWorld_$constant$);
+		put(this.scenePrimitivesWorldToObject_$constant$);
 		put(this.sceneSpheres_$constant$);
 		put(this.sceneSurfaces_$constant$);
 		put(this.sceneTerrains_$constant$);
@@ -436,6 +458,66 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		camera.update();
 		
 		put(this.sceneCamera_$constant$);
+	}
+	
+	/**
+	 * Updates the {@link Primitive}s.
+	 */
+	@Override
+	public void updatePrimitives() {
+		final Scene scene = getScene();
+		
+		if(scene.isPrimitiveUpdateRequired()) {
+			final List<Primitive> primitives = scene.getPrimitives();
+			
+			for(int i = 0; i < primitives.size(); i++) {
+				final
+				Primitive primitive = primitives.get(i);
+				primitive.update();
+				
+				final Matrix44F objectToWorld = primitive.getTransform().getObjectToWorld();
+				final Matrix44F worldToObject = primitive.getTransform().getWorldToObject();
+				
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  0] = objectToWorld.element11;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  1] = objectToWorld.element12;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  2] = objectToWorld.element13;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  3] = objectToWorld.element14;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  4] = objectToWorld.element21;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  5] = objectToWorld.element22;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  6] = objectToWorld.element23;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  7] = objectToWorld.element24;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  8] = objectToWorld.element31;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX +  9] = objectToWorld.element32;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX + 10] = objectToWorld.element33;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX + 11] = objectToWorld.element34;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX + 12] = objectToWorld.element41;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX + 13] = objectToWorld.element42;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX + 14] = objectToWorld.element43;
+				this.scenePrimitivesObjectToWorld_$constant$[i * SIZE_MATRIX + 15] = objectToWorld.element44;
+				
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  0] = worldToObject.element11;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  1] = worldToObject.element12;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  2] = worldToObject.element13;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  3] = worldToObject.element14;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  4] = worldToObject.element21;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  5] = worldToObject.element22;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  6] = worldToObject.element23;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  7] = worldToObject.element24;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  8] = worldToObject.element31;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX +  9] = worldToObject.element32;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX + 10] = worldToObject.element33;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX + 11] = worldToObject.element34;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX + 12] = worldToObject.element41;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX + 13] = worldToObject.element42;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX + 14] = worldToObject.element43;
+				this.scenePrimitivesWorldToObject_$constant$[i * SIZE_MATRIX + 15] = worldToObject.element44;
+			}
+			
+			put(this.scenePrimitivesObjectToWorld_$constant$);
+			put(this.scenePrimitivesWorldToObject_$constant$);
+			
+			setChanged(true);
+		}
 	}
 	
 	/**
@@ -645,7 +727,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		return simplexFractalXY(getGlobalAmplitude(), getGlobalFrequency(), getGlobalGain(), getGlobalLacunarity(), getGlobalOctaves(), x, z);
 	}
 	
-	private float doIntersectPrimitives(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final boolean isTesting) {
+	private float doIntersectPrimitivesOld(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final boolean isTesting) {
 //		Compute the offset for the array containing intersection data:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
 		
@@ -944,6 +1026,379 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 					
 					doCalculateSurfacePropertiesForTriangle(originX, originY, originZ, directionX, directionY, directionZ, closestDistance, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ, aSurfaceNormalX, aSurfaceNormalY, aSurfaceNormalZ, bSurfaceNormalX, bSurfaceNormalY, bSurfaceNormalZ, cSurfaceNormalX, cSurfaceNormalY, cSurfaceNormalZ, aSurfaceTangentX, aSurfaceTangentY, aSurfaceTangentZ, bSurfaceTangentX, bSurfaceTangentY, bSurfaceTangentZ, cSurfaceTangentX, cSurfaceTangentY, cSurfaceTangentZ, aTextureCoordinatesU, aTextureCoordinatesV, bTextureCoordinatesU, bTextureCoordinatesV, cTextureCoordinatesU, cTextureCoordinatesV);
 				}
+				
+//				Perform Normal Mapping via Image Texture:
+				doPerformNormalMappingViaImageTexture(closestPrimitiveOffset);
+				
+//				Perform Normal Mapping via Noise:
+				doPerformNormalMappingViaNoise(closestPrimitiveOffset);
+			} else {
+//				Reset the information in the intersections array:
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = INFINITY;
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET] = -1;
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_TYPE] = -1;
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_OFFSET] = -1;
+			}
+		}
+		
+		return closestDistance;
+	}
+	
+	private float doIntersectPrimitives(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final boolean isTesting) {
+//		Compute the offset for the array containing intersection data:
+		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
+		
+//		Initialize the distance to the closest primitive to INFINITY:
+		float closestDistance = INFINITY;
+		
+//		Initialize the offset to the closest primitive, the shape type of the closest primitive and the shape offset of the closest primitive to -1:
+		int closestMatrixOffset = -1;
+		int closestPrimitiveOffset = -1;
+		int closestShapeType = -1;
+		int closestShapeOffset = -1;
+		
+		final int scenePrimitivesCount = this.scenePrimitivesCount;
+		
+		for(int i = 0; i < scenePrimitivesCount; i++) {
+			float currentDistance = INFINITY;
+			
+			final int currentPrimitiveOffset = i * Primitive.SIZE;
+			final int currentMatrixOffset = i * SIZE_MATRIX;
+			
+			int currentShapeType = this.scenePrimitives_$constant$[currentPrimitiveOffset + Primitive.RELATIVE_OFFSET_SHAPE_TYPE];
+			int currentShapeOffset = this.scenePrimitives_$constant$[currentPrimitiveOffset + Primitive.RELATIVE_OFFSET_SHAPE_OFFSET];
+			
+			final float worldToObjectElement11 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  0];
+			final float worldToObjectElement12 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  1];
+			final float worldToObjectElement13 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  2];
+			final float worldToObjectElement14 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  3];
+			final float worldToObjectElement21 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  4];
+			final float worldToObjectElement22 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  5];
+			final float worldToObjectElement23 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  6];
+			final float worldToObjectElement24 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  7];
+			final float worldToObjectElement31 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  8];
+			final float worldToObjectElement32 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset +  9];
+			final float worldToObjectElement33 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset + 10];
+			final float worldToObjectElement34 = this.scenePrimitivesWorldToObject_$constant$[currentMatrixOffset + 11];
+			
+			final float originXObjectSpace = worldToObjectElement11 * originX + worldToObjectElement12 * originY + worldToObjectElement13 * originZ + worldToObjectElement14;
+			final float originYObjectSpace = worldToObjectElement21 * originX + worldToObjectElement22 * originY + worldToObjectElement23 * originZ + worldToObjectElement24;
+			final float originZObjectSpace = worldToObjectElement31 * originX + worldToObjectElement32 * originY + worldToObjectElement33 * originZ + worldToObjectElement34;
+			
+			final float directionXObjectSpace = worldToObjectElement11 * directionX + worldToObjectElement12 * directionY + worldToObjectElement13 * directionZ;
+			final float directionYObjectSpace = worldToObjectElement21 * directionX + worldToObjectElement22 * directionY + worldToObjectElement23 * directionZ;
+			final float directionZObjectSpace = worldToObjectElement31 * directionX + worldToObjectElement32 * directionY + worldToObjectElement33 * directionZ;
+			
+			if(currentShapeType == TriangleMesh.TYPE) {
+//				Initialize the offset to the root of the BVH structure:
+				int boundingVolumeHierarchyAbsoluteOffset = currentShapeOffset;
+				int boundingVolumeHierarchyRelativeOffset = 0;
+				
+//				Loop through the BVH structure as long as the offset to the next node is not -1:
+				while(boundingVolumeHierarchyRelativeOffset != -1) {
+//					Calculate the current offset in the BVH structure:
+					final int boundingVolumeHierarchyOffset = boundingVolumeHierarchyAbsoluteOffset + boundingVolumeHierarchyRelativeOffset;
+					
+//					Retrieve the offsets to the points defining the minimum and maximum locations of the current bounding box:
+					final int minimumOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 2];
+					final int maximumOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 3];
+					
+//					Retrieve the minimum point location of the current bounding box:
+					final float minimumX = this.scenePoint3Fs_$constant$[minimumOffset + 0];
+					final float minimumY = this.scenePoint3Fs_$constant$[minimumOffset + 1];
+					final float minimumZ = this.scenePoint3Fs_$constant$[minimumOffset + 2];
+					
+//					Retrieve the maximum point location of the current bounding box:
+					final float maximumX = this.scenePoint3Fs_$constant$[maximumOffset + 0];
+					final float maximumY = this.scenePoint3Fs_$constant$[maximumOffset + 1];
+					final float maximumZ = this.scenePoint3Fs_$constant$[maximumOffset + 2];
+					
+//					Calculate the distance to the minimum point location of the bounding box:
+					final float t0X = (minimumX - originXObjectSpace) / directionXObjectSpace;
+					final float t0Y = (minimumY - originYObjectSpace) / directionYObjectSpace;
+					final float t0Z = (minimumZ - originZObjectSpace) / directionZObjectSpace;
+					
+//					Calculate the distance to the maximum point location of the bounding box:
+					final float t1X = (maximumX - originXObjectSpace) / directionXObjectSpace;
+					final float t1Y = (maximumY - originYObjectSpace) / directionYObjectSpace;
+					final float t1Z = (maximumZ - originZObjectSpace) / directionZObjectSpace;
+					
+//					Calculate the minimum and maximum X-components:
+					final float tMaximumX = max(t0X, t1X);
+					final float tMinimumX = min(t0X, t1X);
+					
+//					Calculate the minimum and maximum Y-components:
+					final float tMaximumY = max(t0Y, t1Y);
+					final float tMinimumY = min(t0Y, t1Y);
+					
+//					Calculate the minimum and maximum Z-components:
+					final float tMaximumZ = max(t0Z, t1Z);
+					final float tMinimumZ = min(t0Z, t1Z);
+					
+//					Calculate the minimum and maximum distance values of the X-, Y- and Z-components above:
+					final float tMaximum = min(tMaximumX, min(tMaximumY, tMaximumZ));
+					final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
+					
+//					Check if the maximum distance is greater than or equal to the minimum distance:
+					if(tMaximum < 0.0F || tMinimum > tMaximum || closestDistance < tMinimum) {
+//						Retrieve the offset to the next node in the BVH structure, relative to the current one:
+						boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 1];
+					} else {
+//						Retrieve the type of the current BVH node:
+						final int type = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset];
+						
+						if(type == BoundingVolumeHierarchy.NODE_TYPE_TREE) {
+//							This BVH node is a tree node, so retrieve the offset to the next node in the BVH structure, relative to the current one:
+							boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 4];
+						} else {
+//							Retrieve the triangle count in the current BVH node:
+							final int triangleCount = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 4];
+							
+							int j = 0;
+							
+//							Loop through all triangles in the current BVH node:
+							while(j < triangleCount) {
+//								Retrieve the offset to the current triangle:
+								final int currentTriangleOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 5 + j];
+								
+								final int offsetAPosition = this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET];
+								final int offsetBPosition = this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET];
+								final int offsetCPosition = this.sceneTriangles_$constant$[currentTriangleOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET];
+								
+								final float aPositionX = this.scenePoint3Fs_$constant$[offsetAPosition + 0];
+								final float aPositionY = this.scenePoint3Fs_$constant$[offsetAPosition + 1];
+								final float aPositionZ = this.scenePoint3Fs_$constant$[offsetAPosition + 2];
+								final float bPositionX = this.scenePoint3Fs_$constant$[offsetBPosition + 0];
+								final float bPositionY = this.scenePoint3Fs_$constant$[offsetBPosition + 1];
+								final float bPositionZ = this.scenePoint3Fs_$constant$[offsetBPosition + 2];
+								final float cPositionX = this.scenePoint3Fs_$constant$[offsetCPosition + 0];
+								final float cPositionY = this.scenePoint3Fs_$constant$[offsetCPosition + 1];
+								final float cPositionZ = this.scenePoint3Fs_$constant$[offsetCPosition + 2];
+								
+//								Perform an intersection test with the current triangle:
+								currentDistance = doIntersectTriangle(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ);
+								
+//								Check if the current distance is less than the distance to the closest primitive so far:
+								if(currentDistance < closestDistance) {
+									closestDistance = currentDistance;
+									closestMatrixOffset = currentMatrixOffset;
+									closestPrimitiveOffset = currentPrimitiveOffset;
+									closestShapeType = Triangle.TYPE;
+									closestShapeOffset = currentTriangleOffset;
+								}
+								
+								if(isTesting && closestPrimitiveOffset != -1) {
+									return closestDistance;
+								}
+								
+								j++;
+							}
+							
+//							Retrieve the offset to the next node in the BVH structure, relative to the current one:
+							boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 1];
+						}
+					}
+				}
+			} else if(currentShapeType == Plane.TYPE) {
+				final int offsetA = this.scenePlanes_$constant$[currentShapeOffset + Plane.RELATIVE_OFFSET_A_OFFSET];
+				final int offsetSurfaceNormal = this.scenePlanes_$constant$[currentShapeOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL_OFFSET];
+				
+				final float aX = this.scenePoint3Fs_$constant$[offsetA + 0];
+				final float aY = this.scenePoint3Fs_$constant$[offsetA + 1];
+				final float aZ = this.scenePoint3Fs_$constant$[offsetA + 2];
+				
+				final float surfaceNormalX = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 0];
+				final float surfaceNormalY = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 1];
+				final float surfaceNormalZ = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 2];
+				
+				currentDistance = doIntersectPlane(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aX, aY, aZ, surfaceNormalX, surfaceNormalY, surfaceNormalZ);
+			} else if(currentShapeType == Sphere.TYPE) {
+				final int offsetPosition = (int)(this.sceneSpheres_$constant$[currentShapeOffset + Sphere.RELATIVE_OFFSET_POSITION_OFFSET]);
+				
+				final float positionX = this.scenePoint3Fs_$constant$[offsetPosition + 0];
+				final float positionY = this.scenePoint3Fs_$constant$[offsetPosition + 1];
+				final float positionZ = this.scenePoint3Fs_$constant$[offsetPosition + 2];
+				
+				final float radius = this.sceneSpheres_$constant$[currentShapeOffset + Sphere.RELATIVE_OFFSET_RADIUS];
+				
+				currentDistance = doIntersectSphere(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, positionX, positionY, positionZ, radius);
+			} else if(currentShapeType == Terrain.TYPE) {
+				final float frequency = this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_FREQUENCY];
+				final float gain = this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_GAIN];
+				final float minimum = this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_MINIMUM];
+				final float maximum = this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_MAXIMUM];
+				
+				final int octaves = (int)(this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_OCTAVES]);
+				
+				currentDistance = doIntersectTerrain(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, frequency, gain, minimum, maximum, octaves);
+			} else if(currentShapeType == Triangle.TYPE) {
+				final int offsetAPosition = this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET];
+				final int offsetBPosition = this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET];
+				final int offsetCPosition = this.sceneTriangles_$constant$[currentShapeOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET];
+				
+				final float aPositionX = this.scenePoint3Fs_$constant$[offsetAPosition + 0];
+				final float aPositionY = this.scenePoint3Fs_$constant$[offsetAPosition + 1];
+				final float aPositionZ = this.scenePoint3Fs_$constant$[offsetAPosition + 2];
+				final float bPositionX = this.scenePoint3Fs_$constant$[offsetBPosition + 0];
+				final float bPositionY = this.scenePoint3Fs_$constant$[offsetBPosition + 1];
+				final float bPositionZ = this.scenePoint3Fs_$constant$[offsetBPosition + 2];
+				final float cPositionX = this.scenePoint3Fs_$constant$[offsetCPosition + 0];
+				final float cPositionY = this.scenePoint3Fs_$constant$[offsetCPosition + 1];
+				final float cPositionZ = this.scenePoint3Fs_$constant$[offsetCPosition + 2];
+				
+				currentDistance = doIntersectTriangle(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ);
+			}
+			
+			if(currentDistance < closestDistance) {
+				closestDistance = currentDistance;
+				closestMatrixOffset = currentMatrixOffset;
+				closestPrimitiveOffset = currentPrimitiveOffset;
+				closestShapeType = currentShapeType;
+				closestShapeOffset = currentShapeOffset;
+			}
+			
+			if(isTesting && closestPrimitiveOffset != -1) {
+				return closestDistance;
+			}
+		}
+		
+		if(!isTesting) {
+			if(closestPrimitiveOffset != -1) {
+				final float objectToWorldElement11 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  0];
+				final float objectToWorldElement12 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  1];
+				final float objectToWorldElement13 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  2];
+				final float objectToWorldElement14 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  3];
+				final float objectToWorldElement21 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  4];
+				final float objectToWorldElement22 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  5];
+				final float objectToWorldElement23 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  6];
+				final float objectToWorldElement24 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  7];
+				final float objectToWorldElement31 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  8];
+				final float objectToWorldElement32 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset +  9];
+				final float objectToWorldElement33 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset + 10];
+				final float objectToWorldElement34 = this.scenePrimitivesObjectToWorld_$constant$[closestMatrixOffset + 11];
+				
+				final float worldToObjectElement11 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  0];
+				final float worldToObjectElement12 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  1];
+				final float worldToObjectElement13 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  2];
+				final float worldToObjectElement14 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  3];
+				final float worldToObjectElement21 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  4];
+				final float worldToObjectElement22 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  5];
+				final float worldToObjectElement23 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  6];
+				final float worldToObjectElement24 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  7];
+				final float worldToObjectElement31 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  8];
+				final float worldToObjectElement32 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset +  9];
+				final float worldToObjectElement33 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset + 10];
+				final float worldToObjectElement34 = this.scenePrimitivesWorldToObject_$constant$[closestMatrixOffset + 11];
+				
+				final float originXObjectSpace = worldToObjectElement11 * originX + worldToObjectElement12 * originY + worldToObjectElement13 * originZ + worldToObjectElement14;
+				final float originYObjectSpace = worldToObjectElement21 * originX + worldToObjectElement22 * originY + worldToObjectElement23 * originZ + worldToObjectElement24;
+				final float originZObjectSpace = worldToObjectElement31 * originX + worldToObjectElement32 * originY + worldToObjectElement33 * originZ + worldToObjectElement34;
+				
+				final float directionXObjectSpace = worldToObjectElement11 * directionX + worldToObjectElement12 * directionY + worldToObjectElement13 * directionZ;
+				final float directionYObjectSpace = worldToObjectElement21 * directionX + worldToObjectElement22 * directionY + worldToObjectElement23 * directionZ;
+				final float directionZObjectSpace = worldToObjectElement31 * directionX + worldToObjectElement32 * directionY + worldToObjectElement33 * directionZ;
+				
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_DISTANCE] = closestDistance;
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_PRIMITIVE_OFFSET] = closestPrimitiveOffset;
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_TYPE] = closestShapeType;
+				this.intersections_$local$[intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SHAPE_OFFSET] = closestShapeOffset;
+				
+				if(closestShapeType == Plane.TYPE) {
+					final int offsetA = this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_A_OFFSET];
+					final int offsetB = this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_B_OFFSET];
+					final int offsetC = this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_C_OFFSET];
+					final int offsetSurfaceNormal = this.scenePlanes_$constant$[closestShapeOffset + Plane.RELATIVE_OFFSET_SURFACE_NORMAL_OFFSET];
+					
+					final float aX = this.scenePoint3Fs_$constant$[offsetA + 0];
+					final float aY = this.scenePoint3Fs_$constant$[offsetA + 1];
+					final float aZ = this.scenePoint3Fs_$constant$[offsetA + 2];
+					final float bX = this.scenePoint3Fs_$constant$[offsetB + 0];
+					final float bY = this.scenePoint3Fs_$constant$[offsetB + 1];
+					final float bZ = this.scenePoint3Fs_$constant$[offsetB + 2];
+					final float cX = this.scenePoint3Fs_$constant$[offsetC + 0];
+					final float cY = this.scenePoint3Fs_$constant$[offsetC + 1];
+					final float cZ = this.scenePoint3Fs_$constant$[offsetC + 2];
+					
+					final float surfaceNormalX = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 0];
+					final float surfaceNormalY = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 1];
+					final float surfaceNormalZ = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 2];
+					
+					doCalculateSurfacePropertiesForPlane(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, closestDistance, aX, aY, aZ, bX, bY, bZ, cX, cY, cZ, surfaceNormalX, surfaceNormalY, surfaceNormalZ);
+				} else if(closestShapeType == Sphere.TYPE) {
+					final int offsetPosition = (int)(this.sceneSpheres_$constant$[closestShapeOffset + Sphere.RELATIVE_OFFSET_POSITION_OFFSET]);
+					
+					final float positionX = this.scenePoint3Fs_$constant$[offsetPosition + 0];
+					final float positionY = this.scenePoint3Fs_$constant$[offsetPosition + 1];
+					final float positionZ = this.scenePoint3Fs_$constant$[offsetPosition + 2];
+					
+					doCalculateSurfacePropertiesForSphere(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, closestDistance, positionX, positionY, positionZ);
+				} else if(closestShapeType == Terrain.TYPE) {
+					final float frequency = this.sceneTerrains_$constant$[closestShapeOffset + Terrain.RELATIVE_OFFSET_FREQUENCY];
+					final float gain = this.sceneTerrains_$constant$[closestShapeOffset + Terrain.RELATIVE_OFFSET_GAIN];
+					final float minimum = this.sceneTerrains_$constant$[closestShapeOffset + Terrain.RELATIVE_OFFSET_MINIMUM];
+					final float maximum = this.sceneTerrains_$constant$[closestShapeOffset + Terrain.RELATIVE_OFFSET_MAXIMUM];
+					
+					final int octaves = (int)(this.sceneTerrains_$constant$[closestShapeOffset + Terrain.RELATIVE_OFFSET_OCTAVES]);
+					
+					doCalculateSurfacePropertiesForTerrain(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, closestDistance, frequency, gain, minimum, maximum, octaves);
+				} else if(closestShapeType == Triangle.TYPE) {
+					final int offsetAPosition = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_POSITION_OFFSET];
+					final int offsetBPosition = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_POSITION_OFFSET];
+					final int offsetCPosition = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_POSITION_OFFSET];
+					
+					final int offsetASurfaceNormal = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_SURFACE_NORMAL_OFFSET];
+					final int offsetBSurfaceNormal = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_SURFACE_NORMAL_OFFSET];
+					final int offsetCSurfaceNormal = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_SURFACE_NORMAL_OFFSET];
+					
+					final int offsetASurfaceTangent = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_SURFACE_TANGENT_OFFSET];
+					final int offsetBSurfaceTangent = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_SURFACE_TANGENT_OFFSET];
+					final int offsetCSurfaceTangent = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_SURFACE_TANGENT_OFFSET];
+					
+					final int offsetATextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_A_TEXTURE_COORDINATES_OFFSET];
+					final int offsetBTextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_B_TEXTURE_COORDINATES_OFFSET];
+					final int offsetCTextureCoordinates = this.sceneTriangles_$constant$[closestShapeOffset + Triangle.RELATIVE_OFFSET_C_TEXTURE_COORDINATES_OFFSET];
+					
+					final float aPositionX = this.scenePoint3Fs_$constant$[offsetAPosition + 0];
+					final float aPositionY = this.scenePoint3Fs_$constant$[offsetAPosition + 1];
+					final float aPositionZ = this.scenePoint3Fs_$constant$[offsetAPosition + 2];
+					final float bPositionX = this.scenePoint3Fs_$constant$[offsetBPosition + 0];
+					final float bPositionY = this.scenePoint3Fs_$constant$[offsetBPosition + 1];
+					final float bPositionZ = this.scenePoint3Fs_$constant$[offsetBPosition + 2];
+					final float cPositionX = this.scenePoint3Fs_$constant$[offsetCPosition + 0];
+					final float cPositionY = this.scenePoint3Fs_$constant$[offsetCPosition + 1];
+					final float cPositionZ = this.scenePoint3Fs_$constant$[offsetCPosition + 2];
+					
+					final float aSurfaceNormalX = this.sceneVector3Fs_$constant$[offsetASurfaceNormal + 0];
+					final float aSurfaceNormalY = this.sceneVector3Fs_$constant$[offsetASurfaceNormal + 1];
+					final float aSurfaceNormalZ = this.sceneVector3Fs_$constant$[offsetASurfaceNormal + 2];
+					final float bSurfaceNormalX = this.sceneVector3Fs_$constant$[offsetBSurfaceNormal + 0];
+					final float bSurfaceNormalY = this.sceneVector3Fs_$constant$[offsetBSurfaceNormal + 1];
+					final float bSurfaceNormalZ = this.sceneVector3Fs_$constant$[offsetBSurfaceNormal + 2];
+					final float cSurfaceNormalX = this.sceneVector3Fs_$constant$[offsetCSurfaceNormal + 0];
+					final float cSurfaceNormalY = this.sceneVector3Fs_$constant$[offsetCSurfaceNormal + 1];
+					final float cSurfaceNormalZ = this.sceneVector3Fs_$constant$[offsetCSurfaceNormal + 2];
+					
+					final float aSurfaceTangentX = this.sceneVector3Fs_$constant$[offsetASurfaceTangent + 0];
+					final float aSurfaceTangentY = this.sceneVector3Fs_$constant$[offsetASurfaceTangent + 1];
+					final float aSurfaceTangentZ = this.sceneVector3Fs_$constant$[offsetASurfaceTangent + 2];
+					final float bSurfaceTangentX = this.sceneVector3Fs_$constant$[offsetBSurfaceTangent + 0];
+					final float bSurfaceTangentY = this.sceneVector3Fs_$constant$[offsetBSurfaceTangent + 1];
+					final float bSurfaceTangentZ = this.sceneVector3Fs_$constant$[offsetBSurfaceTangent + 2];
+					final float cSurfaceTangentX = this.sceneVector3Fs_$constant$[offsetCSurfaceTangent + 0];
+					final float cSurfaceTangentY = this.sceneVector3Fs_$constant$[offsetCSurfaceTangent + 1];
+					final float cSurfaceTangentZ = this.sceneVector3Fs_$constant$[offsetCSurfaceTangent + 2];
+					
+					final float aTextureCoordinatesU = this.scenePoint2Fs_$constant$[offsetATextureCoordinates + 0];
+					final float aTextureCoordinatesV = this.scenePoint2Fs_$constant$[offsetATextureCoordinates + 1];
+					final float bTextureCoordinatesU = this.scenePoint2Fs_$constant$[offsetBTextureCoordinates + 0];
+					final float bTextureCoordinatesV = this.scenePoint2Fs_$constant$[offsetBTextureCoordinates + 1];
+					final float cTextureCoordinatesU = this.scenePoint2Fs_$constant$[offsetCTextureCoordinates + 0];
+					final float cTextureCoordinatesV = this.scenePoint2Fs_$constant$[offsetCTextureCoordinates + 1];
+					
+					doCalculateSurfacePropertiesForTriangle(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, closestDistance, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ, aSurfaceNormalX, aSurfaceNormalY, aSurfaceNormalZ, bSurfaceNormalX, bSurfaceNormalY, bSurfaceNormalZ, cSurfaceNormalX, cSurfaceNormalY, cSurfaceNormalZ, aSurfaceTangentX, aSurfaceTangentY, aSurfaceTangentZ, bSurfaceTangentX, bSurfaceTangentY, bSurfaceTangentZ, cSurfaceTangentX, cSurfaceTangentY, cSurfaceTangentZ, aTextureCoordinatesU, aTextureCoordinatesV, bTextureCoordinatesU, bTextureCoordinatesV, cTextureCoordinatesU, cTextureCoordinatesV);
+				}
+				
+				doTransformIntersectionToWorldSpace(objectToWorldElement11, objectToWorldElement12, objectToWorldElement13, objectToWorldElement14, objectToWorldElement21, objectToWorldElement22, objectToWorldElement23, objectToWorldElement24, objectToWorldElement31, objectToWorldElement32, objectToWorldElement33, objectToWorldElement34, worldToObjectElement11, worldToObjectElement12, worldToObjectElement13, worldToObjectElement21, worldToObjectElement22, worldToObjectElement23, worldToObjectElement31, worldToObjectElement32, worldToObjectElement33);
 				
 //				Perform Normal Mapping via Image Texture:
 				doPerformNormalMappingViaImageTexture(closestPrimitiveOffset);
@@ -3487,12 +3942,12 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final int offsetIntersectionSurfaceNormalShading = intersectionsOffset + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
 			
 //			Retrieve the surface intersection point from the intersections array:
-			final float surfaceIntersectionPointX = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint];
+			final float surfaceIntersectionPointX = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 0];
 			final float surfaceIntersectionPointY = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 1];
 			final float surfaceIntersectionPointZ = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 2];
 			
 //			Retrieve the surface normal from the intersections array:
-			final float surfaceNormalShadingX = this.intersections_$local$[offsetIntersectionSurfaceNormalShading];
+			final float surfaceNormalShadingX = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0];
 			final float surfaceNormalShadingY = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
 			final float surfaceNormalShadingZ = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
 			
@@ -3524,5 +3979,82 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		
 //		Update the current pixel color:
 		filmAddColor(pixelColorR, pixelColorG, pixelColorB);
+	}
+	
+	private void doTransformIntersectionToWorldSpace(final float objectToWorldElement11, final float objectToWorldElement12, final float objectToWorldElement13, final float objectToWorldElement14, final float objectToWorldElement21, final float objectToWorldElement22, final float objectToWorldElement23, final float objectToWorldElement24, final float objectToWorldElement31, final float objectToWorldElement32, final float objectToWorldElement33, final float objectToWorldElement34, final float worldToObjectElement11, final float worldToObjectElement12, final float worldToObjectElement13, final float worldToObjectElement21, final float worldToObjectElement22, final float worldToObjectElement23, final float worldToObjectElement31, final float worldToObjectElement32, final float worldToObjectElement33) {
+		final int offsetIntersection = getLocalId() * SIZE_INTERSECTION;
+		final int offsetIntersectionOrthoNormalBasisU = offsetIntersection + RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_U;
+		final int offsetIntersectionOrthoNormalBasisV = offsetIntersection + RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_V;
+		final int offsetIntersectionOrthoNormalBasisW = offsetIntersection + RELATIVE_OFFSET_INTERSECTION_ORTHO_NORMAL_BASIS_W;
+		final int offsetIntersectionSurfaceIntersectionPoint = offsetIntersection + RELATIVE_OFFSET_INTERSECTION_SURFACE_INTERSECTION_POINT;
+		final int offsetIntersectionSurfaceNormal = offsetIntersection + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL;
+		final int offsetIntersectionSurfaceNormalShading = offsetIntersection + RELATIVE_OFFSET_INTERSECTION_SURFACE_NORMAL_SHADING;
+		final int offsetIntersectionSurfaceTangent = offsetIntersection + RELATIVE_OFFSET_INTERSECTION_SURFACE_TANGENT;
+		
+		final float orthoNormalBasisUXObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 0];
+		final float orthoNormalBasisUYObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 1];
+		final float orthoNormalBasisUZObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 2];
+		final float orthoNormalBasisVXObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 0];
+		final float orthoNormalBasisVYObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 1];
+		final float orthoNormalBasisVZObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 2];
+		final float orthoNormalBasisWXObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 0];
+		final float orthoNormalBasisWYObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 1];
+		final float orthoNormalBasisWZObjectSpace = this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 2];
+		final float surfaceIntersectionPointXObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 0];
+		final float surfaceIntersectionPointYObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 1];
+		final float surfaceIntersectionPointZObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 2];
+		final float surfaceNormalXObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceNormal + 0];
+		final float surfaceNormalYObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceNormal + 1];
+		final float surfaceNormalZObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceNormal + 2];
+		final float surfaceNormalShadingXObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0];
+		final float surfaceNormalShadingYObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
+		final float surfaceNormalShadingZObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
+		final float surfaceTangentXObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceTangent + 0];
+		final float surfaceTangentYObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceTangent + 1];
+		final float surfaceTangentZObjectSpace = this.intersections_$local$[offsetIntersectionSurfaceTangent + 2];
+		
+		final float orthoNormalBasisUXWorldSpace = worldToObjectElement11 * orthoNormalBasisUXObjectSpace + worldToObjectElement21 * orthoNormalBasisUYObjectSpace + worldToObjectElement31 * orthoNormalBasisUZObjectSpace;
+		final float orthoNormalBasisUYWorldSpace = worldToObjectElement12 * orthoNormalBasisUXObjectSpace + worldToObjectElement22 * orthoNormalBasisUYObjectSpace + worldToObjectElement32 * orthoNormalBasisUZObjectSpace;
+		final float orthoNormalBasisUZWorldSpace = worldToObjectElement13 * orthoNormalBasisUXObjectSpace + worldToObjectElement23 * orthoNormalBasisUYObjectSpace + worldToObjectElement33 * orthoNormalBasisUZObjectSpace;
+		final float orthoNormalBasisVXWorldSpace = worldToObjectElement11 * orthoNormalBasisVXObjectSpace + worldToObjectElement21 * orthoNormalBasisVYObjectSpace + worldToObjectElement31 * orthoNormalBasisVZObjectSpace;
+		final float orthoNormalBasisVYWorldSpace = worldToObjectElement12 * orthoNormalBasisVXObjectSpace + worldToObjectElement22 * orthoNormalBasisVYObjectSpace + worldToObjectElement32 * orthoNormalBasisVZObjectSpace;
+		final float orthoNormalBasisVZWorldSpace = worldToObjectElement13 * orthoNormalBasisVXObjectSpace + worldToObjectElement23 * orthoNormalBasisVYObjectSpace + worldToObjectElement33 * orthoNormalBasisVZObjectSpace;
+		final float orthoNormalBasisWXWorldSpace = worldToObjectElement11 * orthoNormalBasisWXObjectSpace + worldToObjectElement21 * orthoNormalBasisWYObjectSpace + worldToObjectElement31 * orthoNormalBasisWZObjectSpace;
+		final float orthoNormalBasisWYWorldSpace = worldToObjectElement12 * orthoNormalBasisWXObjectSpace + worldToObjectElement22 * orthoNormalBasisWYObjectSpace + worldToObjectElement32 * orthoNormalBasisWZObjectSpace;
+		final float orthoNormalBasisWZWorldSpace = worldToObjectElement13 * orthoNormalBasisWXObjectSpace + worldToObjectElement23 * orthoNormalBasisWYObjectSpace + worldToObjectElement33 * orthoNormalBasisWZObjectSpace;
+		final float surfaceIntersectionPointXWorldSpace = objectToWorldElement11 * surfaceIntersectionPointXObjectSpace + objectToWorldElement12 * surfaceIntersectionPointYObjectSpace + objectToWorldElement13 * surfaceIntersectionPointZObjectSpace + objectToWorldElement14;
+		final float surfaceIntersectionPointYWorldSpace = objectToWorldElement21 * surfaceIntersectionPointXObjectSpace + objectToWorldElement22 * surfaceIntersectionPointYObjectSpace + objectToWorldElement23 * surfaceIntersectionPointZObjectSpace + objectToWorldElement24;
+		final float surfaceIntersectionPointZWorldSpace = objectToWorldElement31 * surfaceIntersectionPointXObjectSpace + objectToWorldElement32 * surfaceIntersectionPointYObjectSpace + objectToWorldElement33 * surfaceIntersectionPointZObjectSpace + objectToWorldElement34;
+		final float surfaceNormalXWorldSpace = worldToObjectElement11 * surfaceNormalXObjectSpace + worldToObjectElement21 * surfaceNormalYObjectSpace + worldToObjectElement31 * surfaceNormalZObjectSpace;
+		final float surfaceNormalYWorldSpace = worldToObjectElement12 * surfaceNormalXObjectSpace + worldToObjectElement22 * surfaceNormalYObjectSpace + worldToObjectElement32 * surfaceNormalZObjectSpace;
+		final float surfaceNormalZWorldSpace = worldToObjectElement13 * surfaceNormalXObjectSpace + worldToObjectElement23 * surfaceNormalYObjectSpace + worldToObjectElement33 * surfaceNormalZObjectSpace;
+		final float surfaceNormalShadingXWorldSpace = worldToObjectElement11 * surfaceNormalShadingXObjectSpace + worldToObjectElement21 * surfaceNormalShadingYObjectSpace + worldToObjectElement31 * surfaceNormalShadingZObjectSpace;
+		final float surfaceNormalShadingYWorldSpace = worldToObjectElement12 * surfaceNormalShadingXObjectSpace + worldToObjectElement22 * surfaceNormalShadingYObjectSpace + worldToObjectElement32 * surfaceNormalShadingZObjectSpace;
+		final float surfaceNormalShadingZWorldSpace = worldToObjectElement13 * surfaceNormalShadingXObjectSpace + worldToObjectElement23 * surfaceNormalShadingYObjectSpace + worldToObjectElement33 * surfaceNormalShadingZObjectSpace;
+		final float surfaceTangentXWorldSpace = worldToObjectElement11 * surfaceTangentXObjectSpace + worldToObjectElement21 * surfaceTangentYObjectSpace + worldToObjectElement31 * surfaceTangentZObjectSpace;
+		final float surfaceTangentYWorldSpace = worldToObjectElement12 * surfaceTangentXObjectSpace + worldToObjectElement22 * surfaceTangentYObjectSpace + worldToObjectElement32 * surfaceTangentZObjectSpace;
+		final float surfaceTangentZWorldSpace = worldToObjectElement13 * surfaceTangentXObjectSpace + worldToObjectElement23 * surfaceTangentYObjectSpace + worldToObjectElement33 * surfaceTangentZObjectSpace;
+		
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 0] = orthoNormalBasisUXWorldSpace;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 1] = orthoNormalBasisUYWorldSpace;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisU + 2] = orthoNormalBasisUZWorldSpace;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 0] = orthoNormalBasisVXWorldSpace;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 1] = orthoNormalBasisVYWorldSpace;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisV + 2] = orthoNormalBasisVZWorldSpace;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 0] = orthoNormalBasisWXWorldSpace;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 1] = orthoNormalBasisWYWorldSpace;
+		this.intersections_$local$[offsetIntersectionOrthoNormalBasisW + 2] = orthoNormalBasisWZWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 0] = surfaceIntersectionPointXWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 1] = surfaceIntersectionPointYWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceIntersectionPoint + 2] = surfaceIntersectionPointZWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceNormal + 0] = surfaceNormalXWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceNormal + 1] = surfaceNormalYWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceNormal + 2] = surfaceNormalZWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 0] = surfaceNormalShadingXWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1] = surfaceNormalShadingYWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2] = surfaceNormalShadingZWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceTangent + 0] = surfaceTangentXWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceTangent + 1] = surfaceTangentYWorldSpace;
+		this.intersections_$local$[offsetIntersectionSurfaceTangent + 2] = surfaceTangentZWorldSpace;
 	}
 }

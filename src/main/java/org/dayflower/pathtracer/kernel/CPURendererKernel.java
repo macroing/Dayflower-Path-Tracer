@@ -21,6 +21,7 @@ package org.dayflower.pathtracer.kernel;
 import java.util.Optional;
 
 import org.dayflower.pathtracer.scene.Camera;
+import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.PrimitiveIntersection;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Texture;
@@ -46,6 +47,7 @@ import org.macroing.math4j.Ray3F;
 public final class CPURendererKernel extends AbstractRendererKernel {
 	private PrimitiveIntersection[] primitiveIntersections;
 	private Ray3F[] primaryRays;
+	private int selectedPrimitiveIndex;
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -62,6 +64,16 @@ public final class CPURendererKernel extends AbstractRendererKernel {
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	/**
+	 * Returns the selected {@link Primitive} index or {@code -1} if no {@code Primitive} has been selected.
+	 * 
+	 * @return the selected {@code Primitive} index or {@code -1} if no {@code Primitive} has been selected
+	 */
+	@Override
+	public int getSelectedPrimitiveIndex() {
+		return this.selectedPrimitiveIndex;
+	}
 	
 	/**
 	 * Performs the rendering.
@@ -172,6 +184,14 @@ public final class CPURendererKernel extends AbstractRendererKernel {
 		final
 		Camera camera = getCamera();
 		camera.update();
+	}
+	
+	/**
+	 * Updates the {@link Primitive}s.
+	 */
+	@Override
+	public void updatePrimitives() {
+//		TODO: Implement!
 	}
 	
 	/**

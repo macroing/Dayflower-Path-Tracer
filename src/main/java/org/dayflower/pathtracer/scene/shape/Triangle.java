@@ -226,6 +226,25 @@ public final class Triangle extends Shape {
 	}
 	
 	/**
+	 * Flips the texture coordinates for Y of this {@code Triangle} instance.
+	 * <p>
+	 * Returns a new version of this {@code Triangle} instance.
+	 * 
+	 * @return a new version of this {@code Triangle} instance
+	 */
+	public Triangle flipTextureCoordinatesForY() {
+		final Point2F oldTextureCoordinatesA = this.a.getTextureCoordinates();
+		final Point2F oldTextureCoordinatesB = this.b.getTextureCoordinates();
+		final Point2F oldTextureCoordinatesC = this.c.getTextureCoordinates();
+		
+		final Point2F newTextureCoordinatesA = new Point2F(oldTextureCoordinatesA.x, 1.0F - oldTextureCoordinatesA.y);
+		final Point2F newTextureCoordinatesB = new Point2F(oldTextureCoordinatesB.x, 1.0F - oldTextureCoordinatesB.y);
+		final Point2F newTextureCoordinatesC = new Point2F(oldTextureCoordinatesC.x, 1.0F - oldTextureCoordinatesC.y);
+		
+		return new Triangle(this.a.setTextureCoordinates(newTextureCoordinatesA), this.b.setTextureCoordinates(newTextureCoordinatesB), this.c.setTextureCoordinates(newTextureCoordinatesC));
+	}
+	
+	/**
 	 * Rotates this {@code Triangle} instance.
 	 * <p>
 	 * Returns a new rotated version of this {@code Triangle} instance.
@@ -743,7 +762,7 @@ public final class Triangle extends Shape {
 		 * @throws NullPointerException thrown if, and only if, {@code m} is {@code null}
 		 */
 		public Vertex transform(final Matrix44F m) {
-			return new Vertex(this.textureCoordinates, this.position.transform(m), this.normal, this.tangent);
+			return new Vertex(this.textureCoordinates, this.position.transformAndDivide(m), this.normal, this.tangent);
 		}
 		
 		/**
@@ -759,7 +778,7 @@ public final class Triangle extends Shape {
 		 * @throws NullPointerException thrown if, and only if, either {@code objectToWorld} or {@code worldToObject} are {@code null}
 		 */
 		public Vertex transformToObjectSpace(final Matrix44F objectToWorld, final Matrix44F worldToObject) {
-			return new Vertex(this.textureCoordinates, this.position.transform(worldToObject), this.normal.transformTranspose(objectToWorld), this.tangent.transformTranspose(objectToWorld));
+			return new Vertex(this.textureCoordinates, this.position.transformAndDivide(worldToObject), this.normal.transformTranspose(objectToWorld), this.tangent.transformTranspose(objectToWorld));
 		}
 		
 		/**
@@ -775,7 +794,7 @@ public final class Triangle extends Shape {
 		 * @throws NullPointerException thrown if, and only if, either {@code objectToWorld} or {@code worldToObject} are {@code null}
 		 */
 		public Vertex transformToWorldSpace(final Matrix44F objectToWorld, final Matrix44F worldToObject) {
-			return new Vertex(this.textureCoordinates, this.position.transform(objectToWorld), this.normal.transformTranspose(worldToObject), this.tangent.transformTranspose(worldToObject));
+			return new Vertex(this.textureCoordinates, this.position.transformAndDivide(objectToWorld), this.normal.transformTranspose(worldToObject), this.tangent.transformTranspose(worldToObject));
 		}
 		
 		/**

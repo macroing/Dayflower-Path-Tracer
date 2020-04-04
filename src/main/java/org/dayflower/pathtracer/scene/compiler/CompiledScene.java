@@ -57,6 +57,8 @@ public final class CompiledScene {
 	private final float[] camera;
 	private final float[] point2Fs;
 	private final float[] point3Fs;
+	private final float[] primitivesObjectToWorld;
+	private final float[] primitivesWorldToObject;
 	private final float[] spheres;
 	private final float[] surfaces;
 	private final float[] terrains;
@@ -79,6 +81,8 @@ public final class CompiledScene {
 	 * @param camera the array containing the compiled {@link Camera} instance
 	 * @param point2Fs the array containing all the compiled {@link Point2F} instances
 	 * @param point3Fs the array containing all the compiled {@link Point3F} instances
+	 * @param primitivesObjectToWorld the array containing all the compiled matrices for object to world transformations
+	 * @param primitivesWorldToObject the array containing all the compiled matrices for world to object transformations
 	 * @param spheres the array containing all the compiled {@link Sphere} instances
 	 * @param surfaces the array containing all the compiled {@link Surface} instances
 	 * @param terrains the array containing all the compiled {@link Terrain} instances
@@ -91,11 +95,13 @@ public final class CompiledScene {
 	 * @param triangles the array containing all the compiled {@link Triangle} instances
 	 * @throws NullPointerException thrown if, and only if, at least one of the parameters are {@code null}
 	 */
-	public CompiledScene(final String name, final float[] camera, final float[] point2Fs, final float[] point3Fs, final float[] spheres, final float[] surfaces, final float[] terrains, final float[] textures, final float[] vector3Fs, final int[] boundingVolumeHierarchies, final int[] planes, final int[] primitives, /*final int[] primitivesEmittingLight, */final int[] triangles) {
+	public CompiledScene(final String name, final float[] camera, final float[] point2Fs, final float[] point3Fs, final float[] primitivesObjectToWorld, final float[] primitivesWorldToObject, final float[] spheres, final float[] surfaces, final float[] terrains, final float[] textures, final float[] vector3Fs, final int[] boundingVolumeHierarchies, final int[] planes, final int[] primitives, /*final int[] primitivesEmittingLight, */final int[] triangles) {
 		this.name = Objects.requireNonNull(name, "name == null");
 		this.camera = Objects.requireNonNull(camera, "camera == null");
 		this.point2Fs = Objects.requireNonNull(point2Fs, "point2Fs == null");
 		this.point3Fs = Objects.requireNonNull(point3Fs, "point3Fs == null");
+		this.primitivesObjectToWorld = Objects.requireNonNull(primitivesObjectToWorld, "primitivesObjectToWorld == null");
+		this.primitivesWorldToObject = Objects.requireNonNull(primitivesWorldToObject, "primitivesWorldToObject == null");
 		this.spheres = Objects.requireNonNull(spheres, "spheres == null");
 		this.surfaces = Objects.requireNonNull(surfaces, "surfaces == null");
 		this.terrains = Objects.requireNonNull(terrains, "terrains == null");
@@ -144,6 +150,24 @@ public final class CompiledScene {
 	 */
 	public float[] getPoint3Fs() {
 		return this.point3Fs;
+	}
+	
+	/**
+	 * Returns the array containing all the compiled matrices for object to world transformations.
+	 * 
+	 * @return the array containing all the compiled matrices for object to world transformations
+	 */
+	public float[] getPrimitivesObjectToWorld() {
+		return this.primitivesObjectToWorld;
+	}
+	
+	/**
+	 * Returns the array containing all the compiled matrices for world to object transformations.
+	 * 
+	 * @return the array containing all the compiled matrices for world to object transformations
+	 */
+	public float[] getPrimitivesWorldToObject() {
+		return this.primitivesWorldToObject;
 	}
 	
 	/**
@@ -263,6 +287,8 @@ public final class CompiledScene {
 			Arrays2.writeFloatArray(dataOutputStream, this.surfaces);
 			Arrays2.writeIntArray(dataOutputStream, this.primitives);
 //			Arrays2.writeIntArray(dataOutputStream, this.primitivesEmittingLight);
+			Arrays2.writeFloatArray(dataOutputStream, this.primitivesObjectToWorld);
+			Arrays2.writeFloatArray(dataOutputStream, this.primitivesWorldToObject);
 			Arrays2.writeFloatArray(dataOutputStream, this.camera);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
@@ -341,9 +367,11 @@ public final class CompiledScene {
 			final float[] surfaces = Arrays2.readFloatArray(dataInputStream);
 			final int[] primitives = Arrays2.readIntArray(dataInputStream);
 //			final int[] primitivesEmittingLight = Arrays2.readIntArray(dataInputStream);
+			final float[] primitivesObjectToWorld = Arrays2.readFloatArray(dataInputStream);
+			final float[] primitivesWorldToObject = Arrays2.readFloatArray(dataInputStream);
 			final float[] camera = Arrays2.readFloatArray(dataInputStream);
 			
-			return new CompiledScene(name, camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, /*primitivesEmittingLight, */triangles);
+			return new CompiledScene(name, camera, point2Fs, point3Fs, primitivesObjectToWorld, primitivesWorldToObject, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, /*primitivesEmittingLight, */triangles);
 		} catch(final IOException e) {
 			throw new UncheckedIOException(e);
 		}

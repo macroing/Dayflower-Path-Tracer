@@ -40,6 +40,7 @@ import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 import org.dayflower.pathtracer.scene.texture.BlendTexture;
 import org.dayflower.pathtracer.util.Arrays2;
+import org.macroing.math4j.Matrix44F;
 import org.macroing.math4j.Point2F;
 import org.macroing.math4j.Point3F;
 import org.macroing.math4j.Vector3F;
@@ -167,6 +168,8 @@ public final class SceneCompiler {
 		final float[] camera = scene.getCamera().getArray();
 		final float[] point2Fs = doCompilePoint2Fs(uniquePoint2Fs);
 		final float[] point3Fs = doCompilePoint3Fs(uniquePoint3Fs);
+		final float[] primitivesObjectToWorld = doCompilePrimitivesObjectToWorld(uniquePrimitives);
+		final float[] primitivesWorldToObject = doCompilePrimitivesWorldToObject(uniquePrimitives);
 		final float[] spheres = doCompileSpheres(uniqueSpheres, point3FMappings);
 		final float[] surfaces = doCompileSurfaces(uniqueSurfaces, textureMappings);
 		final float[] terrains = doCompileTerrains(uniqueTerrains);
@@ -181,7 +184,7 @@ public final class SceneCompiler {
 		
 		doOnCompilationEnd(scene, System.currentTimeMillis() - currentTimeMillis);
 		
-		return new CompiledScene(scene.getName(), camera, point2Fs, point3Fs, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, /*primitivesEmittingLight, */triangles);
+		return new CompiledScene(scene.getName(), camera, point2Fs, point3Fs, primitivesObjectToWorld, primitivesWorldToObject, spheres, surfaces, terrains, textures, vector3Fs, boundingVolumeHierarchies, planes, primitives, /*primitivesEmittingLight, */triangles);
 	}
 	
 	/**
@@ -687,6 +690,60 @@ public final class SceneCompiler {
 		}
 		
 		return compiledPoint3Fs.length > 0 ? compiledPoint3Fs : new float[1];
+	}
+	
+	private static float[] doCompilePrimitivesObjectToWorld(final List<Primitive> primitives) {
+		final float[] compiledPrimitivesObjectToWorld = new float[primitives.size() * 16];
+		
+		for(int i = 0; i < primitives.size(); i++) {
+			final Matrix44F objectToWorld = primitives.get(i).getTransform().getObjectToWorld();
+			
+			compiledPrimitivesObjectToWorld[i * 16 +  0] = objectToWorld.element11;
+			compiledPrimitivesObjectToWorld[i * 16 +  1] = objectToWorld.element12;
+			compiledPrimitivesObjectToWorld[i * 16 +  2] = objectToWorld.element13;
+			compiledPrimitivesObjectToWorld[i * 16 +  3] = objectToWorld.element14;
+			compiledPrimitivesObjectToWorld[i * 16 +  4] = objectToWorld.element21;
+			compiledPrimitivesObjectToWorld[i * 16 +  5] = objectToWorld.element22;
+			compiledPrimitivesObjectToWorld[i * 16 +  6] = objectToWorld.element23;
+			compiledPrimitivesObjectToWorld[i * 16 +  7] = objectToWorld.element24;
+			compiledPrimitivesObjectToWorld[i * 16 +  8] = objectToWorld.element31;
+			compiledPrimitivesObjectToWorld[i * 16 +  9] = objectToWorld.element32;
+			compiledPrimitivesObjectToWorld[i * 16 + 10] = objectToWorld.element33;
+			compiledPrimitivesObjectToWorld[i * 16 + 11] = objectToWorld.element34;
+			compiledPrimitivesObjectToWorld[i * 16 + 12] = objectToWorld.element41;
+			compiledPrimitivesObjectToWorld[i * 16 + 13] = objectToWorld.element42;
+			compiledPrimitivesObjectToWorld[i * 16 + 14] = objectToWorld.element43;
+			compiledPrimitivesObjectToWorld[i * 16 + 15] = objectToWorld.element44;
+		}
+		
+		return compiledPrimitivesObjectToWorld;
+	}
+	
+	private static float[] doCompilePrimitivesWorldToObject(final List<Primitive> primitives) {
+		final float[] compiledPrimitivesWorldToObject = new float[primitives.size() * 16];
+		
+		for(int i = 0; i < primitives.size(); i++) {
+			final Matrix44F worldToObject = primitives.get(i).getTransform().getWorldToObject();
+			
+			compiledPrimitivesWorldToObject[i * 16 +  0] = worldToObject.element11;
+			compiledPrimitivesWorldToObject[i * 16 +  1] = worldToObject.element12;
+			compiledPrimitivesWorldToObject[i * 16 +  2] = worldToObject.element13;
+			compiledPrimitivesWorldToObject[i * 16 +  3] = worldToObject.element14;
+			compiledPrimitivesWorldToObject[i * 16 +  4] = worldToObject.element21;
+			compiledPrimitivesWorldToObject[i * 16 +  5] = worldToObject.element22;
+			compiledPrimitivesWorldToObject[i * 16 +  6] = worldToObject.element23;
+			compiledPrimitivesWorldToObject[i * 16 +  7] = worldToObject.element24;
+			compiledPrimitivesWorldToObject[i * 16 +  8] = worldToObject.element31;
+			compiledPrimitivesWorldToObject[i * 16 +  9] = worldToObject.element32;
+			compiledPrimitivesWorldToObject[i * 16 + 10] = worldToObject.element33;
+			compiledPrimitivesWorldToObject[i * 16 + 11] = worldToObject.element34;
+			compiledPrimitivesWorldToObject[i * 16 + 12] = worldToObject.element41;
+			compiledPrimitivesWorldToObject[i * 16 + 13] = worldToObject.element42;
+			compiledPrimitivesWorldToObject[i * 16 + 14] = worldToObject.element43;
+			compiledPrimitivesWorldToObject[i * 16 + 15] = worldToObject.element44;
+		}
+		
+		return compiledPrimitivesWorldToObject;
 	}
 	
 	private static float[] doCompileSphere(final Sphere sphere, final Map<Point3F, Integer> point3FMappings) {

@@ -356,6 +356,13 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 	}
 	
 	/**
+	 * Returns the selected {@link Primitive} index or {@code -1} if no {@code Primitive} has been selected.
+	 * 
+	 * @return the selected {@code Primitive} index or {@code -1} if no {@code Primitive} has been selected
+	 */
+	public abstract int getSelectedPrimitiveIndex();
+	
+	/**
 	 * Returns the shader type that is currently enabled.
 	 * 
 	 * @return the shader type that is currently enabled
@@ -706,6 +713,11 @@ public abstract class AbstractRendererKernel extends AbstractImageKernel {
 	 * Updates the {@link Camera} and the variables related to it.
 	 */
 	public abstract void updateCamera();
+	
+	/**
+	 * Updates the {@link Primitive}s.
+	 */
+	public abstract void updatePrimitives();
 	
 	/**
 	 * Updates the variables related to the sun and sky.

@@ -33,6 +33,7 @@ import java.util.function.BiFunction;
 
 import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Surface;
+import org.dayflower.pathtracer.scene.Transform;
 import org.dayflower.pathtracer.scene.material.LambertianMaterial;
 import org.dayflower.pathtracer.scene.shape.Triangle;
 import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
@@ -62,7 +63,7 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * Calling this method is equivalent to {@code load(file, 1.0F)}.
+	 * Calling this method is equivalent to {@code load(file, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)))}.
 	 * <p>
 	 * If {@code file} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
@@ -74,7 +75,7 @@ public final class ObjectLoader {
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
 	public static List<Primitive> load(final File file) {
-		return load(file, 1.0F);
+		return load(file, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)));
 	}
 	
 	/**
@@ -82,42 +83,20 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * Calling this method is equivalent to {@code load(file, scale, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)))}.
-	 * <p>
-	 * If {@code file} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * <p>
-	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
-	 * 
-	 * @param file a {@code File} representing the file to load from
-	 * @param scale the scale to use on the Wavefront Object model
-	 * @return a {@code List} of {@code Primitive}s that represents the loaded Wavefront Object model
-	 * @throws NullPointerException thrown if, and only if, {@code file} is {@code null}
-	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
-	 */
-	public static List<Primitive> load(final File file, final float scale) {
-		return load(file, scale, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)));
-	}
-	
-	/**
-	 * Loads a Wavefront Object (.obj) model.
-	 * <p>
-	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
-	 * <p>
-	 * Calling this method is equivalent to {@code load(file, scale, surfaceMapper, 0.0F, 0.0F, 0.0F)}.
+	 * Calling this method is equivalent to {@code load(file, surfaceMapper, new Transform())}.
 	 * <p>
 	 * If either {@code file} or {@code surfaceMapper} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
 	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
 	 * 
 	 * @param file a {@code File} representing the file to load from
-	 * @param scale the scale to use on the Wavefront Object model
 	 * @param surfaceMapper a {@code BiFunction} that maps a group name or a material name into a specific {@link Surface} instance
 	 * @return a {@code List} of {@code Primitive}s that represents the loaded Wavefront Object model
 	 * @throws NullPointerException thrown if, and only if, either {@code file} or {@code surfaceMapper} are {@code null}
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
-	public static List<Primitive> load(final File file, final float scale, final BiFunction<String, String, Surface> surfaceMapper) {
-		return load(file, scale, surfaceMapper, 0.0F, 0.0F, 0.0F);
+	public static List<Primitive> load(final File file, final BiFunction<String, String, Surface> surfaceMapper) {
+		return load(file, surfaceMapper, new Transform());
 	}
 	
 	/**
@@ -125,25 +104,19 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * If either {@code file} or {@code surfaceMapper} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If either {@code file}, {@code surfaceMapper} or {@code transform} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
 	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
 	 * 
 	 * @param file a {@code File} representing the file to load from
-	 * @param scale the scale to use on the Wavefront Object model
 	 * @param surfaceMapper a {@code BiFunction} that maps a group name or a material name into a specific {@link Surface} instance
-	 * @param translateX use this to translate the Wavefront Object model in the X-direction
-	 * @param translateY use this to translate the Wavefront Object model in the Y-direction
-	 * @param translateZ use this to translate the Wavefront Object model in the Z-direction
+	 * @param transform a {@link Transform}
 	 * @return a {@code List} of {@code Primitive}s that represents the loaded Wavefront Object model
-	 * @throws NullPointerException thrown if, and only if, either {@code file} or {@code surfaceMapper} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, either {@code file}, {@code surfaceMapper} or {@code transform} are {@code null}
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
-	public static List<Primitive> load(final File file, final float scale, final BiFunction<String, String, Surface> surfaceMapper, final float translateX, final float translateY, final float translateZ) {
+	public static List<Primitive> load(final File file, final BiFunction<String, String, Surface> surfaceMapper, final Transform transform) {
 		try {
-			final Matrix44F objectToWorld = doCreateObjectToWorld(scale, translateX, translateY, translateZ);
-			final Matrix44F worldToObject = objectToWorld.inverse();
-			
 			final List<Primitive> primitives = new ArrayList<>();
 			
 			final ObjectModel objectModel = new ObjectModel(Objects.requireNonNull(file, "file == null"));
@@ -172,7 +145,7 @@ public final class ObjectLoader {
 				
 				if(!previousGroup.equals(currentGroup)) {
 					if(triangles.size() > 0) {
-						primitives.add(new Primitive(new TriangleMesh(triangles), surfaceMapper.apply(previousGroup, previousMaterial)));
+						primitives.add(new Primitive(new TriangleMesh(triangles), surfaceMapper.apply(previousGroup, previousMaterial), transform.copy()));
 						
 						triangles.clear();
 					}
@@ -188,12 +161,32 @@ public final class ObjectLoader {
 				final Vertex b = new Vertex(textureCoordinates.get(indexB), positions.get(indexB), normals.get(indexB), tangents.get(indexB));
 				final Vertex c = new Vertex(textureCoordinates.get(indexC), positions.get(indexC), normals.get(indexC), tangents.get(indexC));
 				
-				final Triangle triangle = new Triangle(a, b, c).transformToWorldSpace(objectToWorld, worldToObject).scaleTextureCoordinates(scale);
-				
-				triangles.add(triangle);
+				/*
+				 * Hack information:
+				 * 
+				 * Certain triangle mesh models needs to be scaled in order to appear, for some reason.
+				 * The reason why needs to be found out and a proper way to handle it implemented (if necessary).
+				 * If the triangle mesh "aphroditegirl.obj" is only scaled 10.0F or similar, parts of the model is missing. Could this be due to floating-point precision errors, maybe?
+				 * 
+				 * Another thing to look at, is why we have to flip the Y-coordinate of texture coordinates, for some models to work. This mainly happens with the model "Zealot.obj".
+				 */
+				if(file.getName().equals("aphroditegirl.obj") || file.getName().equals("smoothMonkey2.obj")) {
+					final float scale = 100.0F;
+					
+					final Matrix44F objectToWorld = Matrix44F.scaling(scale, scale, scale);
+					final Matrix44F worldToObject = objectToWorld.inverse();
+					
+					final Triangle triangle = new Triangle(a, b, c).flipTextureCoordinatesForY().transformToWorldSpace(objectToWorld, worldToObject);
+					
+					triangles.add(triangle);
+				} else {
+					final Triangle triangle = new Triangle(a, b, c).flipTextureCoordinatesForY();
+					
+					triangles.add(triangle);
+				}
 			}
 			
-			primitives.add(new Primitive(new TriangleMesh(triangles), surfaceMapper.apply(previousGroup, previousMaterial)));
+			primitives.add(new Primitive(new TriangleMesh(triangles), surfaceMapper.apply(previousGroup, previousMaterial), transform.copy()));
 			
 			return primitives;
 		} catch(final IOException e) {
@@ -206,23 +199,22 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * Calling this method is equivalent to {@code load(file, scale, (groupName, materialName) -> surface)}.
+	 * Calling this method is equivalent to {@code load(file, (groupName, materialName) -> surface)}.
 	 * <p>
 	 * If either {@code file} or {@code surface} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
 	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
 	 * 
 	 * @param file a {@code File} representing the file to load from
-	 * @param scale the scale to use on the Wavefront Object model
 	 * @param surface the {@link Surface} to use on the Wavefront Object model
 	 * @return a {@code List} of {@code Primitive}s that represents the loaded Wavefront Object model
 	 * @throws NullPointerException thrown if, and only if, either {@code file} or {@code surface} are {@code null}
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
-	public static List<Primitive> load(final File file, final float scale, final Surface surface) {
+	public static List<Primitive> load(final File file, final Surface surface) {
 		Objects.requireNonNull(surface, "surface == null");
 		
-		return load(file, scale, (groupName, materialName) -> surface);
+		return load(file, (groupName, materialName) -> surface);
 	}
 	
 	/**
@@ -230,7 +222,7 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * Calling this method is equivalent to {@code load(filename, 1.0F)}.
+	 * Calling this method is equivalent to {@code load(filename, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)))}.
 	 * <p>
 	 * If {@code filename} is {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
@@ -242,7 +234,7 @@ public final class ObjectLoader {
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
 	public static List<Primitive> load(final String filename) {
-		return load(filename, 1.0F);
+		return load(filename, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)));
 	}
 	
 	/**
@@ -250,42 +242,20 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * Calling this method is equivalent to {@code load(filename, scale, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)))}.
-	 * <p>
-	 * If {@code filename} is {@code null}, a {@code NullPointerException} will be thrown.
-	 * <p>
-	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
-	 * 
-	 * @param filename a {@code String} representing the filename of the file to load from
-	 * @param scale the scale to use on the Wavefront Object model
-	 * @return a {@code List} of {@code Primitive}s that represents the loaded Wavefront Object model
-	 * @throws NullPointerException thrown if, and only if, {@code filename} is {@code null}
-	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
-	 */
-	public static List<Primitive> load(final String filename, final float scale) {
-		return load(filename, scale, (groupName, materialName) -> new Surface(new LambertianMaterial(), new ConstantTexture(Color.GRAY), new ConstantTexture(Color.BLACK), new ConstantTexture(Color.BLACK)));
-	}
-	
-	/**
-	 * Loads a Wavefront Object (.obj) model.
-	 * <p>
-	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
-	 * <p>
-	 * Calling this method is equivalent to {@code load(filename, scale, surfaceMapper, 0.0F, 0.0F, 0.0F)}.
+	 * Calling this method is equivalent to {@code load(filename, surfaceMapper, new Transform())}.
 	 * <p>
 	 * If either {@code filename} or {@code surfaceMapper} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
 	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
 	 * 
 	 * @param filename a {@code String} representing the filename of the file to load from
-	 * @param scale the scale to use on the Wavefront Object model
 	 * @param surfaceMapper a {@code BiFunction} that maps a group name or a material name into a specific {@link Surface} instance
 	 * @return a {@code List} of {@code Primitive}s that represents the loaded Wavefront Object model
 	 * @throws NullPointerException thrown if, and only if, either {@code filename} or {@code surfaceMapper} are {@code null}
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
-	public static List<Primitive> load(final String filename, final float scale, final BiFunction<String, String, Surface> surfaceMapper) {
-		return load(filename, scale, surfaceMapper, 0.0F, 0.0F, 0.0F);
+	public static List<Primitive> load(final String filename, final BiFunction<String, String, Surface> surfaceMapper) {
+		return load(filename, surfaceMapper, new Transform());
 	}
 	
 	/**
@@ -293,22 +263,19 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * If either {@code filename} or {@code surfaceMapper} are {@code null}, a {@code NullPointerException} will be thrown.
+	 * If either {@code filename}, {@code surfaceMapper} or {@code transform} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
 	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
 	 * 
 	 * @param filename a {@code String} representing the filename of the file to load from
-	 * @param scale the scale to use on the Wavefront Object model
 	 * @param surfaceMapper a {@code BiFunction} that maps a group name or a material name into a specific {@link Surface} instance
-	 * @param translateX use this to translate the Wavefront Object model in the X-direction
-	 * @param translateY use this to translate the Wavefront Object model in the Y-direction
-	 * @param translateZ use this to translate the Wavefront Object model in the Z-direction
+	 * @param transform a {@link Transform}
 	 * @return a {@code List} of {@code Primitive}s that represents the loaded Wavefront Object model
-	 * @throws NullPointerException thrown if, and only if, either {@code filename} or {@code surfaceMapper} are {@code null}
+	 * @throws NullPointerException thrown if, and only if, either {@code filename}, {@code surfaceMapper} or {@code transform} are {@code null}
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
-	public static List<Primitive> load(final String filename, final float scale, final BiFunction<String, String, Surface> surfaceMapper, final float translateX, final float translateY, final float translateZ) {
-		return load(new File(Objects.requireNonNull(filename, "filename == null")), scale, surfaceMapper, translateX, translateY, translateZ);
+	public static List<Primitive> load(final String filename, final BiFunction<String, String, Surface> surfaceMapper, final Transform transform) {
+		return load(new File(Objects.requireNonNull(filename, "filename == null")), surfaceMapper, transform);
 	}
 	
 	/**
@@ -316,33 +283,22 @@ public final class ObjectLoader {
 	 * <p>
 	 * Returns a {@code List} of {@link Primitive}s that represents the loaded Wavefront Object model.
 	 * <p>
-	 * Calling this method is equivalent to {@code load(filename, scale, (groupName, materialName) -> surface)}.
+	 * Calling this method is equivalent to {@code load(filename, (groupName, materialName) -> surface)}.
 	 * <p>
 	 * If either {@code filename} or {@code surface} are {@code null}, a {@code NullPointerException} will be thrown.
 	 * <p>
 	 * If an I/O error occurs, an {@code UncheckedIOException} will be thrown.
 	 * 
 	 * @param filename a {@code String} representing the filename of the file to load from
-	 * @param scale the scale to use on the Wavefront Object model
 	 * @param surface the {@link Surface} to use on the Wavefront Object model
 	 * @return a {@code List} of {@code Primitive}s that represents the loaded Wavefront Object model
 	 * @throws NullPointerException thrown if, and only if, either {@code filename} or {@code surface} are {@code null}
 	 * @throws UncheckedIOException thrown if, and only if, an I/O error occurs
 	 */
-	public static List<Primitive> load(final String filename, final float scale, final Surface surface) {
+	public static List<Primitive> load(final String filename, final Surface surface) {
 		Objects.requireNonNull(surface, "surface == null");
 		
-		return load(new File(Objects.requireNonNull(filename, "filename == null")), scale, (groupName, materialName) -> surface);
-	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	private static Matrix44F doCreateObjectToWorld(final float scale, final float translateX, final float translateY, final float translateZ) {
-		final Matrix44F translation = Matrix44F.translation(translateX, translateY, translateZ);
-		final Matrix44F scaling = Matrix44F.scaling(scale, scale, scale);
-		final Matrix44F objectToWorld = translation.multiply(scaling);
-		
-		return objectToWorld;
+		return load(new File(Objects.requireNonNull(filename, "filename == null")), (groupName, materialName) -> surface);
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -427,7 +383,7 @@ public final class ObjectLoader {
 				final float deltaV1 = this.textureCoordinates.get(index2).y - this.textureCoordinates.get(index0).y;
 				
 				final float dividend = (deltaU0 * deltaV1 - deltaU1 * deltaV0);
-				final float fraction = dividend == 0.0F ? 0.0F : 1.0F / dividend;
+				final float fraction = Float.compare(dividend, 0.0F) == 0 ? 0.0F : 1.0F / dividend;
 				
 				final float x = fraction * (deltaV1 * edge0.x - deltaV0 * edge1.x);
 				final float y = fraction * (deltaV1 * edge0.y - deltaV0 * edge1.y);

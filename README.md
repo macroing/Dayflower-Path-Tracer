@@ -1,4 +1,4 @@
-Dayflower - Path Tracer v.0.1.7
+Dayflower - Path Tracer v.0.2.0
 ===============================
 Dayflower - Path Tracer is a photorealistic realtime renderer written in Java.
 
@@ -63,12 +63,12 @@ Supported Keyboard Controls
 | ----------- | ------------------------------------------------------------------ |
 | ESCAPE      | Exit or leave the scene if it has been entered like an FPS-game    |
 | ENTER       | Enter the scene like an FPS-game                                   |
-| W           | Walk forward                                                       |
-| A           | Strafe left                                                        |
-| S           | Walk backward                                                      |
-| D           | Strafe right                                                       |
-| Q           | Increase altitude                                                  |
-| E           | Decrease altitude                                                  |
+| W           | Walk forward or move selected Primitive -Z                         |
+| A           | Strafe left or move selected Primitive +X                          |
+| S           | Walk backward or move selected Primitive +Z                        |
+| D           | Strafe right or move selected Primitive -X                         |
+| Q           | Increase altitude or move selected Primitive +Y                    |
+| E           | Decrease altitude or move selected Primitive -Y                    |
 | R           | Toggle selection of shapes                                         |
 | M           | Toggle the material for the surface instance of the selected shape |
 
