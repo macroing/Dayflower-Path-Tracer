@@ -91,7 +91,6 @@ public final class CompiledScene {
 	 * @param boundingVolumeHierarchies the array containing all the compiled {@link BoundingVolumeHierarchy} instances
 	 * @param planes the array containing all the compiled {@link Plane} instances
 	 * @param primitives the array containing all the compiled {@link Primitive} instances
-	 * @param primitivesEmittingLight the array containing all the compiled {@link Primitive} instances that emits light
 	 * @param triangles the array containing all the compiled {@link Triangle} instances
 	 * @throws NullPointerException thrown if, and only if, at least one of the parameters are {@code null}
 	 */

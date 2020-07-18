@@ -18,7 +18,11 @@
  */
 package org.dayflower.pathtracer.scene.loader;
 
+import static org.macroing.math4j.MathF.max;
+import static org.macroing.math4j.MathF.min;
+
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +40,9 @@ import org.dayflower.pathtracer.scene.material.ReflectionMaterial;
 import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.scene.shape.Sphere;
 import org.dayflower.pathtracer.scene.shape.Terrain;
+import org.dayflower.pathtracer.scene.shape.Triangle;
+import org.dayflower.pathtracer.scene.shape.Triangle.Vertex;
+import org.dayflower.pathtracer.scene.shape.TriangleMesh;
 import org.dayflower.pathtracer.scene.texture.BlendTexture;
 import org.dayflower.pathtracer.scene.texture.BullseyeTexture;
 import org.dayflower.pathtracer.scene.texture.CheckerboardTexture;
@@ -46,6 +53,8 @@ import org.dayflower.pathtracer.scene.texture.SurfaceNormalTexture;
 import org.dayflower.pathtracer.scene.texture.UVTexture;
 import org.dayflower.pathtracer.scene.wavefront.ObjectLoader;
 import org.macroing.image4j.Color;
+import org.macroing.math4j.OrthoNormalBasis33F;
+import org.macroing.math4j.Point2F;
 import org.macroing.math4j.Point3F;
 import org.macroing.math4j.QuaternionF;
 import org.macroing.math4j.Vector3F;
@@ -75,6 +84,8 @@ final class Scenes {
 				return newGirlScene(directory);
 			case "House_Scene":
 				return newHouseScene(directory);
+			case "House_2_Scene":
+				return newHouse2Scene(directory);
 			case "Image_Scene":
 				return newImageScene(directory);
 			case "Material_Showcase_Scene":
@@ -212,6 +223,69 @@ final class Scenes {
 		Scene scene = new Scene("House_Scene");
 		scene.addPrimitive(new Primitive(new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F)), new Surface(new LambertianMaterial(), textureAlbedoPlane, textureEmissionPlane, textureNormalPlane, 0.0F, 0.0F)));
 		scene.addPrimitives(primitives);
+		
+		return scene;
+	}
+	
+	public static Scene newHouse2Scene(final File directory) {
+		final Texture textureFloorAlbedo = new CheckerboardTexture(Color.GRAY, Color.WHITE);
+		final Texture textureFloorEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureFloorNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureGroundAlbedo = ImageTexture.load(new File(getTextureFilename(directory, "Texture_2.png")), 0.0F, 0.008F, 0.008F);
+		final Texture textureGroundEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureGroundNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureRoofAlbedo = new ConstantTexture(Color.WHITE);
+		final Texture textureRoofEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureRoofNormal = new ConstantTexture(Color.BLACK);
+		final Texture textureWallAlbedo = new ConstantTexture(Color.WHITE);
+		final Texture textureWallEmission = new ConstantTexture(Color.BLACK);
+		final Texture textureWallNormal = new ConstantTexture(Color.BLACK);
+		
+		final Surface surfaceFloor = new Surface(new LambertianMaterial(), textureFloorAlbedo, textureFloorEmission, textureFloorNormal);
+		final Surface surfaceGround = new Surface(new LambertianMaterial(), textureGroundAlbedo, textureGroundEmission, textureGroundNormal);
+		final Surface surfaceRoof = new Surface(new LambertianMaterial(), textureRoofAlbedo, textureRoofEmission, textureRoofNormal);
+		final Surface surfaceWall = new Surface(new LambertianMaterial(), textureWallAlbedo, textureWallEmission, textureWallNormal);
+		
+		final Plane planeGround = new Plane(new Point3F(0.0F, 0.0F, 0.0F), new Point3F(0.0F, 0.0F, 1.0F), new Point3F(1.0F, 0.0F, 0.0F));
+		
+		final float scale = 0.1F;
+		
+		final Triangle[] trianglesFloor  = doCreateRectangleXZ(  0.0F * scale,   0.0F * scale, 500.0F * scale, 500.0F * scale,   0.2F * scale);
+		final Triangle[] trianglesRoof   = doCreateRectangleXZ(  0.0F * scale,   0.0F * scale, 500.0F * scale, 500.0F * scale, 200.0F * scale);
+		
+		final Triangle[] trianglesWall00 = doCreateRectangleXY(  0.0F * scale,   0.0F * scale, 500.0F * scale,  50.0F * scale,   0.0F * scale);
+		final Triangle[] trianglesWall01 = doCreateRectangleXY(  0.0F * scale,  50.0F * scale, 100.0F * scale, 150.0F * scale,   0.0F * scale);
+		final Triangle[] trianglesWall02 = doCreateRectangleXY(400.0F * scale,  50.0F * scale, 500.0F * scale, 150.0F * scale,   0.0F * scale);
+		final Triangle[] trianglesWall03 = doCreateRectangleXY(  0.0F * scale, 150.0F * scale, 500.0F * scale, 200.0F * scale,   0.0F * scale);
+		
+		final Triangle[] trianglesWall04 = doCreateRectangleXY(  0.0F * scale,   0.0F * scale, 500.0F * scale,  50.0F * scale, 500.0F * scale);
+		final Triangle[] trianglesWall05 = doCreateRectangleXY(  0.0F * scale,  50.0F * scale, 200.0F * scale, 100.0F * scale, 500.0F * scale);
+		final Triangle[] trianglesWall06 = doCreateRectangleXY(300.0F * scale,  50.0F * scale, 500.0F * scale, 100.0F * scale, 500.0F * scale);
+		final Triangle[] trianglesWall07 = doCreateRectangleXY(  0.0F * scale, 100.0F * scale, 500.0F * scale, 200.0F * scale, 500.0F * scale);
+		final Triangle[] trianglesWall08 = doCreateRectangleYZ(  0.0F * scale,   0.0F * scale,  50.0F * scale, 500.0F * scale,   0.0F * scale);
+		final Triangle[] trianglesWall09 = doCreateRectangleYZ( 50.0F * scale,   0.0F * scale, 100.0F * scale, 200.0F * scale,   0.0F * scale);
+		final Triangle[] trianglesWall10 = doCreateRectangleYZ( 50.0F * scale, 300.0F * scale, 100.0F * scale, 500.0F * scale,   0.0F * scale);
+		final Triangle[] trianglesWall11 = doCreateRectangleYZ(100.0F * scale,   0.0F * scale, 200.0F * scale, 500.0F * scale,   0.0F * scale);
+		final Triangle[] trianglesWall12 = doCreateRectangleYZ(  0.0F * scale,   0.0F * scale,  50.0F * scale, 500.0F * scale, 500.0F * scale);
+		final Triangle[] trianglesWall13 = doCreateRectangleYZ( 50.0F * scale,   0.0F * scale, 100.0F * scale, 200.0F * scale, 500.0F * scale);
+		final Triangle[] trianglesWall14 = doCreateRectangleYZ( 50.0F * scale, 300.0F * scale, 100.0F * scale, 500.0F * scale, 500.0F * scale);
+		final Triangle[] trianglesWall15 = doCreateRectangleYZ(100.0F * scale,   0.0F * scale, 200.0F * scale, 500.0F * scale, 500.0F * scale);
+		
+		final TriangleMesh triangleMeshFloor = new TriangleMesh(Arrays.asList(trianglesFloor[0], trianglesFloor[1]));
+		final TriangleMesh triangleMeshRoof = new TriangleMesh(Arrays.asList(trianglesRoof[0], trianglesRoof[1]));
+		final TriangleMesh triangleMeshWall = new TriangleMesh(Arrays.asList(trianglesWall00[0], trianglesWall00[1], trianglesWall01[0], trianglesWall01[1], trianglesWall02[0], trianglesWall02[1], trianglesWall03[0], trianglesWall03[1], trianglesWall04[0], trianglesWall04[1], trianglesWall05[0], trianglesWall05[1], trianglesWall06[0], trianglesWall06[1], trianglesWall07[0], trianglesWall07[1], trianglesWall08[0], trianglesWall08[1], trianglesWall09[0], trianglesWall09[1], trianglesWall10[0], trianglesWall10[1], trianglesWall11[0], trianglesWall11[1], trianglesWall12[0], trianglesWall12[1], trianglesWall13[0], trianglesWall13[1], trianglesWall14[0], trianglesWall14[1], trianglesWall15[0], trianglesWall15[1]));
+		
+		final Primitive primitiveFloor = new Primitive(triangleMeshFloor, surfaceFloor);
+		final Primitive primitiveGround = new Primitive(planeGround, surfaceGround);
+		final Primitive primitiveRoof = new Primitive(triangleMeshRoof, surfaceRoof);
+		final Primitive primitiveWall = new Primitive(triangleMeshWall, surfaceWall);
+		
+		final
+		Scene scene = new Scene("House_2_Scene");
+		scene.addPrimitive(primitiveFloor);
+		scene.addPrimitive(primitiveGround);
+		scene.addPrimitive(primitiveRoof);
+		scene.addPrimitive(primitiveWall);
 		
 		return scene;
 	}
@@ -829,11 +903,27 @@ final class Scenes {
 	*/
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/*
+	
 	private static Triangle doCreateTriangle(final float textureCoordinateAX, final float textureCoordinateAY, final float positionAX, final float positionAY, final float positionAZ, final float surfaceNormalAX, final float surfaceNormalAY, final float surfaceNormalAZ, final float textureCoordinateBX, final float textureCoordinateBY, final float positionBX, final float positionBY, final float positionBZ, final float surfaceNormalBX, final float surfaceNormalBY, final float surfaceNormalBZ, final float textureCoordinateCX, final float textureCoordinateCY, final float positionCX, final float positionCY, final float positionCZ, final float surfaceNormalCX, final float surfaceNormalCY, final float surfaceNormalCZ) {
-		final Vertex a = new Vertex(new Point2F(textureCoordinateAX, textureCoordinateAY), new Point3F(positionAX, positionAY, positionAZ), new Vector3F(surfaceNormalAX, surfaceNormalAY, surfaceNormalAZ));
-		final Vertex b = new Vertex(new Point2F(textureCoordinateBX, textureCoordinateBY), new Point3F(positionBX, positionBY, positionBZ), new Vector3F(surfaceNormalBX, surfaceNormalBY, surfaceNormalBZ));
-		final Vertex c = new Vertex(new Point2F(textureCoordinateCX, textureCoordinateCY), new Point3F(positionCX, positionCY, positionCZ), new Vector3F(surfaceNormalCX, surfaceNormalCY, surfaceNormalCZ));
+		final Point2F textureCoordinatesA = new Point2F(textureCoordinateAX, textureCoordinateAY);
+		final Point2F textureCoordinatesB = new Point2F(textureCoordinateBX, textureCoordinateBY);
+		final Point2F textureCoordinatesC = new Point2F(textureCoordinateCX, textureCoordinateCY);
+		
+		final Point3F positionA = new Point3F(positionAX, positionAY, positionAZ);
+		final Point3F positionB = new Point3F(positionBX, positionBY, positionBZ);
+		final Point3F positionC = new Point3F(positionCX, positionCY, positionCZ);
+		
+		final Vector3F surfaceNormalA = new Vector3F(surfaceNormalAX, surfaceNormalAY, surfaceNormalAZ);
+		final Vector3F surfaceNormalB = new Vector3F(surfaceNormalBX, surfaceNormalBY, surfaceNormalBZ);
+		final Vector3F surfaceNormalC = new Vector3F(surfaceNormalCX, surfaceNormalCY, surfaceNormalCZ);
+		
+		final Vector3F tangentA = new OrthoNormalBasis33F(surfaceNormalA).u;
+		final Vector3F tangentB = new OrthoNormalBasis33F(surfaceNormalB).u;
+		final Vector3F tangentC = new OrthoNormalBasis33F(surfaceNormalC).u;
+		
+		final Vertex a = new Vertex(textureCoordinatesA, positionA, surfaceNormalA, tangentA);
+		final Vertex b = new Vertex(textureCoordinatesB, positionB, surfaceNormalB, tangentB);
+		final Vertex c = new Vertex(textureCoordinatesC, positionC, surfaceNormalC, tangentC);
 		
 		return new Triangle(a, b, c);
 	}
@@ -845,16 +935,23 @@ final class Scenes {
 		final float maxX = max(x0, x1);
 		final float maxY = max(y0, y1);
 		
-		final Point3F position0 = new Point3F(minX, maxY, z);
-		final Point3F position1 = new Point3F(minX, minY, z);
-		final Point3F position2 = new Point3F(maxX, minY, z);
-		final Point3F position3 = new Point3F(maxX, maxY, z);
+		final Point3F positionAA = new Point3F(minX, minY, z);
+		final Point3F positionAB = new Point3F(minX, maxY, z);
+		final Point3F positionAC = new Point3F(maxX, maxY, z);
 		
-		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
-		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
+		final Point3F positionBA = new Point3F(minX, minY, z);
+		final Point3F positionBB = new Point3F(maxX, maxY, z);
+		final Point3F positionBC = new Point3F(maxX, minY, z);
 		
-		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, minX, maxY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, minX, minY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, maxX, minY, z, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
-		final Triangle triangle1 = doCreateTriangle(1.0F, 1.0F, maxX, minY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, maxX, maxY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, minX, maxY, z, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		final Vector3F surfaceNormalA = Vector3F.normalNormalized(positionAA, positionAB, positionAC);
+		final Vector3F surfaceNormalB = Vector3F.normalNormalized(positionBA, positionBB, positionBC);
+		
+		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, positionAA.x, positionAA.y, positionAA.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z,
+													0.0F, 1.0F, positionAB.x, positionAB.y, positionAB.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z,
+													1.0F, 1.0F, positionAC.x, positionAC.y, positionAC.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z);
+		final Triangle triangle1 = doCreateTriangle(0.0F, 0.0F, positionBA.x, positionBA.y, positionBA.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z,
+													1.0F, 1.0F, positionBB.x, positionBB.y, positionBB.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z,
+													1.0F, 0.0F, positionBC.x, positionBC.y, positionBC.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z);
 		
 		return new Triangle[] {triangle0, triangle1};
 	}
@@ -866,16 +963,24 @@ final class Scenes {
 		final float maxX = max(x0, x1);
 		final float maxZ = max(z0, z1);
 		
-		final Point3F position0 = new Point3F(minX, y, maxZ);
-		final Point3F position1 = new Point3F(minX, y, minZ);
-		final Point3F position2 = new Point3F(maxX, y, minZ);
-		final Point3F position3 = new Point3F(maxX, y, maxZ);
+		final Point3F positionAA = new Point3F(minX, y, minZ);
+		final Point3F positionAB = new Point3F(minX, y, maxZ);
+		final Point3F positionAC = new Point3F(maxX, y, maxZ);
 		
-		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
-		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
+		final Point3F positionBA = new Point3F(minX, y, minZ);
+		final Point3F positionBB = new Point3F(maxX, y, maxZ);
+		final Point3F positionBC = new Point3F(maxX, y, minZ);
 		
-		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, minX, y, maxZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, minX, y, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, maxX, y, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
-		final Triangle triangle1 = doCreateTriangle(1.0F, 1.0F, maxX, y, minZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, maxX, y, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, minX, y, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		final Vector3F surfaceNormalA = Vector3F.normalNormalized(positionAA, positionAB, positionAC);
+		final Vector3F surfaceNormalB = Vector3F.normalNormalized(positionBA, positionBB, positionBC);
+		
+		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, positionAA.x, positionAA.y, positionAA.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z,
+													0.0F, 1.0F, positionAB.x, positionAB.y, positionAB.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z,
+													1.0F, 1.0F, positionAC.x, positionAC.y, positionAC.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z);
+													
+		final Triangle triangle1 = doCreateTriangle(0.0F, 0.0F, positionBA.x, positionBA.y, positionBA.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z,
+													1.0F, 1.0F, positionBB.x, positionBB.y, positionBB.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z,
+													1.0F, 0.0F, positionBC.x, positionBC.y, positionBC.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z);
 		
 		return new Triangle[] {triangle0, triangle1};
 	}
@@ -887,18 +992,24 @@ final class Scenes {
 		final float maxY = max(y0, y1);
 		final float maxZ = max(z0, z1);
 		
-		final Point3F position0 = new Point3F(x, minY, maxZ);
-		final Point3F position1 = new Point3F(x, minY, minZ);
-		final Point3F position2 = new Point3F(x, maxY, minZ);
-		final Point3F position3 = new Point3F(x, maxY, maxZ);
+		final Point3F positionAA = new Point3F(x, minY, minZ);
+		final Point3F positionAB = new Point3F(x, minY, maxZ);
+		final Point3F positionAC = new Point3F(x, maxY, maxZ);
 		
-		final Vector3F surfaceNormal0 = Vector3F.normalNormalized(position0, position1, position2);
-		final Vector3F surfaceNormal1 = Vector3F.normalNormalized(position2, position3, position0);
+		final Point3F positionBA = new Point3F(x, minY, minZ);
+		final Point3F positionBB = new Point3F(x, maxY, maxZ);
+		final Point3F positionBC = new Point3F(x, maxY, minZ);
 		
-		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, x, minY, maxZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 0.0F, 1.0F, x, minY, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z, 1.0F, 1.0F, x, maxY, minZ, surfaceNormal0.x, surfaceNormal0.y, surfaceNormal0.z);
-		final Triangle triangle1 = doCreateTriangle(1.0F, 1.0F, x, maxY, minZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 1.0F, 0.0F, x, maxY, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z, 0.0F, 0.0F, x, minY, maxZ, surfaceNormal1.x, surfaceNormal1.y, surfaceNormal1.z);
+		final Vector3F surfaceNormalA = Vector3F.normalNormalized(positionAA, positionAB, positionAC);
+		final Vector3F surfaceNormalB = Vector3F.normalNormalized(positionBA, positionBB, positionBC);
+		
+		final Triangle triangle0 = doCreateTriangle(0.0F, 0.0F, positionAA.x, positionAA.y, positionAA.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z,
+													0.0F, 1.0F, positionAB.x, positionAB.y, positionAB.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z,
+													1.0F, 1.0F, positionAC.x, positionAC.y, positionAC.z, surfaceNormalA.x, surfaceNormalA.y, surfaceNormalA.z);
+		final Triangle triangle1 = doCreateTriangle(0.0F, 0.0F, positionBA.x, positionBA.y, positionBA.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z,
+													1.0F, 1.0F, positionBB.x, positionBB.y, positionBB.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z,
+													1.0F, 0.0F, positionBC.x, positionBC.y, positionBC.z, surfaceNormalB.x, surfaceNormalB.y, surfaceNormalB.z);
 		
 		return new Triangle[] {triangle0, triangle1};
 	}
-	*/
 }

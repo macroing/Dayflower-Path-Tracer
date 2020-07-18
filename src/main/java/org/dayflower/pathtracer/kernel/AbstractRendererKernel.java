@@ -19,6 +19,7 @@
 package org.dayflower.pathtracer.kernel;
 
 import org.dayflower.pathtracer.scene.Camera;
+import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.compiler.CompiledScene;

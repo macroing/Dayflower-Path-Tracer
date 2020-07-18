@@ -112,9 +112,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	private float sunAndSkyOrthoNormalBasisWX;
 	private float sunAndSkyOrthoNormalBasisWY;
 	private float sunAndSkyOrthoNormalBasisWZ;
-	private float sunAndSkySunColorB;
-	private float sunAndSkySunColorG;
-	private float sunAndSkySunColorR;
+//	private float sunAndSkySunColorB;
+//	private float sunAndSkySunColorG;
+//	private float sunAndSkySunColorR;
 	private float sunAndSkySunDirectionWorldX;
 	private float sunAndSkySunDirectionWorldY;
 	private float sunAndSkySunDirectionWorldZ;
@@ -215,9 +215,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.sunAndSkyPerezRelativeLuminance_$constant$ = sky.getPerezRelativeLuminance();
 		this.sunAndSkyPerezX_$constant$ = sky.getPerezX();
 		this.sunAndSkyPerezY_$constant$ = sky.getPerezY();
-		this.sunAndSkySunColorB = sky.getSunColor().b;
-		this.sunAndSkySunColorG = sky.getSunColor().g;
-		this.sunAndSkySunColorR = sky.getSunColor().r;
+//		this.sunAndSkySunColorB = sky.getSunColor().b;
+//		this.sunAndSkySunColorG = sky.getSunColor().g;
+//		this.sunAndSkySunColorR = sky.getSunColor().r;
 		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
 		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
 		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
@@ -536,9 +536,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		this.sunAndSkyOrthoNormalBasisWX = sky.getOrthoNormalBasis().w.x;
 		this.sunAndSkyOrthoNormalBasisWY = sky.getOrthoNormalBasis().w.y;
 		this.sunAndSkyOrthoNormalBasisWZ = sky.getOrthoNormalBasis().w.z;
-		this.sunAndSkySunColorB = sky.getSunColor().b;
-		this.sunAndSkySunColorG = sky.getSunColor().g;
-		this.sunAndSkySunColorR = sky.getSunColor().r;
+//		this.sunAndSkySunColorB = sky.getSunColor().b;
+//		this.sunAndSkySunColorG = sky.getSunColor().g;
+//		this.sunAndSkySunColorR = sky.getSunColor().r;
 		this.sunAndSkySunDirectionWorldX = sky.getSunDirectionWorld().x;
 		this.sunAndSkySunDirectionWorldY = sky.getSunDirectionWorld().y;
 		this.sunAndSkySunDirectionWorldZ = sky.getSunDirectionWorld().z;
@@ -727,6 +727,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		return simplexFractalXY(getGlobalAmplitude(), getGlobalFrequency(), getGlobalGain(), getGlobalLacunarity(), getGlobalOctaves(), x, z);
 	}
 	
+	@SuppressWarnings("unused")
 	private float doIntersectPrimitivesOld(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final boolean isTesting) {
 //		Compute the offset for the array containing intersection data:
 		final int intersectionsOffset = getLocalId() * SIZE_INTERSECTION;
@@ -3785,8 +3786,19 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		final float surfaceNormalShadingY = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
 		final float surfaceNormalShadingZ = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
 		
-		final int colorRGB = doShaderPhongReflectionModel0(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
-//		final int colorRGB = doShaderPhongReflectionModel1(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
+//		Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
+		final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
+		
+//		Check if the surface normal is correctly oriented:
+		final boolean isCorrectlyOriented = dotProduct < 0.0F;
+		
+//		Retrieve the correctly oriented surface normal:
+		final float surfaceNormalWNormalizedX = isCorrectlyOriented ? surfaceNormalShadingX : -surfaceNormalShadingX;
+		final float surfaceNormalWNormalizedY = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
+		final float surfaceNormalWNormalizedZ = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
+		
+		final int colorRGB = doShaderPhongReflectionModel0(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalWNormalizedX, surfaceNormalWNormalizedY, surfaceNormalWNormalizedZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
+//		final int colorRGB = doShaderPhongReflectionModel1(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalWNormalizedX, surfaceNormalWNormalizedY, surfaceNormalWNormalizedZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
 		
 		pixelColorR = ((colorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
 		pixelColorG = ((colorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
@@ -3951,8 +3963,19 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final float surfaceNormalShadingY = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 1];
 			final float surfaceNormalShadingZ = this.intersections_$local$[offsetIntersectionSurfaceNormalShading + 2];
 			
-			final int colorRGB = doShaderPhongReflectionModel0(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
-//			final int colorRGB = doShaderPhongReflectionModel1(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalShadingX, surfaceNormalShadingY, surfaceNormalShadingZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
+//			Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
+			final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
+			
+//			Check if the surface normal is correctly oriented:
+			final boolean isCorrectlyOriented = dotProduct < 0.0F;
+			
+//			Retrieve the correctly oriented surface normal:
+			final float surfaceNormalWNormalizedX = isCorrectlyOriented ? surfaceNormalShadingX : -surfaceNormalShadingX;
+			final float surfaceNormalWNormalizedY = isCorrectlyOriented ? surfaceNormalShadingY : -surfaceNormalShadingY;
+			final float surfaceNormalWNormalizedZ = isCorrectlyOriented ? surfaceNormalShadingZ : -surfaceNormalShadingZ;
+			
+			final int colorRGB = doShaderPhongReflectionModel0(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalWNormalizedX, surfaceNormalWNormalizedY, surfaceNormalWNormalizedZ, -directionX, -directionY, -directionZ, albedoColorR, albedoColorG, albedoColorB, 0.2F, 0.2F, 0.2F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 0.5F, 250.0F);
+//			final int colorRGB = doShaderPhongReflectionModel1(true, surfaceIntersectionPointX, surfaceIntersectionPointY, surfaceIntersectionPointZ, surfaceNormalWNormalizedX, surfaceNormalWNormalizedY, surfaceNormalWNormalizedZ, directionX, directionY, directionZ, albedoColorR, albedoColorG, albedoColorB);
 			
 			pixelColorR += ((colorRGB >> 16) & 0xFF) * COLOR_RECIPROCAL;
 			pixelColorG += ((colorRGB >>  8) & 0xFF) * COLOR_RECIPROCAL;
@@ -3960,7 +3983,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			
 			if(material == ReflectionMaterial.TYPE) {
 //				Calculate the dot product between the surface normal of the intersected shape and the current ray direction:
-				final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
+//				final float dotProduct = surfaceNormalShadingX * directionX + surfaceNormalShadingY * directionY + surfaceNormalShadingZ * directionZ;
 				final float dotProductMultipliedByTwo = dotProduct * 2.0F;
 				
 //				Update the ray origin for the next iteration:

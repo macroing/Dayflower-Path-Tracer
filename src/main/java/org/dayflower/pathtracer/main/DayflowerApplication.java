@@ -55,7 +55,6 @@ import com.amd.aparapi.Range;
 import org.dayflower.pathtracer.application.AbstractApplication;
 import org.dayflower.pathtracer.application.JavaFX;
 import org.dayflower.pathtracer.kernel.AbstractRendererKernel;
-import org.dayflower.pathtracer.kernel.CPURendererKernel;
 import org.dayflower.pathtracer.kernel.GPURendererKernel;
 import org.dayflower.pathtracer.scene.Camera;
 import org.dayflower.pathtracer.scene.CameraObserver;
@@ -63,7 +62,6 @@ import org.dayflower.pathtracer.scene.Primitive;
 import org.dayflower.pathtracer.scene.Scene;
 import org.dayflower.pathtracer.scene.Sky;
 import org.dayflower.pathtracer.scene.loader.SceneLoader;
-import org.dayflower.pathtracer.scene.shape.Plane;
 import org.dayflower.pathtracer.util.Timer;
 import org.dayflower.pathtracer.util.Files;
 import org.dayflower.pathtracer.util.Strings;
@@ -535,8 +533,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		}
 	}
 	
-//	private long previousTime = System.nanoTime();
-	
 	/**
 	 * Called when updating.
 	 */
@@ -562,18 +558,6 @@ public final class DayflowerApplication extends AbstractApplication implements C
 		final Optional<Primitive> optionalSelectedPrimitive = scene.getSelectedPrimitive(selectedPrimitiveIndex);
 		
 		final Primitive selectedPrimitive = optionalSelectedPrimitive.orElse(null);
-		
-//		final long currentTime = System.nanoTime();
-		
-//		final float delta = (float)((currentTime - this.previousTime) / 1000000000.0D);
-		
-//		this.previousTime = currentTime;
-		
-//		for(final Primitive primitive : scene.getPrimitives()) {
-//			if(!(primitive.getShape() instanceof Plane)) {
-//				primitive.getTransform().rotate(QuaternionF.fromVector(Vector3F.x(), AngleF.radians(delta)));
-//			}
-//		}
 		
 		if(isKeyPressed(KeyCode.A)) {
 			if(selectedPrimitive != null) {

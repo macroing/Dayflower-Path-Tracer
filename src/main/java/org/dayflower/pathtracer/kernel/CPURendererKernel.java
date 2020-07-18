@@ -45,7 +45,7 @@ import org.macroing.math4j.Ray3F;
  * @author J&#246;rgen Lundgren
  */
 public final class CPURendererKernel extends AbstractRendererKernel {
-	private PrimitiveIntersection[] primitiveIntersections;
+//	private PrimitiveIntersection[] primitiveIntersections;
 	private Ray3F[] primaryRays;
 	private int selectedPrimitiveIndex;
 	
@@ -169,7 +169,7 @@ public final class CPURendererKernel extends AbstractRendererKernel {
 	public void update(final int resolutionX, final int resolutionY, final byte[] imageDataByte, final int localSize) {
 		update(resolutionX, resolutionY, imageDataByte);
 		
-		this.primitiveIntersections = new PrimitiveIntersection[resolutionX * resolutionY];
+//		this.primitiveIntersections = new PrimitiveIntersection[resolutionX * resolutionY];
 		this.primaryRays = new Ray3F[resolutionX * resolutionY];
 		
 		setExplicit(true);
