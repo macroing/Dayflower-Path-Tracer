@@ -1,3 +1,8 @@
+2020-08-08	Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* ADD:		Add a key, 'Y', to rotate a primitive around the Y-axis.
+	* CHANGE:	Update to the latest version of Math4J that contains a fix for rotations around the Y-axis.
+
 2020-04-04	Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* CHANGE:	Update version to 0.2.0.

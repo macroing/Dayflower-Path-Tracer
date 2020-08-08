@@ -629,6 +629,10 @@ public final class DayflowerApplication extends AbstractApplication implements C
 			selectedPrimitive.getTransform().rotate(QuaternionF.fromVector(Vector3F.x(), AngleF.degrees(1.0F)));
 		}
 		
+		if(isKeyPressed(KeyCode.Y) && selectedPrimitive != null) {
+			selectedPrimitive.getTransform().rotate(QuaternionF.fromVector(Vector3F.y(), AngleF.degrees(1.0F)));
+		}
+		
 		if(isKeyPressed(KeyCode.Z) && selectedPrimitive != null) {
 			selectedPrimitive.getTransform().rotate(QuaternionF.fromVector(Vector3F.z(), AngleF.degrees(1.0F)));
 		}

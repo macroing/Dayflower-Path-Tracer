@@ -71,6 +71,9 @@ Supported Keyboard Controls
 | E           | Decrease altitude or move selected Primitive -Y                    |
 | R           | Toggle selection of shapes                                         |
 | M           | Toggle the material for the surface instance of the selected shape |
+| X           | Rotate the selected primitive around the X-axis                    |
+| Y           | Rotate the selected primitive around the Y-axis                    |
+| Z           | Rotate the selected primitive around the Z-axis                    |
 
 ___________________________________________________________________________________
 
