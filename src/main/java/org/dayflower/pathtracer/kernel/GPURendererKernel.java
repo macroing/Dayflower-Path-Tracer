@@ -842,7 +842,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 								final float cPositionZ = this.scenePoint3Fs_$constant$[offsetCPosition + 2];
 								
 //								Perform an intersection test with the current triangle:
-								currentDistance = doIntersectTriangle(originX, originY, originZ, directionX, directionY, directionZ, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ);
+								currentDistance = doIntersectTriangle(originX, originY, originZ, directionX, directionY, directionZ, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ, 0.001F, closestDistance);
 								
 //								Check if the current distance is less than the distance to the closest primitive so far:
 								if(currentDistance < closestDistance) {
@@ -876,7 +876,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				final float surfaceNormalY = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 1];
 				final float surfaceNormalZ = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 2];
 				
-				currentDistance = doIntersectPlane(originX, originY, originZ, directionX, directionY, directionZ, aX, aY, aZ, surfaceNormalX, surfaceNormalY, surfaceNormalZ);
+				currentDistance = doIntersectPlane(originX, originY, originZ, directionX, directionY, directionZ, aX, aY, aZ, surfaceNormalX, surfaceNormalY, surfaceNormalZ, 0.001F, closestDistance);
 			} else if(currentShapeType == Sphere.TYPE) {
 				final int offsetPosition = (int)(this.sceneSpheres_$constant$[currentShapeOffset + Sphere.RELATIVE_OFFSET_POSITION_OFFSET]);
 				
@@ -886,7 +886,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				
 				final float radius = this.sceneSpheres_$constant$[currentShapeOffset + Sphere.RELATIVE_OFFSET_RADIUS];
 				
-				currentDistance = doIntersectSphere(originX, originY, originZ, directionX, directionY, directionZ, positionX, positionY, positionZ, radius);
+				currentDistance = doIntersectSphere(originX, originY, originZ, directionX, directionY, directionZ, positionX, positionY, positionZ, radius, 0.001F, closestDistance);
 			} else if(currentShapeType == Terrain.TYPE) {
 				final float frequency = this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_FREQUENCY];
 				final float gain = this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_GAIN];
@@ -911,7 +911,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				final float cPositionY = this.scenePoint3Fs_$constant$[offsetCPosition + 1];
 				final float cPositionZ = this.scenePoint3Fs_$constant$[offsetCPosition + 2];
 				
-				currentDistance = doIntersectTriangle(originX, originY, originZ, directionX, directionY, directionZ, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ);
+				currentDistance = doIntersectTriangle(originX, originY, originZ, directionX, directionY, directionZ, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ, 0.001F, closestDistance);
 			}
 			
 			if(currentDistance < closestDistance) {
@@ -1090,6 +1090,10 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final float directionYObjectSpace = worldToObjectElement21 * directionX + worldToObjectElement22 * directionY + worldToObjectElement23 * directionZ;
 			final float directionZObjectSpace = worldToObjectElement31 * directionX + worldToObjectElement32 * directionY + worldToObjectElement33 * directionZ;
 			
+			final float directionXObjectSpaceReciprocal = 1.0F / directionXObjectSpace;
+			final float directionYObjectSpaceReciprocal = 1.0F / directionYObjectSpace;
+			final float directionZObjectSpaceReciprocal = 1.0F / directionZObjectSpace;
+			
 			if(currentShapeType == TriangleMesh.TYPE) {
 //				Initialize the offset to the root of the BVH structure:
 				int boundingVolumeHierarchyAbsoluteOffset = currentShapeOffset;
@@ -1115,33 +1119,21 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 					final float maximumZ = this.scenePoint3Fs_$constant$[maximumOffset + 2];
 					
 //					Calculate the distance to the minimum point location of the bounding box:
-					final float t0X = (minimumX - originXObjectSpace) / directionXObjectSpace;
-					final float t0Y = (minimumY - originYObjectSpace) / directionYObjectSpace;
-					final float t0Z = (minimumZ - originZObjectSpace) / directionZObjectSpace;
+					final float t0X = (minimumX - originXObjectSpace) * directionXObjectSpaceReciprocal;
+					final float t0Y = (minimumY - originYObjectSpace) * directionYObjectSpaceReciprocal;
+					final float t0Z = (minimumZ - originZObjectSpace) * directionZObjectSpaceReciprocal;
 					
 //					Calculate the distance to the maximum point location of the bounding box:
-					final float t1X = (maximumX - originXObjectSpace) / directionXObjectSpace;
-					final float t1Y = (maximumY - originYObjectSpace) / directionYObjectSpace;
-					final float t1Z = (maximumZ - originZObjectSpace) / directionZObjectSpace;
-					
-//					Calculate the minimum and maximum X-components:
-					final float tMaximumX = max(t0X, t1X);
-					final float tMinimumX = min(t0X, t1X);
-					
-//					Calculate the minimum and maximum Y-components:
-					final float tMaximumY = max(t0Y, t1Y);
-					final float tMinimumY = min(t0Y, t1Y);
-					
-//					Calculate the minimum and maximum Z-components:
-					final float tMaximumZ = max(t0Z, t1Z);
-					final float tMinimumZ = min(t0Z, t1Z);
+					final float t1X = (maximumX - originXObjectSpace) * directionXObjectSpaceReciprocal;
+					final float t1Y = (maximumY - originYObjectSpace) * directionYObjectSpaceReciprocal;
+					final float t1Z = (maximumZ - originZObjectSpace) * directionZObjectSpaceReciprocal;
 					
 //					Calculate the minimum and maximum distance values of the X-, Y- and Z-components above:
-					final float tMaximum = min(tMaximumX, min(tMaximumY, tMaximumZ));
-					final float tMinimum = max(tMinimumX, max(tMinimumY, tMinimumZ));
+					final float tMaximum = min(max(t0X, t1X), min(max(t0Y, t1Y), max(t0Z, t1Z)));
+					final float tMinimum = max(min(t0X, t1X), max(min(t0Y, t1Y), min(t0Z, t1Z)));
+					final float t = tMinimum > tMaximum ? -1.0F : tMinimum > 0.001F && tMinimum < closestDistance ? tMinimum : tMaximum > 0.001F && tMaximum < closestDistance ? tMaximum : -1.0F;
 					
-//					Check if the maximum distance is greater than or equal to the minimum distance:
-					if(tMaximum < 0.0F || tMinimum > tMaximum || closestDistance < tMinimum) {
+					if(t < 0.0F) {
 //						Retrieve the offset to the next node in the BVH structure, relative to the current one:
 						boundingVolumeHierarchyRelativeOffset = this.sceneBoundingVolumeHierarchies_$constant$[boundingVolumeHierarchyOffset + 1];
 					} else {
@@ -1177,7 +1169,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 								final float cPositionZ = this.scenePoint3Fs_$constant$[offsetCPosition + 2];
 								
 //								Perform an intersection test with the current triangle:
-								currentDistance = doIntersectTriangle(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ);
+								currentDistance = doIntersectTriangle(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ, 0.001F, closestDistance);
 								
 //								Check if the current distance is less than the distance to the closest primitive so far:
 								if(currentDistance < closestDistance) {
@@ -1212,7 +1204,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				final float surfaceNormalY = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 1];
 				final float surfaceNormalZ = this.sceneVector3Fs_$constant$[offsetSurfaceNormal + 2];
 				
-				currentDistance = doIntersectPlane(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aX, aY, aZ, surfaceNormalX, surfaceNormalY, surfaceNormalZ);
+				currentDistance = doIntersectPlane(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aX, aY, aZ, surfaceNormalX, surfaceNormalY, surfaceNormalZ, 0.001F, closestDistance);
 			} else if(currentShapeType == Sphere.TYPE) {
 				final int offsetPosition = (int)(this.sceneSpheres_$constant$[currentShapeOffset + Sphere.RELATIVE_OFFSET_POSITION_OFFSET]);
 				
@@ -1222,7 +1214,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				
 				final float radius = this.sceneSpheres_$constant$[currentShapeOffset + Sphere.RELATIVE_OFFSET_RADIUS];
 				
-				currentDistance = doIntersectSphere(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, positionX, positionY, positionZ, radius);
+				currentDistance = doIntersectSphere(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, positionX, positionY, positionZ, radius, 0.001F, closestDistance);
 			} else if(currentShapeType == Terrain.TYPE) {
 				final float frequency = this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_FREQUENCY];
 				final float gain = this.sceneTerrains_$constant$[currentShapeOffset + Terrain.RELATIVE_OFFSET_GAIN];
@@ -1247,7 +1239,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				final float cPositionY = this.scenePoint3Fs_$constant$[offsetCPosition + 1];
 				final float cPositionZ = this.scenePoint3Fs_$constant$[offsetCPosition + 2];
 				
-				currentDistance = doIntersectTriangle(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ);
+				currentDistance = doIntersectTriangle(originXObjectSpace, originYObjectSpace, originZObjectSpace, directionXObjectSpace, directionYObjectSpace, directionZObjectSpace, aPositionX, aPositionY, aPositionZ, bPositionX, bPositionY, bPositionZ, cPositionX, cPositionY, cPositionZ, 0.001F, closestDistance);
 			}
 			
 			if(currentDistance < closestDistance) {
@@ -1419,7 +1411,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	}
 	
 	@SuppressWarnings("static-method")
-	private float doIntersectPlane(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float aX, final float aY, final float aZ, final float surfaceNormalX, final float surfaceNormalY, final float surfaceNormalZ) {
+	private float doIntersectPlane(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float aX, final float aY, final float aZ, final float surfaceNormalX, final float surfaceNormalY, final float surfaceNormalZ, final float tMinimum, final float tMaximum) {
 //		Calculate the dot product between the surface normal and the ray direction:
 		final float dotProduct = surfaceNormalX * directionX + surfaceNormalY * directionY + surfaceNormalZ * directionZ;
 		
@@ -1429,7 +1421,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final float t = ((aX - originX) * surfaceNormalX + (aY - originY) * surfaceNormalY + (aZ - originZ) * surfaceNormalZ) / dotProduct;
 			
 //			Check that t is greater than an epsilon value and return it if so:
-			if(t > EPSILON) {
+			if(t > tMinimum && t < tMaximum) {
 				return t;
 			}
 		}
@@ -1438,7 +1430,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		return INFINITY;
 	}
 	
-	private float doIntersectSphere(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float positionX, final float positionY, final float positionZ, final float radius) {
+	private float doIntersectSphere(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float positionX, final float positionY, final float positionZ, final float radius, final float tMinimum, final float tMaximum) {
 		final float positionToOriginX = originX - positionX;
 		final float positionToOriginY = originY - positionY;
 		final float positionToOriginZ = originZ - positionZ;
@@ -1462,11 +1454,11 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final float t0 = min(result0, result1);
 			final float t1 = max(result0, result1);
 			
-			if(t0 > EPSILON) {
+			if(t0 > tMinimum && t0 < tMaximum) {
 				return t0;
 			}
 			
-			if(t1 > EPSILON) {
+			if(t1 > tMinimum && t1 < tMaximum) {
 				return t1;
 			}
 		}
@@ -1546,7 +1538,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 	}
 	
 	@SuppressWarnings("static-method")
-	private float doIntersectTriangle(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float aX, final float aY, final float aZ, final float bX, final float bY, final float bZ, final float cX, final float cY, final float cZ) {
+	private float doIntersectTriangle(final float originX, final float originY, final float originZ, final float directionX, final float directionY, final float directionZ, final float aX, final float aY, final float aZ, final float bX, final float bY, final float bZ, final float cX, final float cY, final float cZ, final float tMinimum, final float tMaximum) {
 //		Calculate the first edge between the points A and B:
 		final float edge0X = bX - aX;
 		final float edge0Y = bY - aY;
@@ -1569,7 +1561,7 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 		float t = INFINITY;
 		
 //		Check that the determinant is anything other than in the range of negative epsilon to positive epsilon:
-		if(determinant < -EPSILON || determinant > EPSILON) {
+		if(determinant < -0.0001F || determinant > 0.0001F) {
 //			Calculate the reciprocal of the determinant:
 			final float determinantReciprocal = 1.0F / determinant;
 			
@@ -1592,8 +1584,8 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				final float v = (directionX * v2X + directionY * v2Y + directionZ * v2Z) * determinantReciprocal;
 				
 //				Update the distance value:
-				t = v >= 0.0F && u + v <= 1.0F ? (edge1X * v2X + edge1Y * v2Y + edge1Z * v2Z) * determinantReciprocal : EPSILON;
-				t = t > EPSILON ? t : INFINITY;
+				t = v >= 0.0F && u + v <= 1.0F ? (edge1X * v2X + edge1Y * v2Y + edge1Z * v2Z) * determinantReciprocal : tMinimum;
+				t = t > tMinimum && t < tMaximum ? t : INFINITY;
 			}
 		}
 		
@@ -2282,6 +2274,9 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 			final float cosTheta = u * (cosThetaMax - 1.0F) + 1.0F;
 			final float sinTheta = sqrt(max(0.0F, 1.0F - cosTheta * cosTheta));
 			final float phi = PI_MULTIPLIED_BY_TWO * v;
+//			final float cosTheta = (1.0F - u) + u * cosThetaMax;
+//			final float sinTheta = sqrt(1.0F - cosTheta * cosTheta);
+//			final float phi = v * PI_MULTIPLIED_BY_TWO;
 			final float x = cos(phi) * sinTheta;
 			final float y = sin(phi) * sinTheta;
 			final float z = cosTheta;
@@ -2329,23 +2324,19 @@ public final class GPURendererKernel extends AbstractRendererKernel {
 				final float t = doIntersectPrimitives(originX, originY, originZ, directionX, directionY, directionZ, true);
 				
 				if(t >= INFINITY - 0.0001F) {
-//					doCalculateColorForSky(directionX, directionY, directionZ);
+//					final float sunColorR = 0.001F;
+//					final float sunColorG = 0.001F;
+//					final float sunColorB = 0.001F;
+					final float sunColorR = 1.0F;
+					final float sunColorG = 1.0F;
+					final float sunColorB = 1.0F;
 					
-					float sunColorR = 1.0F;//this.colorTemporarySamples_$private$3[0] + this.sunAndSkySunColorR;
-					float sunColorG = 1.0F;//this.colorTemporarySamples_$private$3[1] + this.sunAndSkySunColorG;
-					float sunColorB = 1.0F;//this.colorTemporarySamples_$private$3[2] + this.sunAndSkySunColorB;
+//					final float probabilityDensityFunctionValueReciprocal = 1.0F / (PI_MULTIPLIED_BY_TWO * (1.0F - cosThetaMax));
+					final float probabilityDensityFunctionValueReciprocal = PI_RECIPROCAL;
 					
-//					final float sunColorMax = max(sunColorR, sunColorG, sunColorB);
-					
-//					if(sunColorMax > 1.0F) {
-//						sunColorR = sunColorR / sunColorMax;
-//						sunColorG = sunColorG / sunColorMax;
-//						sunColorB = sunColorB / sunColorMax;
-//					}
-					
-					r = albedoColorR * sunColorR * dotProduct1 * PI_RECIPROCAL;
-					g = albedoColorG * sunColorG * dotProduct1 * PI_RECIPROCAL;
-					b = albedoColorB * sunColorB * dotProduct1 * PI_RECIPROCAL;
+					r = albedoColorR * sunColorR * dotProduct1 * probabilityDensityFunctionValueReciprocal;
+					g = albedoColorG * sunColorG * dotProduct1 * probabilityDensityFunctionValueReciprocal;
+					b = albedoColorB * sunColorB * dotProduct1 * probabilityDensityFunctionValueReciprocal;
 				}
 			}
 		}
