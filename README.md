@@ -6,6 +6,8 @@ The engine primarily uses a rendering technique called Path Tracing, which is in
 
 This early test implementation of Dayflower uses a library called Aparapi. Aparapi is responsible for decompiling the Java bytecode into OpenCL C99 on the fly. The OpenCL C99 is then compiled into binary code and an attempt to execute it by the current GPU is made. If the GPU fails to execute the binary code, it should still run, but in a Java Thread pool on the CPU.
 
+A new version of Dayflower is available [here](https://github.com/macroing/Dayflower). That version contains more features and many improvements. It supports both CPU- and GPU-based rendering as well as more light sources, materials, shapes and textures. The new version will be the focus of development moving forward. This version will probably not get any more updates.
+
 ![alt text](https://github.com/macroing/Dayflower-Path-Tracer/blob/master/images/random/Dayflower-Zealot.png "Dayflower Path Tracer")
 
 For more images, check out [images](https://github.com/macroing/Dayflower-Path-Tracer/tree/master/images).
