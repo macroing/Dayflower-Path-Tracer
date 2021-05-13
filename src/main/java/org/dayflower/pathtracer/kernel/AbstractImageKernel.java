@@ -530,7 +530,7 @@ public abstract class AbstractImageKernel extends AbstractKernel {
 	 * @param exposure the exposure to apply to the image
 	 */
 	protected final void imageSetFilmicCurveACESModified(final float exposure) {
-		imageSetFilmicCurve(exposure, 2.51F, 0.03F, 2.43F, 0.59F, 0.14F, 0.0F, Float.MIN_VALUE);
+		imageSetFilmicCurve(exposure, 2.51F, 0.03F, 2.43F, 0.59F, 0.14F, 0.0F, -Float.MAX_VALUE);
 	}
 	
 	/**

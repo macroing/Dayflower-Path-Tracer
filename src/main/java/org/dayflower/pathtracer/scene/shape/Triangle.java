@@ -497,7 +497,7 @@ public final class Triangle extends Shape {
 	 * @throws NullPointerException thrown if, and only if, either {@code triangles} or any of its elements are {@code null}
 	 */
 	public static Point3F maximum(final List<Triangle> triangles) {
-		Point3F maximum = new Point3F(Float.MIN_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
+		Point3F maximum = new Point3F(-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
 		
 		for(final Triangle triangle : triangles) {
 			final Point3F a = triangle.a.position;

@@ -1,3 +1,9 @@
+2021-05-13	Jörgen Lundgren  <joergen.lundgren@macroing.org>
+
+	* CHANGE:	Update to the latest version of Math4J.
+	* CHANGE:	Update to the latest version of Image4J.
+	* CHANGE:	Fix a bug where Float.MIN_VALUE was assumed to be the minimum float value. The correct value is -Float.MAX_VALUE.
+
 2020-08-08	Jörgen Lundgren  <joergen.lundgren@macroing.org>
 
 	* ADD:		Add a key, 'Y', to rotate a primitive around the Y-axis.

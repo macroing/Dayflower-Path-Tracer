@@ -120,12 +120,12 @@ public final class BoundingVolumeHierarchy {
 		
 		final List<LeafNode> leafNodes = new ArrayList<>(triangles.size());
 		
-		float maximumX = Float.MIN_VALUE;
-		float maximumY = Float.MIN_VALUE;
-		float maximumZ = Float.MIN_VALUE;
-		float minimumX = Float.MAX_VALUE;
-		float minimumY = Float.MAX_VALUE;
-		float minimumZ = Float.MAX_VALUE;
+		float maximumX = -Float.MAX_VALUE;
+		float maximumY = -Float.MAX_VALUE;
+		float maximumZ = -Float.MAX_VALUE;
+		float minimumX = +Float.MAX_VALUE;
+		float minimumY = +Float.MAX_VALUE;
+		float minimumZ = +Float.MAX_VALUE;
 		
 		for(final Triangle triangle : triangles) {
 			final Point3F p0 = triangle.a.position;
@@ -349,12 +349,12 @@ public final class BoundingVolumeHierarchy {
 	 * @author J&#246;rgen Lundgren
 	 */
 	public static abstract class Node {
-		private float maximumX = Float.MAX_VALUE;
-		private float maximumY = Float.MAX_VALUE;
-		private float maximumZ = Float.MAX_VALUE;
-		private float minimumX = Float.MIN_VALUE;
-		private float minimumY = Float.MIN_VALUE;
-		private float minimumZ = Float.MIN_VALUE;
+		private float maximumX = +Float.MAX_VALUE;
+		private float maximumY = +Float.MAX_VALUE;
+		private float maximumZ = +Float.MAX_VALUE;
+		private float minimumX = -Float.MAX_VALUE;
+		private float minimumY = -Float.MAX_VALUE;
+		private float minimumZ = -Float.MAX_VALUE;
 		private final int depth;
 		private final int id;
 		
@@ -840,19 +840,19 @@ public final class BoundingVolumeHierarchy {
 			final float step = (stop - start) / (1024.0F / (depth + 1.0F));
 			
 			for(float split = start + step; split < stop - step; split += step) {
-				float maximumLeftX = Float.MIN_VALUE;
-				float maximumLeftY = Float.MIN_VALUE;
-				float maximumLeftZ = Float.MIN_VALUE;
-				float minimumLeftX = Float.MAX_VALUE;
-				float minimumLeftY = Float.MAX_VALUE;
-				float minimumLeftZ = Float.MAX_VALUE;
+				float maximumLeftX = -Float.MAX_VALUE;
+				float maximumLeftY = -Float.MAX_VALUE;
+				float maximumLeftZ = -Float.MAX_VALUE;
+				float minimumLeftX = +Float.MAX_VALUE;
+				float minimumLeftY = +Float.MAX_VALUE;
+				float minimumLeftZ = +Float.MAX_VALUE;
 				
-				float maximumRightX = Float.MIN_VALUE;
-				float maximumRightY = Float.MIN_VALUE;
-				float maximumRightZ = Float.MIN_VALUE;
-				float minimumRightX = Float.MAX_VALUE;
-				float minimumRightY = Float.MAX_VALUE;
-				float minimumRightZ = Float.MAX_VALUE;
+				float maximumRightX = -Float.MAX_VALUE;
+				float maximumRightY = -Float.MAX_VALUE;
+				float maximumRightZ = -Float.MAX_VALUE;
+				float minimumRightX = +Float.MAX_VALUE;
+				float minimumRightY = +Float.MAX_VALUE;
+				float minimumRightZ = +Float.MAX_VALUE;
 				
 				int countLeft = 0;
 				int countRight = 0;
@@ -925,19 +925,19 @@ public final class BoundingVolumeHierarchy {
 		final List<LeafNode> leafNodesLeft = new ArrayList<>(size1);
 		final List<LeafNode> leafNodesRight = new ArrayList<>(size1);
 		
-		float maximumLeftX = Float.MIN_VALUE;
-		float maximumLeftY = Float.MIN_VALUE;
-		float maximumLeftZ = Float.MIN_VALUE;
-		float minimumLeftX = Float.MAX_VALUE;
-		float minimumLeftY = Float.MAX_VALUE;
-		float minimumLeftZ = Float.MAX_VALUE;
+		float maximumLeftX = -Float.MAX_VALUE;
+		float maximumLeftY = -Float.MAX_VALUE;
+		float maximumLeftZ = -Float.MAX_VALUE;
+		float minimumLeftX = +Float.MAX_VALUE;
+		float minimumLeftY = +Float.MAX_VALUE;
+		float minimumLeftZ = +Float.MAX_VALUE;
 		
-		float maximumRightX = Float.MIN_VALUE;
-		float maximumRightY = Float.MIN_VALUE;
-		float maximumRightZ = Float.MIN_VALUE;
-		float minimumRightX = Float.MAX_VALUE;
-		float minimumRightY = Float.MAX_VALUE;
-		float minimumRightZ = Float.MAX_VALUE;
+		float maximumRightX = -Float.MAX_VALUE;
+		float maximumRightY = -Float.MAX_VALUE;
+		float maximumRightZ = -Float.MAX_VALUE;
+		float minimumRightX = +Float.MAX_VALUE;
+		float minimumRightY = +Float.MAX_VALUE;
+		float minimumRightZ = +Float.MAX_VALUE;
 		
 		for(final LeafNode leafNode : leafNodes) {
 			final float centerX = leafNode.getCenterX();
